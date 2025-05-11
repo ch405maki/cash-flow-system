@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('last_name');
             $table->string('email')->unique()->nullable();
             $table->timestamp('email_verified_at')->nullable();
-            $table->enum('role', ['supper_admin','admin', 'staff'])->default('staff');
+            $table->enum('role', ['super_admin','admin', 'staff'])->default('staff');
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->foreignId('department_id')
                     ->nullable()
@@ -27,7 +27,7 @@ return new class extends Migration
                     ->onDelete('set null');
             $table->foreignId('access_id')
                     ->nullable()
-                    ->constrained('access')
+                    ->constrained('accesses')
                     ->onDelete('set null');
             $table->string('password');
             $table->rememberToken();

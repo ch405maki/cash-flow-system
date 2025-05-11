@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('access', function (Blueprint $table) {
+        Schema::create('accesses', function (Blueprint $table) {
             $table->id();
             $table->string('prognam_name');
             $table->string('access_level');
@@ -19,6 +19,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('access');
+        Schema::dropIfExists('accesses');
     }
 };
