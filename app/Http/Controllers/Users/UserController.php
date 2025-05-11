@@ -7,8 +7,11 @@ use Illuminate\Http\JsonResponse;
 use App\Imports\UsersImport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
-
+use Illuminate\Validation\ValidationException;
+use Illuminate\Database\QueryException;
+use Exception;
 
 use App\Models\User;
 
@@ -24,23 +27,85 @@ class UserController extends Controller
     
     public function store(Request $request): JsonResponse
     {
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'role' => 'required|in:admin,user',
-            'status' => 'required|in:active,inactive',
-        ]);
+        try {
+            // Validate request data
+            $validatedData = $request->validate([
+                'username' => 'required|string|max:255|unique:users',
+                'first_name' => 'required|string|max:255',
+                'middle_name' => 'nullable|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:8|confirmed',
+                'role' => 'required|in:super_admin,admin,staff',
+                'status' => 'required|in:active,inactive',
+                'department_id' => 'required|exists:departments,id',
+                'access_id' => 'required|exists:accesses,id'
+            ]);
 
-        $user = User::create([
-            'name' => $validatedData['name'],
-            'email' => $validatedData['email'],
-            'password' => bcrypt($validatedData['password']),
-            'role' => $validatedData['role'],
-            'status' => $validatedData['status'],
-        ]);
+            // Create user
+            $user = User::create([
+                'username' => $validatedData['username'],
+                'first_name' => $validatedData['first_name'],
+                'middle_name' => $validatedData['middle_name'],
+                'last_name' => $validatedData['last_name'],
+                'email' => $validatedData['email'],
+                'password' => Hash::make($validatedData['password']),
+                'role' => $validatedData['role'],
+                'status' => $validatedData['status'],
+                'department_id' => $validatedData['department_id'],
+                'access_id' => $validatedData['access_id'],
+            ]);
 
-        return response()->json(['message' => 'User created successfully', 'user' => $user], 201);
+            // Load relationships for response
+            $user->load(['department', 'access']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User created successfully',
+                'data' => $user,
+                'meta' => [
+                    'created_at' => now()->toDateTimeString(),
+                    'resource' => 'users'
+                ]
+            ], 201);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $e->errors(),
+                'meta' => [
+                    'failed_validation' => true,
+                    'validation_rules' => [
+                        'username' => 'required|string|max:255|unique:users',
+                        'email' => 'required|email|unique:users',
+                        // ... other rules
+                    ]
+                ]
+            ], 422);
+
+        } catch (QueryException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Database error occurred',
+                'error' => config('app.debug') ? $e->getMessage() : 'Please contact support',
+                'meta' => [
+                    'database_error' => true,
+                    'code' => $e->getCode()
+                ]
+            ], 500);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Server error',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+                'meta' => [
+                    'timestamp' => now()->toDateTimeString(),
+                    'error_code' => $e->getCode()
+                ]
+            ], 500);
+        }
     }
 
     public function uploadUsers(Request $request)

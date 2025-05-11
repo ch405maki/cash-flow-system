@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Access extends Model
 {
-
+    protected $table = 'accesses';
+    
     protected $fillable = ['prognam_name', 'access_level'];
 
     public function users(): HasMany

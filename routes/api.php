@@ -3,6 +3,11 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Users\UserController;
+use App\Http\Controllers\Api\DepartmentController;
+use App\Http\Controllers\Api\AccessController;
+use App\Http\Controllers\Api\RequestController;
+use App\Http\Controllers\Api\AccountController;
+use App\Http\Controllers\Api\SignatoryController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -14,3 +19,11 @@ Route::post('/users', [UserController::class, 'store']);
 Route::post('/upload-users', [UserController::class, 'uploadUsers']);
 Route::put('/users/{id}', [UserController::class, 'update']);
 Route::patch('/users/{user}/status', [UserController::class, 'updateStatus']);
+
+
+Route::apiResource('requests', RequestController::class);
+Route::apiResource('departments', DepartmentController::class);
+Route::apiResource('access', AccessController::class);
+
+Route::apiResource('accounts', AccountController::class);
+Route::apiResource('signatories', SignatoryController::class);
