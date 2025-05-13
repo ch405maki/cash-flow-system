@@ -18,7 +18,7 @@ import UserMenuContent from '@/components/UserMenuContent.vue';
 import { getInitials } from '@/composables/useInitials';
 import type { BreadcrumbItem, NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Menu, Search, Settings } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 interface Props {
@@ -44,18 +44,33 @@ const mainNavItems: NavItem[] = [
         href: '/dashboard',
         icon: LayoutGrid,
     },
+    {
+        title: 'Requests',
+        href: '/request',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Purchase Order',
+        href: '/dashboard',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Voucher',
+        href: '/dashboard',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Reports',
+        href: '/dashboard',
+        icon: LayoutGrid,
+    },
 ];
 
 const rightNavItems: NavItem[] = [
     {
-        title: 'Repository',
+        title: 'Configuration',
         href: 'https://github.com/laravel/vue-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits',
-        icon: BookOpen,
+        icon: Settings,
     },
 ];
 </script>
@@ -169,9 +184,9 @@ const rightNavItems: NavItem[] = [
                                 class="relative size-10 w-auto rounded-full p-1 focus-within:ring-2 focus-within:ring-primary"
                             >
                                 <Avatar class="size-8 overflow-hidden rounded-full">
-                                    <AvatarImage v-if="auth.user.avatar" :src="auth.user.avatar" :alt="auth.user.name" />
+                                    <AvatarImage v-if="auth.user.avatar" :src="auth.user.avatar" :alt="auth.user.first_name" />
                                     <AvatarFallback class="rounded-lg bg-neutral-200 font-semibold text-black dark:bg-neutral-700 dark:text-white">
-                                        {{ getInitials(auth.user?.name) }}
+                                        {{ getInitials(auth.user?.first_name) }}
                                     </AvatarFallback>
                                 </Avatar>
                             </Button>
