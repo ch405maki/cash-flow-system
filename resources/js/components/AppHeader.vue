@@ -18,7 +18,7 @@ import UserMenuContent from '@/components/UserMenuContent.vue';
 import { getInitials } from '@/composables/useInitials';
 import type { BreadcrumbItem, NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Menu, Search, Settings } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 interface Props {
@@ -44,13 +44,33 @@ const mainNavItems: NavItem[] = [
         href: '/dashboard',
         icon: LayoutGrid,
     },
+    {
+        title: 'Requests',
+        href: '/request',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Purchase Order',
+        href: '/dashboard',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Voucher',
+        href: '/dashboard',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Reports',
+        href: '/dashboard',
+        icon: LayoutGrid,
+    },
 ];
 
 const rightNavItems: NavItem[] = [
     {
-        title: 'Repository',
+        title: 'Configuration',
         href: 'https://github.com/laravel/vue-starter-kit',
-        icon: Folder,
+        icon: Settings,
     },
 ];
 </script>
