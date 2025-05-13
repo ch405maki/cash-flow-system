@@ -11,9 +11,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\QueryException;
+use Inertia\Inertia;
 
 class VoucherController extends Controller
 {
+    public function index()
+    {
+        $vouchers = Voucher::all();
+        return Inertia::render('Vouchers/Index', ['vouchers' => $vouchers]);
+    }
     public function store(Request $request): JsonResponse
     {
         DB::beginTransaction();

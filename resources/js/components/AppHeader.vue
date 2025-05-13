@@ -55,8 +55,8 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Voucher',
-        href: '/dashboard',
+        title: 'Vouchers',
+        href: '/vouchers',
         icon: LayoutGrid,
     },
     {
