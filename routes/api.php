@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\AccessController;
 use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\SignatoryController;
+use App\Http\Controllers\Api\VoucherController;
+use App\Http\Controllers\Api\PurchaseOrderController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();

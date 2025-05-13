@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\SignatoryController;
 use App\Http\Controllers\Api\PurchaseOrderController;
+use App\Http\Controllers\Api\VoucherController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -22,6 +23,11 @@ Route::get('dashboard', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/request', [RequestController::class, 'index'])->name('request.index');
 });
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/vouchers', [VoucherController::class, 'index'])->name('vouchers.index');
+});
+
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
