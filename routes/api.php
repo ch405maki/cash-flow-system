@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\AccessController;
 use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\SignatoryController;
+use App\Http\Controllers\Api\VoucherController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -24,6 +25,7 @@ Route::patch('/users/{user}/status', [UserController::class, 'updateStatus']);
 Route::apiResource('requests', RequestController::class);
 Route::apiResource('departments', DepartmentController::class);
 Route::apiResource('access', AccessController::class);
+Route::apiResource('vouchers', VoucherController::class);
 
 Route::apiResource('accounts', AccountController::class);
 Route::apiResource('signatories', SignatoryController::class);
