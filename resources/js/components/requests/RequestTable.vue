@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { defineProps } from 'vue';
+import { router } from '@inertiajs/vue3';
 
 const props = defineProps<{
   requests: Array<any>;
@@ -8,6 +9,10 @@ const props = defineProps<{
 
 const getFullName = (user: any) =>
   `${user.first_name} ${user.middle_name} ${user.last_name}`;
+
+  function goToCreatePO(requestId: number) {
+    router.get(`/purchase-orders/create/${requestId}`);
+  }
 </script>
 
 <template>
@@ -48,7 +53,13 @@ const getFullName = (user: any) =>
             </span>
           </td>
           <td class="px-4 py-2 space-x-2">
-            <Button size="sm" variant="outline">Create PO</Button>
+            <Button
+              size="sm"
+              variant="outline"
+              @click="goToCreatePO(request.id)"
+            >
+              Create PO
+            </Button>
           </td>
         </tr>
       </tbody>
