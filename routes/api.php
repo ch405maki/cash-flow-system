@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\AccessController;
 use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\SignatoryController;
+use App\Http\Controllers\Api\PurchaseOrderController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -27,3 +28,10 @@ Route::apiResource('access', AccessController::class);
 
 Route::apiResource('accounts', AccountController::class);
 Route::apiResource('signatories', SignatoryController::class);
+
+
+Route::apiResource('purchase-orders', PurchaseOrderController::class)->only(['store']);
+
+// Additional custom route for PO approval
+Route::patch('purchase-orders/{purchase_order}/approve', [PurchaseOrderController::class, 'approve']);
+Route::patch('purchase-orders/{purchase_order}/reject', [PurchaseOrderController::class, 'reject']);

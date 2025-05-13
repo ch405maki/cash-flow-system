@@ -10,8 +10,19 @@ use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\QueryException;
 
+use Inertia\Inertia;
+
 class RequestController extends Controller
 {
+    public function index()
+    {
+        $requests = Request::with(['department', 'user', 'details'])->get();
+
+        return Inertia::render('Request/Index', [
+            'requests' => $requests,
+        ]);
+    }
+
     public function store(HttpRequest $request): JsonResponse
     {
         try {
