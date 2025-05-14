@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderDetail;
+use App\Models\Account;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,9 +18,9 @@ class PurchaseOrderController extends Controller
 
     public function create(PurchaseRequest $request)
     {
-        // Pass request data to the PO creation page
         return Inertia::render('PurchaseOrders/Create', [
             'request' => $request->load(['user', 'department', 'details']),
+            'accounts' => Account::all(['id', 'account_title']),
         ]);
     }
 
