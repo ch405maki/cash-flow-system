@@ -15,6 +15,28 @@ use Inertia\Inertia;
 
 class PurchaseOrderController extends Controller
 {
+    public function index()
+    {
+        $purchaseOrders = PurchaseOrder::with(['user', 'department', 'account', 'details'])
+            ->latest()
+            ->paginate(10);
+
+        return Inertia::render('PurchaseOrders/Index', [
+            'purchaseOrders' => $purchaseOrders,
+        ]);
+    }
+
+    public function show(PurchaseOrder $purchaseOrder)
+    {
+        return Inertia::render('PurchaseOrders/Show', [
+            'purchaseOrder' => $purchaseOrder->load([
+                'user',
+                'department', 
+                'account',
+                'details'
+            ]),
+        ]);
+    }
 
     public function create(PurchaseRequest $request)
     {
@@ -24,44 +46,44 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
-    {
-        DB::beginTransaction();
+        public function store(Request $request): JsonResponse
+        {
+            DB::beginTransaction();
 
-        try {
-            $validated = $request->validate([
-                'po_no' => 'required|string|unique:purchase_orders',
-                'payee' => 'required|string|max:255',
-                'check_payable_to' => 'required|string|max:255',
-                'date' => 'required|date',
-                'amount' => 'required|numeric|min:0',
-                'purpose' => 'required|string|max:500',
-                'status' => 'required|in:draft,approved,rejected,completed',
-                'remarks' => 'nullable|string',
-                'user_id' => 'required|exists:users,id',
-                'department_id' => 'required|exists:departments,id',
-                'account_id' => 'required|exists:accounts,id',
-                'items' => 'required|array|min:1',
-                'items.*.quantity' => 'required|numeric|min:1',
-                'items.*.unit' => 'required|string|max:20',
-                'items.*.item_description' => 'required|string|max:255',
-                'items.*.unit_price' => 'required|numeric|min:0',
-                'items.*.amount' => 'required|numeric|min:0'
-            ]);
+            try {
+                $validated = $request->validate([
+                    'po_no' => 'required|string|unique:purchase_orders',
+                    'payee' => 'required|string|max:255',
+                    'check_payable_to' => 'required|string|max:255',
+                    'date' => 'required|date',
+                    'amount' => 'required|numeric|min:0',
+                    'purpose' => 'required|string|max:500',
+                    'status' => 'required|in:draft,approved,rejected,completed',
+                    'remarks' => 'nullable|string',
+                    'user_id' => 'required|exists:users,id',
+                    'department_id' => 'required|exists:departments,id',
+                    'account_id' => 'required|exists:accounts,id',
+                    'items' => 'required|array|min:1',
+                    'items.*.quantity' => 'required|numeric|min:1',
+                    'items.*.unit' => 'required|string|max:20',
+                    'items.*.item_description' => 'required|string|max:255',
+                    'items.*.unit_price' => 'required|numeric|min:0',
+                    'items.*.amount' => 'required|numeric|min:0'
+                ]);
 
-            // Create purchase order
-            $purchaseOrder = PurchaseOrder::create($validated);
+                // Create purchase order
+                $purchaseOrder = PurchaseOrder::create($validated);
 
-            // Create purchase order details
-            foreach ($validated['items'] as $item) {
-                $purchaseOrder->details()->create($item);
-            }
+                // Create purchase order details
+                foreach ($validated['items'] as $item) {
+                    $purchaseOrder->details()->create($item);
+                }
 
-            DB::commit();
+                DB::commit();
 
-            return response()->json([
+                return response()->json([
                 'success' => true,
-                'message' => 'Purchase order created successfully',
+                'message' => 'Purchase order created successfully', // Ensure this exists
                 'data' => $purchaseOrder->load(['user', 'department', 'account', 'details']),
                 'meta' => [
                     'items_count' => count($validated['items']),
@@ -74,7 +96,7 @@ class PurchaseOrderController extends Controller
             DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Validation error',
+                'message' => 'Validation error', // Ensure this exists
                 'errors' => $e->errors(),
                 'meta' => [
                     'valid_statuses' => ['draft', 'approved', 'rejected', 'completed']
@@ -85,7 +107,7 @@ class PurchaseOrderController extends Controller
             DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create purchase order',
+                'message' => 'Failed to create purchase order: ' . $e->getMessage(),
                 'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }

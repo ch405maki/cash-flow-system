@@ -21,10 +21,17 @@ Route::get('dashboard', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/request', [RequestController::class, 'index'])->name('request.index');
+    Route::get('/request/create', [RequestController::class, 'create'])->name('request.create');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-        Route::get('/purchase-orders/create/{request}', [PurchaseOrderController::class, 'create'])
+    Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])
+        ->name('purchase-orders.index');
+
+    Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])
+        ->name('purchase-orders.show');
+
+    Route::get('/purchase-orders/create/{request}', [PurchaseOrderController::class, 'create'])
         ->name('purchase-orders.create');
 });
 

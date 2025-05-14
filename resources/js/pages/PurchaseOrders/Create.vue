@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AppLayout from '@/layouts/AppLayout.vue';
+import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +8,18 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from 'vue-toastification';
+import axios from 'axios';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Dashboard',
+        href: '/dashboard',
+    },
+    {
+        title: 'Create Purchase Order',
+        href: '/',
+    },
+];
 
 const toast = useToast();
 const props = defineProps({
@@ -54,22 +68,28 @@ function updateItemAmount(index: number) {
 }
 
 // Submit the PO form
-function submitPO() {
-  form.post('/api/purchase-orders', {
-    preserveScroll: true,
-    onSuccess: () => {
-      toast.success('Purchase Order created successfully!');
-    },
-    onError: (errors) => {
+async function submitPO() {
+  try {
+    const response = await axios.post('/api/purchase-orders', form);
+
+    toast.success(response.data.message || 'Purchase Order created successfully');
+    // optionally reset the form or redirect
+  } catch (error) {
+    if (error.response?.data?.errors) {
+      Object.values(error.response.data.errors).forEach((msg) => {
+        toast.error(msg[0]);
+      });
+    } else {
       toast.error('Failed to create Purchase Order');
-      console.error(errors);
     }
-  });
+  }
 }
 </script>
 
 <template>
   <Head title="Create Purchase Order" />
+
+<AppLayout :breadcrumbs="breadcrumbs">
   <div class="p-6 space-y-6">
     <h1 class="text-2xl font-bold">Create Purchase Order</h1>
 
@@ -202,7 +222,6 @@ function submitPO() {
               <Input
                 :id="`description-${index}`"
                 v-model="item.item_description"
-                readonly
               />
             </div>
 
@@ -244,4 +263,5 @@ function submitPO() {
       </div>
     </form>
   </div>
+</AppLayout>
 </template>

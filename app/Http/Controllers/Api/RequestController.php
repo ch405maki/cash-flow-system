@@ -31,6 +31,20 @@ class RequestController extends Controller
         ]);
     }
 
+    public function create()
+    {
+        $requests = Request::with(['department', 'user', 'details'])->get();
+
+        return Inertia::render('Request/Create', [
+            'requests' => $requests,
+            'departments' => Department::all(),
+            'authUser' => [
+                'id' => Auth::id(),
+                'department_id' => Auth::user()->department_id,
+            ],
+        ]);
+    }
+
     public function store(HttpRequest $request): JsonResponse
     {
         try {
@@ -118,4 +132,5 @@ catch (QueryException $e) {
         
         return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
+    
 }

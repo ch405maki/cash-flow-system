@@ -51,7 +51,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Purchase Order',
-        href: '/dashboard',
+        href: '/purchase-orders',
         icon: LayoutGrid,
     },
     {
