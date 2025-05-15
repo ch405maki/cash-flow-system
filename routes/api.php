@@ -18,9 +18,13 @@ Route::get('/user', function (Request $request) {
 
 Route::delete('/users/{id}', [UserController::class, 'destroy']);
 Route::post('/users', [UserController::class, 'store']);
+Route::post('/api/vouchers', [VoucherController::class, 'store']);
 Route::post('/upload-users', [UserController::class, 'uploadUsers']);
 Route::put('/users/{id}', [UserController::class, 'update']);
+Route::put('/vouchers/{voucher}/details', [VoucherController::class, 'updateDetails']);
 Route::patch('/users/{user}/status', [UserController::class, 'updateStatus']);
+Route::get('/vouchers/next-number', [VoucherController::class, 'getNextVoucherNumber']);
+Route::get('/vouchers/{voucher}/edit', [VoucherController::class, 'edit']);
 
 
 Route::apiResource('requests', RequestController::class);

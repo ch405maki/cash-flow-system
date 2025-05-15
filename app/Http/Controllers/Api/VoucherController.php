@@ -17,8 +17,12 @@ class VoucherController extends Controller
 {
     public function index()
     {
-        $vouchers = Voucher::all();
-        return Inertia::render('Vouchers/Index', ['vouchers' => $vouchers]);
+        $vouchers = Voucher::with(['user', 'details'])->get();
+        return Inertia::render('Vouchers/Index', [
+            
+            'vouchers' => $vouchers,
+            'accounts' => Account::all(),
+        ]);
     }
     public function store(Request $request): JsonResponse
     {
@@ -109,6 +113,13 @@ class VoucherController extends Controller
         }
     }
 
+    public function create()
+    {
+        return Inertia::render('Vouchers/Create', [
+            'accounts' => Account::orderBy('account_title')->get()
+        ]);
+    }
+
     protected function generateVoucherNumber(): string
     {
         $prefix = 'V-' . now()->format('Y') . '-';
@@ -119,5 +130,53 @@ class VoucherController extends Controller
             : 1;
         
         return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+    }
+
+    public function getNextVoucherNumber()
+    {
+        return response()->json([
+            'voucher_no' => $this->generateVoucherNumber()
+        ]);
+    }
+
+    public function edit(Voucher $voucher)
+{
+    return Inertia::render('Vouchers/Edit', [
+        'voucher' => $voucher->load('details'),
+        'accounts' => Account::orderBy('account_title')->get()
+    ]);
+}
+
+    public function updateDetails(Voucher $voucher, Request $request)
+    {
+        DB::transaction(function () use ($voucher, $request) {
+            // Process existing details
+            foreach ($request->details as $detail) {
+                if (isset($detail['id'])) {
+                    if ($detail['_destroy']) {
+                        VoucherDetail::find($detail['id'])->delete();
+                    } else {
+                        VoucherDetail::find($detail['id'])->update([
+                            'account_id' => $detail['account_id'],
+                            'amount' => $detail['amount'],
+                            'charging_tag' => $detail['charging_tag'],
+                            'hours' => $detail['hours'],
+                            'rate' => $detail['rate']
+                        ]);
+                    }
+                } else if (!$detail['_destroy']) {
+                    VoucherDetail::create([
+                        'voucher_id' => $voucher->id,
+                        'account_id' => $detail['account_id'],
+                        'amount' => $detail['amount'],
+                        'charging_tag' => $detail['charging_tag'],
+                        'hours' => $detail['hours'],
+                        'rate' => $detail['rate']
+                    ]);
+                }
+            }
+        });
+
+        return redirect()->back()->with('success', 'Voucher details updated');
     }
 }
