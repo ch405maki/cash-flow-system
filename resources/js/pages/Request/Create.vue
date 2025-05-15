@@ -6,21 +6,19 @@ import RequestTable from '@/components/requests/RequestTable.vue';
 import { type BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {
+  {
     title: 'Dashboard',
     href: '/dashboard',
-  },{
+  },
+  {
     title: 'Request',
     href: '/request',
   },
+  {
+    title: 'Create',
+    href: '/request/create',
+  },
 ];
-
-import { router } from '@inertiajs/vue3'
-import { Button } from '@/components/ui/button'
-
-function goToCreate() {
-  router.visit(`/request/create`)
-}
 
 const props = defineProps({
   requests: {
@@ -43,13 +41,8 @@ const props = defineProps({
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
-      <div class="flex justify-between items-center">
-        <h1 class="text-xl font-bold">Requests</h1>
-        <Button variant="default" size="sm" @click="goToCreate()">
-          Create New Request
-        </Button>
-      </div>
-      <RequestTable :requests="requests" />
+        <h2 class="text-xl font-semibold">New Request</h2>
+        <RequestForm :departments="departments" :auth-user="authUser" />
     </div>
   </AppLayout>
 </template>
