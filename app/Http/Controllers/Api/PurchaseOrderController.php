@@ -45,10 +45,11 @@ class PurchaseOrderController extends Controller
             'accounts' => Account::all(['id', 'account_title']),
         ]);
     }
+    
 
-        public function store(Request $request): JsonResponse
-        {
-            DB::beginTransaction();
+    public function store(Request $request): JsonResponse
+    {
+        DB::beginTransaction();
 
             try {
                 $validated = $request->validate([
