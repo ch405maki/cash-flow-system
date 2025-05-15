@@ -9,9 +9,20 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Models\Request as PurchaseRequest;
+use Inertia\Inertia;
 
 class PurchaseOrderController extends Controller
 {
+
+    public function create(PurchaseRequest $request)
+    {
+        // Pass request data to the PO creation page
+        return Inertia::render('PurchaseOrders/Create', [
+            'request' => $request->load(['user', 'department', 'details']),
+        ]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         DB::beginTransaction();

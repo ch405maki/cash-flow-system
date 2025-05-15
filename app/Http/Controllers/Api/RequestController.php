@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Request;
+use App\Models\Department;
 use App\Models\RequestDetail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request as HttpRequest;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\QueryException;
 
@@ -14,12 +16,18 @@ use Inertia\Inertia;
 
 class RequestController extends Controller
 {
+
     public function index()
     {
         $requests = Request::with(['department', 'user', 'details'])->get();
 
         return Inertia::render('Request/Index', [
             'requests' => $requests,
+            'departments' => Department::all(),
+            'authUser' => [
+                'id' => Auth::id(),
+                'department_id' => Auth::user()->department_id,
+            ],
         ]);
     }
 
