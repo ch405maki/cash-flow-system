@@ -62,7 +62,7 @@ function goToPO(id: number) {
           </TableCell>
           <TableCell>{{ po.account.account_title }}</TableCell>
           <TableCell>
-              <Button variant="ghost" size="sm" @click="goToPO(po.id)">
+              <Button variant="outline" size="sm" @click="goToPO(po.id)">
                 View
               </Button>
           </TableCell>

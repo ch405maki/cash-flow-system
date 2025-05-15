@@ -22,7 +22,10 @@ Route::put('/users/{id}', [UserController::class, 'update']);
 Route::patch('/users/{user}/status', [UserController::class, 'updateStatus']);
 
 
-Route::apiResource('requests', RequestController::class);
+// Route::apiResource('requests', RequestController::class);
+Route::post('/requests', [RequestController::class, 'store']);
+
+
 Route::apiResource('departments', DepartmentController::class);
 Route::apiResource('access', AccessController::class);
 

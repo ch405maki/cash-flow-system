@@ -109,9 +109,7 @@ const submitRequest = async () => {
 </script>
 
 <template>
-  <div class="space-y-6 p-6">
-    {{ authUser }}
-    
+  <div>
     <form @submit.prevent="submitRequest" class="space-y-6">
       <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
         <!-- Request Date -->

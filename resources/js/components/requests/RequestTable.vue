@@ -1,52 +1,61 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button';
-import { defineProps } from 'vue';
-import { router } from '@inertiajs/vue3';
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
+import { defineProps } from 'vue'
+import { router } from '@inertiajs/vue3'
 
 const props = defineProps<{
-  requests: Array<any>;
-}>();
+  requests: Array<any>
+}>()
 
 const getFullName = (user: any) =>
-  `${user.first_name} ${user.middle_name} ${user.last_name}`;
+  `${user.first_name} ${user.middle_name} ${user.last_name}`
 
 function goToShowRequest(requestId: number) {
-  router.get(`/request/show/${requestId}`);
+  router.get(`/request/show/${requestId}`)
 }
 
 function goToCreatePO(requestId: number) {
-  router.get(`/purchase-orders/create/${requestId}`);
+  router.get(`/purchase-orders/create/${requestId}`)
 }
 </script>
 
 <template>
   <div class="rounded-lg border">
-    <table class="w-full table-auto text-left text-sm">
-      <thead class="bg-gray-100 dark:bg-gray-800">
-        <tr>
-          <th class="px-4 py-2">Request No</th>
-          <th class="px-4 py-2">Date</th>
-          <th class="px-4 py-2">Purpose</th>
-          <th class="px-4 py-2">Department</th>
-          <th class="px-4 py-2">Requested By</th>
-          <th class="px-4 py-2">Status</th>
-          <th class="px-4 py-2">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="request in requests"
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Request No</TableHead>
+          <TableHead>Date</TableHead>
+          <TableHead>Purpose</TableHead>
+          <TableHead>Department</TableHead>
+          <TableHead>Requested By</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead class="text-right">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+
+      <TableBody>
+        <TableRow
+          v-for="request in props.requests"
           :key="request.id"
-          class="border-t hover:bg-muted/50"
+          class="hover:bg-muted/50"
         >
-          <td class="px-4 py-2 font-medium">{{ request.request_no }}</td>
-          <td class="px-4 py-2">{{ request.request_date }}</td>
-          <td class="px-4 py-2">{{ request.purpose }}</td>
-          <td class="px-4 py-2">{{ request.department?.department_name }}</td>
-          <td class="px-4 py-2">{{ getFullName(request.user) }}</td>
-          <td class="px-4 py-2 capitalize">
+          <TableCell>{{ request.request_no }}</TableCell>
+          <TableCell>{{ request.request_date }}</TableCell>
+          <TableCell>{{ request.purpose }}</TableCell>
+          <TableCell>{{ request.department?.department_name }}</TableCell>
+          <TableCell>{{ getFullName(request.user) }}</TableCell>
+          <TableCell>
             <span
-              class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
+              class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize"
               :class="{
                 'bg-yellow-100 text-yellow-800': request.status === 'pending',
                 'bg-green-100 text-green-800': request.status === 'approved',
@@ -55,8 +64,8 @@ function goToCreatePO(requestId: number) {
             >
               {{ request.status }}
             </span>
-          </td>
-          <td class="px-4 py-2 space-x-2">
+          </TableCell>
+          <TableCell class="text-right space-x-2">
             <Button
               size="sm"
               variant="outline"
@@ -64,15 +73,12 @@ function goToCreatePO(requestId: number) {
             >
               Show
             </Button>
-            <Button
-              size="sm"
-              @click="goToCreatePO(request.id)"
-            >
+            <Button size="sm" @click="goToCreatePO(request.id)">
               Create PO
             </Button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+          </TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
   </div>
 </template>

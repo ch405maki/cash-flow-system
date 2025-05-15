@@ -3,19 +3,19 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Request;
 use App\Models\Department;
 use App\Models\RequestDetail;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderDetail;
 use App\Models\Account;
 use Illuminate\Http\JsonResponse;
+use App\Models\Request;
 use Illuminate\Http\Request as HttpRequest;
-use App\Models\Request as PurchaseRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 use Inertia\Inertia;
 
@@ -118,8 +118,8 @@ class RequestController extends Controller
             'available_request_no' => $this->generateRequestNumber()
         ]
     ], 422);
-}
-catch (QueryException $e) {
+    }
+    catch (QueryException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Database error',
@@ -147,4 +147,32 @@ catch (QueryException $e) {
         return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
     
+    public function edit(request $request) {
+        return Inertia::render('Request/Edit', [
+            'request' => $request->load(['department', 'user', 'details'])
+        ]);
+    }
+
+
+    public function updateStatus(HttpRequest $httpRequest, Request $request)
+    {
+        $validated = $httpRequest->validate([
+            'status' => 'required|in:approved,rejected',
+            'password' => 'required_if:status,approved'
+        ]);
+
+        // Verify password for approval
+        if ($validated['status'] === 'approved') {
+            if (!Hash::check($validated['password'], auth()->user()->password)) {
+                return back()->withErrors([
+                    'password' => 'Invalid password'
+                ]);
+            }
+        }
+
+        // Update status
+        $request->update(['status' => $validated['status']]);
+
+        return back()->with('success', 'Request status updated successfully');
+    }
 }

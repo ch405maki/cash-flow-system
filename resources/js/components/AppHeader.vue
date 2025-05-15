@@ -50,6 +50,11 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
+        title: 'Requests To Order',
+        href: '/request',
+        icon: LayoutGrid,
+    },
+    {
         title: 'Purchase Order',
         href: '/purchase-orders',
         icon: LayoutGrid,
