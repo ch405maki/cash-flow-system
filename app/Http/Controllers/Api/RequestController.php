@@ -6,13 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Request;
 use App\Models\Department;
 use App\Models\RequestDetail;
+use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderDetail;
+use App\Models\Account;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request as HttpRequest;
+use App\Models\Request as PurchaseRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 
 use Inertia\Inertia;
+
 
 class RequestController extends Controller
 {
@@ -28,6 +34,14 @@ class RequestController extends Controller
                 'id' => Auth::id(),
                 'department_id' => Auth::user()->department_id,
             ],
+        ]);
+    }
+
+    public function show(request $request)
+    {
+        return Inertia::render('Request/Show', [
+            'request' => $request->load(['user', 'department', 'details']),
+            'accounts' => Account::all(['id', 'account_title']),
         ]);
     }
 

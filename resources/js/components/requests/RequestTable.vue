@@ -10,9 +10,13 @@ const props = defineProps<{
 const getFullName = (user: any) =>
   `${user.first_name} ${user.middle_name} ${user.last_name}`;
 
-  function goToCreatePO(requestId: number) {
-    router.get(`/purchase-orders/create/${requestId}`);
-  }
+function goToShowRequest(requestId: number) {
+  router.get(`/request/show/${requestId}`);
+}
+
+function goToCreatePO(requestId: number) {
+  router.get(`/purchase-orders/create/${requestId}`);
+}
 </script>
 
 <template>
@@ -56,6 +60,12 @@ const getFullName = (user: any) =>
             <Button
               size="sm"
               variant="outline"
+              @click="goToShowRequest(request.id)"
+            >
+              Show
+            </Button>
+            <Button
+              size="sm"
               @click="goToCreatePO(request.id)"
             >
               Create PO
