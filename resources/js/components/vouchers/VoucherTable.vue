@@ -10,8 +10,8 @@ const props = defineProps<{
 const getFullName = (user: any) =>
   `${user.first_name} ${user.middle_name} ${user.last_name}`;
 
-  function goToEditVoucher(voucherId: number) {
-    router.get(`/vouchers/edit/${voucherId}`);
+  function goToEditVoucher(id: number) {
+    router.get(`/vouchers/${id}/edit`);
   }
 </script>
 
@@ -62,7 +62,7 @@ const getFullName = (user: any) =>
               variant="outline"
               @click="goToEditVoucher(vouchers.id)"
             >
-              Edit Details
+               View Details
             </Button>
           </td>
         </tr>

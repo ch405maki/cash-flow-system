@@ -24,6 +24,7 @@ const props = defineProps({
   vouchers: {
     type: Array,
     default: () => [],
+    required: true,
   },
   authUser: {
     type: Object,

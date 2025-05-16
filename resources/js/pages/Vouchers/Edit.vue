@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, useForm, usePage, router } from '@inertiajs/vue3';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue
-} from '@/components/ui/select';
+} from '@/components/ui/select'
 import {
     Card,
     CardContent,
@@ -18,157 +18,208 @@ import {
     CardFooter,
     CardHeader,
     CardTitle,
-} from '@/components/ui/card';
-import { Plus, Trash2, Save, ArrowLeft } from 'lucide-vue-next';
-import { useToast } from 'vue-toastification';
-import { ref, computed, onMounted } from 'vue';
+} from '@/components/ui/card'
+import { Plus, Trash2 } from 'lucide-vue-next'
+import { useToast } from 'vue-toastification'
+import axios from 'axios'
+import { ref, onMounted } from 'vue'
 import { type BreadcrumbItem } from '@/types';
+import { router } from '@inertiajs/vue3';
 
-const toast = useToast();
 const { props } = usePage();
-const voucher = props.voucher;
+const toast = useToast();
 const accounts = props.accounts || [];
+const voucher = props.voucher; // The voucher being edited
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Vouchers', href: '/vouchers' },
-    { title: `Edit Voucher ${voucher.voucher_no}`, href: '' }
+    { title: `Voucher Details: ${voucher.voucher_no}`, href: `/vouchers/${voucher.id}/edit` },
 ];
 
-// Form for editing voucher details
+// Initialize form with existing voucher data
 const form = useForm({
-    voucher_id: voucher.id,
-    details: voucher.details.map(detail => ({
+    id: voucher.id,
+    issue_date: voucher.issue_date,
+    payment_date: voucher.payment_date,
+    check_date: voucher.check_date,
+    delivery_date: voucher.delivery_date,
+    voucher_date: voucher.voucher_date,
+    purpose: voucher.purpose,
+    payee: voucher.payee,
+    check_no: voucher.check_no,
+    check_payable_to: voucher.check_payable_to,
+    check_amount: voucher.check_amount,
+    status: voucher.status,
+    type: voucher.type,
+    user_id: voucher.user_id,
+    voucher_no: voucher.voucher_no,
+    check: voucher.details.map(detail => ({
         id: detail.id,
-        account_id: detail.account_id,
         amount: detail.amount,
         charging_tag: detail.charging_tag,
         hours: detail.hours,
         rate: detail.rate,
-        _destroy: false // For marking deletions
+        account_id: detail.account_id
     }))
 });
 
-// Calculate total amount
-const totalAmount = computed(() => {
-    return form.details.reduce((sum, item) => {
-        return item._destroy ? sum : sum + parseFloat(item.amount || 0);
-    }, 0);
-});
-
-// Add new detail line
 const addDetailItem = () => {
-    form.details.push({
-        id: null, // Indicates new record
-        account_id: '',
+    form.check.push({
         amount: 0,
         charging_tag: '',
         hours: null,
         rate: null,
-        _destroy: false
+        account_id: ''
     });
 };
 
-// Mark detail for deletion
-const removeDetailItem = (index: number) => {
-    if (form.details[index].id) {
-        // Existing record - mark for deletion
-        form.details[index]._destroy = true;
-    } else {
-        // New record - just remove from array
-        form.details.splice(index, 1);
+const removeDetailItem = (index) => {
+    if (form.check.length > 1) {
+        form.check.splice(index, 1);
+        calculateTotalAmount();
     }
 };
 
-// Calculate amount when hours or rate changes
-const calculateAmountFromRate = (index: number) => {
-    const detail = form.details[index];
+const calculateTotalAmount = () => {
+    form.check_amount = form.check.reduce((sum, item) => {
+        return sum + (parseFloat(item.amount) || 0);
+    }, 0);
+};
+
+const calculateAmountFromRate = (index) => {
+    const detail = form.check[index];
     if (detail.hours && detail.rate) {
         detail.amount = parseFloat(detail.hours) * parseFloat(detail.rate);
+        calculateTotalAmount();
     }
 };
 
-// Submit the form
-const submit = () => {
-    form.put(`/api/vouchers/${voucher.id}/details`, {
-        preserveScroll: true,
-        onSuccess: () => {
-            toast.success('Voucher details updated successfully');
-            router.visit(`/vouchers/${voucher.id}`);
-        },
-        onError: (errors) => {
-            toast.error('Failed to update voucher details');
-            if (errors.details) {
-                toast.warning('Please check all line items for errors');
-            }
-        }
-    });
-};
+async function updateVoucher() {
+    try {
+        const response = await axios.put(`/api/vouchers/${voucher.id}`, form);
 
-// Go back to voucher view
-const goBack = () => {
-    router.visit(`/vouchers/${voucher.id}`);
-};
+        toast.success(response.data.message || 'Voucher updated successfully');
+
+        // Redirect to the vouchers index page
+        router.visit('/vouchers');
+    } catch (error) {
+        if (error.response?.data?.errors) {
+            Object.values(error.response.data.errors).forEach((msg) => {
+                toast.error(msg[0]);
+            });
+        } else {
+            toast.error(error.response?.data?.message || 'Failed to update Voucher');
+        }
+    }
+}
 </script>
 
 <template>
-
-    <Head :title="`Edit Voucher ${voucher.voucher_no}`" />
+    <Head :title="`Voucher Details - ${voucher.voucher_no}`" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <Card class="mt-6 max-w-6xl mx-auto">
             <CardHeader>
-                <div class="flex justify-between items-start">
-                    <div>
-                        <CardTitle>Edit Voucher Details</CardTitle>
-                        <CardDescription>
-                            Voucher #{{ voucher.voucher_no }} - {{ voucher.purpose }}
-                        </CardDescription>
-                    </div>
-                    <Button variant="outline" @click="goBack">
-                        <ArrowLeft class="h-4 w-4 mr-2" />
-                        Back to Voucher
-                    </Button>
-                </div>
+                <CardTitle>Voucher {{ voucher.voucher_no }}</CardTitle>
+                <CardDescription>Update voucher details</CardDescription>
             </CardHeader>
 
             <CardContent>
-                <form @submit.prevent="submit">
-                    <!-- Voucher Summary -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                        <div>
-                            <p class="font-medium">Payee:</p>
-                            <p>{{ voucher.payee }}</p>
+                <form @submit.prevent="updateVoucher">
+                    <!-- Voucher Header Section -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <!-- Column 1 -->
+                        <div class="space-y-4">
+                            <div class="grid gap-2">
+                                <Label for="voucher_no">Voucher Number</Label>
+                                <Input id="voucher_no" v-model="form.voucher_no" disabled />
+                            </div>
+
+                            <div class="grid gap-2">
+                                <Label for="voucher_date">Voucher Date *</Label>
+                                <Input id="voucher_date" type="date" v-model="form.voucher_date" required />
+                            </div>
+
+                            <div class="grid gap-2">
+                                <Label for="payee">Payee *</Label>
+                                <Input id="payee" v-model="form.payee" required />
+                            </div>
                         </div>
-                        <div>
-                            <p class="font-medium">Check Payable To:</p>
-                            <p>{{ voucher.check_payable_to }}</p>
+
+                        <!-- Column 2 -->
+                        <div class="space-y-4">
+                            <div class="grid gap-2">
+                                <Label for="check_no">Check Number *</Label>
+                                <Input id="check_no" v-model="form.check_no"/>
+                            </div>
+
+                            <div class="grid gap-2">
+                                <Label for="check_date">Check Date *</Label>
+                                <Input id="check_date" type="date" v-model="form.check_date" required />
+                            </div>
+
+                            <div class="grid gap-2">
+                                <Label for="check_payable_to">Payable To *</Label>
+                                <Input id="check_payable_to" v-model="form.check_payable_to" required />
+                            </div>
                         </div>
-                        <div>
-                            <p class="font-medium">Total Amount:</p>
-                            <p>{{ totalAmount.toFixed(2) }}</p>
+
+                        <!-- Column 3 -->
+                        <div class="space-y-4">
+                            <div class="grid gap-2">
+                                <Label for="check_amount">Check Amount *</Label>
+                                <Input id="check_amount" type="number" step="0.01" v-model="form.check_amount"
+                                disabled />
+                            </div>
+
+                            <div class="grid gap-2">
+                                <Label for="purpose">Purpose *</Label>
+                                <Input id="purpose" v-model="form.purpose" required />
+                            </div>
+
+                            <div class="grid gap-2">
+                                 <Label for="status">Status *</Label>
+                                    <Select v-model="form.status" required>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="pending">Pending</SelectItem>
+                                        <SelectItem value="paid">Paid</SelectItem>
+                                        <SelectItem value="rejected">Rejected</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
                         </div>
                     </div>
 
                     <!-- Voucher Details Section -->
-                    <div class="border rounded-lg p-4 mb-6">
+                    <div v-if="form.type !== 'salary'" class="border rounded-lg p-4 mb-6">
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-medium">Voucher Line Items</h3>
-                            <Button type="button" variant="outline" size="sm" @click="addDetailItem">
+                            <h3 class="font-medium">Update Accounts</h3>
+                            <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="sm" 
+                                @click="addDetailItem"
+                                :disabled="form.type === 'salary'"
+                            >
                                 <Plus class="h-4 w-4 mr-2" />
-                                Add Item
+                                Add Account
                             </Button>
                         </div>
 
-                        <div v-for="(detail, index) in form.details" :key="index"
+                        <div 
+                            v-for="(detail, index) in form.check" 
+                            :key="index"
                             class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 pb-4 border-b last:border-0"
-                            :class="{ 'opacity-50': detail._destroy }">
-
+                        >
                             <!-- Account Selection -->
                             <div class="grid gap-2">
                                 <Label :for="`account-${index}`">Account *</Label>
-                                <Select :id="`account-${index}`" v-model="detail.account_id" :disabled="detail._destroy"
-                                    required>
+                                <Select v-model="detail.account_id" required :disabled="form.type === 'salary'">
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select account" />
                                     </SelectTrigger>
@@ -183,50 +234,99 @@ const goBack = () => {
                             <!-- Charging Tag -->
                             <div class="grid gap-2">
                                 <Label :for="`tag-${index}`">Charging Tag *</Label>
-                                <Input :id="`tag-${index}`" v-model="detail.charging_tag" :disabled="detail._destroy"
-                                    required />
+                                <Select v-model="detail.charging_tag" :disabled="form.type === 'salary'">
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Choose Charging Tag" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="C">C</SelectItem>
+                                        <SelectItem value="D">D</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             <!-- Hours -->
                             <div class="grid gap-2">
                                 <Label :for="`hours-${index}`">Hours</Label>
-                                <Input :id="`hours-${index}`" type="number" step="0.01" v-model="detail.hours"
-                                    @blur="calculateAmountFromRate(index)" :disabled="detail._destroy"
-                                    placeholder="Optional" />
+                                <Input 
+                                    :id="`hours-${index}`" 
+                                    type="number" 
+                                    step="0.01" 
+                                    v-model="detail.hours"
+                                    @blur="calculateAmountFromRate(index)" 
+                                    placeholder="Optional"
+                                    :disabled="form.type === 'salary'"
+                                />
                             </div>
 
                             <!-- Rate -->
                             <div class="grid gap-2">
                                 <Label :for="`rate-${index}`">Rate</Label>
-                                <Input :id="`rate-${index}`" type="number" step="0.01" v-model="detail.rate"
-                                    @blur="calculateAmountFromRate(index)" :disabled="detail._destroy"
-                                    placeholder="Optional" />
+                                <Input 
+                                    :id="`rate-${index}`" 
+                                    type="number" 
+                                    step="0.01" 
+                                    v-model="detail.rate"
+                                    @blur="calculateAmountFromRate(index)" 
+                                    placeholder="Optional"
+                                    :disabled="form.type === 'salary'"
+                                />
                             </div>
 
-                            <!-- Amount & Actions -->
+                            <!-- Amount -->
                             <div class="grid gap-2">
                                 <Label :for="`amount-${index}`">Amount *</Label>
                                 <div class="flex gap-2">
-                                    <Input :id="`amount-${index}`" type="number" step="0.01" v-model="detail.amount"
-                                        :disabled="detail._destroy" required class="flex-1" />
-                                    <Button type="button" variant="destructive" size="icon"
-                                        @click="removeDetailItem(index)">
+                                    <Input 
+                                        :id="`amount-${index}`" 
+                                        type="number" 
+                                        step="0.01" 
+                                        v-model="detail.amount"
+                                        @change="calculateTotalAmount" 
+                                        required 
+                                        class="flex-1"
+                                        :disabled="form.type === 'salary'"
+                                    />
+                                    <Button 
+                                        type="button" 
+                                        variant="destructive" 
+                                        size="icon"
+                                        @click="removeDetailItem(index)" 
+                                        :disabled="form.check.length <= 1 || form.type === 'salary'"
+                                    >
                                         <Trash2 class="h-4 w-4" />
                                     </Button>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Dates Section -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div class="grid gap-2">
+                            <Label for="issue_date">Issue Date *</Label>
+                            <Input id="issue_date" type="date" v-model="form.issue_date" required />
+                        </div>
+
+                        <div class="grid gap-2">
+                            <Label for="payment_date">Payment Date *</Label>
+                            <Input id="payment_date" type="date" v-model="form.payment_date" required />
+                        </div>
+
+                        <div class="grid gap-2">
+                            <Label for="delivery_date">Delivery Date *</Label>
+                            <Input id="delivery_date" type="date" v-model="form.delivery_date" required />
+                        </div>
+                    </div>
 
                     <!-- Form Actions -->
                     <CardFooter class="flex justify-end gap-4 px-0 pb-0">
-                        <Button variant="outline" type="button" @click="goBack">
+                        <Button variant="outline" type="button" @click="router.visit('/vouchers')">
                             Cancel
                         </Button>
                         <Button type="submit" :disabled="form.processing">
-                            <Save class="h-4 w-4 mr-2" />
-                            <span v-if="form.processing">Saving...</span>
-                            <span v-else>Save Changes</span>
+                            <span v-if="form.processing">Updating...</span>
+                            <span v-else>Update Voucher</span>
                         </Button>
                     </CardFooter>
                 </form>

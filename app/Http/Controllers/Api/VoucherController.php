@@ -15,102 +15,35 @@ use Inertia\Inertia;
 
 class VoucherController extends Controller
 {
+    // Validation rules shared between store and update
+    protected array $voucherValidationRules = [
+        'issue_date' => 'required|date',
+        'payment_date' => 'required|date',
+        'check_date' => 'required|date',
+        'delivery_date' => 'required|date',
+        'voucher_date' => 'required|date',
+        'purpose' => 'required|string|max:500',
+        'payee' => 'required|string|max:255',
+        'check_no' => 'nullable|string|max:500',
+        'check_payable_to' => 'required|string|max:500',
+        'check_amount' => 'required|numeric|min:0',
+        'status' => 'required|in:pending,paid,rejected',
+        'type' => 'required|in:cash,salary',
+        'user_id' => 'required|exists:users,id',
+        'check' => 'nullable|array',
+        'check.*.amount' => 'nullable|numeric|min:0',
+        'check.*.rate' => 'nullable|numeric|min:0',
+        'check.*.hours' => 'nullable|numeric|min:0|max:24',
+        'check.*.charging_tag' => 'nullable|in:C,D',
+        'check.*.account_id' => 'required_with:check.*|exists:accounts,id',
+    ];
+
     public function index()
     {
-        $vouchers = Voucher::with(['user', 'details'])->get();
         return Inertia::render('Vouchers/Index', [
-            
-            'vouchers' => $vouchers,
+            'vouchers' => Voucher::with(['user', 'details'])->get(),
             'accounts' => Account::all(),
         ]);
-    }
-    public function store(Request $request): JsonResponse
-    {
-        DB::beginTransaction();
-
-        try {
-            $validated = $request->validate([
-                'issue_date' => 'required|date',
-                'payment_date' => 'required|date',
-                'check_date' => 'required|date',
-                'delivery_date' => 'required|date',
-                'voucher_date' => 'required|date',
-                'purpose' => 'required|string|max:500',
-                'payee' => 'required|string|max:255',
-                'check_no' => 'required|string|max:500',
-                'check_payable_to' => 'required|string|max:500',
-                'check_amount' => 'required|numeric|min:0',
-                'status' => 'required|in:pending,paid,rejected',
-                'type' => 'required|in:payment',
-                'user_id' => 'required|exists:users,id',
-                'check' => 'required|array|min:1',
-                'check.*.amount' => 'required|numeric|min:0',
-                'check.*.rate' => 'nullable|numeric|min:0',
-                'check.*.hours' => 'nullable|numeric|min:0|max:24',
-                'check.*.charging_tag' => 'required|string|max:20',
-                'check.*.account_id' => 'required|exists:accounts,id',
-            ]);
-
-            // Validate check amount equals sum of item amounts
-            $sumAmount = collect($validated['check'])->sum('amount');
-            if (abs($sumAmount - $validated['check_amount']) > 0.01) {
-                throw ValidationException::withMessages([
-                    'check_amount' => 'Check amount must equal the sum of all item amounts'
-                ]);
-            }
-
-            // Auto-generate voucher number
-            $validated['voucher_no'] = $this->generateVoucherNumber();
-
-            // Create the voucher
-            $voucher = Voucher::create(collect($validated)->except('check')->toArray());
-
-            // Create voucher details
-            foreach ($validated['check'] as $check) {
-                VoucherDetail::create([
-                    'voucher_id' => $voucher->id,
-                    'account_id' => $check['account_id'],
-                    'amount' => $check['amount'],
-                    'rate' => $check['rate'] ?? null,
-                    'hours' => $check['hours'] ?? null,
-                    'charging_tag' => $check['charging_tag']
-                ]);
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Voucher created successfully',
-                'data' => $voucher->load(['user', 'details']),
-                'meta' => [
-                    'created_at' => now()->toDateTimeString(),
-                    'items_count' => count($validated['check'])
-                ]
-            ], 201);
-
-        } catch (ValidationException $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (QueryException $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Database error',
-                'error' => config('app.debug') ? $e->getMessage() : null
-            ], 500);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Server error',
-                'error' => config('app.debug') ? $e->getMessage() : null
-            ], 500);
-        }
     }
 
     public function create()
@@ -118,6 +51,67 @@ class VoucherController extends Controller
         return Inertia::render('Vouchers/Create', [
             'accounts' => Account::orderBy('account_title')->get()
         ]);
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        return DB::transaction(function () use ($request) {
+            $validated = $this->validateRequest($request);
+            
+            $this->handleCashVoucherDetails($validated);
+            $voucher = $this->createVoucher($validated);
+            
+            return $this->successResponse(
+                'Voucher created successfully',
+                $voucher->load(['user', 'details']),
+                201,
+                ['items_count' => $validated['type'] === 'cash' ? count($validated['check'] ?? []) : 0]
+            );
+        });
+    }
+
+    public function edit(Voucher $voucher)
+    {
+        return Inertia::render('Vouchers/Edit', [
+            'voucher' => $voucher->load('details.account'),
+            'accounts' => Account::orderBy('account_title')->get()
+        ]);
+    }
+
+    public function update(Request $request, Voucher $voucher): JsonResponse
+    {
+        return DB::transaction(function () use ($request, $voucher) {
+            $validated = $this->validateRequest($request);
+            
+            $this->validateCashVoucherAmount($validated);
+            $this->updateVoucher($voucher, $validated);
+            $this->syncVoucherDetails($voucher, $validated);
+            
+            return $this->successResponse(
+                'Voucher updated successfully',
+                $voucher->fresh(['user', 'details']),
+                200,
+                ['items_count' => $validated['type'] === 'cash' ? count($validated['check'] ?? []) : 0]
+            );
+        });
+    }
+
+    public function show(Voucher $voucher): JsonResponse
+    {
+        return $this->successResponse(
+            'Voucher retrieved successfully',
+            $voucher->load(['user', 'details.account']),
+            200,
+            ['accounts' => Account::all()]
+        );
+    }
+
+    public function getNextVoucherNumber(): JsonResponse
+    {
+        return $this->successResponse(
+            'Next voucher number generated',
+            ['voucher_no' => $this->generateVoucherNumber()]
+        );
     }
 
     protected function generateVoucherNumber(): string
@@ -132,51 +126,173 @@ class VoucherController extends Controller
         return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 
-    public function getNextVoucherNumber()
+    /**
+     * Validate the request data
+     */
+    protected function validateRequest(Request $request): array
     {
-        return response()->json([
-            'voucher_no' => $this->generateVoucherNumber()
-        ]);
+        return $request->validate($this->voucherValidationRules);
     }
 
-    public function edit(Voucher $voucher)
-{
-    return Inertia::render('Vouchers/Edit', [
-        'voucher' => $voucher->load('details'),
-        'accounts' => Account::orderBy('account_title')->get()
-    ]);
-}
-
-    public function updateDetails(Voucher $voucher, Request $request)
+    /**
+     * Handle cash voucher details (amount distribution)
+     */
+    protected function handleCashVoucherDetails(array &$validated): void
     {
-        DB::transaction(function () use ($voucher, $request) {
-            // Process existing details
-            foreach ($request->details as $detail) {
-                if (isset($detail['id'])) {
-                    if ($detail['_destroy']) {
-                        VoucherDetail::find($detail['id'])->delete();
-                    } else {
-                        VoucherDetail::find($detail['id'])->update([
-                            'account_id' => $detail['account_id'],
-                            'amount' => $detail['amount'],
-                            'charging_tag' => $detail['charging_tag'],
-                            'hours' => $detail['hours'],
-                            'rate' => $detail['rate']
-                        ]);
-                    }
-                } else if (!$detail['_destroy']) {
+        if ($validated['type'] !== 'cash' || empty($validated['check'])) {
+            return;
+        }
+
+        $checkCollection = collect($validated['check']);
+        
+        // Distribute amount evenly if any amount is null
+        if ($checkCollection->contains(fn ($item) => is_null($item['amount']))) {
+            $evenAmount = round($validated['check_amount'] / $checkCollection->count(), 2);
+            $validated['check'] = $checkCollection->map(fn ($item) => [
+                ...$item,
+                'amount' => $item['amount'] ?? $evenAmount
+            ])->toArray();
+        }
+
+        // Validate total amount matches
+        $sumAmount = collect($validated['check'])->sum('amount');
+        if (abs($sumAmount - $validated['check_amount']) > 0.01) {
+            throw ValidationException::withMessages([
+                'check_amount' => 'Sum of item amounts does not match check amount'
+            ]);
+        }
+    }
+
+    /**
+     * Create a new voucher with details
+     */
+    protected function createVoucher(array $validated): Voucher
+    {
+        $voucher = Voucher::create([
+            ...collect($validated)->except('check')->toArray(),
+            'voucher_no' => $this->generateVoucherNumber()
+        ]);
+
+        if ($validated['type'] === 'cash' && !empty($validated['check'])) {
+            $this->createVoucherDetails($voucher, $validated['check']);
+        }
+
+        return $voucher;
+    }
+
+    /**
+     * Update an existing voucher
+     */
+    protected function updateVoucher(Voucher $voucher, array $validated): void
+    {
+        $voucher->update(collect($validated)->except('check')->toArray());
+    }
+
+    /**
+     * Sync voucher details (create/update/delete as needed)
+     */
+    protected function syncVoucherDetails(Voucher $voucher, array $validated): void
+    {
+        $existingDetailIds = $voucher->details->pluck('id')->toArray();
+        $updatedDetailIds = [];
+
+        if ($validated['type'] === 'cash' && !empty($validated['check'])) {
+            foreach ($validated['check'] as $check) {
+                if (isset($check['id']) && in_array($check['id'], $existingDetailIds)) {
+                    VoucherDetail::where('id', $check['id'])->update($this->mapDetailAttributes($check));
+                    $updatedDetailIds[] = $check['id'];
+                } else {
                     VoucherDetail::create([
                         'voucher_id' => $voucher->id,
-                        'account_id' => $detail['account_id'],
-                        'amount' => $detail['amount'],
-                        'charging_tag' => $detail['charging_tag'],
-                        'hours' => $detail['hours'],
-                        'rate' => $detail['rate']
+                        ...$this->mapDetailAttributes($check)
                     ]);
                 }
             }
-        });
+        }
 
-        return redirect()->back()->with('success', 'Voucher details updated');
+        // Delete removed details (for cash) or all details (for salary)
+        $detailsToDelete = $validated['type'] === 'cash'
+            ? array_diff($existingDetailIds, $updatedDetailIds)
+            : $existingDetailIds;
+
+        if (!empty($detailsToDelete)) {
+            VoucherDetail::whereIn('id', $detailsToDelete)->delete();
+        }
+    }
+
+    /**
+     * Create multiple voucher details
+     */
+    protected function createVoucherDetails(Voucher $voucher, array $details): void
+    {
+        $voucher->details()->createMany(
+            array_map(fn ($detail) => $this->mapDetailAttributes($detail), $details)
+        );
+    }
+
+    /**
+     * Map detail attributes for consistent structure
+     */
+    protected function mapDetailAttributes(array $detail): array
+    {
+        return [
+            'account_id' => $detail['account_id'],
+            'amount' => $detail['amount'],
+            'rate' => $detail['rate'] ?? null,
+            'hours' => $detail['hours'] ?? null,
+            'charging_tag' => $detail['charging_tag'] ?? null
+        ];
+    }
+
+    /**
+     * Validate cash voucher amount matches sum of details
+     */
+    protected function validateCashVoucherAmount(array $validated): void
+    {
+        if ($validated['type'] === 'cash' && !empty($validated['check'])) {
+            $sumAmount = collect($validated['check'])->sum('amount');
+            if (abs($sumAmount - $validated['check_amount']) > 0.01) {
+                throw ValidationException::withMessages([
+                    'check_amount' => 'For cash vouchers, check amount must equal the sum of all item amounts'
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Standard success response format
+     */
+    protected function successResponse(
+        string $message,
+        mixed $data = null,
+        int $status = 200,
+        array $meta = []
+    ): JsonResponse {
+        $response = [
+            'success' => true,
+            'message' => $message,
+            'data' => $data,
+        ];
+
+        if (!empty($meta)) {
+            $response['meta'] = $meta;
+        }
+
+        return response()->json($response, $status);
+    }
+
+    /**
+     * Standard error response format
+     */
+    protected function errorResponse(
+        string $message,
+        mixed $errors = null,
+        int $status = 500
+    ): JsonResponse {
+        return response()->json([
+            'success' => false,
+            'message' => $message,
+            'errors' => $errors,
+        ], $status);
     }
 }

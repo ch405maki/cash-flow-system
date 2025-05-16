@@ -22,7 +22,7 @@ import {
 import { Plus, Trash2 } from 'lucide-vue-next'
 import { useToast } from 'vue-toastification'
 import axios from 'axios'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted} from 'vue'
 import { type BreadcrumbItem } from '@/types';
 import { router } from '@inertiajs/vue3';
 
@@ -60,17 +60,17 @@ const form = useForm({
     voucher_date: '',
     purpose: '',
     payee: '',
-    check_no: '',
+    check_no: null,
     check_payable_to: '',
-    check_amount: 0,
+    check_amount: null,
     status: 'pending',
-    type: 'payment',
+    type: '',
     user_id: props.auth.user.id,
     voucher_no: voucherNo.value,
     check: [
         {
             amount: 0,
-            charging_tag: '',
+            charging_tag: null,
             hours: null,
             rate: null,
             account_id: ''
@@ -78,10 +78,12 @@ const form = useForm({
     ]
 });
 
+
+
 const addDetailItem = () => {
     form.check.push({
         amount: 0,
-        charging_tag: '',
+        charging_tag: null,
         hours: null,
         rate: null,
         account_id: ''
@@ -109,26 +111,19 @@ const calculateAmountFromRate = (index) => {
     }
 };
 
-
-const generateVoucherNumber = (): string => {
-    const prefix = 'V-' + new Date().getFullYear() + '-';
-    const lastVoucher = '';
-    const sequence = lastVoucher
-        ? parseInt(lastVoucher.replace(prefix, '')) + 1
-        : 1;
-    return prefix + sequence.toString().padStart(4, '0');
-};
-
 async function submitVoucher() {
     try {
-        const response = await axios.post('/api/vouchers', {
+        // Prepare payload based on voucher type
+        const payload = {
             ...form,
-            voucher_no: form.voucher_no
-        });
+            voucher_no: form.voucher_no,
+            // For Salary vouchers, don't send check details
+            check: form.type === 'salary' ? [] : form.check
+        };
+
+        const response = await axios.post('/api/vouchers', payload);
 
         toast.success(response.data.message || 'Voucher created successfully');
-
-        // Redirect to the vouchers index page
         router.visit('/vouchers');
     } catch (error) {
         if (error.response?.data?.errors) {
@@ -143,7 +138,6 @@ async function submitVoucher() {
 </script>
 
 <template>
-
     <Head title="Create Voucher" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
@@ -159,10 +153,7 @@ async function submitVoucher() {
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                         <!-- Column 1 -->
                         <div class="space-y-4">
-                            <div class="grid gap-2">
-                                <Label for="voucher_no">Voucher Number</Label>
-                                <Input id="voucher_no" :value="voucherNo" disabled />
-                            </div>
+                            
 
                             <div class="grid gap-2">
                                 <Label for="voucher_date">Voucher Date *</Label>
@@ -170,6 +161,19 @@ async function submitVoucher() {
                             </div>
 
                             <div class="grid gap-2">
+                                <Label for="voucher_type">Voucher Type *</Label>
+                                <Select v-model="form.type" required>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select Voucher Type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="salary">Salary</SelectItem>
+                                        <SelectItem value="cash">Cash</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                             <div class="grid gap-2">
                                 <Label for="payee">Payee *</Label>
                                 <Input id="payee" v-model="form.payee" required />
                             </div>
@@ -178,19 +182,21 @@ async function submitVoucher() {
                         <!-- Column 2 -->
                         <div class="space-y-4">
                             <div class="grid gap-2">
-                                <Label for="check_no">Check Number *</Label>
-                                <Input id="check_no" v-model="form.check_no" required />
+                                <Label for="check_no">Check No</Label>
+                                <Input id="check_no" v-model="form.check_no" />
                             </div>
 
                             <div class="grid gap-2">
                                 <Label for="check_date">Check Date *</Label>
                                 <Input id="check_date" type="date" v-model="form.check_date" required />
                             </div>
-
+                            
                             <div class="grid gap-2">
                                 <Label for="check_payable_to">Payable To *</Label>
-                                <Input id="check_payable_to" v-model="form.check_payable_to" required />
+                                <Input id="check_payable_to" v-model="form.check_payable_to" 
+                                     required />
                             </div>
+                           
                         </div>
 
                         <!-- Column 3 -->
@@ -198,20 +204,21 @@ async function submitVoucher() {
                             <div class="grid gap-2">
                                 <Label for="check_amount">Check Amount *</Label>
                                 <Input id="check_amount" type="number" step="0.01" v-model="form.check_amount"
-                                    disabled />
+                                 />
                             </div>
 
                             <div class="grid gap-2">
                                 <Label for="purpose">Purpose *</Label>
                                 <Input id="purpose" v-model="form.purpose" required />
                             </div>
+
                         </div>
                     </div>
 
-                    <!-- Voucher Details Section -->
-                    <div class="border rounded-lg p-4 mb-6">
+                    <!-- Voucher Details Section (Only shown for Non-Salary Vouchers) -->
+                    <div v-if="form.type === 'cash'" class="border rounded-lg p-4 mb-6">
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-medium">Voucher Details</h3>
+                            <h3 class="font-medium">Add/Remove Accounts</h3>
                             <Button type="button" variant="outline" size="sm" @click="addDetailItem">
                                 <Plus class="h-4 w-4 mr-2" />
                                 Add Item
@@ -223,7 +230,7 @@ async function submitVoucher() {
                             <!-- Account Selection -->
                             <div class="grid gap-2">
                                 <Label :for="`account-${index}`">Account *</Label>
-                                <Select v-model="detail.account_id" required>
+                                <Select v-model="detail.account_id">
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select account" />
                                     </SelectTrigger>
@@ -238,7 +245,15 @@ async function submitVoucher() {
                             <!-- Charging Tag -->
                             <div class="grid gap-2">
                                 <Label :for="`tag-${index}`">Charging Tag *</Label>
-                                <Input :id="`tag-${index}`" v-model="detail.charging_tag" required />
+                                <Select v-model="detail.charging_tag" >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select Charging tag" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="C">C</SelectItem>
+                                        <SelectItem value="D">D</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             <!-- Hours -->

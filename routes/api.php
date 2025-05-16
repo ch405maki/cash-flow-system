@@ -22,10 +22,10 @@ Route::post('/api/vouchers', [VoucherController::class, 'store']);
 Route::post('/upload-users', [UserController::class, 'uploadUsers']);
 Route::put('/users/{id}', [UserController::class, 'update']);
 Route::put('/vouchers/{voucher}/details', [VoucherController::class, 'updateDetails']);
+Route::put('/vouchers/{voucher}', [VoucherController::class, 'update']);
 Route::patch('/users/{user}/status', [UserController::class, 'updateStatus']);
 Route::get('/vouchers/next-number', [VoucherController::class, 'getNextVoucherNumber']);
-Route::get('/vouchers/{voucher}/edit', [VoucherController::class, 'edit']);
-
+Route::get('/vouchers/{voucher}', [VoucherController::class, 'show']);
 
 // Route::apiResource('requests', RequestController::class);
 Route::post('/requests', [RequestController::class, 'store']);
