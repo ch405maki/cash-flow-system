@@ -23,6 +23,7 @@ Route::patch('/users/{user}/status', [UserController::class, 'updateStatus']);
 
 // Route::apiResource('requests', RequestController::class);
 Route::post('/requests', [RequestController::class, 'store']);
+Route::put('/requests/{request}/items', [RequestController::class, 'updateItems']);
 
 
 Route::apiResource('departments', DepartmentController::class);

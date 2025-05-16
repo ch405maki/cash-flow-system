@@ -147,10 +147,77 @@ class RequestController extends Controller
         return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
     
-    public function edit(request $request) {
+    public function edit(Request $request)
+    {
         return Inertia::render('Request/Edit', [
-            'request' => $request->load(['department', 'user', 'details'])
+            'request' => $request->load(['details', 'department']),
+            'departments' => Department::all(),
         ]);
+    }
+
+
+    public function updateItems(HttpRequest $httpRequest, Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            \Log::debug('Incoming update items request:', $httpRequest->all());
+
+            $validated = $httpRequest->validate([
+                'details' => 'required|array|min:1',
+                'details.*.quantity' => 'required|numeric|min:1',
+                'details.*.unit' => 'required|string|max:20',
+                'details.*.item_description' => 'required|string|max:255',
+            ]);
+
+            \Log::debug('Validated data:', $validated);
+
+            // Delete existing details
+            $deletedCount = $request->details()->delete();
+            \Log::debug("Deleted {$deletedCount} existing items");
+
+            // Create new details
+            $createdItems = [];
+            foreach ($validated['details'] as $detail) {
+                $createdItem = $request->details()->create([
+                    'request_id' => $request->id,
+                    'quantity' => $detail['quantity'],
+                    'unit' => $detail['unit'],
+                    'item_description' => $detail['item_description']
+                ]);
+                $createdItems[] = $createdItem->id;
+            }
+
+            \Log::debug('Created items with IDs:', $createdItems);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Request items updated successfully',
+                'data' => $request->fresh()->load('details'),
+                'meta' => [
+                    'deleted_count' => $deletedCount,
+                    'created_count' => count($createdItems)
+                ]
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            \Log::error('Validation failed:', $e->errors());
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Update failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update items',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
     }
 
 
