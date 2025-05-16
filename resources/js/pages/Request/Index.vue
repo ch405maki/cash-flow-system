@@ -4,6 +4,8 @@ import { Head } from '@inertiajs/vue3';
 import RequestForm from '@/components/requests/RequestForm.vue';
 import RequestTable from '@/components/requests/RequestTable.vue';
 import { type BreadcrumbItem } from '@/types';
+import { router } from '@inertiajs/vue3'
+import { Button } from '@/components/ui/button'
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -15,8 +17,6 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
 ];
 
-import { router } from '@inertiajs/vue3'
-import { Button } from '@/components/ui/button'
 
 function goToCreate() {
   router.visit(`/request/create`)

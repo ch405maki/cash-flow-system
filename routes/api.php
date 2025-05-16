@@ -27,7 +27,10 @@ Route::get('/vouchers/next-number', [VoucherController::class, 'getNextVoucherNu
 Route::get('/vouchers/{voucher}/edit', [VoucherController::class, 'edit']);
 
 
-Route::apiResource('requests', RequestController::class);
+// Route::apiResource('requests', RequestController::class);
+Route::post('/requests', [RequestController::class, 'store']);
+
+
 Route::apiResource('departments', DepartmentController::class);
 Route::apiResource('access', AccessController::class);
 Route::apiResource('vouchers', VoucherController::class);
