@@ -263,7 +263,7 @@ class RequestController extends Controller
 
         $release = Release::create([
             'request_id' => $request->id,
-            'user_id' => auth()->id() ?? 1, // Fallback for testing
+            'user_id' => auth()->id() ?? 1,
             'release_date' => now(),
             'notes' => $validated['notes'] ?? null
         ]);
@@ -274,28 +274,30 @@ class RequestController extends Controller
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            $available = (int)$requestDetail->quantity - (int)$requestDetail->released_quantity;
-            
-            if ($item['quantity'] > $available) {
+            // Check if requested quantity is available
+            if ($item['quantity'] > $requestDetail->quantity) {
                 throw ValidationException::withMessages([
                     'quantity' => [
-                        "Cannot release {$item['quantity']} items. Only {$available} available."
+                        "Cannot release {$item['quantity']} items. Only {$requestDetail->quantity} available."
                     ]
                 ]);
             }
 
+            // Create release record
             ReleaseDetail::create([
                 'release_id' => $release->id,
                 'request_detail_id' => $item['request_detail_id'],
                 'quantity' => $item['quantity']
             ]);
 
+            // Subtract the released quantity directly from the main quantity
+            $requestDetail->decrement('quantity', $item['quantity']);
             $requestDetail->increment('released_quantity', $item['quantity']);
         }
 
-        // Update request status
+        // Update request status based on remaining quantities
         $fullyReleased = !RequestDetail::where('request_id', $request->id)
-            ->whereRaw('quantity > released_quantity')
+            ->where('quantity', '>', 0)
             ->exists();
 
         $request->update(['status' => $fullyReleased ? 'fully_released' : 'partially_released']);
