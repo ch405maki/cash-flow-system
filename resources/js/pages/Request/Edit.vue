@@ -312,20 +312,20 @@ const toggleSelectAll = (checked: boolean) => {
                         <Label :for="`select-${index}`" class="text-sm">Release</Label>
                       </div>
                     </TableCell>
-                    <TableCell>
-  <Input
-    :id="'released-' + index"
-    type="number"
-    v-model.number="detail.released_quantity"
-    :max="detail.quantity - detail.released_quantity"
-    min="0"
-    :disabled="!selectedItems.includes(detail.id)"
-  />
-  <p class="text-xs text-muted-foreground mt-1">
-    Available: {{ detail.quantity - detail.released_quantity }} / {{ detail.quantity }}
-  </p>
-</TableCell>
 
+                    <TableCell>
+                      <Input
+                        :id="'released-' + index"
+                        type="number"
+                        v-model.number="detail.released_quantity"
+                        :max="detail.quantity - detail.released_quantity"
+                        min="0"
+                        :disabled="!selectedItems.includes(detail.id)"
+                      />
+                      <p class="text-xs text-muted-foreground mt-1">
+                        Available: {{ detail.quantity - detail.released_quantity }} / {{ detail.quantity }}
+                      </p>
+                    </TableCell>
 
                     <TableCell>
                       <Input

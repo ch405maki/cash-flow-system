@@ -57,6 +57,7 @@ function goToCreatePO(requestId: number) {
             <span
               class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize"
               :class="{
+                'bg-blue-100 text-blue-800': request.status === 'partially_released',
                 'bg-yellow-100 text-yellow-800': request.status === 'pending',
                 'bg-green-100 text-green-800': request.status === 'approved',
                 'bg-red-100 text-red-800': request.status === 'rejected',
