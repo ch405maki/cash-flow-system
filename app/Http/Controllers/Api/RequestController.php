@@ -18,6 +18,8 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+
 
 use Inertia\Inertia;
 
@@ -251,24 +253,34 @@ class RequestController extends Controller
     try {
         $validated = $httpRequest->validate([
             'items' => 'required|array|min:1',
-            'items.*.request_detail_id' => 'required|exists:request_details,id',
+            'items.*.request_detail_id' => [
+                'required',
+                Rule::exists('request_details', 'id')->where('request_id', $request->id)
+            ],
             'items.*.quantity' => 'required|integer|min:1',
+            'notes' => 'nullable|string'
         ]);
 
-        // Create the release record
         $release = Release::create([
             'request_id' => $request->id,
-            'user_id' => 1,
-            'notes' => $httpRequest->input('notes', null)
+            'user_id' => auth()->id() ?? 1, // Fallback for testing
+            'release_date' => now(),
+            'notes' => $validated['notes'] ?? null
         ]);
 
-        // Create release details
         foreach ($validated['items'] as $item) {
-            // Verify quantity doesn't exceed available
-            $requestDetail = RequestDetail::find($item['request_detail_id']);
-            if ($item['quantity'] > $requestDetail->quantity - $requestDetail->released_quantity) {
+            $requestDetail = RequestDetail::where('id', $item['request_detail_id'])
+                ->where('request_id', $request->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $available = (int)$requestDetail->quantity - (int)$requestDetail->released_quantity;
+            
+            if ($item['quantity'] > $available) {
                 throw ValidationException::withMessages([
-                    'quantity' => ['Release quantity cannot exceed available quantity']
+                    'quantity' => [
+                        "Cannot release {$item['quantity']} items. Only {$available} available."
+                    ]
                 ]);
             }
 
@@ -278,16 +290,25 @@ class RequestController extends Controller
                 'quantity' => $item['quantity']
             ]);
 
-            // Update released quantity in request detail
             $requestDetail->increment('released_quantity', $item['quantity']);
         }
+
+        // Update request status
+        $fullyReleased = !RequestDetail::where('request_id', $request->id)
+            ->whereRaw('quantity > released_quantity')
+            ->exists();
+
+        $request->update(['status' => $fullyReleased ? 'fully_released' : 'partially_released']);
 
         DB::commit();
 
         return response()->json([
             'success' => true,
             'message' => 'Items released successfully',
-            'data' => $release->load('details')
+            'data' => [
+                'release' => $release->load('details'),
+                'request' => $request->load('details')
+            ]
         ]);
 
     } catch (ValidationException $e) {
@@ -299,10 +320,11 @@ class RequestController extends Controller
         ], 422);
     } catch (\Exception $e) {
         DB::rollBack();
+        \Log::error('Release failed: ' . $e->getMessage());
         return response()->json([
             'success' => false,
             'message' => 'Release failed',
-            'error' => config('app.debug') ? $e->getMessage() : null
+            'error' => $e->getMessage()
         ], 500);
     }
 }

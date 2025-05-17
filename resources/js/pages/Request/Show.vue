@@ -136,7 +136,7 @@
                 variant="secondary" 
                 size="sm"
                 @click="navigateToEdit"
-                :disabled="request.status !== 'pending'"
+                :disabled="request.status == 'rejected'"
                 >
                 Edit
             </Button>

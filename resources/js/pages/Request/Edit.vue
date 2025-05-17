@@ -126,6 +126,31 @@ const releaseItems = async () => {
     return;
   }
 
+  // Validate quantities before submitting
+  const invalidItems = form.value.details
+    .filter(detail => selectedItems.value.includes(detail.id))
+    .filter(item => {
+      const available = item.quantity - (item.released_quantity || 0);
+      if (isNaN(available) || available < 0) {
+        console.error('Invalid quantity calculation', {
+          quantity: item.quantity,
+          released: item.released_quantity,
+          available
+        });
+      }
+      return item.released_quantity <= 0 || item.released_quantity > available;
+    });
+
+  if (invalidItems.length > 0) {
+    const itemNames = invalidItems.map(i => i.item_description).join(', ');
+    toast({
+      title: 'Invalid quantities',
+      description: `Release quantities must be greater than 0 and not exceed available quantity for: ${itemNames}`,
+      variant: 'destructive'
+    });
+    return;
+  }
+
   isReleasing.value = true;
   
   try {
@@ -133,43 +158,45 @@ const releaseItems = async () => {
       .filter(detail => selectedItems.value.includes(detail.id))
       .map(item => ({
         request_detail_id: item.id,
-        quantity: item.released_quantity
+        quantity: Number(item.released_quantity) // Ensure number type
       }));
 
-    console.log('Releasing items:', itemsToRelease);
-    
     const response = await axios.post(`/api/requests/${props.request.id}/release`, {
-      items: itemsToRelease
+      items: itemsToRelease,
+      notes: 'Items released from request'
     });
 
-    console.log('Release response:', response.data);
-    
+    // Update local state
+    form.value.details = form.value.details.map(detail => {
+      const updated = response.data.data.request.details.find(d => d.id === detail.id);
+      return updated ? {
+        ...detail,
+        released_quantity: Number(updated.released_quantity) // Ensure number type
+      } : detail;
+    });
+
     toast({
       title: 'Success',
       description: 'Items released successfully',
     });
 
-    // Reset selection after release
     selectedItems.value = [];
     
   } catch (error) {
-    console.error('Release error:', error.response ? error.response.data : error.message);
+    console.error('Release error:', error);
+    let errorMessage = 'Failed to release items';
     
-    if (error.response?.data?.errors) {
-      toast({
-        title: 'Release Error',
-        description: Object.entries(error.response.data.errors)
-          .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-          .join('\n'),
-        variant: 'destructive',
-      });
-    } else {
-      toast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to release items',
-        variant: 'destructive',
-      });
+    if (error.response?.data?.errors?.quantity) {
+      errorMessage = error.response.data.errors.quantity.join(', ');
+    } else if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
     }
+
+    toast({
+      title: 'Error',
+      description: errorMessage,
+      variant: 'destructive',
+    });
   } finally {
     isReleasing.value = false;
   }
@@ -272,7 +299,7 @@ const toggleSelectAll = (checked: boolean) => {
                     <TableCell>
                       <div class="flex items-center space-x-2">
                         <Checkbox 
-                          :id="`select-${index}`"
+                          :id="'select-' + index"
                           :checked="selectedItems.includes(detail.id)"
                           @update:checked="(checked) => {
                             if (checked) {
@@ -285,17 +312,20 @@ const toggleSelectAll = (checked: boolean) => {
                         <Label :for="`select-${index}`" class="text-sm">Release</Label>
                       </div>
                     </TableCell>
-
                     <TableCell>
-                      <Input
-                        :id="`released-${index}`"
-                        type="number"
-                        v-model.number="detail.released_quantity"
-                        :max="detail.quantity"
-                        min="0"
-                        :disabled="!selectedItems.includes(detail.id)"
-                      />
-                    </TableCell>
+  <Input
+    :id="'released-' + index"
+    type="number"
+    v-model.number="detail.released_quantity"
+    :max="detail.quantity - detail.released_quantity"
+    min="0"
+    :disabled="!selectedItems.includes(detail.id)"
+  />
+  <p class="text-xs text-muted-foreground mt-1">
+    Available: {{ detail.quantity - detail.released_quantity }} / {{ detail.quantity }}
+  </p>
+</TableCell>
+
 
                     <TableCell>
                       <Input

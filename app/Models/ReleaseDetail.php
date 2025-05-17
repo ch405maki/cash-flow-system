@@ -20,4 +20,16 @@ class ReleaseDetail extends Model
     {
         return $this->belongsTo(RequestDetail::class);
     }
+
+        // Calculate remaining quantity
+    public function getRemainingQuantityAttribute(): int
+    {
+        return $this->quantity - $this->released_quantity;
+    }
+    
+    // Check if fully released
+    public function getFullyReleasedAttribute(): bool
+    {
+        return $this->remaining_quantity <= 0;
+    }
 }
