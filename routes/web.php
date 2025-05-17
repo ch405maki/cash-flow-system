@@ -7,6 +7,7 @@ use App\Http\Controllers\Users\UserController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\AccessController;
 use App\Http\Controllers\Api\RequestController;
+use App\Http\Controllers\Api\RequestToOrderController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\SignatoryController;
 use App\Http\Controllers\Api\PurchaseOrderController;
@@ -26,6 +27,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/request/create', [RequestController::class, 'create'])->name('request.create');
     Route::get('/requests/{request}/edit', [RequestController::class, 'edit'])->name('requests.edit');
     Route::patch('/requests/{request}/status', [RequestController::class, 'updateStatus'])->name('request.updateStatus');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/request-to-order', [RequestToOrderController::class, 'index'])->name('request-to-order.index');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

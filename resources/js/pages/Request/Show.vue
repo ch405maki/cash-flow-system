@@ -43,6 +43,7 @@
 
     // Modal state
     const showPasswordModal = ref(false);
+
     const password = ref('');
 
     const form = useForm({
@@ -138,14 +139,86 @@
                 @click="navigateToEdit"
                 :disabled="request.status == 'rejected'"
                 >
-                Edit
+                Partial Release
             </Button>
-            <Button 
-                variant="secondary" 
-                size="sm" 
-            >
-                Request To Order
-            </Button>
+            <Dialog v-model:open="showPasswordModal">
+                <DialogTrigger as-child>
+                <Button 
+                    variant="default" 
+                    size="sm" 
+                    :disabled="request.status === 'released' || form.processing"
+                >
+                    Release All
+                </Button>
+                </DialogTrigger>
+                <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Password Verification</DialogTitle>
+                    <DialogDescription>
+                    Please enter your password to release this request
+                    </DialogDescription>
+                </DialogHeader>
+                <div class="space-y-2">
+                    <Label for="password">Password</Label>
+                    <Input 
+                    id="password" 
+                    v-model="password" 
+                    type="password" 
+                    placeholder="Enter your password"
+                    class="w-full"
+                    />
+                </div>
+                <DialogFooter>
+                    <Button 
+                    @click="submitStatusUpdate('released', password)"
+                    :disabled="!password || form.processing"
+                    >
+                    <span v-if="form.processing">Processing...</span>
+                    <span v-else>Confirm Release</span>
+                    </Button>
+                </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog v-model:open="showPasswordModal">
+                <DialogTrigger as-child>
+                <Button 
+                    variant="default" 
+                    size="sm" 
+                    :disabled="request.status === 'approved' || form.processing"
+                >
+                    Request To Order
+                </Button>
+                </DialogTrigger>
+                <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Password Verification</DialogTitle>
+                    <DialogDescription>
+                    Please enter your password to request this order
+                    </DialogDescription>
+                </DialogHeader>
+                <div class="space-y-2">
+                    <Label for="password">Password</Label>
+                    <Input 
+                    id="password" 
+                    v-model="password" 
+                    type="password" 
+                    placeholder="Enter your password"
+                    class="w-full"
+                    />
+                </div>
+                <DialogFooter>
+                    <Button 
+                    @click="submitStatusUpdate('request to order', password)"
+                    :disabled="!password || form.processing"
+                    >
+                    <span v-if="form.processing">Processing...</span>
+                    <span v-else>Confirm Order</span>
+                    </Button>
+                </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             </div>
         </div>
 
@@ -157,9 +230,10 @@
                     <TableCell class="border p-2  w-10">Request No:</TableCell>
                     <TableCell class="border p-2">{{ request.request_no }}</TableCell>
                     <TableCell class="border p-2  w-32">Status: </TableCell>
-                    <TableCell class="border p-2">
+                    <TableCell class="border p-2 capitalize">
                     <span :class="{
                             'text-green-600': request.status === 'approved',
+                            'text-green-700': request.status === 'released',
                             'text-red-600': request.status === 'rejected',
                             'text-yellow-600': request.status === 'pending'
                         }">
