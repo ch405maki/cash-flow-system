@@ -8,6 +8,8 @@ use App\Models\RequestDetail;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderDetail;
 use App\Models\Account;
+use App\Models\Release;
+use App\Models\ReleaseDetail;
 use Illuminate\Http\JsonResponse;
 use App\Models\Request;
 use Illuminate\Http\Request as HttpRequest;
@@ -220,7 +222,6 @@ class RequestController extends Controller
         }
     }
 
-
     public function updateStatus(HttpRequest $httpRequest, Request $request)
     {
         $validated = $httpRequest->validate([
@@ -242,4 +243,67 @@ class RequestController extends Controller
 
         return back()->with('success', 'Request status updated successfully');
     }
+
+
+    public function releaseItems(HttpRequest $httpRequest, Request $request)
+{
+    DB::beginTransaction();
+    try {
+        $validated = $httpRequest->validate([
+            'items' => 'required|array|min:1',
+            'items.*.request_detail_id' => 'required|exists:request_details,id',
+            'items.*.quantity' => 'required|integer|min:1',
+        ]);
+
+        // Create the release record
+        $release = Release::create([
+            'request_id' => $request->id,
+            'user_id' => 1,
+            'notes' => $httpRequest->input('notes', null)
+        ]);
+
+        // Create release details
+        foreach ($validated['items'] as $item) {
+            // Verify quantity doesn't exceed available
+            $requestDetail = RequestDetail::find($item['request_detail_id']);
+            if ($item['quantity'] > $requestDetail->quantity - $requestDetail->released_quantity) {
+                throw ValidationException::withMessages([
+                    'quantity' => ['Release quantity cannot exceed available quantity']
+                ]);
+            }
+
+            ReleaseDetail::create([
+                'release_id' => $release->id,
+                'request_detail_id' => $item['request_detail_id'],
+                'quantity' => $item['quantity']
+            ]);
+
+            // Update released quantity in request detail
+            $requestDetail->increment('released_quantity', $item['quantity']);
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Items released successfully',
+            'data' => $release->load('details')
+        ]);
+
+    } catch (ValidationException $e) {
+        DB::rollBack();
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation failed',
+            'errors' => $e->errors()
+        ], 422);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'success' => false,
+            'message' => 'Release failed',
+            'error' => config('app.debug') ? $e->getMessage() : null
+        ], 500);
+    }
+}
 }

@@ -5,11 +5,21 @@ import { Head, Link } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/toast';
 import axios from 'axios';
 import { ref } from 'vue';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 const props = defineProps({
   request: {
@@ -28,16 +38,20 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: `${props.request.request_no}`, href: '' },
 ]
 
-// We'll only track the editable items in our form
+// Add selected items state
+const selectedItems = ref<number[]>([]);
+const isReleasing = ref(false);
+
+// Modify form to include released quantities
 const form = ref({
   details: props.request.details.map(detail => ({
     id: detail.id,
     quantity: detail.quantity,
+    released_quantity: detail.released_quantity || 0,
     unit: detail.unit,
     item_description: detail.item_description
   }))
 });
-
 const processing = ref(false);
 
 const submit = async () => {
@@ -92,13 +106,77 @@ const submit = async () => {
 const addDetail = () => {
   form.value.details.push({
     quantity: 1,
-    unit: 'pcs', // Default unit
+    unit: 'pcs',
     item_description: '',
   });
 };
 
 const removeDetail = (index: number) => {
   form.value.details.splice(index, 1);
+};
+
+// Add release method
+const releaseItems = async () => {
+  if (selectedItems.value.length === 0) {
+    toast({
+      title: 'No items selected',
+      description: 'Please select at least one item to release',
+      variant: 'destructive'
+    });
+    return;
+  }
+
+  isReleasing.value = true;
+  
+  try {
+    const itemsToRelease = form.value.details
+      .filter(detail => selectedItems.value.includes(detail.id))
+      .map(item => ({
+        request_detail_id: item.id,
+        quantity: item.released_quantity
+      }));
+
+    console.log('Releasing items:', itemsToRelease);
+    
+    const response = await axios.post(`/api/requests/${props.request.id}/release`, {
+      items: itemsToRelease
+    });
+
+    console.log('Release response:', response.data);
+    
+    toast({
+      title: 'Success',
+      description: 'Items released successfully',
+    });
+
+    // Reset selection after release
+    selectedItems.value = [];
+    
+  } catch (error) {
+    console.error('Release error:', error.response ? error.response.data : error.message);
+    
+    if (error.response?.data?.errors) {
+      toast({
+        title: 'Release Error',
+        description: Object.entries(error.response.data.errors)
+          .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+          .join('\n'),
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to release items',
+        variant: 'destructive',
+      });
+    }
+  } finally {
+    isReleasing.value = false;
+  }
+};
+
+const toggleSelectAll = (checked: boolean) => {
+  selectedItems.value = checked ? form.value.details.map(d => d.id) : [];
 };
 </script>
 
@@ -169,57 +247,99 @@ const removeDetail = (index: number) => {
                   Add Item
                 </Button>
               </div>
-
-              <div
-                v-for="(detail, index) in form.details"
-                :key="index"
-                class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end border p-4 rounded-lg"
-              >
-                <div class="md:col-span-2 space-y-2">
-                  <Label :for="`quantity-${index}`">Quantity</Label>
-                  <Input
-                    :id="`quantity-${index}`"
-                    type="number"
-                    v-model.number="detail.quantity"
-                    min="1"
-                    required
-                  />
-                </div>
-
-                <div class="md:col-span-2 space-y-2">
-                  <Label :for="`unit-${index}`">Unit</Label>
-                  <Input
-                    :id="`unit-${index}`"
-                    v-model="detail.unit"
-                    placeholder="e.g. kg, pcs"
-                    required
-                  />
-                </div>
-
-                <div class="md:col-span-7 space-y-2">
-                  <Label :for="`item_description-${index}`">Description</Label>
-                  <Input
-                    :id="`item_description-${index}`"
-                    v-model="detail.item_description"
-                    placeholder="Item description"
-                    required
-                  />
-                </div>
-
-                <div class="md:col-span-1">
-                  <Button
-                    type="button"
-                    @click="removeDetail(index)"
-                    variant="destructive"
-                    size="sm"
-                    :disabled="form.details.length <= 1"
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead class="w-[60px]">
+                      <Checkbox 
+                      id="select-all"
+                      :checked="selectedItems.length === form.details.length"
+                      @update:checked="toggleSelectAll"
+                    />
+                    </TableHead>
+                    <TableHead class="w-[100px]">Release Qty</TableHead>
+                    <TableHead class="w-[100px]">Quantity</TableHead>
+                    <TableHead class="w-[100px]">Unit</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead class="w-[100px]">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow
+                    v-for="(detail, index) in form.details"
+                    :key="index"
                   >
-                    Remove
-                  </Button>
-                </div>
-              </div>
-            </div>
+                    <TableCell>
+                      <div class="flex items-center space-x-2">
+                        <Checkbox 
+                          :id="`select-${index}`"
+                          :checked="selectedItems.includes(detail.id)"
+                          @update:checked="(checked) => {
+                            if (checked) {
+                              selectedItems.push(detail.id);
+                            } else {
+                              selectedItems = selectedItems.filter(id => id !== detail.id);
+                            }
+                          }"
+                        />
+                        <Label :for="`select-${index}`" class="text-sm">Release</Label>
+                      </div>
+                    </TableCell>
 
+                    <TableCell>
+                      <Input
+                        :id="`released-${index}`"
+                        type="number"
+                        v-model.number="detail.released_quantity"
+                        :max="detail.quantity"
+                        min="0"
+                        :disabled="!selectedItems.includes(detail.id)"
+                      />
+                    </TableCell>
+
+                    <TableCell>
+                      <Input
+                        :id="`quantity-${index}`"
+                        type="number"
+                        v-model.number="detail.quantity"
+                        min="1"
+                        required
+                      />
+                    </TableCell>
+
+                    <TableCell>
+                      <Input
+                        :id="`unit-${index}`"
+                        v-model="detail.unit"
+                        placeholder="e.g. kg, pcs"
+                        required
+                      />
+                    </TableCell>
+
+                    <TableCell>
+                      <Input
+                        :id="`item_description-${index}`"
+                        v-model="detail.item_description"
+                        placeholder="Item description"
+                        required
+                      />
+                    </TableCell>
+
+                    <TableCell>
+                      <Button
+                        type="button"
+                        @click="removeDetail(index)"
+                        variant="destructive"
+                        size="sm"
+                        :disabled="form.details.length <= 1"
+                      >
+                        Remove
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
             <div class="flex justify-end gap-4">
               <Button
                 type="button"
@@ -228,6 +348,16 @@ const removeDetail = (index: number) => {
               >
                 <Link :href="route('request.index')">Cancel</Link>
               </Button>
+
+              <Button 
+                type="button" 
+                @click="releaseItems"
+                :disabled="selectedItems.length === 0 || isReleasing"
+              >
+                <span v-if="isReleasing">Releasing...</span>
+                <span v-else>Release Selected Items</span>
+              </Button>
+              
               <Button type="submit" :disabled="processing">
                 <span v-if="processing">Saving...</span>
                 <span v-else>Save Items</span>
