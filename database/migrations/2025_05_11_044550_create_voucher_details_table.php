@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('voucher_details', function (Blueprint $table) {
             $table->id();
             $table->foreignId('voucher_id')->constrained('vouchers');
-            $table->decimal('amount', 12, 2);
+            $table->decimal('amount', 12, 2)->nullable();
             $table->string('charging_tag');
             $table->decimal('hours', 8, 2)->nullable();
             $table->decimal('rate', 10, 2)->nullable();

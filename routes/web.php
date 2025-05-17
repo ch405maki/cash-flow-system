@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\SignatoryController;
 use App\Http\Controllers\Api\PurchaseOrderController;
+use App\Http\Controllers\Api\VoucherController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -26,6 +27,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/requests/{request}/edit', [RequestController::class, 'edit'])->name('requests.edit');
     Route::patch('/requests/{request}/status', [RequestController::class, 'updateStatus'])->name('request.updateStatus');
 });
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/vouchers', [VoucherController::class, 'index'])->name('vouchers.index');
+    Route::get('/vouchers/create', [VoucherController::class, 'create'])->name('vouchers.create');
+    Route::get('/vouchers/{voucher}/edit', [VoucherController::class, 'edit'])->name('vouchers.edit');
+    Route::put('/vouchers/{voucher}', [VoucherController::class, 'update'])->name('vouchers.update');
+});
+
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])

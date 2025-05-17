@@ -19,7 +19,7 @@ return new class extends Migration
             $table->date('payment_date');
             $table->string('type');
             $table->string('payee');
-            $table->string('check_no');
+            $table->string('check_no')->nullable();
             $table->date('check_date');
             $table->decimal('check_amount', 12, 2);
             $table->string('check_payable_to');
