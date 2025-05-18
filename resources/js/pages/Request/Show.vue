@@ -42,7 +42,9 @@
     ]
 
     // Modal state
-    const showPasswordModal = ref(false);
+    const showApproveModal = ref(false);
+    const showReleaseModal = ref(false);
+    const showOrderModal = ref(false);
 
     const password = ref('');
 
@@ -64,7 +66,9 @@
             preserveScroll: true,
             onSuccess: () => {
                 toast.success('Status updated successfully');
-                showPasswordModal.value = false; // Close dialog on success
+                showApproveModal.value = false;
+                showReleaseModal.value = false;
+                showOrderModal.value = false;
                 password.value = ''; // Clear password field
             },
             onError: (errors) => {
@@ -86,7 +90,7 @@
         <div class="flex items-center justify-between">
             <h1 class="text-xl font-bold">Request Details</h1>
             <div class="ml-auto space-x-2">
-            <Dialog v-model:open="showPasswordModal">
+            <Dialog v-model:open="showApproveModal">
                 <DialogTrigger as-child>
                 <Button 
                     variant="default" 
@@ -104,9 +108,9 @@
                     </DialogDescription>
                 </DialogHeader>
                 <div class="space-y-2">
-                    <Label for="password">Password</Label>
+                    <Label for="approve-password">Password</Label>
                     <Input 
-                    id="password" 
+                    id="approve-password" 
                     v-model="password" 
                     type="password" 
                     placeholder="Enter your password"
@@ -141,7 +145,9 @@
                 >
                 Partial Release
             </Button>
-            <Dialog v-model:open="showPasswordModal">
+            
+            <!-- Release All Dialog -->
+            <Dialog v-model:open="showReleaseModal">
                 <DialogTrigger as-child>
                 <Button 
                     variant="default" 
@@ -159,9 +165,9 @@
                     </DialogDescription>
                 </DialogHeader>
                 <div class="space-y-2">
-                    <Label for="password">Password</Label>
+                    <Label for="release-password">Password</Label>
                     <Input 
-                    id="password" 
+                    id="release-password" 
                     v-model="password" 
                     type="password" 
                     placeholder="Enter your password"
@@ -180,7 +186,8 @@
                 </DialogContent>
             </Dialog>
 
-            <Dialog v-model:open="showPasswordModal">
+            <!-- Request To Order Dialog -->
+            <Dialog v-model:open="showOrderModal">
                 <DialogTrigger as-child>
                 <Button 
                     variant="default" 
@@ -198,9 +205,9 @@
                     </DialogDescription>
                 </DialogHeader>
                 <div class="space-y-2">
-                    <Label for="password">Password</Label>
+                    <Label for="order-password">Password</Label>
                     <Input 
-                    id="password" 
+                    id="order-password" 
                     v-model="password" 
                     type="password" 
                     placeholder="Enter your password"
@@ -218,7 +225,6 @@
                 </DialogFooter>
                 </DialogContent>
             </Dialog>
-
             </div>
         </div>
 
