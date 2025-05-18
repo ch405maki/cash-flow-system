@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/toast';
 import axios from 'axios';
 import { ref } from 'vue';
+import { Trash2 } from 'lucide-vue-next';
 import {
   Table,
   TableBody,
@@ -211,169 +212,170 @@ const toggleSelectAll = (checked: boolean) => {
   <Head title="Edit Request Items" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="container mx-auto p-4 space-y-4">
+    <div class="p-4 space-y-4">
       <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold">Edit Request Items</h1>
+        <h1 class="text-2xl font-bold">Request Information</h1>
         <Link :href="route('request.index')">
           <Button variant="outline"> Back to Requests </Button>
         </Link>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Request Information (Read Only)</CardTitle>
-        </CardHeader>
-        <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="space-y-1">
-            <Label>Request Number</Label>
-            <div class="p-2 border rounded-md bg-gray-50 dark:bg-gray-800">
-              {{ request.request_no }}
-            </div>
-          </div>
-
-          <div class="space-y-1">
-            <Label>Request Date</Label>
-            <div class="p-2 border rounded-md bg-gray-50 dark:bg-gray-800">
-              {{ new Date(request.request_date).toLocaleDateString() }}
-            </div>
-          </div>
-
-          <div class="space-y-1">
-            <Label>Department</Label>
-            <div class="p-2 border rounded-md bg-gray-50 dark:bg-gray-800">
-              {{ request.department.department_name || 'N/A' }}
-            </div>
-          </div>
-
-          <div class="space-y-1">
-            <Label>Status</Label>
-            <div class="p-2 border rounded-md bg-gray-50 dark:bg-gray-800">
-              {{ request.status }}
-            </div>
-          </div>
-
-          <div class="space-y-1 md:col-span-2">
-            <Label>Purpose</Label>
-            <div class="p-2 border rounded-md bg-gray-50 dark:bg-gray-800 min-h-20">
-              {{ request.purpose }}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Request Items (Editable)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form @submit.prevent="submit" class="space-y-6">
-            <div class="space-y-4">
-              <div class="flex justify-between items-center">
-                <h3 class="font-medium">Items List</h3>
-                <Button type="button" @click="addDetail" variant="outline">
-                  Add Item
-                </Button>
-              </div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead class="w-[60px]">
+      <div>
+        <Table>
+        <TableBody>
+            <TableRow>
+                <TableCell class="border p-2  w-10">Request No:</TableCell>
+                <TableCell class="border p-2">{{ request.request_no }}</TableCell>
+                <TableCell class="border p-2  w-32">Status: </TableCell>
+                <TableCell class="border p-2 capitalize">
+                <span 
+                class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize"
+                :class="{
+                        'bg-indigo-100 text-indigo-800': request.status === 'partially_released',
+                        'bg-orange-100 text-orange-800 ': request.status === 'request to order',
+                        'bg-green-100 text-green-700': request.status === 'released',
+                        'bg-yellow-100 text-yellow-800': request.status === 'pending',
+                        'bg-green-100 text-green-800': request.status === 'approved',
+                        'bg-red-100 text-red-800': request.status === 'rejected',
+                    }">
+                    {{ request.status }}
+                </span>
+                </TableCell>
+            </TableRow>
+            <TableRow>
+                <TableCell class="border p-2">Department:</TableCell>
+                <TableCell class="border p-2">{{ request.department.department_name || 'N/A' }}</TableCell>
+                <TableCell class="border p-2">Requested By:</TableCell>
+                <TableCell class="border p-2">{{ request.user.first_name }} {{ request.user.last_name }}</TableCell>
+            </TableRow>
+            <TableRow>
+                <TableCell class="border p-2">Purpose:</TableCell>
+                <TableCell colspan="3" class="border p-2">{{ request.purpose || 'N/A'}}</TableCell>
+            </TableRow>
+        </TableBody>
+        </Table>
+      </div>
+      <!-- start table -->
+      <div class="pt-4 pb-6">
+        <h1 class="text-xl font-bold">Partially Release Requested Items (Editable)</h1>
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="text-sm font-medium">Items List</h3>
+          <Button type="button" @click="addDetail" variant="outline" size="sm">
+            Add Item
+          </Button>
+        </div>
+        <form @submit.prevent="submit" class="space-y-4">
+          <div class="border overflow-hidden">
+            <Table>
+              <TableHeader class="bg-gray-100 dark:bg-gray-800">
+                <TableRow>
+                  <TableHead class="w-[40px] border-r text-xs text-center">
+                    Release
+                  </TableHead>
+                  <TableHead class="w-[100px] border-r text-xs">Release Qty</TableHead>
+                  <TableHead class="w-[100px] border-r text-xs">Quantity</TableHead>
+                  <TableHead class="w-[100px] border-r text-xs">Unit</TableHead>
+                  <TableHead class="border-r text-xs">Description</TableHead>
+                  <TableHead class="w-[40px] text-xs text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow
+                  v-for="(detail, index) in form.details"
+                  :key="index"
+                  class="border-b"
+                >
+                  <TableCell class="border-r">
+                    <div class="flex justify-center items-center">
                       <Checkbox 
-                      id="select-all"
-                      :checked="selectedItems.length === form.details.length"
-                      @update:checked="toggleSelectAll"
+                        :id="'select-' + index"
+                        :checked="selectedItems.includes(detail.id)"
+                        @update:checked="(checked) => {
+                          if (checked) {
+                            selectedItems.push(detail.id);
+                          } else {
+                            selectedItems = selectedItems.filter(id => id !== detail.id);
+                          }
+                        }"
+                        class="h-4 mr-4 w-4 border-zinc-600"
+                      />
+                    </div>
+                  </TableCell>
+
+                  <TableCell class="border-r p-2">
+                    <Input
+                      :id="'released-' + index"
+                      type="number"
+                      v-model.number="detail.released_quantity"
+                      :max="detail.quantity - detail.released_quantity"
+                      min="0"
+                      :disabled="!selectedItems.includes(detail.id)"
+                      class="border border-gray-300 rounded text-xs h-8 w-full"
                     />
-                    </TableHead>
-                    <TableHead class="w-[100px]">Release Qty</TableHead>
-                    <TableHead class="w-[100px]">Quantity</TableHead>
-                    <TableHead class="w-[100px]">Unit</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead class="w-[100px]">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow
-                    v-for="(detail, index) in form.details"
-                    :key="index"
-                  >
-                    <TableCell>
-                      <div class="flex items-center space-x-2">
-                        <Checkbox 
-                          :id="'select-' + index"
-                          :checked="selectedItems.includes(detail.id)"
-                          @update:checked="(checked) => {
-                            if (checked) {
-                              selectedItems.push(detail.id);
-                            } else {
-                              selectedItems = selectedItems.filter(id => id !== detail.id);
-                            }
-                          }"
-                        />
-                        <Label :for="`select-${index}`" class="text-sm">Release</Label>
-                      </div>
-                    </TableCell>
+                  </TableCell>
 
-                    <TableCell>
-                      <Input
-                        :id="'released-' + index"
-                        type="number"
-                        v-model.number="detail.released_quantity"
-                        :max="detail.quantity - detail.released_quantity"
-                        min="0"
-                        :disabled="!selectedItems.includes(detail.id)"
-                      />
-                      <p class="text-xs text-muted-foreground mt-1">
-                        Available: {{ detail.quantity - detail.released_quantity }} / {{ detail.quantity }}
-                      </p>
-                    </TableCell>
+                  <TableCell class="border-r p-2">
+                    <Input
+                      :id="`quantity-${index}`"
+                      type="number"
+                      v-model.number="detail.quantity"
+                      min="1"
+                      required
+                      class="border border-gray-300 rounded text-xs h-8 w-full"
+                    />
+                  </TableCell>
 
-                    <TableCell>
-                      <Input
-                        :id="`quantity-${index}`"
-                        type="number"
-                        v-model.number="detail.quantity"
-                        min="1"
-                        required
-                      />
-                    </TableCell>
+                  <TableCell class="border-r p-2">
+                    <Input
+                      :id="`unit-${index}`"
+                      v-model="detail.unit"
+                      placeholder="e.g. kg, pcs"
+                      required
+                      class="border border-gray-300 rounded text-xs h-8 w-full"
+                    />
+                  </TableCell>
 
-                    <TableCell>
-                      <Input
-                        :id="`unit-${index}`"
-                        v-model="detail.unit"
-                        placeholder="e.g. kg, pcs"
-                        required
-                      />
-                    </TableCell>
+                  <TableCell class="border-r p-2">
+                    <Input
+                      :id="`item_description-${index}`"
+                      v-model="detail.item_description"
+                      placeholder="Item description"
+                      required
+                      class="border border-gray-300 rounded text-xs h-8 w-full"
+                    />
+                  </TableCell>
 
-                    <TableCell>
-                      <Input
-                        :id="`item_description-${index}`"
-                        v-model="detail.item_description"
-                        placeholder="Item description"
-                        required
-                      />
-                    </TableCell>
-
-                    <TableCell>
-                      <Button
-                        type="button"
-                        @click="removeDetail(index)"
-                        variant="destructive"
-                        size="sm"
-                        :disabled="form.details.length <= 1"
-                      >
-                        Remove
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+                  <TableCell class="p-2 flex justify-end items-center mr-[7px]">
+                    <Button
+                      type="button"
+                      @click="removeDetail(index)"
+                      variant="destructive"
+                      size="sm"
+                      class="text-xs h-8 px-3"
+                      :disabled="form.details.length <= 1"
+                    >
+                      <Trash2 />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+          
+          <div class="flex justify-between items-center">
+            <div class="flex items-center  gap-2">
+              <Checkbox 
+                id="select-all"
+                :checked="selectedItems.length === form.details.length"
+                @update:checked="toggleSelectAll"
+                class="h-4 w-4"
+              />
+              <Label>Select All</Label>
             </div>
-            <div class="flex justify-end gap-4">
+            <div class="flex gap-2">
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 as-child
               >
                 <Link :href="route('request.index')">Cancel</Link>
@@ -382,20 +384,22 @@ const toggleSelectAll = (checked: boolean) => {
               <Button 
                 type="button" 
                 @click="releaseItems"
+                size="sm"
                 :disabled="selectedItems.length === 0 || isReleasing"
               >
-                <span v-if="isReleasing">Releasing...</span>
-                <span v-else>Release Selected Items</span>
+                <span v-if="isReleasing" class="text-xs">Releasing...</span>
+                <span v-else class="text-xs">Release Selected Items</span>
               </Button>
               
-              <Button type="submit" :disabled="processing">
-                <span v-if="processing">Saving...</span>
-                <span v-else>Save Items</span>
+              <Button type="submit" size="sm" :disabled="processing">
+                <span v-if="processing" class="text-xs">Saving...</span>
+                <span v-else class="text-xs">Save Items</span>
               </Button>
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
+        </form>
+      </div>
+      <!-- end table -->
     </div>
   </AppLayout>
 </template>

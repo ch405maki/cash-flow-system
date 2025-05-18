@@ -154,7 +154,7 @@ class RequestController extends Controller
     public function edit(Request $request)
     {
         return Inertia::render('Request/Edit', [
-            'request' => $request->load(['details', 'department']),
+            'request' => $request->load(['details','user', 'department']),
             'departments' => Department::all(),
         ]);
     }

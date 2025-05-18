@@ -1,26 +1,18 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
-import RequestForm from '@/components/requests/RequestForm.vue';
-import RequestTable from '@/components/requests/RequestTable.vue';
+import ApprovedRequestTable from '@/components/requests/approved/ApprovedRequestTable.vue';
 import { type BreadcrumbItem } from '@/types';
-import { router } from '@inertiajs/vue3'
-import { Button } from '@/components/ui/button'
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
     title: 'Dashboard',
     href: '/dashboard',
   },{
-    title: 'Request To Order',
+    title: 'Approved Request',
     href: '/request',
   }
 ];
-
-
-function goToCreate() {
-  router.visit(`/request/create`)
-}
 
 const props = defineProps({
   requests: {
@@ -44,9 +36,9 @@ const props = defineProps({
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
       <div class="flex justify-between items-center">
-        <h1 class="text-xl font-bold">Request To Order List</h1>
+        <h1 class="text-xl font-bold">Approved Request List</h1>
       </div>
-      <RequestTable :requests="requests"/>
+      <ApprovedRequestTable :requests="requests"/>
     </div>
   </AppLayout>
 </template>
