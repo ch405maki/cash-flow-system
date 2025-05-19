@@ -12,19 +12,19 @@ const sidebarNavItems: NavItem[] = [
     },
     {
         title: 'User Access',
-        href: '/',
+        href: '/configuration/users-access',
     },
     {
         title: 'Departments',
-        href: '/',
+        href: '/configuration/departments',
     },
     {
         title: 'Signatory',
-        href: '/',
+        href: '/configuration/signatory',
     },
     {
         title: 'Accounts',
-        href: '/',
+        href: '/configuration/account',
     },
 ];
 

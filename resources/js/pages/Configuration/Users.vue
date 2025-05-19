@@ -136,7 +136,7 @@
                 </div>
         
                 <!-- Users Table -->
-                <div class="relative min-h-[100vh] flex-1 rounded-xl border">
+                <div class="relative min-h-[100vh] flex-1 rounded-lg border">
                 <UsersTable :users="filteredUsers" />
                 </div>
             </div>
