@@ -22,7 +22,7 @@ import {
 import { Plus, Trash2 } from 'lucide-vue-next'
 import { useToast } from 'vue-toastification'
 import axios from 'axios'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { type BreadcrumbItem } from '@/types';
 import { router } from '@inertiajs/vue3';
 
@@ -94,6 +94,8 @@ const calculateAmountFromRate = (index) => {
         calculateTotalAmount();
     }
 };
+
+const isSalaryVoucher = computed(() => form.type === 'salary');
 
 async function updateVoucher() {
     try {
@@ -169,8 +171,13 @@ async function updateVoucher() {
                         <div class="space-y-4">
                             <div class="grid gap-2">
                                 <Label for="check_amount">Check Amount *</Label>
-                                <Input id="check_amount" type="number" step="0.01" v-model="form.check_amount"
-                                disabled />
+                                <Input 
+                                    id="check_amount" 
+                                    type="number" 
+                                    step="0.01" 
+                                    v-model="form.check_amount"
+                                    :disabled="!isSalaryVoucher"
+                                />
                             </div>
 
                             <div class="grid gap-2">
