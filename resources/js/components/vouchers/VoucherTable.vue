@@ -10,9 +10,16 @@ const props = defineProps<{
 const getFullName = (user: any) =>
   `${user.first_name} ${user.middle_name} ${user.last_name}`;
 
-  function goToEditVoucher(id: number) {
-    router.get(`/vouchers/${id}/edit`);
-  }
+function goToEditVoucher(id: number) {
+  router.get(`/vouchers/${id}/edit`);
+}
+
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP'
+  }).format(amount);
+}
 </script>
 
 <template>
@@ -33,36 +40,38 @@ const getFullName = (user: any) =>
       </thead>
       <tbody>
         <tr
-          v-for="vouchers in vouchers"
-          :key="vouchers.id"
+          v-for="voucher in vouchers"
+          :key="voucher.id"
           class="border-t hover:bg-muted/50"
         >
-          <td class="px-4 py-2 font-medium">{{ vouchers.voucher_no }}</td>
-          <td class="px-4 py-2">{{ vouchers.type }}</td>
-          <td class="px-4 py-2">{{ getFullName(vouchers.user) }}</td>
-          <td class="px-4 py-2">{{ vouchers.purpose }}</td>
-          <td class="px-4 py-2">{{ vouchers.check_amount }}</td>
-          <td class="px-4 py-2">{{ vouchers.payee }}</td>
-          <td class="px-4 py-2">{{ vouchers.check_payable_to }}</td>
+          <td class="px-4 py-2 font-medium">{{ voucher.voucher_no }}</td>
+          <td class="px-4 py-2">{{ voucher.type }}</td>
+          <td class="px-4 py-2">{{ getFullName(voucher.user) }}</td>
+          <td class="px-4 py-2">{{ voucher.purpose }}</td>
+          <td class="px-4 py-2 font-mono tabular-nums">
+            {{ formatCurrency(voucher.check_amount) }}
+          </td>
+          <td class="px-4 py-2">{{ voucher.payee }}</td>
+          <td class="px-4 py-2">{{ voucher.check_payable_to }}</td>
           <td class="px-4 py-2 capitalize">
             <span
               class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
               :class="{
-                'bg-yellow-100 text-yellow-800': vouchers.status === 'pending',
-                'bg-green-100 text-green-800': vouchers.status === 'approved',
-                'bg-red-100 text-red-800': vouchers.status === 'rejected',
+                'bg-yellow-100 text-yellow-800': voucher.status === 'pending',
+                'bg-green-100 text-green-800': voucher.status === 'approved',
+                'bg-red-100 text-red-800': voucher.status === 'rejected',
               }"
             >
-              {{ vouchers.status }}
+              {{ voucher.status }}
             </span>
           </td>
           <td class="px-4 py-2 space-x-2">
             <Button
               size="sm"
               variant="outline"
-              @click="goToEditVoucher(vouchers.id)"
+              @click="goToEditVoucher(voucher.id)"
             >
-               View Details
+              View Details
             </Button>
           </td>
         </tr>
