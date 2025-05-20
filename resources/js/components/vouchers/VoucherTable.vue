@@ -55,10 +55,10 @@ function formatCurrency(amount: number): string {
           <td class="px-4 py-2">{{ voucher.check_payable_to }}</td>
           <td class="px-4 py-2 capitalize">
             <span
-              class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
+              class="inline-block rounded-full px-8 py-0.5 text-xs font-semibold"
               :class="{
                 'bg-yellow-100 text-yellow-800': voucher.status === 'pending',
-                'bg-green-100 text-green-800': voucher.status === 'approved',
+                'bg-green-100 text-green-800': voucher.status === 'paid',
                 'bg-red-100 text-red-800': voucher.status === 'rejected',
               }"
             >
