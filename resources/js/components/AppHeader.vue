@@ -51,7 +51,12 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Requests To Order',
-        href: '/request',
+        href: '/request-to-order',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Approved Request',
+        href: '/approved-request',
         icon: LayoutGrid,
     },
     {

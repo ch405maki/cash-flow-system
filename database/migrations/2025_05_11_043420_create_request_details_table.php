@@ -15,8 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('request_id')->constrained('requests');
             $table->decimal('quantity', 10, 2);
+            $table->decimal('released_quantity', 10, 2)->default(0);
             $table->string('unit');
             $table->text('item_description');
+            $table->string('tagging')->nullable();
             $table->timestamps();
         });
     }

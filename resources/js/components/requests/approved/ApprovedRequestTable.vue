@@ -19,7 +19,7 @@ const getFullName = (user: any) =>
   `${user.first_name} ${user.middle_name} ${user.last_name}`
 
 function goToShowRequest(requestId: number) {
-  router.get(`/request/show/${requestId}`)
+  router.get(`/approved-request/show/${requestId}`)
 }
 
 function goToCreatePO(requestId: number) {

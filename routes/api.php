@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\SignatoryController;
 use App\Http\Controllers\Api\VoucherController;
 use App\Http\Controllers\Api\PurchaseOrderController;
+use App\Http\Controllers\Api\ApprovedRequestController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -30,7 +31,9 @@ Route::get('/vouchers/{voucher}', [VoucherController::class, 'show']);
 // Route::apiResource('requests', RequestController::class);
 Route::post('/requests', [RequestController::class, 'store']);
 Route::put('/requests/{request}/items', [RequestController::class, 'updateItems']);
+Route::post('/requests/{request}/release', [RequestController::class, 'releaseItems']);
 
+Route::patch('/requests/{request}/tagging', [ApprovedRequestController::class, 'updateTagging']);
 
 Route::apiResource('departments', DepartmentController::class);
 Route::apiResource('access', AccessController::class);
