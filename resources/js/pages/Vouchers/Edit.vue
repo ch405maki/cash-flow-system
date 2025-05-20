@@ -68,8 +68,8 @@ const addDetailItem = () => {
     form.check.push({
         amount: 0,
         charging_tag: '',
-        hours: null,
-        rate: null,
+        hours: '',
+        rate: '',
         account_id: ''
     });
 };
@@ -95,7 +95,7 @@ const calculateAmountFromRate = (index) => {
     }
 };
 
-const isSalaryVoucher = computed(() => form.type === 'salary');
+const isCashVoucher = computed(() => form.type === 'cash');
 
 async function updateVoucher() {
     try {
@@ -121,7 +121,7 @@ async function updateVoucher() {
     <Head :title="`Voucher Details - ${voucher.voucher_no}`" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <Card class="mt-6 max-w-6xl mx-auto">
+        <Card class="mt-6 mx-auto w-full">
             <CardHeader>
                 <CardTitle>Voucher {{ voucher.voucher_no }}</CardTitle>
                 <CardDescription>Update voucher details</CardDescription>
@@ -176,7 +176,7 @@ async function updateVoucher() {
                                     type="number" 
                                     step="0.01" 
                                     v-model="form.check_amount"
-                                    :disabled="!isSalaryVoucher"
+                                    :disabled="!isCashVoucher"
                                 />
                             </div>
 
@@ -203,7 +203,7 @@ async function updateVoucher() {
                     </div>
 
                     <!-- Voucher Details Section -->
-                    <div v-if="form.type !== 'salary'" class="border rounded-lg p-4 mb-6">
+                    <div v-if="form.type !== 'cash'" class="border rounded-lg p-4 mb-6">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="font-medium">Update Accounts</h3>
                             <Button 
@@ -211,7 +211,7 @@ async function updateVoucher() {
                                 variant="outline" 
                                 size="sm" 
                                 @click="addDetailItem"
-                                :disabled="form.type === 'salary'"
+                                :disabled="form.type === 'cash'"
                             >
                                 <Plus class="h-4 w-4 mr-2" />
                                 Add Account
@@ -226,7 +226,7 @@ async function updateVoucher() {
                             <!-- Account Selection -->
                             <div class="grid gap-2">
                                 <Label :for="`account-${index}`">Account *</Label>
-                                <Select v-model="detail.account_id" required :disabled="form.type === 'salary'">
+                                <Select v-model="detail.account_id" required :disabled="form.type === 'cash'">
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select account" />
                                     </SelectTrigger>
@@ -241,7 +241,7 @@ async function updateVoucher() {
                             <!-- Charging Tag -->
                             <div class="grid gap-2">
                                 <Label :for="`tag-${index}`">Charging Tag *</Label>
-                                <Select v-model="detail.charging_tag" :disabled="form.type === 'salary'">
+                                <Select v-model="detail.charging_tag" :disabled="form.type === 'cash'">
                                     <SelectTrigger>
                                         <SelectValue placeholder="Choose Charging Tag" />
                                     </SelectTrigger>
@@ -262,7 +262,7 @@ async function updateVoucher() {
                                     v-model="detail.hours"
                                     @blur="calculateAmountFromRate(index)" 
                                     placeholder="Optional"
-                                    :disabled="form.type === 'salary'"
+                                    :disabled="form.type === 'cash'"
                                 />
                             </div>
 
@@ -276,7 +276,7 @@ async function updateVoucher() {
                                     v-model="detail.rate"
                                     @blur="calculateAmountFromRate(index)" 
                                     placeholder="Optional"
-                                    :disabled="form.type === 'salary'"
+                                    :disabled="form.type === 'cash'"
                                 />
                             </div>
 
@@ -292,14 +292,14 @@ async function updateVoucher() {
                                         @change="calculateTotalAmount" 
                                         required 
                                         class="flex-1"
-                                        :disabled="form.type === 'salary'"
+                                        :disabled="form.type === 'cash'"
                                     />
                                     <Button 
                                         type="button" 
                                         variant="destructive" 
                                         size="icon"
                                         @click="removeDetailItem(index)" 
-                                        :disabled="form.check.length <= 1 || form.type === 'salary'"
+                                        :disabled="form.check.length <= 1 || form.type === 'cash'"
                                     >
                                         <Trash2 class="h-4 w-4" />
                                     </Button>

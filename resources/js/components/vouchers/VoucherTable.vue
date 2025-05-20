@@ -2,6 +2,15 @@
 import { Button } from '@/components/ui/button';
 import { defineProps } from 'vue';
 import { router } from '@inertiajs/vue3';
+import { SquarePen, Eye } from 'lucide-vue-next';
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from '@/components/ui/table'
 
 const props = defineProps<{
   vouchers: Array<any>;
@@ -9,6 +18,10 @@ const props = defineProps<{
 
 const getFullName = (user: any) =>
   `${user.first_name} ${user.middle_name} ${user.last_name}`;
+
+function viewVoucher(id: number) {
+  router.get(`/vouchers/${id}/view`);
+}
 
 function goToEditVoucher(id: number) {
   router.get(`/vouchers/${id}/edit`);
@@ -24,36 +37,36 @@ function formatCurrency(amount: number): string {
 
 <template>
   <div class="rounded-lg border">
-    <table class="w-full table-auto text-left text-sm">
-      <thead class="bg-gray-100 dark:bg-gray-800">
-        <tr>
-          <th class="px-4 py-2">Voucher No</th>
-          <th class="px-4 py-2">Type</th>
-          <th class="px-4 py-2">Created By</th>
-          <th class="px-4 py-2">Purpose</th>
-          <th class="px-4 py-2">Check Amount</th>
-          <th class="px-4 py-2">Payee</th>
-          <th class="px-4 py-2">Check Pay to</th>
-          <th class="px-4 py-2">Status</th>
-          <th class="px-4 py-2">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
+    <Table class="w-full table-auto text-left text-sm">
+      <TableHeader>
+        <TableRow>
+          <TableHead class="px-4 py-2">Voucher No</TableHead>
+          <TableHead class="px-4 py-2">Type</TableHead>
+          <TableHead class="px-4 py-2">Created By</TableHead>
+          <TableHead class="px-4 py-2">Purpose</TableHead>
+          <TableHead class="px-4 py-2">Check Amount</TableHead>
+          <TableHead class="px-4 py-2">Payee</TableHead>
+          <TableHead class="px-4 py-2">Check Pay to</TableHead>
+          <TableHead class="px-4 py-2 text-center">Status</TableHead>
+          <TableHead class="px-4 py-2 text-center">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <TableRow
           v-for="voucher in vouchers"
           :key="voucher.id"
           class="border-t hover:bg-muted/50"
         >
-          <td class="px-4 py-2 font-medium">{{ voucher.voucher_no }}</td>
-          <td class="px-4 py-2">{{ voucher.type }}</td>
-          <td class="px-4 py-2">{{ getFullName(voucher.user) }}</td>
-          <td class="px-4 py-2">{{ voucher.purpose }}</td>
-          <td class="px-4 py-2 font-mono tabular-nums">
+          <TableCell class="px-4 py-2 font-medium">{{ voucher.voucher_no }}</TableCell>
+          <TableCell class="px-4 py-2 capitalize">{{ voucher.type }}</TableCell>
+          <TableCell class="px-4 py-2">{{ getFullName(voucher.user) }}</TableCell>
+          <TableCell class="px-4 py-2">{{ voucher.purpose }}</TableCell>
+          <TableCell class="px-4 py-2 font-mono tabular-nums">
             {{ formatCurrency(voucher.check_amount) }}
-          </td>
-          <td class="px-4 py-2">{{ voucher.payee }}</td>
-          <td class="px-4 py-2">{{ voucher.check_payable_to }}</td>
-          <td class="px-4 py-2 capitalize">
+          </TableCell>
+          <TableCell class="px-4 py-2">{{ voucher.payee }}</TableCell>
+          <TableCell class="px-4 py-2">{{ voucher.check_payable_to }}</TableCell>
+          <TableCell class="px-4 py-2 capitalize">
             <span
               class="inline-block rounded-full px-8 py-0.5 text-xs font-semibold"
               :class="{
@@ -64,18 +77,29 @@ function formatCurrency(amount: number): string {
             >
               {{ voucher.status }}
             </span>
-          </td>
-          <td class="px-4 py-2 space-x-2">
+          </TableCell>
+          <TableCell class="px-4 py-2 space-x-2">
+            <Button
+              size="sm"
+              variant="outline"
+              @click="viewVoucher(voucher.id)"
+              class="hover:bg-blue-50"
+            >
+              <Eye class="h-4 w-4 mr-1"/>
+              <span>View</span>
+            </Button>
             <Button
               size="sm"
               variant="outline"
               @click="goToEditVoucher(voucher.id)"
+              class="hover:bg-green-50"
             >
-              View Details
+              <SquarePen class="h-4 w-4 mr-1"/>
+              <span>Edit</span>
             </Button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+          </TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
   </div>
 </template>

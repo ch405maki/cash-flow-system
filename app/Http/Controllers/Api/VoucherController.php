@@ -58,6 +58,9 @@ class VoucherController extends Controller
         return DB::transaction(function () use ($request) {
             $validated = $this->validateRequest($request);
             
+            // Explicitly remove voucher_no if somehow provided
+            unset($validated['voucher_no']);
+            
             $this->handleCashVoucherDetails($validated);
             $voucher = $this->createVoucher($validated);
             
@@ -83,6 +86,9 @@ class VoucherController extends Controller
         return DB::transaction(function () use ($request, $voucher) {
             $validated = $this->validateRequest($request);
             
+            // Lock the voucher number to the existing value
+            $validated['voucher_no'] = $voucher->voucher_no;
+            
             $this->validateCashVoucherAmount($validated);
             $this->updateVoucher($voucher, $validated);
             $this->syncVoucherDetails($voucher, $validated);
@@ -90,8 +96,7 @@ class VoucherController extends Controller
             return $this->successResponse(
                 'Voucher updated successfully',
                 $voucher->fresh(['user', 'details']),
-                200,
-                ['items_count' => $validated['type'] === 'cash' ? count($validated['check'] ?? []) : 0]
+                200
             );
         });
     }
@@ -106,18 +111,23 @@ class VoucherController extends Controller
         );
     }
 
-    public function getNextVoucherNumber(): JsonResponse
+    public function view(Voucher $voucher)
     {
-        return $this->successResponse(
-            'Next voucher number generated',
-            ['voucher_no' => $this->generateVoucherNumber()]
-        );
+        $voucher->load(['user', 'details.account']);
+        
+        return inertia('Vouchers/View', [
+            'voucher' => $voucher,
+            'accounts' => Account::all(),
+        ]);
     }
+
 
     protected function generateVoucherNumber(): string
     {
         $prefix = 'V-' . now()->format('Y') . '-';
-        $lastVoucher = Voucher::where('voucher_no', 'like', $prefix . '%')->latest()->first();
+        $lastVoucher = Voucher::where('voucher_no', 'like', $prefix . '%')
+                            ->orderBy('voucher_no', 'desc')
+                            ->first();
         
         $sequence = $lastVoucher 
             ? (int) str_replace($prefix, '', $lastVoucher->voucher_no) + 1
@@ -131,7 +141,17 @@ class VoucherController extends Controller
      */
     protected function validateRequest(Request $request): array
     {
-        return $request->validate($this->voucherValidationRules);
+        $rules = $this->voucherValidationRules;
+        
+        // If updating, ignore unique rule for current voucher
+        if ($request->isMethod('patch') || $request->isMethod('put')) {
+            $voucherId = $request->route('voucher')?->id;
+            if ($voucherId) {
+                $rules['voucher_no'] = 'required|string|unique:vouchers,voucher_no,'.$voucherId;
+            }
+        }
+        
+        return $request->validate($rules);
     }
 
     /**
@@ -168,12 +188,13 @@ class VoucherController extends Controller
      */
     protected function createVoucher(array $validated): Voucher
     {
-        $voucher = Voucher::create([
-            ...collect($validated)->except('check')->toArray(),
-            'voucher_no' => $this->generateVoucherNumber()
-        ]);
+        $voucherData = collect($validated)->except('check')->toArray();
+        $voucherData['voucher_no'] = $this->generateVoucherNumber();
 
-        if ($validated['type'] === 'cash' && !empty($validated['check'])) {
+        $voucher = Voucher::create($voucherData);
+
+        // Modified condition to handle both cash and salary vouchers
+        if (!empty($validated['check'])) {
             $this->createVoucherDetails($voucher, $validated['check']);
         }
 

@@ -29,7 +29,6 @@ Route::patch('/users/{user}/status', [UserController::class, 'updateStatus']);
 Route::apiResource('vouchers', VoucherController::class);
 Route::put('/vouchers/{voucher}/details', [VoucherController::class, 'updateDetails']);
 Route::put('/vouchers/{voucher}', [VoucherController::class, 'update']);
-Route::get('/vouchers/next-number', [VoucherController::class, 'getNextVoucherNumber']);
 Route::get('/vouchers/{voucher}', [VoucherController::class, 'show']);
 
 // Request Routes
