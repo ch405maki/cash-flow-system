@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, usePage, router } from '@inertiajs/vue3';
 import {
     Card,
     CardContent,
@@ -11,6 +11,8 @@ import {
 import { ref, computed } from 'vue'
 import { type BreadcrumbItem } from '@/types';
 import { format } from 'date-fns'
+import { ArrowLeft } from 'lucide-vue-next';
+import { Button } from '@/components/ui/button'
 
 const { props } = usePage();
 const accounts = props.accounts || [];
@@ -37,8 +39,20 @@ const formatDate = (dateString: string) => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Card class="mt-6 mx-auto w-full">
             <CardHeader>
-                <CardTitle>Voucher {{ voucher.voucher_no }}</CardTitle>
-                <CardDescription>Voucher Details</CardDescription>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <CardTitle>Voucher {{ voucher.voucher_no }}</CardTitle>
+                        <CardDescription>Voucher Details</CardDescription>
+                    </div>
+                <Button 
+                        variant="outline" 
+                        @click="router.visit('/vouchers')"
+                        class="flex items-center gap-2"
+                    >
+                        <ArrowLeft class="h-4 w-4" />
+                        Back
+                </Button>
+                </div>
             </CardHeader>
 
             <CardContent>

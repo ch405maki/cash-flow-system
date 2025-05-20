@@ -25,6 +25,7 @@ import axios from 'axios'
 import { ref, computed } from 'vue'
 import { type BreadcrumbItem } from '@/types';
 import { router } from '@inertiajs/vue3';
+import { ArrowLeft } from 'lucide-vue-next';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -145,8 +146,20 @@ async function submitVoucher() {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Card class="mt-6 mx-auto w-full">
             <CardHeader>
-                <CardTitle>Create Voucher</CardTitle>
-                <CardDescription>Complete all required fields</CardDescription>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <CardTitle>Create Voucher</CardTitle>
+                        <CardDescription>Complete all required fields</CardDescription>
+                    </div>
+                    <Button 
+                        variant="outline" 
+                        @click="router.visit('/vouchers')"
+                        class="flex items-center gap-2"
+                    >
+                        <ArrowLeft class="h-4 w-4" />
+                        Back
+                    </Button>
+                </div>
             </CardHeader>
 
             <CardContent>
