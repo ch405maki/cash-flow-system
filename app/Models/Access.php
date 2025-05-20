@@ -9,7 +9,7 @@ class Access extends Model
 {
     protected $table = 'accesses';
     
-    protected $fillable = ['prognam_name', 'access_level'];
+    protected $fillable = ['program_name', 'access_level'];
 
     public function users(): HasMany
     {

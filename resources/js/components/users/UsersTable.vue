@@ -11,7 +11,7 @@
     </TableHeader>
     <TableBody>
       <TableRow v-for="user in users" :key="user.id">
-        <TableCell class="font-medium">{{ user.name }}</TableCell>
+        <TableCell class="font-medium">{{ user.username }}</TableCell>
         <TableCell>{{ user.email }}</TableCell>
         <TableCell>{{ user.role }}</TableCell>
         <TableCell>

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('accesses', function (Blueprint $table) {
             $table->id();
-            $table->string('prognam_name');
+            $table->string('program_name');
             $table->string('access_level');
             $table->timestamps();
             $table->softDeletes();

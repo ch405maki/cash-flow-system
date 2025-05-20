@@ -8,15 +8,23 @@ import { Link, usePage } from '@inertiajs/vue3';
 const sidebarNavItems: NavItem[] = [
     {
         title: 'Users',
-        href: '/settings/profile',
+        href: '/configuration/users',
     },
     {
-        title: 'Password',
-        href: '/settings/password',
+        title: 'User Access',
+        href: '/configuration/users-access',
     },
     {
-        title: 'Appearance',
-        href: '/settings/appearance',
+        title: 'Departments',
+        href: '/configuration/departments',
+    },
+    {
+        title: 'Signatory',
+        href: '/configuration/signatory',
+    },
+    {
+        title: 'Accounts',
+        href: '/configuration/account',
     },
 ];
 
@@ -27,7 +35,7 @@ const currentPath = page.props.ziggy?.location ? new URL(page.props.ziggy.locati
 
 <template>
     <div class="px-4 py-6">
-        <Heading title="Settings" description="Manage your profile and account settings" />
+        <Heading title="Configurations" description="Manage your users, access, departments, signatories, and accounts, " />
 
         <div class="flex flex-col space-y-8 md:space-y-0 lg:flex-row lg:space-x-12 lg:space-y-0">
             <aside class="w-full max-w-xl lg:w-48">
@@ -48,8 +56,8 @@ const currentPath = page.props.ziggy?.location ? new URL(page.props.ziggy.locati
 
             <Separator class="my-6 md:hidden" />
 
-            <div class="flex-1 md:max-w-2xl">
-                <section class="max-w-xl space-y-12">
+            <div class="mx-auto flex h-full w-full max-w-7xl flex-1 flex-col gap-4 rounded-xl">
+                <section class="max-w-full space-y-12">
                     <slot />
                 </section>
             </div>
