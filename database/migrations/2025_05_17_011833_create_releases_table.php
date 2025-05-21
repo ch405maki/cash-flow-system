@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('request_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->date('release_date')->default(DB::raw('CURRENT_DATE'));
+            $table->date('release_date')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
         });
