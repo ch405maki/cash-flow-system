@@ -22,9 +22,10 @@ import {
 import { Plus, Trash2 } from 'lucide-vue-next'
 import { useToast } from 'vue-toastification'
 import axios from 'axios'
-import { ref, onMounted} from 'vue'
+import { ref, computed } from 'vue'
 import { type BreadcrumbItem } from '@/types';
 import { router } from '@inertiajs/vue3';
+import { ArrowLeft } from 'lucide-vue-next';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -35,22 +36,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 const toast = useToast();
 const { props } = usePage();
 const accounts = props.accounts || [];
-const voucherNo = ref('Loading...');
-
-// Fetch the next voucher number from the backend
-const fetchNextVoucherNumber = async () => {
-    try {
-        const response = await axios.get('/api/vouchers/next-number');
-        voucherNo.value = response.data.voucher_no;
-    } catch (error) {
-        toast.error('Failed to load voucher number');
-        voucherNo.value = 'Error loading number';
-    }
-};
-
-onMounted(() => {
-    fetchNextVoucherNumber();
-});
 
 const form = useForm({
     issue_date: '',
@@ -66,7 +51,6 @@ const form = useForm({
     status: 'pending',
     type: '',
     user_id: props.auth.user.id,
-    voucher_no: voucherNo.value,
     check: [
         {
             amount: 0,
@@ -77,8 +61,6 @@ const form = useForm({
         }
     ]
 });
-
-
 
 const addDetailItem = () => {
     form.check.push({
@@ -111,19 +93,40 @@ const calculateAmountFromRate = (index) => {
     }
 };
 
+const isCashVoucher = computed(() => form.type === 'cash');
+
 async function submitVoucher() {
     try {
-        // Prepare payload based on voucher type
+        // Prepare the base payload
         const payload = {
-            ...form,
-            voucher_no: form.voucher_no,
-            // For Salary vouchers, don't send check details
-            check: form.type === 'salary' ? [] : form.check
+            issue_date: form.issue_date,
+            payment_date: form.payment_date,
+            check_date: form.check_date,
+            delivery_date: form.delivery_date,
+            voucher_date: form.voucher_date,
+            purpose: form.purpose,
+            payee: form.payee,
+            check_no: form.check_no,
+            check_payable_to: form.check_payable_to,
+            check_amount: form.check_amount,
+            status: form.status,
+            type: form.type,
+            user_id: form.user_id,
         };
 
-        const response = await axios.post('/api/vouchers', payload);
+        // Only add check details if type is salary
+        if (form.type === 'salary') {
+            payload.check = form.check.map(item => ({
+                account_id: item.account_id,
+                amount: item.amount,
+                charging_tag: item.charging_tag,
+                hours: item.hours,
+                rate: item.rate
+            }));
+        }
 
-        toast.success(response.data.message || 'Voucher created successfully');
+        const response = await axios.post('/api/vouchers', payload);
+        toast.success(`Voucher created Successfully! Number: ${response.data.data.voucher_no}`);
         router.visit('/vouchers');
     } catch (error) {
         if (error.response?.data?.errors) {
@@ -141,10 +144,22 @@ async function submitVoucher() {
     <Head title="Create Voucher" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <Card class="mt-6 max-w-6xl mx-auto">
+        <Card class="mt-6 mx-auto w-full">
             <CardHeader>
-                <CardTitle>Create Voucher</CardTitle>
-                <CardDescription>Complete all required fields</CardDescription>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <CardTitle>Create Voucher</CardTitle>
+                        <CardDescription>Complete all required fields</CardDescription>
+                    </div>
+                    <Button 
+                        variant="outline" 
+                        @click="router.visit('/vouchers')"
+                        class="flex items-center gap-2"
+                    >
+                        <ArrowLeft class="h-4 w-4" />
+                        Back
+                    </Button>
+                </div>
             </CardHeader>
 
             <CardContent>
@@ -153,8 +168,6 @@ async function submitVoucher() {
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                         <!-- Column 1 -->
                         <div class="space-y-4">
-                            
-
                             <div class="grid gap-2">
                                 <Label for="voucher_date">Voucher Date *</Label>
                                 <Input id="voucher_date" type="date" v-model="form.voucher_date" required />
@@ -173,7 +186,7 @@ async function submitVoucher() {
                                 </Select>
                             </div>
 
-                             <div class="grid gap-2">
+                            <div class="grid gap-2">
                                 <Label for="payee">Payee *</Label>
                                 <Input id="payee" v-model="form.payee" required />
                             </div>
@@ -193,44 +206,49 @@ async function submitVoucher() {
                             
                             <div class="grid gap-2">
                                 <Label for="check_payable_to">Payable To *</Label>
-                                <Input id="check_payable_to" v-model="form.check_payable_to" 
-                                     required />
+                                <Input id="check_payable_to" v-model="form.check_payable_to" required />
                             </div>
-                           
                         </div>
 
                         <!-- Column 3 -->
                         <div class="space-y-4">
                             <div class="grid gap-2">
                                 <Label for="check_amount">Check Amount *</Label>
-                                <Input id="check_amount" type="number" step="0.01" v-model="form.check_amount"
-                                 />
+                                <Input id="check_amount" type="number" step="0.01" v-model="form.check_amount" />
                             </div>
 
                             <div class="grid gap-2">
                                 <Label for="purpose">Purpose *</Label>
                                 <Input id="purpose" v-model="form.purpose" required />
                             </div>
-
                         </div>
                     </div>
 
-                    <!-- Voucher Details Section (Only shown for Non-Salary Vouchers) -->
-                    <div v-if="form.type === 'cash'" class="border rounded-lg p-4 mb-6">
+                    <!-- Voucher Details Section (Only shown for Non-Cash Vouchers) -->
+                    <div class="border rounded-lg p-4 mb-6" :class="{ 'opacity-50': isCashVoucher }">
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-medium">Add/Remove Accounts</h3>
-                            <Button type="button" variant="outline" size="sm" @click="addDetailItem">
+                            <h3 class="font-medium">Account Details</h3>
+                            <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="sm" 
+                                @click="addDetailItem"
+                                :disabled="isCashVoucher"
+                            >
                                 <Plus class="h-4 w-4 mr-2" />
                                 Add Item
                             </Button>
                         </div>
 
-                        <div v-for="(detail, index) in form.check" :key="index"
-                            class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 pb-4 border-b last:border-0">
+                        <div 
+                            v-for="(detail, index) in form.check" 
+                            :key="index"
+                            class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 pb-4 border-b last:border-0"
+                        >
                             <!-- Account Selection -->
                             <div class="grid gap-2">
-                                <Label :for="`account-${index}`">Account *</Label>
-                                <Select v-model="detail.account_id">
+                                <Label :for="`account-${index}`">Account <span v-if="!isCashVoucher">*</span></Label>
+                                <Select v-model="detail.account_id" :disabled="isCashVoucher">
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select account" />
                                     </SelectTrigger>
@@ -244,8 +262,8 @@ async function submitVoucher() {
 
                             <!-- Charging Tag -->
                             <div class="grid gap-2">
-                                <Label :for="`tag-${index}`">Charging Tag *</Label>
-                                <Select v-model="detail.charging_tag" >
+                                <Label :for="`tag-${index}`">Charging Tag <span v-if="!isCashVoucher">*</span></Label>
+                                <Select v-model="detail.charging_tag" :disabled="isCashVoucher">
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select Charging tag" />
                                     </SelectTrigger>
@@ -259,25 +277,52 @@ async function submitVoucher() {
                             <!-- Hours -->
                             <div class="grid gap-2">
                                 <Label :for="`hours-${index}`">Hours</Label>
-                                <Input :id="`hours-${index}`" type="number" step="0.01" v-model="detail.hours"
-                                    @blur="calculateAmountFromRate(index)" placeholder="Optional" />
+                                <Input 
+                                    :id="`hours-${index}`" 
+                                    type="number" 
+                                    step="0.01" 
+                                    v-model="detail.hours"
+                                    @blur="!isCashVoucher && calculateAmountFromRate(index)" 
+                                    placeholder="Optional"
+                                    :disabled="isCashVoucher"
+                                />
                             </div>
 
                             <!-- Rate -->
                             <div class="grid gap-2">
                                 <Label :for="`rate-${index}`">Rate</Label>
-                                <Input :id="`rate-${index}`" type="number" step="0.01" v-model="detail.rate"
-                                    @blur="calculateAmountFromRate(index)" placeholder="Optional" />
+                                <Input 
+                                    :id="`rate-${index}`" 
+                                    type="number" 
+                                    step="0.01" 
+                                    v-model="detail.rate"
+                                    @blur="!isCashVoucher && calculateAmountFromRate(index)" 
+                                    placeholder="Optional"
+                                    :disabled="isCashVoucher"
+                                />
                             </div>
 
                             <!-- Amount -->
                             <div class="grid gap-2">
-                                <Label :for="`amount-${index}`">Amount *</Label>
+                                <Label :for="`amount-${index}`">Amount <span v-if="!isCashVoucher">*</span></Label>
                                 <div class="flex gap-2">
-                                    <Input :id="`amount-${index}`" type="number" step="0.01" v-model="detail.amount"
-                                        @change="calculateTotalAmount" required class="flex-1" />
-                                    <Button type="button" variant="destructive" size="icon"
-                                        @click="removeDetailItem(index)" :disabled="form.check.length <= 1">
+                                    <Input 
+                                        :id="`amount-${index}`" 
+                                        type="number" 
+                                        step="0.01" 
+                                        v-model="detail.amount"
+                                        @change="!isCashVoucher && calculateTotalAmount" 
+                                        :required="!isCashVoucher" 
+                                        class="flex-1"
+                                        :disabled="isCashVoucher"
+                                    />
+                                    <Button 
+                                        type="button" 
+                                        variant="destructive" 
+                                        size="icon"
+                                        @click="removeDetailItem(index)" 
+                                        :disabled="form.check.length <= 1 || isCashVoucher"
+                                    >
                                         <Trash2 class="h-4 w-4" />
                                     </Button>
                                 </div>

@@ -44,6 +44,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/vouchers/create', [VoucherController::class, 'create'])->name('vouchers.create');
     Route::get('/vouchers/{voucher}/edit', [VoucherController::class, 'edit'])->name('vouchers.edit');
     Route::put('/vouchers/{voucher}', [VoucherController::class, 'update'])->name('vouchers.update');
+    Route::get('/vouchers/{voucher}/view', [VoucherController::class, 'view'])->name('vouchers.view');
 });
 
 
