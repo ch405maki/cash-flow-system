@@ -78,8 +78,6 @@ const form = useForm({
     ]
 });
 
-
-
 const addDetailItem = () => {
     form.check.push({
         amount: 0,
