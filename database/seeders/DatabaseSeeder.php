@@ -34,10 +34,10 @@ class DatabaseSeeder extends Seeder
 
         // Create access levels
         $accessLevels = [
-            ['prognam_name' => 'System', 'access_level' => 'Full Access'],
-            ['prognam_name' => 'System', 'access_level' => 'Read Only'],
-            ['prognam_name' => 'Procurement', 'access_level' => 'Approver'],
-            ['prognam_name' => 'Finance', 'access_level' => 'Processor'],
+            ['program_name' => 'System', 'access_level' => 'Full Access'],
+            ['program_name' => 'System', 'access_level' => 'Read Only'],
+            ['program_name' => 'Procurement', 'access_level' => 'Approver'],
+            ['program_name' => 'Finance', 'access_level' => 'Processor'],
         ];
 
         foreach ($accessLevels as $access) {
