@@ -13,6 +13,8 @@ use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\SignatoryController;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\VoucherController;
+use App\Http\Controllers\Api\ReportController;
+
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -45,6 +47,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/vouchers/{voucher}/edit', [VoucherController::class, 'edit'])->name('vouchers.edit');
     Route::put('/vouchers/{voucher}', [VoucherController::class, 'update'])->name('vouchers.update');
     Route::get('/vouchers/{voucher}/view', [VoucherController::class, 'view'])->name('vouchers.view');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
 });
 
 

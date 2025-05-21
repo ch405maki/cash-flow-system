@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
-import VoucherTable from '@/components/vouchers/VoucherTable.vue';
+import ReportsTable from '@/components/reports/ReportsTable.vue';
 import { type BreadcrumbItem } from '@/types';
 import { router } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
@@ -11,14 +11,10 @@ const breadcrumbs: BreadcrumbItem[] = [
     title: 'Dashboard',
     href: '/dashboard',
   },{
-    title: 'Vouchers',
-    href: '/vouchers',
+    title: 'Reports',
+    href: '/reports',
   },
 ];
-
-function goToCreate() {
-  router.visit(`/vouchers/create`)
-}
 
 const props = defineProps({
   vouchers: {
@@ -34,17 +30,14 @@ const props = defineProps({
 </script>
 
 <template>
-  <Head title="Create Voucher" />
+  <Head title="Reports" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
       <div class="flex justify-between items-center">
-        <h1 class="text-xl font-bold">Vouchers</h1>
-        <Button variant="default" size="sm" @click="goToCreate()">
-          Create New Voucher
-        </Button>
+        <h1 class="text-xl font-bold">Reports</h1>
       </div>
-      <VoucherTable :vouchers="vouchers" />
+      <ReportsTable :vouchers="vouchers" />
 
       <div class="mt-4 flex items-center justify-between">
         <div class="text-sm text-muted-foreground">
