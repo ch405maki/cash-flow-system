@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { 
+    Head, 
+    useForm, 
+    usePage, 
+    router 
+} from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,13 +24,11 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card'
-import { Plus, Trash2 } from 'lucide-vue-next'
+import { Plus, Trash2, ArrowLeft } from 'lucide-vue-next'
 import { useToast } from 'vue-toastification'
 import axios from 'axios'
 import { ref, computed } from 'vue'
 import { type BreadcrumbItem } from '@/types';
-import { router } from '@inertiajs/vue3';
-import { ArrowLeft } from 'lucide-vue-next';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },

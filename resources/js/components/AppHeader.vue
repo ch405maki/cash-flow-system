@@ -71,7 +71,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Reports',
-        href: '/reports',
+        href: '/reports/vouchers',
         icon: LayoutGrid,
     },
 ];

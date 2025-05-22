@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/card'
 import { ref, computed } from 'vue'
 import { type BreadcrumbItem } from '@/types';
-import { format } from 'date-fns'
 import { ArrowLeft } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
 
@@ -24,12 +23,30 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: `View Voucher: ${voucher.voucher_no}`, href: `/vouchers/${voucher.id}` },
 ];
 
-
-
-// Date formatting function using date-fns
-const formatDate = (dateString: string) => {
+// Date formatting function using plain JavaScript
+const formattedDate = (dateString: string) => {
     if (!dateString) return 'N/A';
-    return format(new Date(dateString), 'MMM dd, yyyy');
+    
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString; // Return original if invalid date
+        
+        const months = [
+            'January', 'February', 'March', 'April', 
+            'May', 'June', 'July', 'August',
+            'September', 'October', 'November', 'December'
+        ];
+        
+        const day = date.getDate();
+        const month = months[date.getMonth()];
+        const year = date.getFullYear();
+        
+        
+        return `${month} ${day}, ${year}`;
+    } catch (error) {
+        console.error('Error formatting date:', error);
+        return dateString; // Return original if formatting fails
+    }
 };
 </script>
 
@@ -44,14 +61,14 @@ const formatDate = (dateString: string) => {
                         <CardTitle>Voucher {{ voucher.voucher_no }}</CardTitle>
                         <CardDescription>Voucher Details</CardDescription>
                     </div>
-                <Button 
+                    <Button 
                         variant="outline" 
                         @click="router.visit('/vouchers')"
                         class="flex items-center gap-2"
                     >
                         <ArrowLeft class="h-4 w-4" />
                         Back
-                </Button>
+                    </Button>
                 </div>
             </CardHeader>
 
@@ -67,7 +84,7 @@ const formatDate = (dateString: string) => {
 
                         <div class="grid gap-2">
                             <Label for="voucher_date">Voucher Date</Label>
-                            <div class="p-2 border rounded-md bg-gray-50 text-sm">{{ formatDate(voucher.voucher_date) }}</div>
+                            <div class="p-2 border rounded-md bg-gray-50 text-sm">{{ formattedDate(voucher.voucher_date) }}</div>
                         </div>
 
                         <div class="grid gap-2">
@@ -85,7 +102,7 @@ const formatDate = (dateString: string) => {
 
                         <div class="grid gap-2">
                             <Label for="check_date">Check Date</Label>
-                            <div class="p-2 border rounded-md bg-gray-50 text-sm">{{ formatDate(voucher.check_date) }}</div>
+                            <div class="p-2 border rounded-md bg-gray-50 text-sm">{{ formattedDate(voucher.check_date) }}</div>
                         </div>
 
                         <div class="grid gap-2">
@@ -168,17 +185,17 @@ const formatDate = (dateString: string) => {
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <div class="grid gap-2">
                         <Label for="issue_date">Issue Date</Label>
-                        <div class="p-2 border rounded-md bg-gray-50 text-sm">{{ formatDate(voucher.issue_date) }}</div>
+                        <div class="p-2 border rounded-md bg-gray-50 text-sm">{{ formattedDate(voucher.issue_date) }}</div>
                     </div>
 
                     <div class="grid gap-2">
                         <Label for="payment_date">Payment Date</Label>
-                        <div class="p-2 border rounded-md bg-gray-50 text-sm">{{ formatDate(voucher.payment_date) }}</div>
+                        <div class="p-2 border rounded-md bg-gray-50 text-sm">{{ formattedDate(voucher.payment_date) }}</div>
                     </div>
 
                     <div class="grid gap-2">
                         <Label for="delivery_date">Delivery Date</Label>
-                        <div class="p-2 border rounded-md bg-gray-50 text-sm">{{ formatDate(voucher.delivery_date) }}</div>
+                        <div class="p-2 border rounded-md bg-gray-50 text-sm">{{ formattedDate(voucher.delivery_date) }}</div>
                     </div>
                 </div>
             </CardContent>

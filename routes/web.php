@@ -47,10 +47,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/vouchers/{voucher}/edit', [VoucherController::class, 'edit'])->name('vouchers.edit');
     Route::put('/vouchers/{voucher}', [VoucherController::class, 'update'])->name('vouchers.update');
     Route::get('/vouchers/{voucher}/view', [VoucherController::class, 'view'])->name('vouchers.view');
+    Route::get('/reports/vouchers/{voucher}/report', [ReportController::class, 'generateVoucherReports'])->name('vouchers.report');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/vouchers', [ReportController::class, 'voucherReports'])->name('reports.voucherReports');
 });
 
 

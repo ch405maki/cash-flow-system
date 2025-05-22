@@ -12,7 +12,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     href: '/dashboard',
   },{
     title: 'Reports',
-    href: '/reports',
+    href: '/reports/vouchers',
   },
 ];
 
