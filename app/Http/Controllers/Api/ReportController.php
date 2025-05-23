@@ -15,21 +15,33 @@ class ReportController extends Controller
 {
     public function voucherReports()
     {
-        return Inertia::render('Reports/Vouchers/Report', [
+        return Inertia::render('Reports/Vouchers/Reports', [
             'vouchers' => Voucher::with(['user', 'details'])->get(),
             'accounts' => Account::all(),
         ]);
     }
 
+   public function preview(Voucher $voucher)
+    {
+        return inertia('Reports/Vouchers/ReportPreview', [
+            'voucher' => $voucher,
+            'pdfHtml' => view('vouchers.pdf-template', [
+                'voucher' => $voucher,
+                // Don't include preview controls here anymore
+            ])->render(),
+            'pdfUrl' => route('vouchers.pdf', $voucher),
+            'authUser' => auth()->user()
+        ]);
+    }
+
     public function generateVoucherReports(Voucher $voucher)
     {
-        // Generate HTML content (you might want to create a dedicated view)
-        $html = view('vouchers.report', compact('voucher'))->render();
+        // PDF generation remains the same
+        $html = view('vouchers.pdf-template', compact('voucher'))->render();
         
-        // Generate PDF
         $pdf = Browsershot::html($html)
-            ->setNodeBinary(config('browsershot.node_path'))
-            ->setNpmBinary(config('browsershot.npm_path'))
+            ->setNodeBinary('C:\Program Files\nodejs\node.exe')
+            ->setNpmBinary('C:\Program Files\nodejs\npm.cmd')
             ->waitUntilNetworkIdle()
             ->emulateMedia('screen')
             ->format('A4')

@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import VoucherTable from '@/components/vouchers/VoucherTable.vue';
 import { type BreadcrumbItem } from '@/types';
-import { router } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 
 const breadcrumbs: BreadcrumbItem[] = [
