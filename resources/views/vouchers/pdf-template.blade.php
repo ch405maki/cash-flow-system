@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!--SAMPLE REPORT LAYOUT-->
 <html>
 <head>
 <title>Cash Voucher</title>
