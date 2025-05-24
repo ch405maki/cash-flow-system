@@ -45,6 +45,7 @@ function getStatusVariant(status: string) {
 
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold">Request To Order Details</h1>
+        
         <Button @click="goBack" variant="outline">Back</Button>
       </div>
 
@@ -64,22 +65,25 @@ function getStatusVariant(status: string) {
       <Table>
         <TableCaption>Items in this order</TableCaption>
         <TableHeader>
-          <TableRow>
+            <TableRow>
             <TableHead>Item Description</TableHead>
             <TableHead>Quantity</TableHead>
             <TableHead>Unit</TableHead>
-            <TableHead>Tagging</TableHead>
-          </TableRow>
+            <TableHead>Department</TableHead>
+            <TableHead>Purpose</TableHead>
+            </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow v-for="detail in requestOrder.details" :key="detail.id">
+            <TableRow v-for="detail in requestOrder.details" :key="detail.id">
             <TableCell>{{ detail.item_description }}</TableCell>
             <TableCell>{{ detail.quantity }}</TableCell>
             <TableCell>{{ detail.unit }}</TableCell>
-            <TableCell>{{ detail.tagging }}</TableCell>
-          </TableRow>
+            <TableCell>{{ detail.request?.department?.department_name ?? 'N/A' }}</TableCell>
+        <TableCell>{{ detail.request?.purpose ?? 'N/A' }}</TableCell>
+            </TableRow>
         </TableBody>
-      </Table>
+        </Table>
+
 
     </div>
   </AppLayout>

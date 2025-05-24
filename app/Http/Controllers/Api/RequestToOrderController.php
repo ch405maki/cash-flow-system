@@ -93,12 +93,15 @@ class RequestToOrderController extends Controller
 
     public function show($id)
     {
-        $requestOrder = RequestToOrder::with('details')->findOrFail($id);
+        $requestOrder = RequestToOrder::with([
+    'details.request.department'
+])->findOrFail($id);
 
         return Inertia::render('Request/Order/Show', [
             'requestOrder' => $requestOrder,
         ]);
     }
+
 
 }
 
