@@ -37,6 +37,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/request-to-order/create', [RequestToOrderController::class, 'create'])->name('request-to-order.create');
     Route::post('/request-to-orders', [RequestToOrderController::class, 'store'])->name('request-to-orders.store');
     Route::get('/request-to-order/{id}', [RequestToOrderController::class, 'show'])->name('request-to-order.show');
+
+    Route::patch('/request-to-order/{id}/approve', [RequestToOrderController::class, 'approve'])->name('request-to-order.approve');
+    Route::patch('/request-to-order/{id}/reject', [RequestToOrderController::class, 'reject'])->name('request-to-order.reject');
+
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

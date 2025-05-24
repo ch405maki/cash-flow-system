@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request as HttpRequest;
+use Illuminate\Support\Facades\Hash;
 use App\Models\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -18,7 +19,7 @@ class RequestToOrderController extends Controller
 {
     public function index()
     {
-        $requests = RequestToOrder::with('details')->get(); // eager load details
+        $requests = RequestToOrder::with('details')->get();
 
         return Inertia::render('Request/Order/Index', [
             'requests' => $requests,
@@ -94,14 +95,50 @@ class RequestToOrderController extends Controller
     public function show($id)
     {
         $requestOrder = RequestToOrder::with([
-    'details.request.department'
-])->findOrFail($id);
+            'details.request.department'
+        ])->findOrFail($id);
 
         return Inertia::render('Request/Order/Show', [
             'requestOrder' => $requestOrder,
         ]);
     }
 
+    public function approve($id, HttpRequest $request)
+    {
+        $request->validate(['password' => 'required']);
+        $user = auth()->user();
+
+        if (!Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['password' => 'Incorrect password']);
+        }
+
+        $order = RequestToOrder::findOrFail($id);
+        if ($order->status === 'approved') {
+            return back()->withErrors(['status' => 'Already approved']);
+        }
+
+        $order->update(['status' => 'approved']);
+        return back()->with('success', 'Request approved');
+    }
+
+
+    public function reject($id, HttpRequest $request)
+    {
+        $request->validate(['password' => 'required']);
+        $user = auth()->user();
+
+        if (!Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['password' => 'Incorrect password']);
+        }
+
+        $order = RequestToOrder::findOrFail($id);
+        if ($order->status === 'approved') {
+            return back()->withErrors(['status' => 'Already approved']);
+        }
+
+        $order->update(['status' => 'rejected']);
+        return back()->with('success', 'Request approved');
+    }
 
 }
 

@@ -2,6 +2,15 @@
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Head, usePage } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
+  import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    } from '@/components/ui/dialog'
 import {
   Table,
   TableCaption,
@@ -12,8 +21,12 @@ import {
   TableCell,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-
-const { requestOrder } = usePage().props
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { ref } from 'vue'
+import axios from 'axios'
+import { useToast } from 'vue-toastification'
+import { useForm } from '@inertiajs/vue3'
 
 function goBack() {
   window.history.back()
@@ -31,22 +44,154 @@ function getStatusVariant(status: string) {
       return 'default'
   }
 }
+
+const { requestOrder } = usePage().props
+const toast = useToast()
+
+const password = ref('')
+const showApproveModal = ref(false)
+const showRejectModal = ref(false)
+
+const form = useForm({
+  password: '',
+})
+
+async function submitApproval() {
+  form.processing = true
+
+  form.patch(route('request-to-order.approve', requestOrder.id), {
+    onSuccess: (page) => {
+      toast.success('Request approved successfully')
+      showApproveModal.value = false
+      form.reset('password')
+    },
+    onError: (errors) => {
+      if (errors.password) {
+        toast.error(errors.password)
+      } else {
+        toast.error('Something went wrong.')
+      }
+    },
+    onFinish: () => {
+      form.processing = false
+    }
+  })
+}
+
+async function submitReject() {
+  form.processing = true
+
+  form.patch(route('request-to-order.reject', requestOrder.id), {
+    onSuccess: (page) => {
+      toast.success('Request rejected successfully')
+      showRejectModal.value = false
+      form.reset('password')
+    },
+    onError: (errors) => {
+      if (errors.password) {
+        toast.error(errors.password)
+      } else {
+        toast.error('Something went wrong.')
+      }
+    },
+    onFinish: () => {
+      form.processing = false
+    }
+  })
+}
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Request To Order', href: '/request-to-order' },
+    { title: `Order ${requestOrder.order_no}`, href: `/request/order/${requestOrder.id}` }
+]
 </script>
 
 <template>
   <Head :title="`Order ${requestOrder.order_no}`" />
 
-  <AppLayout :breadcrumbs="[
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Request To Order', href: '/request-to-order' },
-    { title: `Order ${requestOrder.order_no}`, href: '#' }
-  ]">
+  <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-4 space-y-4">
 
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold">Request To Order Details</h1>
         
-        <Button @click="goBack" variant="outline">Back</Button>
+        <div class="space-x-2 flex items-center">
+            <Button @click="goBack" variant="outline">Back</Button>
+            <!-- Approve Button with Dialog -->
+            <Dialog v-model:open="showApproveModal">
+                <DialogTrigger as-child>
+                    <Button
+                    variant="default"
+                    size="sm"
+                    :disabled="requestOrder.status == 'approved' || form.processing"
+                    >
+                    Approve
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                    <DialogTitle>Password Verification</DialogTitle>
+                    <DialogDescription>Enter your password to approve this request</DialogDescription>
+                    </DialogHeader>
+                    <div class="space-y-2">
+                    <Label for="approve-password">Password</Label>
+                    <Input
+                        id="approve-password"
+                        v-model="form.password"
+                        type="password"
+                        placeholder="Enter password"
+                        class="w-full"
+                    />
+                    </div>
+                    <DialogFooter>
+                    <Button
+                        @click="submitApproval"
+                        :disabled="!form.password || form.processing"
+                    >
+                        <span v-if="form.processing">Processing...</span>
+                        <span v-else>Confirm Approval</span>
+                    </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <Dialog v-model:open="showRejectModal">
+                <DialogTrigger as-child>
+                    <Button
+                    variant="default"
+                    size="sm"
+                    :disabled="requestOrder.status == 'rejected' || form.processing"
+                    >
+                    Reject
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                    <DialogTitle>Password Verification</DialogTitle>
+                    <DialogDescription>Enter your password to approve this request</DialogDescription>
+                    </DialogHeader>
+                    <div class="space-y-2">
+                    <Label for="approve-password">Password</Label>
+                    <Input
+                        id="approve-password"
+                        v-model="form.password"
+                        type="password"
+                        placeholder="Enter password"
+                        class="w-full"
+                    />
+                    </div>
+                    <DialogFooter>
+                    <Button
+                        @click="submitReject"
+                        :disabled="!form.password || form.processing"
+                    >
+                        <span v-if="form.processing">Processing...</span>
+                        <span v-else>Confirm Reject Request</span>
+                    </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div>
       </div>
 
       <div class="space-y-2">
@@ -83,8 +228,6 @@ function getStatusVariant(status: string) {
             </TableRow>
         </TableBody>
         </Table>
-
-
     </div>
   </AppLayout>
 </template>
