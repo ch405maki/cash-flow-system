@@ -45,8 +45,8 @@ const allRequestDetails = computed(() => {
     request.details.map(detail => ({
       ...detail,
       request_no: request.request_no,
-      department_name: request.department.name,
-      department_id: request.department_id, // Ensure department_id is included
+      department_name: request.department.department_name,
+      department_id: request.department_id, 
       available_quantity: detail.quantity - detail.released_quantity
     }))
   );

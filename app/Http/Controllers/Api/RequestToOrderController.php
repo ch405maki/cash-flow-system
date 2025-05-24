@@ -18,17 +18,10 @@ class RequestToOrderController extends Controller
 {
     public function index()
     {
-        $requests = Request::with(['department', 'user', 'details'])
-            ->where('status', 'request to order')
-            ->get();
+        $requests = RequestToOrder::with('details')->get(); // eager load details
 
         return Inertia::render('Request/Order/Index', [
             'requests' => $requests,
-            'departments' => Department::all(),
-            'authUser' => [
-                'id' => Auth::id(),
-                'department_id' => Auth::user()->department_id,
-            ],
         ]);
     }
 
@@ -44,46 +37,46 @@ class RequestToOrderController extends Controller
     }
 
     public function store(HttpRequest $request)
-{
-    $validated = $request->validate([
-        'notes' => 'nullable|string',
-        'items' => 'required|array|min:1',
-        'items.*.request_id' => 'required|exists:requests,id',
-        'items.*.department_id' => 'required|exists:departments,id', 
-        'items.*.detail_id' => 'required|exists:request_details,id',
-        'items.*.quantity' => 'required|numeric|min:0.01',
-        'items.*.unit' => 'required|string',
-        'items.*.item_description' => 'required|string',
-    ]);
-
-    // Create the order
-    $order = RequestToOrder::create([
-        'user_id' => auth()->id(),
-        'order_no' => 'ORD-' . now()->format('YmdHis'),
-        'order_date' => now(),
-        'notes' => $validated['notes'],
-        'status' => 'pending'
-    ]);
-
-    // Add order items
-    foreach ($validated['items'] as $item) {
-        $order->details()->create([
-            'request_id' => $item['request_id'],
-            'department_id' => $item['department_id'],
-            'request_detail_id' => $item['detail_id'],
-            'quantity' => $item['quantity'],
-            'unit' => $item['unit'],
-            'item_description' => $item['item_description']
+    {
+        $validated = $request->validate([
+            'notes' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.request_id' => 'required|exists:requests,id',
+            'items.*.department_id' => 'required|exists:departments,id', 
+            'items.*.detail_id' => 'required|exists:request_details,id',
+            'items.*.quantity' => 'required|numeric|min:0.01',
+            'items.*.unit' => 'required|string',
+            'items.*.item_description' => 'required|string',
         ]);
 
-        // Update released quantity in original request
-        // RequestDetail::where('id', $item['detail_id'])
-        //     ->increment('released_quantity', $item['quantity']);
-    }
+        // Create the order
+        $order = RequestToOrder::create([
+            'user_id' => auth()->id(),
+            'order_no' => 'ORD-' . now()->format('YmdHis'),
+            'order_date' => now(),
+            'notes' => $validated['notes'],
+            'status' => 'pending'
+        ]);
 
-    return redirect()->route('request-to-order.index')
-        ->with('success', 'Order created successfully');
-}
+        // Add order items
+        foreach ($validated['items'] as $item) {
+            $order->details()->create([
+                'request_id' => $item['request_id'],
+                'department_id' => $item['department_id'],
+                'request_detail_id' => $item['detail_id'],
+                'quantity' => $item['quantity'],
+                'unit' => $item['unit'],
+                'item_description' => $item['item_description']
+            ]);
+
+            // Update released quantity in original request
+            // RequestDetail::where('id', $item['detail_id'])
+            //     ->increment('released_quantity', $item['quantity']);
+        }
+
+        return redirect()->route('request-to-order.index')
+            ->with('success', 'Order created successfully');
+    }
 
     private function generateOrderNumber()
     {
@@ -97,5 +90,15 @@ class RequestToOrderController extends Controller
         
         return $prefix.$date.str_pad($number, 4, '0', STR_PAD_LEFT);
     }
+
+    public function show($id)
+    {
+        $requestOrder = RequestToOrder::with('details')->findOrFail($id);
+
+        return Inertia::render('Request/Order/Show', [
+            'requestOrder' => $requestOrder,
+        ]);
+    }
+
 }
 

@@ -36,6 +36,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/request-to-order', [RequestToOrderController::class, 'index'])->name('request-to-order.index');
     Route::get('/request-to-order/create', [RequestToOrderController::class, 'create'])->name('request-to-order.create');
     Route::post('/request-to-orders', [RequestToOrderController::class, 'store'])->name('request-to-orders.store');
+    Route::get('/request-to-order/{id}', [RequestToOrderController::class, 'show'])->name('request-to-order.show');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
