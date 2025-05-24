@@ -72,7 +72,7 @@ function goToCreate() {
 }
 
 function viewRequest(id: number) {
-  router.visit(`/request-to-order/${id}`) // navigate to view page of the request
+  router.visit(`/request-to-order/${id}`) 
 }
 
 const props = defineProps({
