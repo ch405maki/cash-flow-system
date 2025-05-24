@@ -25,9 +25,6 @@ return new class extends Migration {
             $table->decimal('quantity', 10, 2);
             $table->string('unit');
             $table->text('item_description');
-            $table->string('supplier')->nullable();
-            $table->decimal('unit_price', 10, 2)->nullable();
-            $table->decimal('total_price', 10, 2)->nullable();
             $table->timestamps();
         });
     }

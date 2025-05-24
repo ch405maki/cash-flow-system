@@ -14,9 +14,6 @@ class RequestToOrderDetail extends Model
         'quantity',
         'unit',
         'item_description',
-        'supplier',
-        'unit_price',
-        'total_price'
     ];
 
     public function order(): BelongsTo

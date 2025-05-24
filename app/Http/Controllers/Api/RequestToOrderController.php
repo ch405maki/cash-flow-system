@@ -44,51 +44,46 @@ class RequestToOrderController extends Controller
     }
 
     public function store(HttpRequest $request)
-    {
-        $validated = $request->validate([
-            'request_id' => 'required|exists:requests,id',
-            'notes' => 'nullable|string',
-            'items' => 'required|array|min:1',
-            'items.*.id' => 'required|exists:request_details,id',
-            'items.*.quantity' => 'required|numeric|min:0.01',
-            'items.*.supplier' => 'nullable|string|max:255',
-            'items.*.unit_price' => 'nullable|numeric|min:0',
+{
+    $validated = $request->validate([
+        'notes' => 'nullable|string',
+        'items' => 'required|array|min:1',
+        'items.*.request_id' => 'required|exists:requests,id',
+        'items.*.department_id' => 'required|exists:departments,id',
+        'items.*.detail_id' => 'required|exists:request_details,id',
+        'items.*.quantity' => 'required|numeric|min:0.01',
+        'items.*.unit' => 'required|string',
+        'items.*.item_description' => 'required|string',
+    ]);
+
+    // Create the order
+    $order = RequestToOrder::create([
+        'user_id' => auth()->id(),
+        'order_no' => 'ORD-' . now()->format('YmdHis'),
+        'order_date' => now(),
+        'notes' => $validated['notes'],
+        'status' => 'pending'
+    ]);
+
+    // Add order items
+    foreach ($validated['items'] as $item) {
+        $order->details()->create([
+            'request_id' => $item['request_id'],
+            'department_id' => $item['department_id'],
+            'request_detail_id' => $item['detail_id'],
+            'quantity' => $item['quantity'],
+            'unit' => $item['unit'],
+            'item_description' => $item['item_description']
         ]);
 
-        // Create the order
-        $order = RequestToOrder::create([
-            'user_id' => auth()->id(),
-            'order_no' => $this->generateOrderNumber(),
-            'order_date' => now(),
-            'notes' => $validated['notes'] ?? null,
-            'status' => 'pending'
-        ]);
-
-        // Get the original request for department info
-        $originalRequest = Request::findOrFail($validated['request_id']);
-
-        // Add the selected items
-        foreach ($validated['items'] as $item) {
-            $requestDetail = RequestDetail::findOrFail($item['id']);
-
-            $order->details()->create([
-                'request_id' => $validated['request_id'],
-                'department_id' => $originalRequest->department_id,
-                'quantity' => $item['quantity'],
-                'unit' => $requestDetail->unit,
-                'item_description' => $requestDetail->item_description,
-                'supplier' => $item['supplier'] ?? null,
-                'unit_price' => $item['unit_price'] ?? null,
-                // total_price will be auto-calculated by the model
-            ]);
-
-            // Update released quantity in the original request
-            $requestDetail->increment('released_quantity', $item['quantity']);
-        }
-
-        return redirect()->route('request-to-orders.show', $order->id)
-            ->with('success', 'Order created successfully');
+        // Update released quantity in original request
+        // RequestDetail::where('id', $item['detail_id'])
+        //     ->increment('released_quantity', $item['quantity']);
     }
+
+    return redirect()->route('request-to-order.index')
+        ->with('success', 'Order created successfully');
+}
 
     private function generateOrderNumber()
     {
