@@ -19,7 +19,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 
 function goToCreate() {
-  router.visit(`/request/create`)
+  router.visit(`/request-to-order/create`)
 }
 
 const props = defineProps({
@@ -45,6 +45,7 @@ const props = defineProps({
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
       <div class="flex justify-between items-center">
         <h1 class="text-xl font-bold">Request To Order List</h1>
+        <Button @click="goToCreate">Create New Order</Button>
       </div>
       <RequestTable :requests="requests"/>
     </div>
