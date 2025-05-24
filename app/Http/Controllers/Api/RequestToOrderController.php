@@ -49,7 +49,7 @@ class RequestToOrderController extends Controller
         'notes' => 'nullable|string',
         'items' => 'required|array|min:1',
         'items.*.request_id' => 'required|exists:requests,id',
-        'items.*.department_id' => 'required|exists:departments,id',
+        'items.*.department_id' => 'required|exists:departments,id', 
         'items.*.detail_id' => 'required|exists:request_details,id',
         'items.*.quantity' => 'required|numeric|min:0.01',
         'items.*.unit' => 'required|string',
