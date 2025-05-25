@@ -39,6 +39,10 @@ function goToCreate() {
   router.visit(`/purchase-order/create`)
 }
 
+function viewRequest(id: number) {
+  router.visit(`/request-to-order/${id}`) 
+}
+
 function getStatusVariant(status: string) {
   switch (status.toLowerCase()) {
     case 'pending':

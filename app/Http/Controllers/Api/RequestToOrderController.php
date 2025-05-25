@@ -19,12 +19,24 @@ class RequestToOrderController extends Controller
 {
     public function index() 
     {
+        $user = Auth::user();
+
         $requests = RequestToOrder::with('details')
             ->whereIn('status', ['pending', 'for_eod'])
             ->get();
 
+        $forOrders = Request::with(['department', 'user', 'details'])
+            ->whereIn('status', [ 'to_order'])
+            ->get();
+
         return Inertia::render('Request/Order/Index', [
             'requests' => $requests,
+            'forOrders' => $forOrders,
+            'authUser' => [
+                'id' => $user->id,
+                'role' => $user->role,
+                'department_id' => $user->department_id,
+            ],
         ]);
     }
 
@@ -97,12 +109,19 @@ class RequestToOrderController extends Controller
 
     public function show($id)
     {
+        $user = Auth::user();
+
         $requestOrder = RequestToOrder::with([
             'details.request.department'
         ])->findOrFail($id);
 
         return Inertia::render('Request/Order/Show', [
             'requestOrder' => $requestOrder,
+            'authUser' => [
+                'id' => $user->id,
+                'role' => $user->role,
+                'access' => $user->access_id,
+            ],
         ]);
     }
 

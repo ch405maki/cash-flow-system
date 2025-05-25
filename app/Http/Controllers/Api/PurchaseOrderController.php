@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use App\Models\Request as PurchaseRequest;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class PurchaseOrderController extends Controller
 {
@@ -30,6 +31,9 @@ class PurchaseOrderController extends Controller
 
     public function show(PurchaseOrder $purchaseOrder)
     {
+
+        $user = Auth::user();
+
         return Inertia::render('PurchaseOrders/Show', [
             'purchaseOrder' => $purchaseOrder->load([
                 'user',
@@ -37,6 +41,11 @@ class PurchaseOrderController extends Controller
                 'account',
                 'details'
             ]),
+            'authUser' => [
+                'id' => $user->id,
+                'role' => $user->role,
+                'access' => $user->access_id,
+            ],
         ]);
     }
 

@@ -37,6 +37,10 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  authUser: {
+    type: Object,
+    required: true,
+  },
 })
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -104,9 +108,10 @@ async function submitStatusUpdate(newStatus: string) {
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="flex items-center justify-between">
         <h1 class="text-2xl font-bold">Purchase Order: {{ purchaseOrder.po_no }}</h1>
-        <div class="space-x-2">
+        <div class="space-x-2 flex space-x-2">
           <!-- Approve Dialog -->
-          <Dialog v-model:open="showApproveModal">
+          <div v-if="authUser.role === 'executive_director'" class="space-x-2 flex space-x-2">
+            <Dialog v-model:open="showApproveModal">
             <DialogTrigger as-child>
               <Button 
                 variant="default" 
@@ -158,7 +163,7 @@ async function submitStatusUpdate(newStatus: string) {
 
           <!-- Reject Dialog -->
           <Dialog v-model:open="showRejectModal">
-            <DialogTrigger as-child>
+            <DialogTrigger>
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -208,8 +213,9 @@ async function submitStatusUpdate(newStatus: string) {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
 
-          <Button variant="outline" as-child>
+          <Button variant="outline" size="sm"  as-child>
             <Link href="/purchase-orders">Back to List</Link>
           </Button>
         </div>

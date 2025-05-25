@@ -6,6 +6,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\Users\UserController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\AccessController;
+use App\Http\Controllers\Api\RequestApprovalController;
 use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\RequestToOrderController;
 use App\Http\Controllers\Api\ApprovedRequestController;
@@ -17,7 +18,7 @@ use App\Http\Controllers\Api\ReportController;
 
 
 Route::get('/', function () {
-    return Inertia::render('Welcome');
+    return Inertia::render('auth/Login');
 })->name('home');
 
 Route::get('dashboard', function () {   
@@ -37,11 +38,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/request-to-order/create', [RequestToOrderController::class, 'create'])->name('request-to-order.create');
     Route::post('/request-to-orders', [RequestToOrderController::class, 'store'])->name('request-to-orders.store');
     Route::get('/request-to-order/{id}', [RequestToOrderController::class, 'show'])->name('request-to-order.show');
-
+    
     Route::patch('/request-to-order/{id}/approve', [RequestToOrderController::class, 'approve'])->name('request-to-order.approve');
     Route::patch('/request-to-order/{id}/for-eod', [RequestToOrderController::class, 'forEod'])->name('request-to-order.for-eod');
     Route::patch('/request-to-order/{id}/reject', [RequestToOrderController::class, 'reject'])->name('request-to-order.reject');
-
+    
+    Route::get('/for-approval', [RequestApprovalController::class, 'index'])->name('for-approval.index');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

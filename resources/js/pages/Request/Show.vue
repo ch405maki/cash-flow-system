@@ -33,6 +33,10 @@
         type: Object,
         required: true,
     },
+    user: {
+        type: Object,
+        required: true,
+    },
     })
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -92,181 +96,196 @@
         <div class="flex items-center justify-between">
             <h1 class="text-xl font-bold">Request Details</h1>
             <div class="ml-auto space-x-2">
-            <Dialog v-model:open="showApproveModal">
-                <DialogTrigger as-child>
-                <Button 
-                    variant="default" 
-                    size="sm" 
-                    :disabled="request.status === 'approved' || form.processing"
-                >
-                    Approve
-                </Button>
-                </DialogTrigger>
-                <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Password Verification</DialogTitle>
-                    <DialogDescription>
-                    Please enter your password to approve this request
-                    </DialogDescription>
-                </DialogHeader>
-                <div class="space-y-2">
-                    <Label for="approve-password">Password</Label>
-                    <Input 
-                    id="approve-password" 
-                    v-model="password" 
-                    type="password" 
-                    placeholder="Enter your password"
-                    class="w-full"
-                    />
-                </div>
-                <DialogFooter>
+            <!-- Executive access -->
+            <div v-if="user.role === 'executive_director'" class="flex items-center gap-2">
+                <Dialog v-model:open="showApproveModal">
+                    <DialogTrigger as-child>
                     <Button 
-                    @click="submitStatusUpdate('approved', password)"
-                    :disabled="!password || form.processing"
+                        variant="default" 
+                        size="sm" 
+                        :disabled="request.status === 'approved' || form.processing"
                     >
-                    <span v-if="form.processing">Processing...</span>
-                    <span v-else>Confirm Approval</span>
+                        Approve
                     </Button>
-                </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                    </DialogTrigger>
+                    <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Password Verification</DialogTitle>
+                        <DialogDescription>
+                        Please enter your password to approve this request
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div class="space-y-2">
+                        <Label for="approve-password">Password</Label>
+                        <Input 
+                        id="approve-password" 
+                        v-model="password" 
+                        type="password" 
+                        placeholder="Enter your password"
+                        class="w-full"
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button 
+                        @click="submitStatusUpdate('approved', password)"
+                        :disabled="!password || form.processing"
+                        >
+                        <span v-if="form.processing">Processing...</span>
+                        <span v-else>Confirm Approval</span>
+                        </Button>
+                    </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+                <Button 
+                    variant="outline" 
+                    size="sm" 
+                    @click="submitStatusUpdate('rejected', '')"
+                    :disabled="request.status === 'rejected' || form.processing"
+                >
+                    Reject
+                </Button>
+            </div>
+            <!-- Property access -->
+            <div v-if="user.role === 'property_custodian'" class="flex items-center gap-2">
+                <Button 
+                    variant="secondary" 
+                    size="sm"
+                    @click="navigateToEdit"
+                    :disabled="request.status == 'rejected'"
+                    >
+                    Partial Release
+                </Button>
+                
+                <!-- Release All Dialog -->
+                <Dialog v-model:open="showReleaseModal">
+                    <DialogTrigger as-child>
+                    <Button 
+                        variant="default" 
+                        size="sm" 
+                        :disabled="request.status === 'released' || form.processing"
+                    >
+                        Release All
+                    </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Password Verification</DialogTitle>
+                        <DialogDescription>
+                        Please enter your password to release this request
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div class="space-y-2">
+                        <Label for="release-password">Password</Label>
+                        <Input 
+                        id="release-password" 
+                        v-model="password" 
+                        type="password" 
+                        placeholder="Enter your password"
+                        class="w-full"
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button 
+                        @click="submitStatusUpdate('released', password)"
+                        :disabled="!password || form.processing"
+                        >
+                        <span v-if="form.processing">Processing...</span>
+                        <span v-else>Confirm Release</span>
+                        </Button>
+                    </DialogFooter>
+                    </DialogContent>
+                </Dialog>
 
-            <Button 
-                variant="outline" 
-                size="sm" 
-                @click="submitStatusUpdate('rejected', '')"
-                :disabled="request.status === 'rejected' || form.processing"
-            >
-                Reject
-            </Button>
-            <Button 
-                variant="secondary" 
-                size="sm"
-                @click="navigateToEdit"
-                :disabled="request.status == 'rejected'"
-                >
-                Partial Release
-            </Button>
-            
-            <!-- Release All Dialog -->
-            <Dialog v-model:open="showReleaseModal">
-                <DialogTrigger as-child>
-                <Button 
-                    variant="default" 
-                    size="sm" 
-                    :disabled="request.status === 'released' || form.processing"
-                >
-                    Release All
-                </Button>
-                </DialogTrigger>
-                <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Password Verification</DialogTitle>
-                    <DialogDescription>
-                    Please enter your password to release this request
-                    </DialogDescription>
-                </DialogHeader>
-                <div class="space-y-2">
-                    <Label for="release-password">Password</Label>
-                    <Input 
-                    id="release-password" 
-                    v-model="password" 
-                    type="password" 
-                    placeholder="Enter your password"
-                    class="w-full"
-                    />
-                </div>
-                <DialogFooter>
+                <!-- Request To Order Dialog -->
+                <Dialog v-model:open="showForRequestModal">
+                    <DialogTrigger as-child>
                     <Button 
-                    @click="submitStatusUpdate('released', password)"
-                    :disabled="!password || form.processing"
+                        variant="default" 
+                        size="sm" 
+                        :disabled="request.status === 'to_order' || form.processing"
                     >
-                    <span v-if="form.processing">Processing...</span>
-                    <span v-else>Confirm Release</span>
+                        For Request To Order
                     </Button>
-                </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                    </DialogTrigger>
+                    <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Password Verification</DialogTitle>
+                        <DialogDescription>
+                        Please enter your password to send this order
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div class="space-y-2">
+                        <Label for="order-password">Password</Label>
+                        <Input 
+                        id="order-password" 
+                        v-model="password" 
+                        type="password" 
+                        placeholder="Enter your password"
+                        class="w-full"
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button 
+                        @click="submitStatusUpdate('to_order', password)"
+                        :disabled="!password || form.processing"
+                        >
+                        <span v-if="form.processing">Processing...</span>
+                        <span v-else>Confirm Order</span>
+                        </Button>
+                    </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </div>
 
-            <!-- Request To Order Dialog -->
-            <Dialog v-model:open="showForRequestModal">
-                <DialogTrigger as-child>
-                <Button 
-                    variant="default" 
-                    size="sm" 
-                    :disabled="request.status === 'to_order' || form.processing"
-                >
-                    For Request To Order
-                </Button>
-                </DialogTrigger>
-                <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Password Verification</DialogTitle>
-                    <DialogDescription>
-                    Please enter your password to send this order
-                    </DialogDescription>
-                </DialogHeader>
-                <div class="space-y-2">
-                    <Label for="order-password">Password</Label>
-                    <Input 
-                    id="order-password" 
-                    v-model="password" 
-                    type="password" 
-                    placeholder="Enter your password"
-                    class="w-full"
-                    />
-                </div>
-                <DialogFooter>
+            <!-- Request To Property Dialog -->
+            <div v-if="user.role === 'department_head'" class="flex items-center gap-2">
+                <Dialog v-model:open="showOrderModal">
+                    <DialogTrigger as-child>
                     <Button 
-                    @click="submitStatusUpdate('to_order', password)"
-                    :disabled="!password || form.processing"
+                        variant="default" 
+                        size="sm" 
+                        :disabled="request.status === 'to_property' || form.processing"
                     >
-                    <span v-if="form.processing">Processing...</span>
-                    <span v-else>Confirm Order</span>
+                        Send To Property
                     </Button>
-                </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            <!-- Request To Order Dialog -->
-            <Dialog v-model:open="showOrderModal">
-                <DialogTrigger as-child>
+                    </DialogTrigger>
+                    <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Password Verification</DialogTitle>
+                        <DialogDescription>
+                        Please enter your password to send this order
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div class="space-y-2">
+                        <Label for="order-password">Password</Label>
+                        <Input 
+                        id="order-password" 
+                        v-model="password" 
+                        type="password" 
+                        placeholder="Enter your password"
+                        class="w-full"
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button 
+                            @click="submitStatusUpdate('to_property', password)"
+                            :disabled="!password || form.processing"
+                            >
+                            <span v-if="form.processing">Processing...</span>
+                            <span v-else>Confirm Order</span>
+                            </Button>
+                    </DialogFooter>
+                    </DialogContent>
+                </Dialog>
                 <Button 
-                    variant="default" 
-                    size="sm" 
-                    :disabled="request.status === 'approved' || form.processing"
-                >
-                    Send To Property
-                </Button>
-                </DialogTrigger>
-                <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Password Verification</DialogTitle>
-                    <DialogDescription>
-                    Please enter your password to send this order
-                    </DialogDescription>
-                </DialogHeader>
-                <div class="space-y-2">
-                    <Label for="order-password">Password</Label>
-                    <Input 
-                    id="order-password" 
-                    v-model="password" 
-                    type="password" 
-                    placeholder="Enter your password"
-                    class="w-full"
-                    />
-                </div>
-                <DialogFooter>
-                    <Button 
-                    @click="submitStatusUpdate('to_property', password)"
-                    :disabled="!password || form.processing"
+                        variant="outline" 
+                        size="sm" 
+                        @click="submitStatusUpdate('rejected', '')"
+                        :disabled="request.status === 'rejected' || form.processing"
                     >
-                    <span v-if="form.processing">Processing...</span>
-                    <span v-else>Confirm Order</span>
-                    </Button>
-                </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                        Reject
+                </Button>
+            </div>
             </div>
         </div>
 

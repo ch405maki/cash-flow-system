@@ -45,12 +45,13 @@ function getStatusVariant(status: string) {
   }
 }
 
-const { requestOrder } = usePage().props
+const { requestOrder, authUser } = usePage().props
 const toast = useToast()
 
 const password = ref('')
 const showApproveModal = ref(false)
 const showRejectModal = ref(false)
+const showRejectCustodianModal = ref(false)
 const showForEODModal = ref(false)
 
 const form = useForm({
@@ -108,6 +109,7 @@ async function submitReject() {
     onSuccess: (page) => {
       toast.success('Request rejected successfully')
       showRejectModal.value = false
+      showRejectCustodianModal.value = false
       form.reset('password')
     },
     onError: (errors) => {
@@ -125,7 +127,6 @@ async function submitReject() {
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Request To Order', href: '/request-to-order' },
     { title: `Order ${requestOrder.order_no}`, href: `/request/order/${requestOrder.id}` }
 ]
 </script>
@@ -140,8 +141,9 @@ const breadcrumbs: BreadcrumbItem[] = [
         <h1 class="text-2xl font-bold">Request To Order Details</h1>
         
         <div class="space-x-2 flex items-center">
-            <Button @click="goBack" variant="outline">Back</Button>
-            <!-- Approve Button with Dialog -->
+          <Button @click="goBack" variant="outline">Back</Button>
+          <!-- Approve Button with Dialog -->
+          <div v-if="authUser.role == 'executive_director'" class="space-x-2 flex items-center">
             <Dialog v-model:open="showApproveModal">
               <DialogTrigger as-child>
                   <Button
@@ -174,42 +176,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                   >
                       <span v-if="form.processing">Processing...</span>
                       <span v-else>Confirm Approval</span>
-                  </Button>
-                  </DialogFooter>
-              </DialogContent>
-          </Dialog>
-          <Dialog v-model:open="showForEODModal">
-              <DialogTrigger as-child>
-                  <Button
-                  variant="default"
-                  size="sm"
-                  :disabled="requestOrder.status == 'approved' || form.processing"
-                  >
-                  For EOD Approval
-                  </Button>
-              </DialogTrigger>
-              <DialogContent>
-                  <DialogHeader>
-                  <DialogTitle>Password Verification</DialogTitle>
-                  <DialogDescription>Enter your password to approve this request</DialogDescription>
-                  </DialogHeader>
-                  <div class="space-y-2">
-                  <Label for="approve-password">Password</Label>
-                  <Input
-                      id="approve-password"
-                      v-model="form.password"
-                      type="password"
-                      placeholder="Enter password"
-                      class="w-full"
-                  />
-                  </div>
-                  <DialogFooter>
-                  <Button
-                      @click="submitForEOD"
-                      :disabled="!form.password || form.processing"
-                  >
-                      <span v-if="form.processing">Processing...</span>
-                      <span v-else>Confirm</span>
                   </Button>
                   </DialogFooter>
               </DialogContent>
@@ -250,6 +216,83 @@ const breadcrumbs: BreadcrumbItem[] = [
                   </DialogFooter>
               </DialogContent>
           </Dialog>
+          </div>
+          <!-- for property -->
+          <div v-if="authUser.role === 'property_custodian' && authUser.access == 3" class="space-x-2 flex items-center">
+            <Dialog v-model:open="showForEODModal">
+              <DialogTrigger as-child>
+                  <Button
+                  variant="default"
+                  size="sm"
+                  :disabled="requestOrder.status == 'for_eod' || form.processing"
+                  >
+                  For EOD Approval
+                  </Button>
+              </DialogTrigger>
+              <DialogContent>
+                  <DialogHeader>
+                  <DialogTitle>Password Verification</DialogTitle>
+                  <DialogDescription>Enter your password to approve this request</DialogDescription>
+                  </DialogHeader>
+                  <div class="space-y-2">
+                  <Label for="approve-password">Password</Label>
+                  <Input
+                      id="approve-password"
+                      v-model="form.password"
+                      type="password"
+                      placeholder="Enter password"
+                      class="w-full"
+                  />
+                  </div>
+                  <DialogFooter>
+                  <Button
+                      @click="submitForEOD"
+                      :disabled="!form.password || form.processing"
+                  >
+                      <span v-if="form.processing">Processing...</span>
+                      <span v-else>Confirm</span>
+                  </Button>
+                  </DialogFooter>
+              </DialogContent>
+          </Dialog>
+          <!-- reject -->
+           <Dialog v-model:open="showRejectCustodianModal">
+              <DialogTrigger as-child>
+                  <Button
+                  variant="default"
+                  size="sm"
+                  :disabled="requestOrder.status == 'rejected' || form.processing"
+                  >
+                  Reject
+                  </Button>
+              </DialogTrigger>
+              <DialogContent>
+                  <DialogHeader>
+                  <DialogTitle>Password Verification</DialogTitle>
+                  <DialogDescription>Enter your password to approve this request</DialogDescription>
+                  </DialogHeader>
+                  <div class="space-y-2">
+                  <Label for="approve-password">Password</Label>
+                  <Input
+                      id="approve-password"
+                      v-model="form.password"
+                      type="password"
+                      placeholder="Enter password"
+                      class="w-full"
+                  />
+                  </div>
+                  <DialogFooter>
+                  <Button
+                      @click="submitReject"
+                      :disabled="!form.password || form.processing"
+                  >
+                      <span v-if="form.processing">Processing...</span>
+                      <span v-else>Confirm Reject Request</span>
+                  </Button>
+                  </DialogFooter>
+              </DialogContent>
+          </Dialog>
+          </div>
         </div>
       </div>
 
