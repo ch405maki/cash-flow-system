@@ -3,7 +3,8 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import ApprovedRequestTable from '@/components/requests/approved/ApprovedRequestTable.vue';
 import { type BreadcrumbItem } from '@/types';
-
+import { router } from '@inertiajs/vue3'
+import { Filter, PlusCircle } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -34,6 +35,10 @@ const props = defineProps({
   },
 })
 
+function goToCreate() {
+  router.visit(`/purchase-order/create`)
+}
+
 function getStatusVariant(status: string) {
   switch (status.toLowerCase()) {
     case 'pending':
@@ -55,9 +60,12 @@ function getStatusVariant(status: string) {
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
       <div class="flex justify-between items-center">
         <h1 class="text-xl font-bold">Approved Request List</h1>
-      </div>
+          <Button variant="default" size="sm" @click="goToCreate()" class="h-8">
+            <PlusCircle class="h-4 w-4" />
+            Create P. O.
+          </Button>      
+        </div>
 
-      <!-- ShadCN UI Table -->
       <Table>
         <TableCaption>Approved Requests</TableCaption>
         <TableHeader>

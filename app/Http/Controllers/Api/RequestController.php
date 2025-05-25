@@ -226,8 +226,8 @@ class RequestController extends Controller
     public function updateStatus(HttpRequest $httpRequest, Request $request)
     {
         $validated = $httpRequest->validate([
-            'status' => 'required|in:approved,rejected,request to order,released',
-            'password' => 'required_if:status, approved,request to order,released'
+            'status' => 'required|in:approved,rejected,to_property,to_order,released',
+            'password' => 'required_if:status, approved,to_property,to_order,released'
         ]);
 
         // Verify password for approval

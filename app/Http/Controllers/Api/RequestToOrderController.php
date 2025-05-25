@@ -17,19 +17,22 @@ use App\Models\PurchaseOrderDetail;
 
 class RequestToOrderController extends Controller
 {
-    public function index()
+    public function index() 
     {
-        $requests = RequestToOrder::with('details')->get();
+        $requests = RequestToOrder::with('details')
+            ->whereIn('status', ['pending', 'for_eod'])
+            ->get();
 
         return Inertia::render('Request/Order/Index', [
             'requests' => $requests,
         ]);
     }
 
+
     public function create()
     {
         $requests = Request::with(['details', 'department', 'user'])
-            ->where('status', 'approved')
+            ->where('status', 'to_order')
             ->get();
 
         return Inertia::render('Request/Order/Create', [
@@ -113,12 +116,30 @@ class RequestToOrderController extends Controller
         }
 
         $order = RequestToOrder::findOrFail($id);
-        if ($order->status === 'approved') {
+        if ($order->status === 'for_po') {
             return back()->withErrors(['status' => 'Already approved']);
         }
 
-        $order->update(['status' => 'approved']);
+        $order->update(['status' => 'for_po']);
         return back()->with('success', 'Request approved');
+    }
+
+    public function forEod($id, HttpRequest $request)
+    {
+        $request->validate(['password' => 'required']);
+        $user = auth()->user();
+
+        if (!Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['password' => 'Incorrect password']);
+        }
+
+        $order = RequestToOrder::findOrFail($id);
+        if ($order->status === 'for_eod') {
+            return back()->withErrors(['status' => 'Already sent for EOD approval']);
+        }
+
+        $order->update(['status' => 'for_eod']);
+        return back()->with('success', 'Request sent for EOD approval');
     }
 
 

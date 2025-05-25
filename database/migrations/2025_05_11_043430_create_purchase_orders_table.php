@@ -23,6 +23,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users');
             $table->foreignId('department_id')->constrained('departments');
             $table->foreignId('account_id')->constrained('accounts');
+            $table->string('tagging')->nullable();
             $table->text('remarks')->nullable();
             $table->timestamps();
         });
