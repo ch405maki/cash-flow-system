@@ -16,7 +16,7 @@ const props = defineProps<{
 }>()
 
 const getFullName = (user: any) =>
-  `${user.first_name} ${user.middle_name} ${user.last_name}`
+  `${user.first_name} ${user.last_name}`
 
 function goToShowRequest(requestId: number) {
   router.get(`/request/show/${requestId}`)
@@ -74,9 +74,6 @@ function goToCreatePO(requestId: number) {
               @click="goToShowRequest(request.id)"
             >
               Show
-            </Button>
-            <Button v-if="request.status === 'approved'" size="sm" @click="goToCreatePO(request.id)">
-              Create PO
             </Button>
           </TableCell>
         </TableRow>

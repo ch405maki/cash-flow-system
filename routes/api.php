@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\VoucherController;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\ApprovedRequestController;
+use App\Http\Controllers\Api\RequestToOrderController;
 
 use App\Http\Controllers\Configuration\UserAccessController;
 use App\Http\Controllers\Configuration\DepartmentController;
@@ -62,7 +63,6 @@ Route::prefix('configuration/accounts')->group(function () {
     Route::put('/{account}', [AccountController::class, 'update']);
     Route::delete('/{account}', [AccountController::class, 'destroy']);
 });
-
 
 // Purchase Order Routes
 Route::apiResource('purchase-orders', PurchaseOrderController::class)->only(['store']);

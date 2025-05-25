@@ -29,23 +29,42 @@ class RequestController extends Controller
 
     public function index()
     {
-        $requests = Request::with(['department', 'user', 'details'])->get();
+        $user = Auth::user();
+
+        if (in_array($user->role, ['admin', 'executive_director', 'property_custodian'])) {
+            // Admin-level users: See all non-pending requests
+            $requests = Request::with(['department', 'user', 'details'])
+                ->whereIn('status', ['to_property', 'partially_released', 'to_order'])
+                ->get();
+        } else {
+            $requests = Request::with(['department', 'user', 'details'])
+                ->where('department_id', $user->department_id)
+                ->get();
+        }
 
         return Inertia::render('Request/Index', [
             'requests' => $requests,
             'departments' => Department::all(),
             'authUser' => [
-                'id' => Auth::id(),
-                'department_id' => Auth::user()->department_id,
+                'id' => $user->id,
+                'role' => $user->role,
+                'department_id' => $user->department_id,
             ],
         ]);
     }
 
     public function show(request $request)
     {
+        $user = Auth::user();
+
         return Inertia::render('Request/Show', [
             'request' => $request->load(['user', 'department', 'details']),
             'accounts' => Account::all(['id', 'account_title']),
+            'user' => [
+                'id' => $user->id,
+                'role' => $user->role,
+                'department_id' => $user->department_id,
+            ],
         ]);
     }
 
@@ -226,8 +245,8 @@ class RequestController extends Controller
     public function updateStatus(HttpRequest $httpRequest, Request $request)
     {
         $validated = $httpRequest->validate([
-            'status' => 'required|in:approved,rejected,request to order,released',
-            'password' => 'required_if:status, approved,request to order,released'
+            'status' => 'required|in:approved,rejected,to_property,to_order,released',
+            'password' => 'required_if:status, approved,to_property,to_order,released'
         ]);
 
         // Verify password for approval

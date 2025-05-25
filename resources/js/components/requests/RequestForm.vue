@@ -122,25 +122,6 @@ const submitRequest = async () => {
             required
           />
         </div>
-
-        <!-- Status -->
-        <div>
-          <Label for="status">Status</Label>
-          <Select v-model="form.status" required>
-            <SelectTrigger>
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem
-                v-for="status in statusOptions"
-                :key="status.value"
-                :value="status.value"
-              >
-                {{ status.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       <!-- Purpose -->

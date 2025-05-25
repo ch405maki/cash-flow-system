@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
@@ -12,10 +13,31 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import { computed } from 'vue'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { useToast } from 'vue-toastification'
+import { router } from '@inertiajs/vue3'
+import { useForm } from '@inertiajs/vue3'
+
+const toast = useToast()
 
 const props = defineProps({
   purchaseOrder: {
+    type: Object,
+    required: true,
+  },
+  authUser: {
     type: Object,
     required: true,
   },
@@ -25,7 +47,6 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Purchase Orders', href: '/purchase-orders' },
   { title: `${props.purchaseOrder.po_no}`, href: '' },
 ];
-
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
@@ -42,6 +63,42 @@ function formatCurrency(amount: number): string {
     currency: 'PHP'
   }).format(amount);
 }
+
+// Modal state
+const showApproveModal = ref(false)
+const showRejectModal = ref(false)
+const showReleaseModal = ref(false)
+const showOrderModal = ref(false)
+
+const form = useForm({
+  status: '',
+  password: '',
+  remarks: '',
+})
+
+// Status update function
+async function submitStatusUpdate(newStatus: string) {
+  form.status = newStatus
+  
+  form.patch(`/purchase-orders/${props.purchaseOrder.id}/status`, {
+    preserveScroll: true,
+    onSuccess: () => {
+      toast.success('Status updated successfully')
+      showApproveModal.value = false
+      showRejectModal.value = false
+      showReleaseModal.value = false
+      showOrderModal.value = false
+      form.reset()
+    },
+    onError: (errors) => {
+      if (errors.password) {
+        toast.error(errors.password)
+      } else {
+        toast.error('Failed to update status')
+      }
+    }
+  })
+}
 </script>
 
 <template>
@@ -51,11 +108,114 @@ function formatCurrency(amount: number): string {
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="flex items-center justify-between">
         <h1 class="text-2xl font-bold">Purchase Order: {{ purchaseOrder.po_no }}</h1>
-        <div class="space-x-2">
-          <Button variant="outline" as-child>
-            <Link :href="`/purchase-orders/${purchaseOrder.id}/edit`">Edit</Link>
-          </Button>
-          <Button as-child>
+        <div class="space-x-2 flex space-x-2">
+          <!-- Approve Dialog -->
+          <div v-if="authUser.role === 'executive_director'" class="space-x-2 flex space-x-2">
+            <Dialog v-model:open="showApproveModal">
+            <DialogTrigger as-child>
+              <Button 
+                variant="default" 
+                size="sm" 
+                :disabled="purchaseOrder.status === 'approved' || form.processing"
+              >
+                Approve
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Approve Purchase Order</DialogTitle>
+                <DialogDescription>
+                  Please verify your identity and add remarks
+                </DialogDescription>
+              </DialogHeader>
+              <div class="space-y-4">
+                <div class="space-y-2">
+                  <Label for="approve-password">Password</Label>
+                  <Input 
+                    id="approve-password" 
+                    v-model="form.password" 
+                    type="password" 
+                    placeholder="Enter your password"
+                    class="w-full"
+                  />
+                </div>
+                <div class="space-y-2">
+                  <Label for="approve-remarks">Remarks (Optional)</Label>
+                  <Textarea
+                    id="approve-remarks"
+                    v-model="form.remarks"
+                    placeholder="Add any remarks about this approval"
+                    class="w-full"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button 
+                  @click="submitStatusUpdate('approved')"
+                  :disabled="!form.password || form.processing"
+                >
+                  <span v-if="form.processing">Processing...</span>
+                  <span v-else>Confirm Approval</span>
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <!-- Reject Dialog -->
+          <Dialog v-model:open="showRejectModal">
+            <DialogTrigger>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                :disabled="purchaseOrder.status === 'rejected' || form.processing"
+              >
+                Reject
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Reject Purchase Order</DialogTitle>
+                <DialogDescription>
+                  Please verify your identity and provide a reason
+                </DialogDescription>
+              </DialogHeader>
+              <div class="space-y-4">
+                <div class="space-y-2">
+                  <Label for="reject-password">Password</Label>
+                  <Input 
+                    id="reject-password" 
+                    v-model="form.password" 
+                    type="password" 
+                    placeholder="Enter your password"
+                    class="w-full"
+                  />
+                </div>
+                <div class="space-y-2">
+                  <Label for="reject-remarks">Reason for Rejection (Required)</Label>
+                  <Textarea
+                    id="reject-remarks"
+                    v-model="form.remarks"
+                    placeholder="Explain why this PO is being rejected"
+                    class="w-full"
+                    required
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button 
+                  @click="submitStatusUpdate('rejected')"
+                  :disabled="!form.password || !form.remarks || form.processing"
+                  variant="destructive"
+                >
+                  <span v-if="form.processing">Processing...</span>
+                  <span v-else>Confirm Rejection</span>
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          </div>
+
+          <Button variant="outline" size="sm"  as-child>
             <Link href="/purchase-orders">Back to List</Link>
           </Button>
         </div>

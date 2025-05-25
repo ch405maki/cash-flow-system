@@ -73,10 +73,9 @@ watch([departmentFilter, statusFilter], () => {
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
       <div class="flex justify-between items-center">
         <h1 class="text-xl font-bold">Requests</h1>
-
         <div class="flex gap-4 items-center">
           <!-- Department Filter -->
-          <div class="w-[180px]">
+          <div class="w-[180px]" v-if="authUser.role !== 'staff' && authUser.role !== 'department_head'">
             <Select v-model="departmentFilter">
               <SelectTrigger class="h-8">
                 <div class="flex items-center gap-2">
@@ -138,7 +137,7 @@ watch([departmentFilter, statusFilter], () => {
           </div>
 
           <!-- Create Button -->
-          <Button variant="default" size="sm" @click="goToCreate()" class="h-8">
+          <Button v-if="authUser.role == 'staff'" variant="default" size="sm" @click="goToCreate()" class="h-8">
             <PlusCircle class="h-4 w-4 mr-2" />
             Create Request
           </Button>

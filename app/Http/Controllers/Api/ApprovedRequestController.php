@@ -11,24 +11,23 @@ use App\Models\RequestDetail;
 use App\Models\Department;
 use App\Models\PurchaseOrderDetail;
 use App\Models\Account;
+use App\Models\RequestToOrder;
+use App\Http\Requests\StoreRequestToOrderRequest;
 
 class ApprovedRequestController extends Controller
 {
+
     public function index()
     {
-        $requests = Request::with(['department', 'user', 'details'])
-            ->where('status', 'approved')
+        $requests = RequestToOrder::with('details')
+            ->where('status', 'for_po')
             ->get();
 
         return Inertia::render('Request/Approved/Index', [
             'requests' => $requests,
-            'departments' => Department::all(),
-            'authUser' => [
-                'id' => Auth::id(),
-                'department_id' => Auth::user()->department_id,
-            ],
         ]);
     }
+
 
     public function show(request $request)
     {
