@@ -1,3 +1,61 @@
+@php
+function amountToWords($amount) {
+    $whole = (int)$amount;
+    $fraction = round(($amount - $whole) * 100);
+    
+    $words = [
+        '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+        'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
+        'Seventeen', 'Eighteen', 'Nineteen'
+    ];
+    
+    $tens = [
+        '', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 
+        'Sixty', 'Seventy', 'Eighty', 'Ninety'
+    ];
+    
+    // Nested function without use
+    function convertLessThanOneThousand($number, $words, $tens) {
+        if ($number < 20) {
+            return $words[$number];
+        }
+        
+        if ($number < 100) {
+            return $tens[(int)($number / 10)] . 
+                  ($number % 10 ? ' ' . $words[$number % 10] : '');
+        }
+        
+        $hundreds = (int)($number / 100);
+        $remainder = $number % 100;
+        
+        return $words[$hundreds] . ' Hundred' . 
+              ($remainder ? ' ' . convertLessThanOneThousand($remainder, $words, $tens) : '');
+    }
+    
+    if ($whole == 0) {
+        $result = 'Zero';
+    } elseif ($whole < 1000) {
+        $result = convertLessThanOneThousand($whole, $words, $tens);
+    } elseif ($whole < 1000000) {
+        $thousands = (int)($whole / 1000);
+        $remainder = $whole % 1000;
+        
+        $result = convertLessThanOneThousand($thousands, $words, $tens) . ' Thousand' . 
+                ($remainder ? ' ' . convertLessThanOneThousand($remainder, $words, $tens) : '');
+    } else {
+        return 'Amount exceeds conversion limit';
+    }
+    
+    $result = trim($result) . ' Pesos';
+    
+    if ($fraction > 0) {
+        $result .= ' and ' . convertLessThanOneThousand($fraction, $words, $tens) . ' Centavos';
+    }
+    
+    return $result;
+}
+@endphp
+
 <!DOCTYPE html>
 <!--SAMPLE REPORT LAYOUT-->
 <html>
@@ -64,7 +122,7 @@
     <tr>
       <td width="70%">
         Voucher No.: {{ $voucher-> voucher_no }} <br>
-        Voucher Date: {{ $voucher-> voucher_date }}
+        Voucher Date: {{ date('F j, Y', strtotime($voucher->voucher_date)) }}
       </td>
       
     </tr>
@@ -80,10 +138,10 @@
       <td>Check Payable to: {{ $voucher-> check_payable_to }}</td>
     </tr>
     <tr>
-      <td>Check No./ Date: {{ $voucher-> check_date }} </td>
+      <td>Check No./ Date: {{ date('F j, Y', strtotime($voucher->check_date)) }} </td>
     </tr>
     <tr>
-      <td>Payment for {{ $voucher-> payment_date }} </td>
+      <td>Payment for {{ date('F j, Y', strtotime($voucher->payment_date)) }} </td>
     </tr>
   </table>
 
@@ -93,7 +151,7 @@
   <table>
     <tr>
       <td>GENERAL CHARGES</td>
-      <td class="align-right"> {{ $voucher-> check_amount }} </td>
+      <td class="align-right"> ₱{{ $voucher-> check_amount }} </td>
     </tr>
     <tr>
       <td><br></td>
@@ -124,20 +182,34 @@
   <br><br>
 
   <div class="section-title">RECOMMENDING APPROVAL:</div>
-  <div class="line-item">Ma. Jasmin P. Horlina </div>
+  <div class="line-item"> 
+    {{ $roles['approved_by']->first_name }} 
+    @if($roles['approved_by']->middle_name)
+    {{ strtoupper(substr($roles['approved_by']->middle_name, 0, 1)) }}. 
+    {{ $roles['approved_by']->last_name }}
+    @endif
+  </div>
   <div>Director, Accounting </div>
 
   <br>
 
   <div class="section-title"> {{ $voucher-> status }}</div>
-  <div class="line-item">Gabriel P. Dela Peña </div>
+  <div class="line-item">
+    {{ $roles['exec_director']->first_name }} 
+    @if($roles['exec_director']->middle_name)
+    {{ strtoupper(substr($roles['exec_director']->middle_name, 0, 1)) }}. 
+    {{ $roles['exec_director']->last_name }}
+    @endif
+  </div>
   <div>Executive Director </div>
 
   <br><br>
 
-  <div class="line-item"> {{ $voucher-> check_amount }} </div>
+  <div class="line-item"> ₱{{ $voucher-> check_amount }} </div>
   <div>
-    I hereby certify to have received from the ARELLANO LAW FOUNDATION the sum of Two Thousand One Hundred Pesos ({{ $voucher-> check_amount }}) as payment for the account specified above.
+    I hereby certify to have received from the ARELLANO LAW FOUNDATION the sum of 
+    <strong>{{ amountToWords($voucher->check_amount) }} Pesos</strong>
+    (₱{{ number_format($voucher->check_amount, 2) }}) as payment for the account specified above.
   </div>
 
   <br><br>
@@ -150,14 +222,15 @@
     <tr>
       <td width="33%">
         PREPARED BY:
-        <div class="line-item">JOMARI-05/23/2025 [cite: 5]</div>
+        <div class="line-item"> {{ $voucher->user->first_name }} {{ $voucher->user->middle_name }} {{ $voucher->user->last_name }} - {{ date('F j, Y') }}</div>
       </td>
       <td width="33%">
         AUDITED BY:
-        <div class="line-item"></div>
+        <div class="line-item">Name of Person</div>
       </td>
       <td width="33%">
-        <div class="line-item"> {{ $voucher-> check_amount }} </div>
+        AUDITED BY:
+        <div class="line-item"> ₱{{ $voucher-> check_amount }} </div>
       </td>
     </tr>
   </table>
