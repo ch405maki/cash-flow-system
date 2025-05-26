@@ -18,7 +18,7 @@ class ReportController extends Controller
     public function voucherReports()
     {
         return Inertia::render('Reports/Vouchers/Reports', [
-            'vouchers' => Voucher::with(['user', 'details'])->get(),
+            'vouchers' => Voucher::with(['user', 'details.account'])->get(),
             'accounts' => Account::all(),
         ]);
     }
@@ -27,36 +27,43 @@ class ReportController extends Controller
     {
         $signatories = Signatory::where('status', 'active')->get();
         $roles = [
-        'approved_by' => User::where('role', 'department_head')->first(),
-        'exec_director' => User::where('role', 'executive_director')->first()
+            'approved_by' => User::where('role', 'department_head')->first(),
+            'exec_director' => User::where('role', 'executive_director')->first()
         ];
+        
+        // Eager load necessary relationships
+        $voucher->load(['details.account', 'user']);
 
         return inertia('Reports/Vouchers/ReportPreview', [
             'voucher' => $voucher,
             'pdfHtml' => view('vouchers.pdf-template', [
                 'voucher' => $voucher,
-                'signatories' => $signatories, // Pass signatories to the view
-                'roles' => $roles
-
+                'signatories' => $signatories,
+                'roles' => $roles,
+                'isSalary' => $voucher->type === 'salary'
             ])->render(),
             'pdfUrl' => route('vouchers.pdf', $voucher),
             'authUser' => auth()->user()
         ]);
     }
 
+
     public function generateVoucherReports(Voucher $voucher)
     {
-        // PDF generation remains the same
         $signatories = Signatory::where('status', 'active')->get();
         $roles = [
-        'approved_by' => User::where('role', 'department_head')->first(),
-        'exec_director' => User::where('role', 'executive_director')->first()
+            'approved_by' => User::where('role', 'department_head')->first(),
+            'exec_director' => User::where('role', 'executive_director')->first()
         ];
+        
+        // Eager load for PDF generation too
+        $voucher->load(['details.account', 'user']);
 
         $html = view('vouchers.pdf-template', [
             'voucher' => $voucher,
             'signatories' => $signatories,
-            'roles' => $roles
+            'roles' => $roles,
+            'isSalary' => $voucher->type === 'salary' // Add this flag
         ])->render();
         
         $pdf = Browsershot::html($html)
