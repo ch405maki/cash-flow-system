@@ -207,6 +207,11 @@ class VoucherController extends Controller
      */
     protected function updateVoucher(Voucher $voucher, array $validated): void
     {
+        // For salary vouchers, calculate check_amount from details
+        if ($validated['type'] === 'salary' && !empty($validated['check'])) {
+            $validated['check_amount'] = collect($validated['check'])->sum('amount');
+        }
+        
         $voucher->update(collect($validated)->except('check')->toArray());
     }
 
@@ -218,25 +223,27 @@ class VoucherController extends Controller
         $existingDetailIds = $voucher->details->pluck('id')->toArray();
         $updatedDetailIds = [];
 
-        if ($validated['type'] === 'cash' && !empty($validated['check'])) {
+        // Process details for both cash and salary vouchers
+        if (!empty($validated['check'])) {
             foreach ($validated['check'] as $check) {
                 if (isset($check['id']) && in_array($check['id'], $existingDetailIds)) {
-                    VoucherDetail::where('id', $check['id'])->update($this->mapDetailAttributes($check));
+                    // Update existing detail
+                    VoucherDetail::where('id', $check['id'])
+                        ->update($this->mapDetailAttributes($check));
                     $updatedDetailIds[] = $check['id'];
                 } else {
-                    VoucherDetail::create([
+                    // Create new detail
+                    $newDetail = VoucherDetail::create([
                         'voucher_id' => $voucher->id,
                         ...$this->mapDetailAttributes($check)
                     ]);
+                    $updatedDetailIds[] = $newDetail->id;
                 }
             }
         }
 
-        // Delete removed details (for cash) or all details (for salary)
-        $detailsToDelete = $validated['type'] === 'cash'
-            ? array_diff($existingDetailIds, $updatedDetailIds)
-            : $existingDetailIds;
-
+        // Delete only details that weren't included in the request
+        $detailsToDelete = array_diff($existingDetailIds, $updatedDetailIds);
         if (!empty($detailsToDelete)) {
             VoucherDetail::whereIn('id', $detailsToDelete)->delete();
         }
@@ -271,12 +278,19 @@ class VoucherController extends Controller
      */
     protected function validateCashVoucherAmount(array $validated): void
     {
-        if ($validated['type'] === 'cash' && !empty($validated['check'])) {
+        if (!empty($validated['check'])) {
             $sumAmount = collect($validated['check'])->sum('amount');
-            if (abs($sumAmount - $validated['check_amount']) > 0.01) {
+            
+            // For cash vouchers, amount must match exactly
+            if ($validated['type'] === 'cash' && abs($sumAmount - $validated['check_amount']) > 0.01) {
                 throw ValidationException::withMessages([
                     'check_amount' => 'For cash vouchers, check amount must equal the sum of all item amounts'
                 ]);
+            }
+            
+            // For salary vouchers, update the check amount to match details
+            if ($validated['type'] === 'salary') {
+                $validated['check_amount'] = $sumAmount;
             }
         }
     }
