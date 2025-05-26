@@ -140,12 +140,15 @@ function amountToWords($amount) {
     <tr>
       <td>Check No./ Date: {{ date('F j, Y', strtotime($voucher->check_date)) }} </td>
     </tr>
+    <tr>
+      <td>Amount: ₱{{ number_format($voucher->check_amount, 2) }}</td>
+    </tr>
   </table>
   <div class="line-item"></div>
   <div class="line-item"></div>
   <div style="display: flex; justify-content: space-between;">
     <div>Payment for {{ date('F j, Y', strtotime($voucher->payment_date)) }}</div>
-    <div>₱{{ number_format($voucher->details->sum('amount'), 2) }}</div>
+    <div>₱{{ number_format($voucher->check_amount, 2) }}</div>
   </div>
   
 
@@ -236,28 +239,22 @@ function amountToWords($amount) {
       </tr>
   </table>
 
-  <br><br>
 
 
-
-  <br><br>
-
-  <table>
-    <tr>
-      <td width="33%">
-        PREPARED BY:
-        <div class="line-item"> {{ $voucher->user->first_name }} {{ $voucher->user->middle_name }} {{ $voucher->user->last_name }} - {{ date('F j, Y') }}</div>
-      </td>
-      <td width="33%">
-        AUDITED BY:
-        <div class="line-item">Name of Person</div>
-      </td>
-      <td width="33%">
-        AUDITED BY:
-        <div class="line-item"> ₱{{ $voucher-> check_amount }} </div>
-      </td>
-    </tr>
-  </table>
+    <table style="border-collapse: collapse; width: 100%;">
+        <tr>
+            <td style="border: 1px solid black; width: 33%; padding: 8px; vertical-align: top; height: 100px;">
+                <strong>PREPARED BY:</strong><br>
+                <div style="margin-top: 40px; width: 80%;"></div>
+            </td>
+            
+            <td style="border: 1px solid black; width: 33%; padding: 8px; vertical-align: top; height: 100px;">
+                <strong>APPROVED BY:</strong><br>
+                <div style="margin-top: 40px; width: 80%;"></div>
+                
+            </td>
+        </tr>
+    </table>
 
 </body>
 </html>
