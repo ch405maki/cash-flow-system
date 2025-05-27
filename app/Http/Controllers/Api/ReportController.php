@@ -36,7 +36,7 @@ class ReportController extends Controller
 
         return inertia('Reports/Vouchers/ReportPreview', [
             'voucher' => $voucher,
-            'pdfHtml' => view('vouchers.pdf-template', [
+            'pdfHtml' => view('vouchers.voucher-report', [
                 'voucher' => $voucher,
                 'signatories' => $signatories,
                 'roles' => $roles,
@@ -59,7 +59,7 @@ class ReportController extends Controller
         // Eager load for PDF generation too
         $voucher->load(['details.account', 'user']);
 
-        $html = view('vouchers.pdf-template', [
+        $html = view('vouchers.voucher-report', [
             'voucher' => $voucher,
             'signatories' => $signatories,
             'roles' => $roles,
@@ -67,8 +67,8 @@ class ReportController extends Controller
         ])->render();
         
         $pdf = Browsershot::html($html)
-            ->setNodeBinary('C:\Program Files\nodejs\node.exe')
-            ->setNpmBinary('C:\Program Files\nodejs\npm.cmd')
+            // ->setNodeBinary('C:\Program Files\nodejs\node.exe')
+            // ->setNpmBinary('C:\Program Files\nodejs\npm.cmd')
             ->waitUntilNetworkIdle()
             ->emulateMedia('screen')
             ->format('A4')
