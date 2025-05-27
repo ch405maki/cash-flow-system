@@ -16,8 +16,8 @@ const props = defineProps<{
   vouchers: Array<any>;
 }>();
 
-const getFullName = (user: any) =>
-  `${user.first_name} ${user.middle_name} ${user.last_name}`;
+const getRole = (user: any) =>
+  `${user.role} `;
 
 function viewVoucher(id: number) {
   router.get(`/vouchers/${id}/view`);
@@ -59,7 +59,7 @@ function formatCurrency(amount: number): string {
         >
           <TableCell class="px-4 py-2 font-medium">{{ voucher.voucher_no }}</TableCell>
           <TableCell class="px-4 py-2 capitalize">{{ voucher.type }}</TableCell>
-          <TableCell class="px-4 py-2">{{ getFullName(voucher.user) }}</TableCell>
+          <TableCell class="px-4 py-2">{{ getRole(voucher.user) }}</TableCell>
           <TableCell class="px-4 py-2">{{ voucher.purpose }}</TableCell>
           <TableCell class="px-4 py-2 font-mono tabular-nums">
             {{ formatCurrency(voucher.check_amount) }}
