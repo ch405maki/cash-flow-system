@@ -21,6 +21,7 @@ class PurchaseOrderController extends Controller
     public function index()
     {
         $purchaseOrders = PurchaseOrder::with(['user', 'department', 'account', 'details'])
+            ->where('status', 'for_approval')
             ->latest()
             ->paginate(10);
 
@@ -119,7 +120,7 @@ class PurchaseOrderController extends Controller
     public function updateStatus(Request $request, PurchaseOrder $purchaseOrder)
     {
         $validated = $request->validate([
-            'status' => 'required|in:approved,rejected,released,to_order,to_property',
+            'status' => 'required|in:approved,rejected,released,to_order,for_approval,',
             'password' => 'required|string',
             'remarks' => 'nullable|string|max:500'
         ]);

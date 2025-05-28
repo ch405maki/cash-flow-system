@@ -4,6 +4,8 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
+import FormHeader from '@/components/reports/header/formHeder.vue'
+import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -66,6 +68,7 @@ function formatCurrency(amount: number): string {
 
 // Modal state
 const showApproveModal = ref(false)
+const showForApproveModal = ref(false)
 const showRejectModal = ref(false)
 const showReleaseModal = ref(false)
 const showOrderModal = ref(false)
@@ -86,6 +89,7 @@ async function submitStatusUpdate(newStatus: string) {
       toast.success('Status updated successfully')
       showApproveModal.value = false
       showRejectModal.value = false
+      showForApproveModal.value = false
       showReleaseModal.value = false
       showOrderModal.value = false
       form.reset()
@@ -98,6 +102,20 @@ async function submitStatusUpdate(newStatus: string) {
       }
     }
   })
+}
+
+const printArea = () =>{
+  const printContents = document.getElementById('print-section')?.innerHTML;
+  const originalContents = document.body.innerHTML;
+
+  if (printContents) {
+    document.body.innerHTML = printContents;
+    window.print();
+    document.body.innerHTML = originalContents;
+    location.reload();
+  } else {
+    console.error('Print section not found');
+  }
 }
 </script>
 
@@ -152,6 +170,57 @@ async function submitStatusUpdate(newStatus: string) {
               <DialogFooter>
                 <Button 
                   @click="submitStatusUpdate('approved')"
+                  :disabled="!form.password || form.processing"
+                >
+                  <span v-if="form.processing">Processing...</span>
+                  <span v-else>Confirm Approval</span>
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          </div>
+          <div v-if="authUser.role === 'purchasing' && authUser.access === 3 " class="space-x-2 flex space-x-2">
+            <Dialog v-model:open="showForApproveModal">
+            <DialogTrigger as-child>
+              <Button 
+                variant="default" 
+                size="sm" 
+                :disabled="purchaseOrder.status === 'approved' || form.processing"
+              >
+                Submit
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Submit Purchase Order for Approval</DialogTitle>
+                <DialogDescription>
+                  Please verify your identity and add remarks
+                </DialogDescription>
+              </DialogHeader>
+              <div class="space-y-4">
+                <div class="space-y-2">
+                  <Label for="approve-password">Password</Label>
+                  <Input 
+                    id="approve-password" 
+                    v-model="form.password" 
+                    type="password" 
+                    placeholder="Enter your password"
+                    class="w-full"
+                  />
+                </div>
+                <div class="space-y-2">
+                  <Label for="approve-remarks">Remarks (Optional)</Label>
+                  <Textarea
+                    id="approve-remarks"
+                    v-model="form.remarks"
+                    placeholder="Add any remarks about this approval"
+                    class="w-full"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button 
+                  @click="submitStatusUpdate('for_approval')"
                   :disabled="!form.password || form.processing"
                 >
                   <span v-if="form.processing">Processing...</span>
@@ -215,12 +284,19 @@ async function submitStatusUpdate(newStatus: string) {
           </Dialog>
           </div>
 
-          <Button variant="outline" size="sm"  as-child>
-            <Link href="/purchase-orders">Back to List</Link>
-          </Button>
+          <div class="flex items-center space-x-2">
+            <Button size="sm" @click="printArea">Print</Button>
+            <Button variant="outline" size="sm"  as-child>
+              <Link href="/purchase-orders">Back to List</Link>
+            </Button>
+          </div>
         </div>
       </div>
 
+      <div id="print-section">
+      <div class="hidden print:block">
+        <FormHeader text="Purchase Order" />
+      </div>
       <div class="grid grid-cols-1 gap-4 md:grid-cols-1">
         <table class="w-full text-sm border border-border rounded-md">
           <tbody>
@@ -244,6 +320,7 @@ async function submitStatusUpdate(newStatus: string) {
             </tr>
           </tbody>
         </table>
+        <p class="text-xs italic hidden print:block">*Please deliver the following items immediately subject to the agreed terms and condition.</p>
         <table class="w-full text-sm border border-border rounded-md">
           <tbody>
             <tr class="border-b">
@@ -287,6 +364,52 @@ async function submitStatusUpdate(newStatus: string) {
           </TableRow>
         </TableBody>
       </Table>
+      <h3 class="flex items-center w-full mt-2">
+        <span class="flex-grow border-t border-dashed border-gray-300"></span>
+        <span class="mx-3 text-xs font-medium">Nothing Follows</span>
+        <span class="flex-grow border-t border-dashed border-gray-300"></span>
+      </h3>
+
+      <div class="hidden print:block">
+      <div class="flex justify-between mt-12 items-center">
+          <div class="text-left w-1/2">
+            <div class="flex  items-center text-sm  space-x-[55px]">
+              <p>For: Arrellano University Graduation Series</p>
+            </div>
+          </div>
+      </div>
+
+      <div class="flex justify-between mt-12 items-center">
+          <div class="text-left w-1/2">
+            <div class="text-sm">
+              <p>PLEASE NOTE: All orders for equipment and supplies are made only on this form and signed by Executive Director.</p>
+              <p>Orders made on other forms and Signed by other person's shall not be honored.</p>
+            </div>
+          </div>
+          <div class="text-right w-1/2">
+              <div class="inline-block text-sm border-black uppercase font-semibold">Arellano Law Foundation</div>
+          </div>
+      </div>
+
+      <div class="flex justify-between mt-12 items-center">
+          <div class="text-left w-1/2">
+            <div class="flex  items-center text-sm uppercase space-x-[55px]">
+              <h1>DEPARTMENT:</h1>
+              <h1>Medical and Dental</h1>
+            </div>
+            <div class="flex  items-center text-sm uppercase space-x-[10px]">
+              <h1>ACCOUNT CHARGES:</h1>
+              <h1>Medicine</h1>
+            </div>
+          </div>
+          <div class="text-right w-1/2">
+              <p class="text-xs mb-10">Approve By</p>
+              <div class="inline-block border-b text-sm border-black uppercase">Atty. Gabriel P. Delapeña</div>
+              <p class="text-xs mt-1">Executive Director</p>
+          </div>
+      </div>
+      </div>
+    </div>
     </div>
   </AppLayout>
 </template>
