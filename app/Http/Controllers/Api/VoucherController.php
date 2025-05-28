@@ -39,11 +39,36 @@ class VoucherController extends Controller
         'check.*.account_id' => 'required_with:check.*|exists:accounts,id',
     ];
 
-    public function index()
+    public function index(Request $request)
     {
+        $query = Voucher::with(['user', 'details'])
+            ->latest();
+
+        // Add search functionality
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('voucher_no', 'like', "%{$searchTerm}%")
+                    ->orWhere('type', 'like', "%{$searchTerm}%")
+                    ->orWhere('payee', 'like', "%{$searchTerm}%")
+                    ->orWhere('status', 'like', "%{$searchTerm}%")
+                    ->orWhere('purpose', 'like', "%{$searchTerm}%")
+                    ->orWhere('check_no', 'like', "%{$searchTerm}%")
+                    ->orWhere('check_amount', 'like', "%{$searchTerm}%")
+                    ->orWhere('check_payable_to', 'like', "%{$searchTerm}%")
+                    ->orWhereHas('user', function ($q) use ($searchTerm) {
+                        $q->where('first_name', 'like', "%{$searchTerm}%");
+                    });
+            });
+        }
+
+        // Paginate the results
+        $vouchers = $query->paginate(10);
+
         return Inertia::render('Vouchers/Index', [
-            'vouchers' => Voucher::with(['user', 'details'])->get(),
+            'vouchers' => $vouchers,
             'accounts' => Account::all(),
+            'filters' => $request->only(['search']) // Pass back search term for UI
         ]);
     }
 
@@ -58,13 +83,13 @@ class VoucherController extends Controller
     {
         return DB::transaction(function () use ($request) {
             $validated = $this->validateRequest($request);
-            
+
             // Explicitly remove voucher_no if somehow provided
             unset($validated['voucher_no']);
-            
+
             $this->handleCashVoucherDetails($validated);
             $voucher = $this->createVoucher($validated);
-            
+
             return $this->successResponse(
                 'Voucher created successfully',
                 $voucher->load(['user', 'details']),
@@ -86,14 +111,14 @@ class VoucherController extends Controller
     {
         return DB::transaction(function () use ($request, $voucher) {
             $validated = $this->validateRequest($request);
-            
+
             // Lock the voucher number to the existing value
             $validated['voucher_no'] = $voucher->voucher_no;
-            
+
             $this->validateCashVoucherAmount($validated);
             $this->updateVoucher($voucher, $validated);
             $this->syncVoucherDetails($voucher, $validated);
-            
+
             return $this->successResponse(
                 'Voucher updated successfully',
                 $voucher->fresh(['user', 'details']),
@@ -115,7 +140,7 @@ class VoucherController extends Controller
     public function view(Voucher $voucher)
     {
         $voucher->load(['user', 'details.account']);
-        
+
         return inertia('Vouchers/View', [
             'voucher' => $voucher,
             'accounts' => Account::all(),
@@ -127,13 +152,13 @@ class VoucherController extends Controller
     {
         $prefix = 'V-' . now()->format('Y') . '-';
         $lastVoucher = Voucher::where('voucher_no', 'like', $prefix . '%')
-                            ->orderBy('voucher_no', 'desc')
-                            ->first();
-        
-        $sequence = $lastVoucher 
+            ->orderBy('voucher_no', 'desc')
+            ->first();
+
+        $sequence = $lastVoucher
             ? (int) str_replace($prefix, '', $lastVoucher->voucher_no) + 1
             : 1;
-        
+
         return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 
@@ -143,15 +168,15 @@ class VoucherController extends Controller
     protected function validateRequest(Request $request): array
     {
         $rules = $this->voucherValidationRules;
-        
+
         // If updating, ignore unique rule for current voucher
         if ($request->isMethod('patch') || $request->isMethod('put')) {
             $voucherId = $request->route('voucher')?->id;
             if ($voucherId) {
-                $rules['voucher_no'] = 'required|string|unique:vouchers,voucher_no,'.$voucherId;
+                $rules['voucher_no'] = 'required|string|unique:vouchers,voucher_no,' . $voucherId;
             }
         }
-        
+
         return $request->validate($rules);
     }
 
@@ -165,11 +190,11 @@ class VoucherController extends Controller
         }
 
         $checkCollection = collect($validated['check']);
-        
+
         // Distribute amount evenly if any amount is null
-        if ($checkCollection->contains(fn ($item) => is_null($item['amount']))) {
+        if ($checkCollection->contains(fn($item) => is_null($item['amount']))) {
             $evenAmount = round($validated['check_amount'] / $checkCollection->count(), 2);
-            $validated['check'] = $checkCollection->map(fn ($item) => [
+            $validated['check'] = $checkCollection->map(fn($item) => [
                 ...$item,
                 'amount' => $item['amount'] ?? $evenAmount
             ])->toArray();
@@ -211,7 +236,7 @@ class VoucherController extends Controller
         if ($validated['type'] === 'salary' && !empty($validated['check'])) {
             $validated['check_amount'] = collect($validated['check'])->sum('amount');
         }
-        
+
         $voucher->update(collect($validated)->except('check')->toArray());
     }
 
@@ -255,7 +280,7 @@ class VoucherController extends Controller
     protected function createVoucherDetails(Voucher $voucher, array $details): void
     {
         $voucher->details()->createMany(
-            array_map(fn ($detail) => $this->mapDetailAttributes($detail), $details)
+            array_map(fn($detail) => $this->mapDetailAttributes($detail), $details)
         );
     }
 
@@ -280,14 +305,14 @@ class VoucherController extends Controller
     {
         if (!empty($validated['check'])) {
             $sumAmount = collect($validated['check'])->sum('amount');
-            
+
             // For cash vouchers, amount must match exactly
             if ($validated['type'] === 'cash' && abs($sumAmount - $validated['check_amount']) > 0.01) {
                 throw ValidationException::withMessages([
                     'check_amount' => 'For cash vouchers, check amount must equal the sum of all item amounts'
                 ]);
             }
-            
+
             // For salary vouchers, update the check amount to match details
             if ($validated['type'] === 'salary') {
                 $validated['check_amount'] = $sumAmount;
