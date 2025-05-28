@@ -296,16 +296,29 @@ const breadcrumbs: BreadcrumbItem[] = [
         </div>
       </div>
 
-      <div class="space-y-2">
-        <p><strong>Order No:</strong> {{ requestOrder.order_no }}</p>
-        <p><strong>Order Date:</strong> {{ new Date(requestOrder.order_date).toLocaleDateString() }}</p>
-        <p><strong>Notes:</strong> {{ requestOrder.notes }}</p>
-        <p>
-          <strong>Status:</strong>
-          <Badge :variant="getStatusVariant(requestOrder.status)" class="capitalize">
-            {{ requestOrder.status }}
-          </Badge>
-        </p>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-1">
+        <table class="w-full text-sm border border-border rounded-md">
+          <tbody>
+            <tr class="border-b">
+              <td class="p-2 font-medium text-muted-foreground border-r w-48 uppercase">Order No:</td>
+              <td class="p-2 uppercase border-r w-xl">{{ requestOrder.order_no }}</td>
+              <td class="p-2 font-medium text-muted-foreground border-r w-40 uppercase">Order Date:</td>
+              <td class="p-2 w-40">
+                {{ new Date(requestOrder.order_date).toLocaleDateString() }}
+              </td>
+            </tr>
+            <tr class="border-b">
+              <td class="p-2 font-medium text-muted-foreground border-r w-48 uppercase">Notes:</td>
+              <td class="p-2 uppercase border-r w-xl">{{ requestOrder.notes }}</td>
+              <td class="p-2 font-medium text-muted-foreground border-r w-40 uppercase">Status:</td>
+              <td class="p-2 w-40">
+                <Badge :variant="getStatusVariant(requestOrder.status)" class="capitalize">
+                  {{ requestOrder.status }}
+                </Badge>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <h2 class="text-xl font-semibold mt-6 mb-2">Order Details</h2>
