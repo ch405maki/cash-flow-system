@@ -21,14 +21,8 @@ const getFullName = (user: any) =>
 
 function viewVoucherReport(id: number) {
   // Open in new tab
-  window.open(route('vouchers.report', id), '_blank');
+  router.visit(route('vouchers.preview', id));
   
-  // Or download directly (alternative approach)
-  // router.visit(route('vouchers.report', id), {
-  //   method: 'get',
-  //   preserveScroll: true,
-  //   onSuccess: () => {},
-  // });
 }
 </script>
 

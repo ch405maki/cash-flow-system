@@ -60,12 +60,22 @@ const form = useForm({
         charging_tag: detail.charging_tag,
         hours: detail.hours,
         rate: detail.rate,
-        account_id: detail.account_id
+        account_id: detail.account_id.toString() // Ensure account_id is string for Select component
     }))
 });
 
 const addDetailItem = () => {
+    // Check if the last item is empty (newly added but not filled yet)
+    if (form.check.length > 0) {
+        const lastItem = form.check[form.check.length - 1];
+        if (!lastItem.account_id || !lastItem.amount) {
+            toast.warning('Please fill the current account details before adding a new one');
+            return;
+        }
+    }
+
     form.check.push({
+        id: null, // This will be null for new entries
         amount: 0,
         charging_tag: '',
         hours: '',
@@ -74,8 +84,21 @@ const addDetailItem = () => {
     });
 };
 
-const removeDetailItem = (index) => {
+const removeDetailItem = async (index) => {
     if (form.check.length > 1) {
+        const detail = form.check[index];
+        
+        // If this is an existing record (has an ID), confirm deletion
+        if (detail.id) {
+            try {
+                await axios.delete(`/api/vouchers/details/${detail.id}`);
+                toast.success('Account detail removed successfully');
+            } catch (error) {
+                toast.error('Failed to remove account detail');
+                return;
+            }
+        }
+        
         form.check.splice(index, 1);
         calculateTotalAmount();
     }
@@ -99,6 +122,15 @@ const isCashVoucher = computed(() => form.type === 'cash');
 
 async function updateVoucher() {
     try {
+        // Check for duplicate account IDs before submitting
+        const accountIds = form.check.map(item => item.account_id);
+        const uniqueAccountIds = new Set(accountIds);
+        
+        if (accountIds.length !== uniqueAccountIds.size) {
+            toast.error('Duplicate account entries with the same name detected.');
+            return;
+        }
+
         const response = await axios.put(`/api/vouchers/${voucher.id}`, form);
 
         toast.success(response.data.message || 'Voucher updated successfully');
@@ -228,10 +260,12 @@ async function updateVoucher() {
                                 <Label :for="`account-${index}`">Account *</Label>
                                 <Select v-model="detail.account_id" required :disabled="form.type === 'cash'">
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select account" />
+                                        <SelectValue placeholder="Select account">
+                                            {{ accounts.find(a => a.id == detail.account_id)?.account_title || 'Select account' }}
+                                        </SelectValue>
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem v-for="account in accounts" :key="account.id" :value="account.id">
+                                        <SelectItem v-for="account in accounts" :key="account.id" :value="account.id.toString()">
                                             {{ account.account_title }}
                                         </SelectItem>
                                     </SelectContent>
