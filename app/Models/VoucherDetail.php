@@ -18,6 +18,10 @@ class VoucherDetail extends Model
 
     public function account(): BelongsTo
     {
-        return $this->belongsTo(Account::class);
+        return $this->belongsTo(Account::class)->withDefault([
+            'account_title' => 'Unspecified Account'
+        ]);
     }
+
+    
 }
