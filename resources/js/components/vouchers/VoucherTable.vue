@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
-import { defineProps } from 'vue';
+import { computed } from 'vue'; // Add computed import
 import { router } from '@inertiajs/vue3';
 import { SquarePen, Eye } from 'lucide-vue-next';
 import {
@@ -16,8 +16,17 @@ const props = defineProps<{
   vouchers: Array<any>;
 }>();
 
-const getRole = (user: any) =>
-  `${user.role} `;
+// Sort vouchers by date (newest first)
+const sortedVouchers = computed(() => {
+  return [...props.vouchers].sort((a, b) => {
+    // Use created_at if available, otherwise fall back to voucher_date
+    const dateA = a.created_at || a.voucher_date;
+    const dateB = b.created_at || b.voucher_date;
+    return new Date(dateB).getTime() - new Date(dateA).getTime();
+  });
+});
+
+const getRole = (user: any) => `${user.role} `;
 
 function viewVoucher(id: number) {
   router.get(`/vouchers/${id}/view`);
@@ -47,13 +56,14 @@ function formatCurrency(amount: number): string {
           <TableHead class="px-4 py-2">Check Amount</TableHead>
           <TableHead class="px-4 py-2">Payee</TableHead>
           <TableHead class="px-4 py-2">Check Pay to</TableHead>
+          <TableHead class="px-4 py-2">Date</TableHead> <!-- Added date column -->
           <TableHead class="px-4 py-2 text-center">Status</TableHead>
           <TableHead class="px-4 py-2 text-center">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         <TableRow
-          v-for="voucher in vouchers"
+          v-for="voucher in sortedVouchers"
           :key="voucher.id"
           class="border-t hover:bg-muted/50"
         >
@@ -66,6 +76,9 @@ function formatCurrency(amount: number): string {
           </TableCell>
           <TableCell class="px-4 py-2">{{ voucher.payee }}</TableCell>
           <TableCell class="px-4 py-2">{{ voucher.check_payable_to }}</TableCell>
+          <TableCell class="px-4 py-2">
+            {{ new Date(voucher.created_at || voucher.voucher_date).toLocaleDateString() }}
+          </TableCell>
           <TableCell class="px-4 py-2 capitalize">
             <span
               class="inline-block rounded-full px-8 py-0.5 text-xs font-semibold"
