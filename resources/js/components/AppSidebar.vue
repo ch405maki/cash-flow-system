@@ -29,11 +29,6 @@ const executiveNavItems: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
-    title: 'Requests',
-    href: '/request',
-    icon: FileText,
-  },
-  {
     title: 'Request Approval',
     href: '/for-approval',
     icon: ClipboardCheck,
@@ -50,7 +45,7 @@ const executiveNavItems: NavItem[] = [
   },
   {
     title: 'Reports',
-    href: '/reports/vouchers',
+    href: '/reports',
     icon: BarChart3,
   },
 ];

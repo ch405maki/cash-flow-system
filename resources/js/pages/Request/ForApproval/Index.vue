@@ -3,39 +3,44 @@
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
-      <!-- ShadCN UI Table -->
-      <Table>
-        <TableCaption>-------- Created Orders --------</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Order No</TableHead>
-            <TableHead>Date Request</TableHead>
-            <TableHead>Notes</TableHead>
-            <TableHead class="w-[100px]">Status</TableHead>
-            <TableHead class="text-center">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow v-for="request in props.requests" :key="request.id">
-            <TableCell class="font-medium">{{ request.order_no }}</TableCell>
-            <TableCell>{{ new Date(request.order_date).toLocaleDateString() }}</TableCell>
-            <TableCell>{{ request.notes }}</TableCell>
-            <TableCell>
-              <Badge
-                :variant="getStatusVariant(request.status)"
-                class="capitalize"
-              >
-                {{ request.status }}
-              </Badge>
-            </TableCell>
-            <TableCell class="text-center">
-              <Button size="sm" variant="outline" @click="viewRequest(request.id)">
-                View
-              </Button>
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+      <div class="flex justify-between items-center">
+        <h1 class="text-xl font-bold">For Approval Request to Order</h1>
+      </div>
+      <!-- Table -->
+       <div class="rounded-lg border">
+         <Table>
+           <TableCaption>-------- Created Orders --------</TableCaption>
+           <TableHeader>
+             <TableRow>
+               <TableHead>Order No</TableHead>
+               <TableHead>Date Request</TableHead>
+               <TableHead>Notes</TableHead>
+               <TableHead class="w-[100px]">Status</TableHead>
+               <TableHead class="text-center">Actions</TableHead>
+             </TableRow>
+           </TableHeader>
+           <TableBody>
+             <TableRow v-for="request in props.requests" :key="request.id">
+               <TableCell class="font-medium">{{ request.order_no }}</TableCell>
+               <TableCell>{{ new Date(request.order_date).toLocaleDateString() }}</TableCell>
+               <TableCell>{{ request.notes }}</TableCell>
+               <TableCell>
+                 <Badge
+                   :variant="getStatusVariant(request.status)"
+                   class="capitalize"
+                 >
+                   {{ request.status }}
+                 </Badge>
+               </TableCell>
+               <TableCell class="text-center">
+                 <Button size="sm" variant="outline" @click="viewRequest(request.id)">
+                   View
+                 </Button>
+               </TableCell>
+             </TableRow>
+           </TableBody>
+         </Table>
+       </div>
     </div>
   </AppLayout>
 </template>

@@ -15,6 +15,10 @@ use Spatie\Browsershot\Browsershot;
 
 class ReportController extends Controller
 {
+    public function index(){
+        return Inertia::render('Reports/Index');
+    }
+
     public function voucherReports()
     {
         return Inertia::render('Reports/Vouchers/Reports', [
