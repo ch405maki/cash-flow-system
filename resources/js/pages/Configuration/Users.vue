@@ -15,15 +15,34 @@
   
   // Define the User type
   interface User {
-    id: number;
-    name: string;
-    email: string;
-    role: string;
-    status: string;
-  }
-  
-  // Define props
-  const props = defineProps<{ users: User[] }>();
+      id: number;
+      username: string;
+      first_name: string;
+      middle_name: string;
+      last_name: string;
+      email: string;
+      role: string;
+      status: string;
+      department_id: number;
+      access_id: number;
+    }
+
+    interface Department {
+      id: number;
+      department_name: string;
+    }
+
+    interface AccessLevel {
+      id: number;
+      access_level: string;
+    }
+    
+    // Define props
+    const props = defineProps<{ 
+      users: User[],
+      departments: Department[],
+      accessLevels: AccessLevel[]
+    }>();
   
   const breadcrumbs = [{ title: "Users Management", href: "/users" }];
 
@@ -131,7 +150,10 @@
                     </Button>
         
                     <!-- Create User Button -->
-                    <CreateUserDialog />
+                    <CreateUserDialog 
+                      :departments="departments" 
+                      :access-levels="accessLevels" 
+                    />
                 </div>
                 </div>
         

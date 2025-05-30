@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\QueryException;
+use App\Models\Department;
+use App\Models\Access;
 use Exception;
 
 use App\Models\User;
@@ -20,8 +22,13 @@ class UserController extends Controller
     public function index()
     {
         $users = User::all();
+        $departments = Department::all();
+        $accessLevels = Access::all();
+
         return Inertia::render('Configuration/Users', [
-            'users' => $users
+            'users' => $users,
+            'departments' => $departments,
+            'accessLevels' => $accessLevels
         ]);
     }
     
@@ -35,7 +42,7 @@ class UserController extends Controller
                 'middle_name' => 'nullable|string|max:255',
                 'last_name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
-                'password' => 'required|string|min:8|confirmed',
+                'password' => 'required|string|min:8',
                 'role' => 'required|in:super_admin,admin,staff',
                 'status' => 'required|in:active,inactive',
                 'department_id' => 'required|exists:departments,id',

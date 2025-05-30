@@ -1,77 +1,233 @@
-<!-- components/CreateUserDialog.vue -->
 <template>
-    <Dialog v-model:open="isOpen" class="dark:bg-gray-800">
-        <DialogTrigger as-child>
-            <Button @click="openDialog" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 dark:bg-gray-700 dark:text-gray-200">
-                <UserRoundPlus class="w-4 h-4 mr-2" /> Create
-            </Button>
-        </DialogTrigger>
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle class="text-lg font-bold dark:text-gray-200">Create New User</DialogTitle>
-                <DialogDescription class="text-sm dark:text-gray-400">Fill in the details to add a new user.</DialogDescription>
-            </DialogHeader>
+  <Dialog v-model:open="isOpen">
+    <DialogTrigger as-child>
+      <Button @click="openDialog">
+        <UserRoundPlus class="w-4 h-4 mr-2" />
+        Create User
+      </Button>
+    </DialogTrigger>
+    <DialogContent class="max-h-[90vh] overflow-y-auto ">
+      <DialogHeader>
+        <DialogTitle>Create New User</DialogTitle>
+        <DialogDescription>
+          Fill in the details to add a new user.
+        </DialogDescription>
+      </DialogHeader>
+      
+      <form @submit.prevent="createUser" class="space-y-4">
+        <div class="grid gap-4 py-4">
+          <div class="space-y-2">
+            <Label for="username">Username</Label>
+            <Input id="username" v-model="formData.username" required />
+          </div>
 
-            <form @submit.prevent="createUser">
-                <div class="grid gap-4">
-                    <input v-model="formData.name" type="text" placeholder="Name" class="form-input" required />
-                    <input v-model="formData.email" type="email" placeholder="Email" class="form-input" required />
-                    <input v-model="formData.password" type="password" placeholder="Password" class="form-input" required />
-                    <select v-model="formData.role" class="form-input" required>
-                        <option value="admin">Admin</option>
-                        <option value="user">User</option>
-                    </select>
-                    <select v-model="formData.status" class="form-input" required>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
-                </div>
+          <div class="grid grid-cols-1 gap-4">
+            <div class="space-y-2">
+              <Label for="firstName">First Name</Label>
+              <Input id="firstName" v-model="formData.first_name" required />
+            </div>
+            <div class="space-y-2">
+              <Label for="middleName">Middle Name</Label>
+              <Input id="middleName" v-model="formData.middle_name" />
+            </div>
+            <div class="space-y-2">
+              <Label for="lastName">Last Name</Label>
+              <Input id="lastName" v-model="formData.last_name" required />
+            </div>
+          </div>
 
-                <DialogFooter class="mt-4">
-                    <Button variant="outline" @click="closeDialog" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded border border-gray-300 dark:bg-gray-700 dark:text-gray-200">Cancel</Button>
-                    <Button type="submit" :disabled="loading" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded dark:bg-gray-700 dark:text-gray-200">
-                        <span v-if="loading">Creating...</span>
-                        <span v-else>Create</span>
-                    </Button>
-                </DialogFooter>
-            </form>
-        </DialogContent>
-    </Dialog>
+          <div class="space-y-2">
+            <Label for="email">Email</Label>
+            <Input id="email" type="email" v-model="formData.email" required />
+          </div>
+
+          <div class="space-y-2">
+            <Label for="password">Password</Label>
+            <Input id="password" type="password" v-model="formData.password" required />
+          </div>
+
+          <div class="space-y-2">
+            <Label for="role">Role</Label>
+            <Select v-model="formData.role" required>
+              <SelectTrigger>
+                <SelectValue placeholder="Select role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Administrator</SelectItem>
+                <SelectItem value="executive_director">Executive Director</SelectItem>
+                <SelectItem value="accounting">Accounting</SelectItem>
+                <SelectItem value="department_head">Department Head</SelectItem>
+                <SelectItem value="property_custodian">Property Custodian</SelectItem>
+                <SelectItem value="purchasing">Purchasing</SelectItem>
+                <SelectItem value="staff">Staff</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div class="space-y-2">
+            <Label for="status">Status</Label>
+            <Select v-model="formData.status" required>
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div class="space-y-2">
+            <Label for="department">Department</Label>
+            <Select v-model="formData.department_id" required>
+              <SelectTrigger>
+                <SelectValue placeholder="Select department" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem 
+                  v-for="department in props.departments" 
+                  :key="department.id" 
+                  :value="department.id"
+                >
+                  {{ department.department_name }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div class="space-y-2">
+            <Label for="access">Access Level</Label>
+            <Select v-model="formData.access_id" required>
+              <SelectTrigger>
+                <SelectValue placeholder="Select access level" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem 
+                  v-for="access in props.accessLevels" 
+                  :key="access.id" 
+                  :value="access.id"
+                >
+                  {{ access.access_level }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button type="button" variant="outline" @click="closeDialog">
+            Cancel
+          </Button>
+          <Button type="submit" :disabled="loading">
+            <span v-if="loading" class="flex items-center">
+              <Loader2 class="mr-2 h-4 w-4 animate-spin" />
+              Creating...
+            </span>
+            <span v-else>Create User</span>
+          </Button>
+        </DialogFooter>
+      </form>
+    </DialogContent>
+  </Dialog>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { UserRoundPlus } from "lucide-vue-next";
-import axios from "axios";
-import { useToast } from "vue-toastification";
+import { ref } from 'vue'
+import { useToast } from 'vue-toastification'
+import axios from 'axios'
+import { Loader2, UserRoundPlus } from 'lucide-vue-next'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
-const toast = useToast();
-const isOpen = ref(false);
-const loading = ref(false);
-const formData = ref({ name: "", email: "", password: "", role: "user", status: "active" });
+interface Department {
+  id: number
+  department_name: string
+}
 
-const openDialog = () => (isOpen.value = true);
-const closeDialog = () => (isOpen.value = false);
+interface AccessLevel {
+  id: number
+  access_level: string
+}
+
+const props = defineProps<{
+  departments: Department[]
+  accessLevels: AccessLevel[]
+}>()
+
+const emit = defineEmits(['user-created'])
+
+const toast = useToast()
+const isOpen = ref(false)
+const loading = ref(false)
+
+const formData = ref({
+  username: '',
+  first_name: '',
+  middle_name: '',
+  last_name: '',
+  email: '',
+  password: '',
+  role: 'staff',
+  status: 'active',
+  department_id: '',
+  access_id: '',
+})
+
+const openDialog = () => (isOpen.value = true)
+const closeDialog = () => {
+  isOpen.value = false
+  formData.value = {
+    username: '',
+    first_name: '',
+    middle_name: '',
+    last_name: '',
+    email: '',
+    password: '',
+    role: 'staff',
+    status: 'active',
+    department_id: '',
+    access_id: '',
+  }
+}
 
 const createUser = async () => {
-    loading.value = true;
-    try {
-        await axios.post("/api/users", formData.value);
-        toast.success("User created successfully!");
-        setTimeout(() => location.reload(), 2000);
-    } catch (error) {
-        toast.error("Failed to create user");
-    } finally {
-        loading.value = false;
-        closeDialog();
+  loading.value = true
+  try {
+    await axios.post('/api/users', formData.value)
+    toast.success('User created successfully!')
+    closeDialog()
+    emit('user-created')
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.data?.errors) {
+      Object.values(error.response.data.errors).forEach(err => {
+        toast.error(err[0])
+      })
+    } else {
+      toast.error('Failed to create user')
     }
-};
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <style scoped>
-.form-input {
-    @apply p-2 rounded w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700;
-}
+
 </style>
