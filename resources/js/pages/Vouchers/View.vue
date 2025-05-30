@@ -12,6 +12,15 @@ import { ref, computed } from 'vue'
 import { type BreadcrumbItem } from '@/types';
 import { ArrowLeft } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
+import {
+    Table,
+    TableBody,
+    TableCaption,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table'
 
 const { props } = usePage();
 const accounts = props.accounts || [];
@@ -23,13 +32,12 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: `View Voucher: ${voucher.voucher_no}`, href: `/vouchers/${voucher.id}` },
 ];
 
-// Date formatting function using plain JavaScript
 const formattedDate = (dateString: string) => {
     if (!dateString) return 'N/A';
     
     try {
         const date = new Date(dateString);
-        if (isNaN(date.getTime())) return dateString; // Return original if invalid date
+        if (isNaN(date.getTime())) return dateString;
         
         const months = [
             'January', 'February', 'March', 'April', 
@@ -41,11 +49,10 @@ const formattedDate = (dateString: string) => {
         const month = months[date.getMonth()];
         const year = date.getFullYear();
         
-        
         return `${month} ${day}, ${year}`;
     } catch (error) {
         console.error('Error formatting date:', error);
-        return dateString; // Return original if formatting fails
+        return dateString;
     }
 };
 </script>
@@ -142,43 +149,28 @@ const formattedDate = (dateString: string) => {
                         <h3 class="font-medium">Account Details</h3>
                     </div>
 
-                    <div 
-                        v-for="(detail, index) in voucher.details" 
-                        :key="index"
-                        class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 pb-4 border-b last:border-0"
-                    >
-                        <!-- Account Selection -->
-                        <div class="grid gap-2">
-                            <Label :for="`account-${index}`">Account</Label>
-                            <div class="p-2 border rounded-md bg-gray-50 text-sm">
-                                {{ accounts.find(a => a.id === detail.account_id)?.account_title || 'N/A' }}
-                            </div>
-                        </div>
-
-                        <!-- Charging Tag -->
-                        <div class="grid gap-2">
-                            <Label :for="`tag-${index}`">Charging Tag</Label>
-                            <div class="p-2 border rounded-md bg-gray-50 text-sm">{{ detail.charging_tag }}</div>
-                        </div>
-
-                        <!-- Hours -->
-                        <div class="grid gap-2">
-                            <Label :for="`hours-${index}`">Hours</Label>
-                            <div class="p-2 border rounded-md bg-gray-50 text-sm">{{ detail.hours || 'N/A' }}</div>
-                        </div>
-
-                        <!-- Rate -->
-                        <div class="grid gap-2">
-                            <Label :for="`rate-${index}`">Rate</Label>
-                            <div class="p-2 border rounded-md bg-gray-50 text-sm">{{ detail.rate || 'N/A' }}</div>
-                        </div>
-
-                        <!-- Amount -->
-                        <div class="grid gap-2">
-                            <Label :for="`amount-${index}`">Amount</Label>
-                            <div class="p-2 border rounded-md bg-gray-50 text-sm">{{ detail.amount }}</div>
-                        </div>
-                    </div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Account</TableHead>
+                                <TableHead>Charging Tag</TableHead>
+                                <TableHead>Hours</TableHead>
+                                <TableHead>Rate</TableHead>
+                                <TableHead>Amount</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="(detail, index) in voucher.details" :key="index">
+                                <TableCell>
+                                    {{ accounts.find(a => a.id === detail.account_id)?.account_title || 'N/A' }}
+                                </TableCell>
+                                <TableCell>{{ detail.charging_tag }}</TableCell>
+                                <TableCell>{{ detail.hours || 'N/A' }}</TableCell>
+                                <TableCell>{{ detail.rate || 'N/A' }}</TableCell>
+                                <TableCell>{{ detail.amount }}</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
                 </div>
                 
                 <!-- Dates Section -->

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use Inertia\Inertia;
 use App\Http\Controllers\Controller;
+
 use App\Models\User;
 use App\Models\Voucher;
 use App\Models\Account;
@@ -18,39 +19,22 @@ class ReportController extends Controller
         return Inertia::render('Reports/Index');
     }
 
-    public function voucherReports(Request $request)
+    public function voucherReports()
     {
-        $query = Voucher::with(['user', 'details.account'])
-            ->latest();
-
-        // Add search functionality
-        if ($request->has('search') && !empty($request->search)) {
-            $searchTerm = $request->search;
-            $query->where(function ($q) use ($searchTerm) {
-                $q->where('voucher_no', 'like', "%{$searchTerm}%");
-
-            });
-        }
-
-        // Paginate the results (default 15 per page)
-        $vouchers = $query->paginate($request->per_page ?? 10)
-            ->appends($request->query());
-
         return Inertia::render('Reports/Vouchers/Reports', [
-            'vouchers' => $vouchers,
+            'vouchers' => Voucher::with(['user', 'details.account'])->get(),
             'accounts' => Account::all(),
-            'filters' => $request->only(['search'])
         ]);
     }
 
-    public function preview(Voucher $voucher)
+   public function preview(Voucher $voucher)
     {
         $signatories = Signatory::where('status', 'active')->get();
         $roles = [
             'approved_by' => User::where('role', 'department_head')->first(),
             'exec_director' => User::where('role', 'executive_director')->first()
         ];
-
+        
         // Eager load necessary relationships
         $voucher->load(['details.account', 'user']);
 
@@ -67,6 +51,7 @@ class ReportController extends Controller
         ]);
     }
 
+
     public function generateVoucherReports(Voucher $voucher)
     {
         $signatories = Signatory::where('status', 'active')->get();
@@ -74,7 +59,7 @@ class ReportController extends Controller
             'approved_by' => User::where('role', 'department_head')->first(),
             'exec_director' => User::where('role', 'executive_director')->first()
         ];
-
+        
         // Eager load for PDF generation too
         $voucher->load(['details.account', 'user']);
 
@@ -82,17 +67,19 @@ class ReportController extends Controller
             'voucher' => $voucher,
             'signatories' => $signatories,
             'roles' => $roles,
-            'isSalary' => $voucher->type === 'salary'
+            'isSalary' => $voucher->type === 'salary' // Add this flag
         ])->render();
-
+        
         $pdf = Browsershot::html($html)
+            // ->setNodeBinary('C:\Program Files\nodejs\node.exe')
+            // ->setNpmBinary('C:\Program Files\nodejs\npm.cmd')
             ->waitUntilNetworkIdle()
             ->emulateMedia('screen')
             ->format('A4')
             ->pdf();
-
+            
         return response()->streamDownload(
-            fn() => print ($pdf),
+            fn () => print($pdf),
             "voucher-report-{$voucher->voucher_no}.pdf",
             ['Content-Type' => 'application/pdf']
         );
