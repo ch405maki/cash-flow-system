@@ -182,6 +182,7 @@ const printVoucher = () => {
 </script>
 
 <template>
+
     <Head :title="`View Voucher - ${voucher.voucher_no}`" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
@@ -291,7 +292,7 @@ const printVoucher = () => {
                     <TableBody>
                         <TableRow v-for="(detail, index) in voucher.details" :key="index">
                             <TableCell>
-                                {{ accounts.find(a => a.id === detail.account_id)?.account_title || 'N/A' }}
+                                {{accounts.find(a => a.id === detail.account_id)?.account_title || 'N/A'}}
                             </TableCell>
                             <TableCell>{{ detail.charging_tag }}</TableCell>
                             <TableCell>{{ detail.hours || 'N/A' }}</TableCell>
@@ -363,7 +364,7 @@ const printVoucher = () => {
                         <tbody>
                             <tr v-for="detail in voucher.details" :key="detail.id">
                                 <td style="text-align: left;">
-                                    {{ accounts.find(a => a.id === detail.account_id)?.account_title || 'N/A' }}
+                                    {{accounts.find(a => a.id === detail.account_id)?.account_title || 'N/A'}}
                                 </td>
                                 <td style="text-align: right;">₱{{ formatCurrency(detail.amount) }}</td>
                             </tr>
@@ -371,8 +372,10 @@ const printVoucher = () => {
                         <tfoot>
                             <tr>
                                 <td style="text-align: right;"><strong>TOTAL AMOUNT:</strong></td>
-                                <td style="text-align: right; border: 1px solid black; padding: 5px; font-weight: bold;">
-                                    ₱{{ formatCurrency(voucher.details.reduce((sum, detail) => sum + Number(detail.amount), 0)) }}
+                                <td
+                                    style="text-align: right; border: 1px solid black; padding: 5px; font-weight: bold;">
+                                    ₱{{formatCurrency(voucher.details.reduce((sum, detail) => sum +
+                                    Number(detail.amount), 0)) }}
                                 </td>
                             </tr>
                         </tfoot>
@@ -439,11 +442,13 @@ const printVoucher = () => {
 
                 <table style="border-collapse: collapse; width: 100%;">
                     <tr>
-                        <td style="border: 1px solid black; width: 33%; padding: 8px; vertical-align: top; height: 100px;">
+                        <td
+                            style="border: 1px solid black; width: 33%; padding: 8px; vertical-align: top; height: 100px;">
                             <strong>PREPARED BY:</strong><br>
                             <div style="margin-top: 40px; width: 80%;"></div>
                         </td>
-                        <td style="border: 1px solid black; width: 33%; padding: 8px; vertical-align: top; height: 100px;">
+                        <td
+                            style="border: 1px solid black; width: 33%; padding: 8px; vertical-align: top; height: 100px;">
                             <strong>APPROVED BY:</strong><br>
                             <div style="margin-top: 40px; width: 80%;"></div>
                         </td>
