@@ -4,15 +4,16 @@ import { Head, router } from '@inertiajs/vue3';
 import VoucherTable from '@/components/vouchers/VoucherTable.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button'
-import { Filter, PlusCircle, Search } from 'lucide-vue-next'
+import { PlusCircle, Filter, Search } from 'lucide-vue-next'
 import { Input } from '@/components/ui/input'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -25,33 +26,55 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const searchQuery = ref("");
-const timeFilter = ref<string | null>(null); // 'week', 'month', 'year'
+const timeFilter = ref<string | null>(null);
+const dateRangeLabel = ref<string | null>(null);
 
-// Calculate date ranges
-const getDateRange = (period: string | null) => {
+// Date filter options
+const dateFilterOptions = [
+  { value: 'week', label: 'Last Week' },
+  { value: 'month', label: 'Last Month' },
+  { value: 'year', label: 'Last Year' },
+  { value: null, label: 'All Time' }
+];
+
+// Calculate date ranges and update label
+const updateDateRange = (period: string | null) => {
   const now = new Date();
-  if (!period) return { start: null, end: null };
+  
+  if (!period) {
+    dateRangeLabel.value = null;
+    return { start: null, end: null };
+  }
   
   if (period === 'week') {
     const start = new Date(now);
     start.setDate(now.getDate() - 7);
+    dateRangeLabel.value = 'Last Week';
     return { start, end: now };
   }
   
   if (period === 'month') {
     const start = new Date(now);
     start.setMonth(now.getMonth() - 1);
+    dateRangeLabel.value = 'Last Month';
     return { start, end: now };
   }
   
   if (period === 'year') {
     const start = new Date(now);
     start.setFullYear(now.getFullYear() - 1);
+    dateRangeLabel.value = 'Last Year';
     return { start, end: now };
   }
   
+  dateRangeLabel.value = null;
   return { start: null, end: null };
 };
+
+// Watch for timeFilter changes
+watch(timeFilter, (newValue) => {
+  updateDateRange(newValue);
+});
 
 // Filtered Vouchers
 const filteredVouchers = computed(() => {
@@ -74,7 +97,7 @@ const filteredVouchers = computed(() => {
   
   // Apply time filter
   if (timeFilter.value) {
-    const { start, end } = getDateRange(timeFilter.value);
+    const { start, end } = updateDateRange(timeFilter.value);
     if (start && end) {
       result = result.filter(voucher => {
         const voucherDate = voucher.created_at || voucher.voucher_date;
@@ -124,25 +147,25 @@ const props = defineProps({
       <div class="flex justify-between items-center">
         <h1 class="text-xl font-bold">Vouchers</h1>
         <div class="flex gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger as-child>
-              <Button variant="outline" size="sm">
-                <Filter class="h-4 w-4 mr-2"/>
-                Filter by Date
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent class="w-48">
-              <DropdownMenuItem @click="timeFilter = 'week'">
-                Last Week
-              </DropdownMenuItem>
-              <DropdownMenuItem @click="timeFilter = 'month'">
-                Last Month
-              </DropdownMenuItem>
-              <DropdownMenuItem @click="timeFilter = 'year'">
-                Last Year
-              </DropdownMenuItem>
-              </DropdownMenuContent>
-          </DropdownMenu>
+          <!-- Date Filter Select -->
+          <Select v-model="timeFilter">
+            <SelectTrigger class="w-[180px]">
+              <div class="flex items-center gap-2">
+                  <Filter class="h-4 w-4" />
+                  <SelectValue placeholder="Filter by date" />
+                </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem 
+                v-for="option in dateFilterOptions" 
+                :key="option.value" 
+                :value="option.value"
+              >
+                {{ option.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+
           <div class="flex items-center gap-2">
             <Input
               type="search"
@@ -159,9 +182,9 @@ const props = defineProps({
       </div>
       
       <!-- Filter Status Indicator -->
-      <div v-if="timeFilter" class="flex items-center gap-2 text-sm">
+      <div v-if="dateRangeLabel" class="flex items-center gap-2 text-sm">
         <span class="text-muted-foreground">Showing:</span>
-        <span class="font-medium capitalize">This {{ timeFilter }}'s vouchers</span>
+        <span class="font-medium">{{ dateRangeLabel }}'s vouchers</span>
         <Button 
           variant="ghost" 
           size="sm" 
