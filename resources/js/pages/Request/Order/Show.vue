@@ -321,28 +321,34 @@ const breadcrumbs: BreadcrumbItem[] = [
         </table>
       </div>
 
-      <h2 class="text-xl font-semibold mt-6 mb-2">Order Details</h2>
-      <Table>
-        <TableCaption>Items in this order</TableCaption>
-        <TableHeader>
-            <TableRow>
-            <TableHead>Item Description</TableHead>
-            <TableHead>Quantity</TableHead>
-            <TableHead>Unit</TableHead>
-            <TableHead>Department</TableHead>
-            <TableHead>Purpose</TableHead>
-            </TableRow>
-        </TableHeader>
-        <TableBody>
-            <TableRow v-for="detail in requestOrder.details" :key="detail.id">
-            <TableCell>{{ detail.item_description }}</TableCell>
-            <TableCell>{{ detail.quantity }}</TableCell>
-            <TableCell>{{ detail.unit }}</TableCell>
-            <TableCell>{{ detail.request?.department?.department_name ?? 'N/A' }}</TableCell>
-        <TableCell>{{ detail.request?.purpose ?? 'N/A' }}</TableCell>
-            </TableRow>
-        </TableBody>
-        </Table>
+      <div>
+            <h2 class="text-xl font-semibold my-4">Order Details</h2>
+            <div>
+            <Table>
+              <TableCaption>Items in this order</TableCaption>
+                <TableHeader class="bg-muted">
+                <TableRow>
+                    <TableHead class="border p-2 w-10">#</TableHead>
+                    <TableHead class="border p-2">Item Description</TableHead>
+                    <TableHead class="border p-2">Quantity</TableHead>
+                    <TableHead class="border p-2">Unit</TableHead>
+                    <TableHead class="border p-2">Department</TableHead>
+                    <TableHead class="border p-2">Purpose</TableHead>
+                </TableRow>
+                </TableHeader>
+                <TableBody>
+                <TableRow v-for="(detail, index) in requestOrder.details" :key="detail.id">
+                    <TableCell class="border p-2">{{ index + 1 }}</TableCell>
+                    <TableCell class="border p-2">{{ detail.item_description }}</TableCell>
+                    <TableCell class="border p-2">{{ detail.quantity }}</TableCell>
+                    <TableCell class="border p-2">{{ detail.unit }}</TableCell>
+                    <TableCell class="border p-2">{{ detail.request?.department?.department_name ?? 'N/A' }}</TableCell>
+                    <TableCell class="border p-2">{{ detail.request?.purpose ?? 'N/A' }}</TableCell>
+                </TableRow>
+                </TableBody>
+            </Table>
+            </div>
+        </div>
     </div>
   </AppLayout>
 </template>

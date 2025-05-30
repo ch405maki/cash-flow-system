@@ -14,6 +14,10 @@ use Spatie\Browsershot\Browsershot;
 
 class ReportController extends Controller
 {
+    public function index(){
+        return Inertia::render('Reports/Index');
+    }
+
     public function voucherReports(Request $request)
     {
         $query = Voucher::with(['user', 'details.account'])
