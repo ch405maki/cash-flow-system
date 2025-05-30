@@ -24,7 +24,18 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card'
-import { Plus, Trash2, ArrowLeft } from 'lucide-vue-next'
+import {
+  Combobox,
+  ComboboxAnchor,
+  ComboboxEmpty,
+  ComboboxGroup,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxItemIndicator,
+  ComboboxList,
+  ComboboxTrigger
+} from '@/components/ui/combobox'
+import { Plus, Trash2, ArrowLeft, Check, ChevronsUpDown, Search } from 'lucide-vue-next'
 import { useToast } from 'vue-toastification'
 import axios from 'axios'
 import { ref, computed } from 'vue'
@@ -39,6 +50,15 @@ const breadcrumbs: BreadcrumbItem[] = [
 const toast = useToast();
 const { props } = usePage();
 const accounts = props.accounts || [];
+const accountSearchQuery = ref('');
+
+const filteredAccounts = computed(() => {
+  if (!accountSearchQuery.value) return accounts;
+  
+  const query = accountSearchQuery.value.toLowerCase();
+  return accounts.filter(account => 
+    account.account_title.toLowerCase().includes(query))
+});
 
 const form = useForm({
     issue_date: '',
@@ -248,19 +268,62 @@ async function submitVoucher() {
                             :key="index"
                             class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 pb-4 border-b last:border-0"
                         >
-                            <!-- Account Selection -->
+                            <!-- Account Selection with Combobox -->
                             <div class="grid gap-2">
-                                <Label :for="`account-${index}`">Account <span v-if="!isCashVoucher">*</span></Label>
-                                <Select v-model="detail.account_id" :disabled="isCashVoucher">
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select account" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem v-for="account in accounts" :key="account.id" :value="account.id">
-                                            {{ account.account_title }}
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
+                            <Label :for="`account-${index}`">Account <span v-if="!isCashVoucher">*</span></Label>
+                            <Combobox 
+                                v-model="detail.account_id" 
+                                :disabled="isCashVoucher"
+                                by="id"
+                            >
+                                <ComboboxAnchor as-child>
+                                <ComboboxTrigger as-child>
+                                    <Button 
+                                    variant="outline" 
+                                    class="w-full justify-between"
+                                    :disabled="isCashVoucher"
+                                    >
+                                    {{ accounts.find(a => a.id === detail.account_id)?.account_title || 'Select account' }}
+                                    <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </ComboboxTrigger>
+                                </ComboboxAnchor>
+
+                                <ComboboxList class="max-h-[180px] overflow-y-auto">
+  <!-- Search Input (unchanged) -->
+  <div class="relative w-full items-center">
+    <ComboboxInput 
+      class="pl-9 focus-visible:ring-0 border-0 border-b rounded-none h-10" 
+      placeholder="Search accounts..."
+      v-model="accountSearchQuery"
+    />
+    <span class="absolute start-0 inset-y-0 flex items-center justify-center px-3">
+      <Search class="size-4 text-muted-foreground" />
+    </span>
+  </div>
+
+  <!-- Empty State -->
+  <ComboboxEmpty v-if="filteredAccounts.length === 0">
+    No accounts found.
+  </ComboboxEmpty>
+
+  <!-- Scrollable Group (Limited to 5 items) -->
+  <ComboboxGroup>
+    <div class="max-h-[150px] overflow-y-auto"> <!-- Scroll container -->
+      <ComboboxItem
+        v-for="(account, index) in filteredAccounts.slice(0)"
+        :key="account.id"
+        :value="account.id"
+      >
+        {{ account.account_title }}
+        <ComboboxItemIndicator>
+          <Check class="ml-auto h-4 w-4" />
+        </ComboboxItemIndicator>
+      </ComboboxItem>
+    </div>
+  </ComboboxGroup>
+</ComboboxList>
+                            </Combobox>
                             </div>
 
                             <!-- Charging Tag -->
