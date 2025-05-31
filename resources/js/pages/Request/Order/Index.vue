@@ -20,6 +20,10 @@ const breadcrumbs = [
   { title: 'Request To Order', href: '/request-to-order' },
 ]
 
+function goToList() {
+  router.visit('/request-to-order/list')
+}
+
 function goToCreate() {
   router.visit('/request-to-order/create')
 }
@@ -65,7 +69,10 @@ function goToShowRequest(requestId: number) {
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="flex justify-between items-center">
         <h1 class="text-xl font-bold">Request To Order List</h1>
-        <Button @click="goToCreate">Create New Order</Button>
+        <div class="space-x-2">
+          <Button @click="goToList">List to Order</Button>
+          <Button @click="goToCreate">Create New Order</Button>
+        </div>
       </div>
 
       <!-- Table -->
@@ -102,59 +109,6 @@ function goToShowRequest(requestId: number) {
               </TableCell>
             </TableRow>
           </TableBody>
-        </Table>
-      </div>
-
-      <h1 class="text-lg">To Order List</h1>
-      <div class="rounded-lg border">
-        <Table>
-          <TableCaption>-------- Request To Order --------</TableCaption>
-          <TableHeader>
-          <TableRow>
-            <TableHead>Request No</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Purpose</TableHead>
-            <TableHead>Department</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead class="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-  
-        <TableBody>
-          <TableRow
-            v-for="order in forOrders"
-            :key="order.id"
-            class="hover:bg-muted/50"
-          >
-            <TableCell>{{ order.request_no }}</TableCell>
-            <TableCell>{{ order.request_date }}</TableCell>
-            <TableCell>{{ order.purpose }}</TableCell>
-            <TableCell>{{ order.department?.department_name }}</TableCell>
-            <TableCell>
-              <span
-                class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize"
-                :class="{
-                  'bg-indigo-100 text-indigo-800': order.status === 'partially_released',
-                  'bg-orange-100 text-orange-800': order.status === 'request to order',
-                  'bg-yellow-100 text-yellow-800': order.status === 'pending',
-                  'bg-green-100 text-green-800': order.status === 'approved',
-                  'bg-red-100 text-red-800': order.status === 'rejected',
-                }"
-              >
-                {{ order.status }}
-              </span>
-            </TableCell>
-            <TableCell class="text-right space-x-2">
-              <Button
-                size="sm"
-                variant="outline"
-                @click="goToShowRequest(order.id)"
-              >
-                Show
-              </Button>
-            </TableCell>
-          </TableRow>
-        </TableBody>
         </Table>
       </div>
     </div>

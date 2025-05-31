@@ -9,8 +9,6 @@ class RequestToOrderDetail extends Model
 {
     protected $fillable = [
         'request_to_order_id',
-        'request_id',
-        'department_id',
         'quantity',
         'unit',
         'item_description',

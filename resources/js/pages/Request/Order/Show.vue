@@ -127,8 +127,18 @@ async function submitReject() {
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
+     { title: 'Request To Order', href: '/request-to-order' },
     { title: `Order ${requestOrder.order_no}`, href: `/request/order/${requestOrder.id}` }
 ]
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit'
+  })
+}
 </script>
 
 <template>
@@ -304,7 +314,7 @@ const breadcrumbs: BreadcrumbItem[] = [
               <td class="p-2 uppercase border-r w-xl">{{ requestOrder.order_no }}</td>
               <td class="p-2 font-medium text-muted-foreground border-r w-40 uppercase">Order Date:</td>
               <td class="p-2 w-40">
-                {{ new Date(requestOrder.order_date).toLocaleDateString() }}
+                {{ formatDate(requestOrder.order_date) }}
               </td>
             </tr>
             <tr class="border-b">
@@ -332,7 +342,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                     <TableHead class="border p-2">Item Description</TableHead>
                     <TableHead class="border p-2">Quantity</TableHead>
                     <TableHead class="border p-2">Unit</TableHead>
-                    <TableHead class="border p-2">Purpose</TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -340,8 +349,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                     <TableCell class="border p-2">{{ index + 1 }}</TableCell>
                     <TableCell class="border p-2">{{ detail.item_description }}</TableCell>
                     <TableCell class="border p-2">{{ detail.quantity }}</TableCell>
-                    <TableCell class="border p-2">{{ detail.unit }}</TableCell>
-                    <TableCell class="border p-2">{{ detail.request?.purpose ?? 'N/A' }}</TableCell>
+                    <TableCell class="border p-2">{{ detail.unit }}</TableCell> 
                 </TableRow>
                 </TableBody>
             </Table>

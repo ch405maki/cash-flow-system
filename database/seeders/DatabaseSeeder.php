@@ -170,8 +170,8 @@ class DatabaseSeeder extends Seeder
 
         // Create signatories
         $signatories = [
-            ['full_name' => 'John Smith', 'position' => 'Finance Director'],
-            ['full_name' => 'Maria Garcia', 'position' => 'Procurement Manager'],
+            ['full_name' => 'Atty. Gabriel P. Delapeña', 'position' => 'Executive Director'],
+            ['full_name' => 'Ma. Jasmin P. Horlina', 'position' => 'Director, Accounting'],
         ];
 
         foreach ($signatories as $signatory) {

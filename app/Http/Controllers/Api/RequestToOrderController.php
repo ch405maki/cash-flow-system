@@ -54,41 +54,48 @@ class RequestToOrderController extends Controller
         ]);
     }
 
-    public function store(HttpRequest $request)
-{
-    $validated = $request->validate([
-        'notes' => 'nullable|string',
-        'items' => 'required|array|min:1',
-        'items.*.request_id' => 'required|exists:requests,id',
-        'items.*.department_id' => 'required|exists:departments,id',
-        'items.*.quantity' => 'required|integer|min:1',
-        'items.*.unit' => 'nullable|string|max:20',
-        'items.*.item_description' => 'nullable|string|max:255',
-    ]);
+    public function list()
+    {
+        $requests = Request::with(['details', 'department', 'user'])
+            ->where('status', 'to_order')
+            ->get();
 
-    DB::transaction(function () use ($validated) {
-        $order = RequestToOrder::create([
-            'user_id' => auth()->id(),
-            'order_no' => $this->generateOrderNumber(),
-            'order_date' => now(),
-            'notes' => $validated['notes'],
-            'status' => 'pending'
+        return Inertia::render('Request/Order/ListToOrder', [
+            'requests' => $requests
+        ]);
+    }
+
+    public function store(HttpRequest $request)
+    {
+        $validated = $request->validate([
+            'notes' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unit' => 'nullable|string|max:20',
+            'items.*.item_description' => 'nullable|string|max:255',
         ]);
 
-        foreach ($validated['items'] as $item) {
-            $order->details()->create([
-                'request_id' => $item['request_id'],
-                'department_id' => $item['department_id'],
-                'quantity' => $item['quantity'],
-                'unit' => $item['unit'] ?? null,
-                'item_description' => $item['item_description'] ?? null,
+        DB::transaction(function () use ($validated) {
+            $order = RequestToOrder::create([
+                'user_id' => auth()->id(),
+                'order_no' => $this->generateOrderNumber(),
+                'order_date' => now(),
+                'notes' => $validated['notes'],
+                'status' => 'pending'
             ]);
-        }
-    });
 
-    return redirect()->route('request-to-order.index')
-        ->with('success', 'Order created successfully');
-}
+            foreach ($validated['items'] as $item) {
+                $order->details()->create([
+                    'quantity' => $item['quantity'],
+                    'unit' => $item['unit'] ?? null,
+                    'item_description' => $item['item_description'] ?? null,
+                ]);
+            }
+        });
+
+        return redirect()->route('request-to-order.index')
+            ->with('success', 'Order created successfully');
+    }
     private function generateOrderNumber()
     {
         $prefix = 'ORD-';

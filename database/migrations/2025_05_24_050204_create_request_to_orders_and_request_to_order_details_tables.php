@@ -20,8 +20,6 @@ return new class extends Migration {
         Schema::create('request_to_order_details', function (Blueprint $table) {
             $table->id();
             $table->foreignId('request_to_order_id')->constrained('request_to_orders');
-            $table->foreignId('request_id')->constrained('requests');
-            $table->foreignId('department_id')->constrained('departments');
             $table->decimal('quantity', 10, 2);
             $table->string('unit');
             $table->text('item_description');

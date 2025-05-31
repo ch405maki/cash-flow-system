@@ -111,19 +111,6 @@ const submitRequest = async () => {
 <template>
   <div>
     <form @submit.prevent="submitRequest" class="space-y-6">
-      <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <!-- Request Date -->
-        <div>
-          <Label for="request_date">Request Date</Label>
-          <Input
-            id="request_date"
-            v-model="form.request_date"
-            type="date"
-            required
-          />
-        </div>
-      </div>
-
       <!-- Purpose -->
       <div>
         <Label for="purpose">Purpose</Label>
