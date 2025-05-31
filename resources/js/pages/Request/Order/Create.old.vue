@@ -133,6 +133,13 @@ const submit = () => {
           ></textarea>
         </div>
         
+        <div class="mb-4 p-4 bg-blue-50 rounded">
+          <h3 class="font-bold mb-2">Order Summary</h3>
+          <p>Items Selected: {{ form.selectedItems.length }} of {{ allRequestDetails.length }}</p>
+          <p>Requests Involved: {{ form.request_ids.length }}</p>
+          <p>Departments Involved: {{ form.department_ids.length }}</p>
+        </div>
+        
         <div class="mb-2">
           <label class="flex items-center">
             <input 

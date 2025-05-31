@@ -332,7 +332,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                     <TableHead class="border p-2">Item Description</TableHead>
                     <TableHead class="border p-2">Quantity</TableHead>
                     <TableHead class="border p-2">Unit</TableHead>
-                    <TableHead class="border p-2">Department</TableHead>
                     <TableHead class="border p-2">Purpose</TableHead>
                 </TableRow>
                 </TableHeader>
@@ -342,7 +341,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                     <TableCell class="border p-2">{{ detail.item_description }}</TableCell>
                     <TableCell class="border p-2">{{ detail.quantity }}</TableCell>
                     <TableCell class="border p-2">{{ detail.unit }}</TableCell>
-                    <TableCell class="border p-2">{{ detail.request?.department?.department_name ?? 'N/A' }}</TableCell>
                     <TableCell class="border p-2">{{ detail.request?.purpose ?? 'N/A' }}</TableCell>
                 </TableRow>
                 </TableBody>

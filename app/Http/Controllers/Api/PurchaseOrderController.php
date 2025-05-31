@@ -20,15 +20,27 @@ class PurchaseOrderController extends Controller
 {
     public function index()
     {
-        $purchaseOrders = PurchaseOrder::with(['user', 'department', 'account', 'details'])
-            ->where('status', 'for_approval')
-            ->latest()
-            ->paginate(10);
+        $user = Auth::user();
+
+        if ($user->role === 'purchasing') {
+            // Get all purchase orders regardless of status
+            $purchaseOrders = PurchaseOrder::with(['user', 'department', 'account', 'details'])
+                ->latest()
+                ->paginate(10);
+        } else {
+            // Get only purchase orders with status 'for_approval'
+            $purchaseOrders = PurchaseOrder::with(['user', 'department', 'account', 'details'])
+                ->where('status', 'for_approval')
+                ->latest()
+                ->paginate(10);
+        }
 
         return Inertia::render('PurchaseOrders/Index', [
             'purchaseOrders' => $purchaseOrders,
         ]);
     }
+
+
 
     public function show(PurchaseOrder $purchaseOrder)
     {
