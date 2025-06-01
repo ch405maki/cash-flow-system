@@ -26,6 +26,8 @@ class DatabaseSeeder extends Seeder
             ['department_name' => 'IT', 'department_description' => 'Information Technology department'],
             ['department_name' => 'Finance', 'department_description' => 'Financial operations department'],
             ['department_name' => 'Procurement', 'department_description' => 'Purchasing and supply department'],
+            ['department_name' => 'Registrar', 'department_description' => 'Purchasing and supply department'],
+            ['department_name' => 'Supply', 'department_description' => 'Purchasing and supply department'],
             ['department_name' => 'Supply', 'department_description' => 'Purchasing and supply department'],
         ];
 
@@ -288,24 +290,24 @@ class DatabaseSeeder extends Seeder
                 'request_date' => now()->subDays(8),
                 'purpose' => 'Maintenance tools',
                 'status' => 'approved',
-                'department_id' => Department::where('department_name', 'Maintenance')->first()->id,
-                'user_id' => User::where('username', 'maintenance')->first()->id,
+                'department_id' => Department::where('department_name', 'Registrar')->first()->id,
+                'user_id' => User::where('username', 'staff')->first()->id,
             ],
             [
                 'request_no' => 'REQ-2023-004',
                 'request_date' => now()->subDays(7),
                 'purpose' => 'Medical supplies',
                 'status' => 'approved',
-                'department_id' => Department::where('department_name', 'Health')->first()->id,
-                'user_id' => User::where('username', 'nurse')->first()->id,
+                'department_id' => Department::where('department_name', 'Registrar')->first()->id,
+                'user_id' => User::where('username', 'staff')->first()->id,
             ],
             [
                 'request_no' => 'REQ-2023-005',
                 'request_date' => now()->subDays(6),
-                'purpose' => 'Classroom equipment',
+                'purpose' => 'Classroom equipments',
                 'status' => 'approved',
-                'department_id' => Department::where('department_name', 'Education')->first()->id,
-                'user_id' => User::where('username', 'teacher')->first()->id,
+                'department_id' => Department::where('department_name', 'Registrar')->first()->id,
+                'user_id' => User::where('username', 'staff')->first()->id,
             ],
         ];
 
