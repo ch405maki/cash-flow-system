@@ -2,11 +2,12 @@
 import { ref } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import FormHeader from '@/components/reports/header/formHeder.vue'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge';
+import { computed } from 'vue';
 import {
   Table,
   TableBody,
@@ -24,7 +25,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { computed } from 'vue'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -34,16 +34,31 @@ import { useForm } from '@inertiajs/vue3'
 
 const toast = useToast()
 
-const props = defineProps({
+const props = defineProps<{
   purchaseOrder: {
-    type: Object,
-    required: true,
-  },
+    id: number;
+    po_no: string;
+    date: string;
+    payee: string;
+    status: string;
+    amount: number;
+    department: {
+      department_name: string;
+    };
+    // Add other fields as needed
+  };
   authUser: {
-    type: Object,
-    required: true,
-  },
-})
+    id: number;
+    name: string;
+    email: string;
+    // Add other fields as needed
+  };
+  signatories: {
+    full_name: string;
+    position: string;
+  };
+}>();
+
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Purchase Orders', href: '/purchase-orders' },
@@ -103,6 +118,10 @@ async function submitStatusUpdate(newStatus: string) {
     }
   })
 }
+
+const executiveDirector = computed(() => 
+  props.signatories.find(s => s.position === 'Executive Director')
+);
 
 const printArea = () =>{
   const printContents = document.getElementById('print-section')?.innerHTML;
@@ -234,9 +253,9 @@ const printArea = () =>{
           <Dialog v-model:open="showRejectModal">
             <DialogTrigger>
               <Button 
-                variant="outline" 
+                variant="outline"
                 size="sm" 
-                :disabled="purchaseOrder.status === 'rejected' || form.processing"
+                :disabled="purchaseOrder.status === 'approved' || form.processing"
               >
                 Reject
               </Button>
@@ -402,12 +421,28 @@ const printArea = () =>{
               <h1>Medicine</h1>
             </div>
           </div>
-          <div class="text-right w-1/2">
-              <p class="text-xs mb-10">Approve By</p>
-              <div class="inline-block border-b text-sm border-black uppercase">Atty. Gabriel P. Delapeña</div>
-              <p class="text-xs mt-1">Executive Director</p>
+
+        <div class="text-right w-1/2">
+          <p class="text-xs mb-10">Approved By</p>
+          
+          <div v-if="executiveDirector" class="relative inline-block text-sm uppercase">
+            <img
+              v-if="purchaseOrder.status === 'approved'"
+              src="/images/signatures/oed_signature.png"
+              alt="Signature"
+              class="w-[100px] absolute -top-6 left-1/2 -translate-x-1/2 pointer-events-none"
+            />
+            <div class="border-b border-black px-2">
+                {{ executiveDirector.full_name }}
+              </div>
+              <p class="text-xs mt-1">{{ executiveDirector.position }}</p>
+            </div>
+            
+            <div v-else class="text-xs text-gray-500">
+              No Executive Director assigned.
+            </div>
           </div>
-      </div>
+        </div>
       </div>
     </div>
     </div>

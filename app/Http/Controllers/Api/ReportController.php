@@ -23,6 +23,7 @@ class ReportController extends Controller
     public function poSummary()
     {
         $purchaseOrders = PurchaseOrder::with('department')
+            ->where('status', 'approved')
             ->orderBy('date', 'desc')
             ->get(['id', 'po_no', 'date', 'payee', 'amount', 'department_id']);
 

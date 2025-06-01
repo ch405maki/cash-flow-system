@@ -208,7 +208,7 @@ function goToPO(id: number) {
               <TableCell class="text-right">Amount (₱)</TableCell>
             </TableRow>
             <TableRow v-for="po in filteredPurchaseOrders" :key="po.id">
-              <TableCell><Button variant="ghost" @click="goToPO(po.id)">{{ po.po_no }}</Button></TableCell>
+              <TableCell><button class="hover:text-purple-700 hover:underline" @click="goToPO(po.id)">{{ po.po_no }}</button></TableCell>
               <TableCell>{{ formatDate(po.date) }}</TableCell>
               <TableCell>{{ po.department.department_name }}</TableCell>
               <TableCell>{{ po.payee }}</TableCell>
@@ -237,6 +237,6 @@ table tr {
   line-height: 1.25 !important;
 }
 table td {
-  padding: 0.50rem !important;
+  padding: 0.45rem !important;
 }
 </style>

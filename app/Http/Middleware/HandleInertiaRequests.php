@@ -6,6 +6,7 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
+use App\Models\Signatory;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -38,6 +39,9 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
+        
+        // Get ALL active signatories (not just the first one)
+        $signatories = Signatory::where('status', 'active')->get();
 
         return [
             ...parent::share($request),
@@ -46,6 +50,12 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'signatories' => $signatories->map(function ($signatory) {
+                return [
+                    'full_name' => $signatory->full_name,
+                    'position' => $signatory->position,
+                ];
+            })->toArray(), // Convert to array for frontend
             'ziggy' => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
