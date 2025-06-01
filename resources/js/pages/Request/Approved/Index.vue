@@ -55,6 +55,15 @@ function getStatusVariant(status: string) {
       return 'default'
   }
 }
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit'
+  })
+}
 </script>
 
 <template>
@@ -84,7 +93,7 @@ function getStatusVariant(status: string) {
         <TableBody>
           <TableRow v-for="request in props.requests" :key="request.id">
             <TableCell class="font-medium">{{ request.order_no }}</TableCell>
-            <TableCell>{{ new Date(request.order_date).toLocaleDateString() }}</TableCell>
+            <TableCell>{{ formatDate(request.order_date) }}</TableCell>
             <TableCell>{{ request.notes }}</TableCell>
             <TableCell>
               <Badge

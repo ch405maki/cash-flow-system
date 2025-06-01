@@ -11,12 +11,25 @@ use App\Models\Account;
 use App\Models\Signatory;
 use App\Models\VoucherDetail;
 use Illuminate\Http\Request;
+use App\Models\PurchaseOrder;
 use Spatie\Browsershot\Browsershot;
 
 class ReportController extends Controller
 {
     public function index(){
         return Inertia::render('Reports/Index');
+    }
+
+    public function poSummary()
+    {
+        $purchaseOrders = PurchaseOrder::with('department')
+            ->where('status', 'approved')
+            ->orderBy('date', 'desc')
+            ->get(['id', 'po_no', 'date', 'payee', 'amount', 'department_id']);
+
+        return Inertia::render('Reports/PurchaseOrders/Index', [
+            'purchaseOrders' => $purchaseOrders
+        ]);
     }
 
     public function voucherReports()

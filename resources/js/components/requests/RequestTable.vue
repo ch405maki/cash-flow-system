@@ -25,6 +25,15 @@ function goToShowRequest(requestId: number) {
 function goToCreatePO(requestId: number) {
   router.get(`/purchase-orders/create/${requestId}`)
 }
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit'
+  })
+}
 </script>
 
 <template>
@@ -49,7 +58,7 @@ function goToCreatePO(requestId: number) {
           class="hover:bg-muted/50"
         >
           <TableCell>{{ request.request_no }}</TableCell>
-          <TableCell>{{ request.request_date }}</TableCell>
+          <TableCell>{{ formatDate(request.request_date) }}</TableCell>
           <TableCell>{{ request.purpose }}</TableCell>
           <TableCell>{{ request.department?.department_name }}</TableCell>
           <TableCell>{{ getFullName(request.user) }}</TableCell>

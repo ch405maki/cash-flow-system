@@ -5,6 +5,15 @@ import { Head } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button'
 import { useForm } from '@inertiajs/vue3';
 import { ref, computed, onMounted } from 'vue';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 interface RequestDetail {
   id: number;
@@ -27,8 +36,6 @@ interface FormData {
 const props = defineProps<{
   requests: Array<{
     id: number;
-    department_id: number;
-    request_no: string;
     department: { id: number, name: string };
     details: RequestDetail[];
   }>;
@@ -36,7 +43,8 @@ const props = defineProps<{
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Dashboard', href: '/dashboard' },
-  { title: 'Create Request To Order', href: '/request-to-order/create' }
+  { title: 'Request To Order', href: '/request-to-order' },
+  { title: 'To Order List', href: '/' }
 ];
 
 // Flatten all request details with department_id
@@ -44,9 +52,6 @@ const allRequestDetails = computed(() => {
   return props.requests.flatMap(request => 
     request.details.map(detail => ({
       ...detail,
-      request_no: request.request_no,
-      department_name: request.department.department_name,
-      department_id: request.department_id, 
       available_quantity: detail.quantity - detail.released_quantity
     }))
   );
@@ -110,7 +115,7 @@ const submit = () => {
 </script>
 
 <template>
-  <Head title="Create Request To Order" />
+  <Head title="To Order List" />
   
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
@@ -133,13 +138,6 @@ const submit = () => {
           ></textarea>
         </div>
         
-        <div class="mb-4 p-4 bg-blue-50 rounded">
-          <h3 class="font-bold mb-2">Order Summary</h3>
-          <p>Items Selected: {{ form.selectedItems.length }} of {{ allRequestDetails.length }}</p>
-          <p>Requests Involved: {{ form.request_ids.length }}</p>
-          <p>Departments Involved: {{ form.department_ids.length }}</p>
-        </div>
-        
         <div class="mb-2">
           <label class="flex items-center">
             <input 
@@ -153,53 +151,45 @@ const submit = () => {
           </label>
         </div>
         
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Select</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request #</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item Description</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="detail in allRequestDetails" :key="detail.id">
-                <td class="px-6 py-4 whitespace-nowrap">
+        <div class="overflow-x-auto rounded-md border">
+          <Table>
+            <TableCaption>A list of items to order.</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead class="w-[40px]">
+                  Select
+                </TableHead>
+                <TableHead>Item Description</TableHead>
+                <TableHead class="text-right w-[40px]">Unit</TableHead>
+                <TableHead class="text-right w-[40px]">
+                  Quantity
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-for="detail in allRequestDetails" :key="detail.id">
+                <TableCell class="font-medium">
                   <input
                     type="checkbox"
                     v-model="form.selectedItems"
                     :value="detail.id"
                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   >
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  {{ detail.request_no }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  {{ detail.department_name }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  {{ detail.item_description }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  {{ detail.unit }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
+                </TableCell>
+                <TableCell>{{ detail.item_description }}</TableCell>
+                <TableCell class="text-right">{{ detail.unit }}</TableCell>
+                <TableCell class="text-right">
                   {{ detail.quantity }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </div>
         
         <div class="mt-6">
           <Button
             @click="submit"
             :disabled="form.processing || form.selectedItems.length === 0"
-            class="bg-blue-600 hover:bg-blue-700 focus:ring-blue-500"
           >
             <span v-if="form.processing">Processing...</span>
             <span v-else>Create Order</span>

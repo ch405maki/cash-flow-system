@@ -1,207 +1,219 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3'
+import AppLayout from '@/layouts/AppLayout.vue'
+import { useToast } from 'vue-toastification'
 import { Button } from '@/components/ui/button'
-import { useForm } from '@inertiajs/vue3';
-import { ref, computed, onMounted } from 'vue';
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-interface RequestDetail {
-  id: number;
-  request_id: number;
-  department_id: number;
-  quantity: number;
-  released_quantity: number;
-  unit: string;
-  item_description: string;
+const toast = useToast()
+
+interface OrderItem {
+  quantity: number
+  unit: string
+  item_description: string
 }
 
-interface FormData {
-  notes: string;
-  selectedItems: number[];
-  quantities: Record<number, number>;
-  request_ids: number[];
-  department_ids: number[];
-}
-
-const props = defineProps<{
-  requests: Array<{
-    id: number;
-    department_id: number;
-    request_no: string;
-    department: { id: number, name: string };
-    details: RequestDetail[];
-  }>;
-}>();
-
-const breadcrumbs: BreadcrumbItem[] = [
+const breadcrumbs = [
   { title: 'Dashboard', href: '/dashboard' },
-  { title: 'Create Request To Order', href: '/request-to-order/create' }
-];
+  { title: 'Request To Order', href: '/request-to-order' },
+  { title: 'Create Request To Order', href: '/' },
+]
 
-// Flatten all request details with department_id
-const allRequestDetails = computed(() => {
-  return props.requests.flatMap(request => 
-    request.details.map(detail => ({
-      ...detail,
-      request_no: request.request_no,
-      department_name: request.department.department_name,
-      department_id: request.department_id, 
-      available_quantity: detail.quantity - detail.released_quantity
-    }))
-  );
-});
-
-const form = useForm<FormData>({
+const form = useForm({
   notes: '',
-  selectedItems: [],
-  quantities: {},
-  request_ids: [],
-  department_ids: []
-});
+  newItem: {
+    quantity: 1,
+    unit: '',
+    item_description: ''
+  },
+  items: [] as OrderItem[]
+})
 
-// Initialize with all items selected by default
-onMounted(() => {
-  form.selectedItems = allRequestDetails.value.map(d => d.id);
-  form.request_ids = [...new Set(allRequestDetails.value.map(d => d.request_id))];
-  form.department_ids = [...new Set(allRequestDetails.value.map(d => d.department_id))];
-  allRequestDetails.value.forEach(detail => {
-    form.quantities[detail.id] = detail.available_quantity;
-  });
-});
-
-const toggleSelectAll = (event: Event) => {
-  const isChecked = (event.target as HTMLInputElement).checked;
-  form.selectedItems = isChecked ? allRequestDetails.value.map(d => d.id) : [];
-  form.request_ids = isChecked 
-    ? [...new Set(allRequestDetails.value.map(d => d.request_id))] 
-    : [];
-  form.department_ids = isChecked
-    ? [...new Set(allRequestDetails.value.map(d => d.department_id))]
-    : [];
-};
-
-const submit = () => {
-  if (form.selectedItems.length === 0) {
-    alert('Please select at least one item');
-    return;
+const addItem = () => {
+  if (!form.newItem.quantity) {
+    toast.error('Please fill all required fields')
+    return
   }
 
-  // Prepare items with department_id
-  const items = form.selectedItems.map(id => {
-    const detail = allRequestDetails.value.find(d => d.id === id)!;
-    return {
-      request_id: detail.request_id,
-      department_id: detail.department_id, // Include department_id
-      detail_id: detail.id,
-      quantity: form.quantities[id],
-      unit: detail.unit,
-      item_description: detail.item_description
-    };
-  });
+  if (!form.newItem.item_description) {
+    toast.error('Please enter an item description')
+    return
+  }
 
-  form.transform(() => ({
-    notes: form.notes,
-    items,
-    request_ids: [...new Set(items.map(item => item.request_id))],
-    department_ids: [...new Set(items.map(item => item.department_id))]
-  })).post(route('request-to-orders.store'));
-};
+  form.items.push({ ...form.newItem })
+  form.newItem = {
+    quantity: 1,
+    unit: '',
+    item_description: ''
+  }
+  
+  toast.success('Item added to order')
+}
+
+const unitOptions = ['pc', 'box', 'kg', 'liter', 'pack'];
+
+const removeItem = (index: number) => {
+  form.items.splice(index, 1)
+  toast.info('Item removed from order')
+}
+
+const submitForm = () => {
+  if (form.items.length === 0) {
+    toast.error('Please add at least one item')
+    return
+  }
+
+  form.post(route('request-to-orders.store'), {
+    preserveScroll: true,
+    onSuccess: () => {
+      toast.success('Order created successfully!')
+      form.reset()
+      form.items = []
+    },
+    onError: (errors) => {
+      if (errors.items) {
+        toast.error('There were errors with your items')
+      } else {
+        toast.error('Failed to create order. Please try again.')
+      }
+    }
+  })
+}
 </script>
 
 <template>
   <Head title="Create Request To Order" />
-  
+
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-      <h1 class="text-2xl font-bold mb-4">Create Request to Order</h1>
-      
-      <div v-if="Object.keys(form.errors).length > 0" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-        <p v-for="(error, field) in form.errors" :key="field" class="text-sm">
-          {{ error }}
-        </p>
+    <div class="space-y-6 p-6">
+      <div class="space-y-2">
+        <h1 class="text-2xl font-bold">Create New Order</h1>
+        <p class="text-muted-foreground">Fill out the form below to create a new request to order</p>
       </div>
-      
-      <div v-if="allRequestDetails.length > 0">
-        <div class="mb-4">
-          <label for="order-notes" class="block font-medium">Notes</label>
-          <textarea
-            id="order-notes"
-            v-model="form.notes"
-            class="w-full border rounded p-2"
-            rows="3"
-          ></textarea>
+
+      <div class="space-y-6">
+        <!-- Notes Section -->
+        <div class="">
+          <h2 class="mb-4 text-lg font-semibold">Order Information</h2>
+          <div class="space-y-4">
+            <Textarea
+              id="notes"  
+              v-model="form.notes"
+              placeholder="Additional notes or instructions..."
+              class="min-h-[100px]"
+            />
+          </div>
         </div>
-        
-        <div class="mb-2">
-          <label class="flex items-center">
-            <input 
-              type="checkbox" 
-              :checked="form.selectedItems.length === allRequestDetails.length"
-              :indeterminate="form.selectedItems.length > 0 && form.selectedItems.length < allRequestDetails.length"
-              @change="toggleSelectAll"
-              class="mr-2"
-            >
-            Select All Items
-          </label>
+
+        <!-- Items Section -->
+        <div class="">
+          <h2 class="mb-4 text-lg font-semibold">Order Items</h2>
+          
+          <!-- Input Row -->
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-6">
+
+            <div class="md:col-span-1">
+              <Input
+                v-model.number="form.newItem.quantity"
+                type="number"
+                step="1"
+                min="1"
+                placeholder="Qty *"
+              />
+            </div>
+
+            <div class="md:col-span-2">
+              <Select v-model="form.newItem.unit">
+                <SelectTrigger class="w-full">
+                  <SelectValue placeholder="Select a unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="pc">pc</SelectItem>
+                    <SelectItem value="box">box</SelectItem>
+                    <SelectItem value="kg">kg</SelectItem>
+                    <SelectItem value="liter">liter</SelectItem>
+                    <SelectItem value="pack">pack</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div class="md:col-span-8">
+              <Input
+                v-model="form.newItem.item_description"
+                placeholder="Item Description *"
+              />
+            </div>
+
+            <div class="md:col-span-1 flex items-center">
+              <Button
+                type="button"
+                @click="addItem"
+                class="w-full"
+              >
+                Add
+              </Button>
+            </div>
+          </div>
+
+          <!-- Items Table -->
+          <div class="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Qty</TableHead>
+                  <TableHead>Unit</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead class="w-[100px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow v-if="form.items.length === 0">
+                  <TableCell colspan="6" class="text-center py-8 text-muted-foreground">
+                    No items added yet. Add items using the form above.
+                  </TableCell>
+                </TableRow>
+                <TableRow v-for="(item, index) in form.items" :key="index">
+                  <TableCell>{{ item.quantity }}</TableCell>
+                  <TableCell>{{ item.unit || '-' }}</TableCell>
+                  <TableCell class="max-w-[200px] truncate">{{ item.item_description }}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      @click="removeItem(index)"
+                      class="text-red-600 hover:text-red-700"
+                    >
+                      Remove
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
         </div>
-        
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Select</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request #</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item Description</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="detail in allRequestDetails" :key="detail.id">
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <input
-                    type="checkbox"
-                    v-model="form.selectedItems"
-                    :value="detail.id"
-                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  >
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  {{ detail.request_no }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  {{ detail.department_name }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  {{ detail.item_description }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  {{ detail.unit }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  {{ detail.quantity }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        
-        <div class="mt-6">
+
+        <!-- Form Actions -->
+        <div class="flex justify-end gap-4">
+          <Button variant="outline" type="button" @click="$inertia.visit(route('request-to-order.index'))">
+            Cancel
+          </Button>
+          <Button variant="outline" type="button" @click="$inertia.visit(route('request-to-order.index'))">
+            Save Draft
+          </Button>
           <Button
-            @click="submit"
-            :disabled="form.processing || form.selectedItems.length === 0"
-            class="bg-blue-600 hover:bg-blue-700 focus:ring-blue-500"
+            type="submit"
+            @click="submitForm"
+            :disabled="form.processing || form.items.length === 0"
           >
             <span v-if="form.processing">Processing...</span>
-            <span v-else>Create Order</span>
+            <span v-else>Submit Order</span>
           </Button>
         </div>
-      </div>
-      
-      <div v-else class="bg-yellow-100 p-4 rounded">
-        No available items to order.
       </div>
     </div>
   </AppLayout>

@@ -170,8 +170,8 @@ class DatabaseSeeder extends Seeder
 
         // Create signatories
         $signatories = [
-            ['full_name' => 'John Smith', 'position' => 'Finance Director'],
-            ['full_name' => 'Maria Garcia', 'position' => 'Procurement Manager'],
+            ['full_name' => 'Atty. Gabriel P. Delapeña', 'position' => 'Executive Director'],
+            ['full_name' => 'Ma. Jasmin P. Horlina', 'position' => 'Director, Accounting'],
         ];
 
         foreach ($signatories as $signatory) {
@@ -247,6 +247,17 @@ class DatabaseSeeder extends Seeder
             'department_id' => Department::where('department_name', 'Supply')->first()->id,
             'access_id' => Access::where('access_level', 'Write')->first()->id,
         ],
+        [
+            'username' => 'accounting',
+            'first_name' => 'Accounting',
+            'last_name' => 'Officer',
+            'email' => 'accounting@itc.com',
+            'password' => Hash::make('password'),
+            'role' => 'accounting',
+            'status' => 'active',
+            'department_id' => Department::where('department_name', 'Finance')->first()->id,
+            'access_id' => Access::where('access_level', 'Approver')->first()->id,
+        ],
     ];
 
 
@@ -258,7 +269,7 @@ class DatabaseSeeder extends Seeder
         $requests = [
             [
                 'request_no' => 'REQ-2023-001',
-                'request_date' => now()->subDays(5),
+                'request_date' => now()->subDays(10),
                 'purpose' => 'Office supplies for new employees',
                 'status' => 'approved',
                 'department_id' => Department::where('department_name', 'Administration')->first()->id,
@@ -266,33 +277,49 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'request_no' => 'REQ-2023-002',
-                'request_date' => now()->subDays(3),
+                'request_date' => now()->subDays(9),
                 'purpose' => 'New laptops for IT department',
                 'status' => 'pending',
                 'department_id' => Department::where('department_name', 'IT')->first()->id,
                 'user_id' => User::where('username', 'director')->first()->id,
+            ],
+            [
+                'request_no' => 'REQ-2023-003',
+                'request_date' => now()->subDays(8),
+                'purpose' => 'Maintenance tools',
+                'status' => 'approved',
+                'department_id' => Department::where('department_name', 'Maintenance')->first()->id,
+                'user_id' => User::where('username', 'maintenance')->first()->id,
+            ],
+            [
+                'request_no' => 'REQ-2023-004',
+                'request_date' => now()->subDays(7),
+                'purpose' => 'Medical supplies',
+                'status' => 'approved',
+                'department_id' => Department::where('department_name', 'Health')->first()->id,
+                'user_id' => User::where('username', 'nurse')->first()->id,
+            ],
+            [
+                'request_no' => 'REQ-2023-005',
+                'request_date' => now()->subDays(6),
+                'purpose' => 'Classroom equipment',
+                'status' => 'approved',
+                'department_id' => Department::where('department_name', 'Education')->first()->id,
+                'user_id' => User::where('username', 'teacher')->first()->id,
             ],
         ];
 
         foreach ($requests as $request) {
             $createdRequest = Request::create($request);
 
-            // Add request details
-            $items = $request['purpose'] === 'Office supplies for new employees' ? 
-                [
-                    ['quantity' => 5, 'unit' => 'box', 'item_description' => 'A4 Paper'],
-                    ['quantity' => 10, 'unit' => 'pcs', 'item_description' => 'Ballpens'],
-                ] : 
-                [
-                    ['quantity' => 3, 'unit' => 'unit', 'item_description' => 'Laptop i7 16GB RAM'],
-                ];
-
-            foreach ($items as $item) {
+            // Generate 5–10 items for each request
+            $itemCount = rand(5, 10);
+            for ($i = 0; $i < $itemCount; $i++) {
                 RequestDetail::create([
                     'request_id' => $createdRequest->id,
-                    'quantity' => $item['quantity'],
-                    'unit' => $item['unit'],
-                    'item_description' => $item['item_description'],
+                    'quantity' => rand(1, 10),
+                    'unit' => 'pcs',
+                    'item_description' => 'Item ' . chr(65 + $i), // A, B, C...
                 ]);
             }
         }
@@ -336,6 +363,7 @@ class DatabaseSeeder extends Seeder
                 'amount' => 250.50,
             ]);
         }
+
 
         // Create sample voucher
         $voucher = Voucher::create([

@@ -94,7 +94,6 @@ async function submitAllTagging() {
     }
   }
 }
-
 </script>
 
 <template>

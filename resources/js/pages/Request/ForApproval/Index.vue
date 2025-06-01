@@ -64,7 +64,7 @@ import { Badge } from '@/components/ui/badge'
 
 const breadcrumbs = [
   { title: 'Dashboard', href: '/dashboard' },
-  { title: 'Request To Order', href: '/request-to-order' },
+  { title: 'Order For Approval', href: '/request-to-order' },
 ]
 
 function goToCreate() {

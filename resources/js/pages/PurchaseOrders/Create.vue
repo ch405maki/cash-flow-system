@@ -176,28 +176,28 @@ const submitForm = async () => {
           <h2 class="text-xl font-semibold">Items</h2>
 
           <div class="border rounded-lg p-4 space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-              <div class="space-y-2">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+              <div class="space-y-2 md:col-span-6">
                 <Label for="item_description">Description</Label>
                 <Input id="item_description" v-model="newItem.item_description" />
               </div>
 
-              <div class="space-y-2">
+              <div class="space-y-2 md:col-span-1">
                 <Label for="quantity">Quantity</Label>
                 <Input id="quantity" type="number" v-model.number="newItem.quantity" min="1" />
               </div>
 
-              <div class="space-y-2">
+              <div class="space-y-2 md:col-span-2">
                 <Label for="unit">Unit</Label>
                 <Input id="unit" v-model="newItem.unit" />
               </div>
 
-              <div class="space-y-2">
+              <div class="space-y-2 md:col-span-2">
                 <Label for="unit_price">Unit Price</Label>
                 <Input id="unit_price" type="number" step="0.01" v-model.number="newItem.unit_price" min="0" />
               </div>
 
-              <Button type="button" @click="addItem" class="w-full">
+              <Button type="button" @click="addItem" class="w-full md:col-span-1 px">
                 Add Item
               </Button>
             </div>

@@ -11,6 +11,8 @@ use Inertia\Inertia;
 use App\Models\RequestDetail;
 use App\Models\RequestToOrder;
 use App\Http\Requests\StoreRequestToOrderRequest;
+use Illuminate\Support\Facades\DB;
+
 
 use App\Models\Department;
 use App\Models\PurchaseOrderDetail;
@@ -52,48 +54,48 @@ class RequestToOrderController extends Controller
         ]);
     }
 
+    public function list()
+    {
+        $requests = Request::with(['details', 'department', 'user'])
+            ->where('status', 'to_order')
+            ->get();
+
+        return Inertia::render('Request/Order/ListToOrder', [
+            'requests' => $requests
+        ]);
+    }
+
     public function store(HttpRequest $request)
     {
         $validated = $request->validate([
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
-            'items.*.request_id' => 'required|exists:requests,id',
-            'items.*.department_id' => 'required|exists:departments,id', 
-            'items.*.detail_id' => 'required|exists:request_details,id',
-            'items.*.quantity' => 'required|numeric|min:0.01',
-            'items.*.unit' => 'required|string',
-            'items.*.item_description' => 'required|string',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unit' => 'nullable|string|max:20',
+            'items.*.item_description' => 'nullable|string|max:255',
         ]);
 
-        // Create the order
-        $order = RequestToOrder::create([
-            'user_id' => auth()->id(),
-            'order_no' => 'ORD-' . now()->format('YmdHis'),
-            'order_date' => now(),
-            'notes' => $validated['notes'],
-            'status' => 'pending'
-        ]);
-
-        // Add order items
-        foreach ($validated['items'] as $item) {
-            $order->details()->create([
-                'request_id' => $item['request_id'],
-                'department_id' => $item['department_id'],
-                'request_detail_id' => $item['detail_id'],
-                'quantity' => $item['quantity'],
-                'unit' => $item['unit'],
-                'item_description' => $item['item_description']
+        DB::transaction(function () use ($validated) {
+            $order = RequestToOrder::create([
+                'user_id' => auth()->id(),
+                'order_no' => $this->generateOrderNumber(),
+                'order_date' => now(),
+                'notes' => $validated['notes'],
+                'status' => 'pending'
             ]);
 
-            // Update released quantity in original request
-            // RequestDetail::where('id', $item['detail_id'])
-            //     ->increment('released_quantity', $item['quantity']);
-        }
+            foreach ($validated['items'] as $item) {
+                $order->details()->create([
+                    'quantity' => $item['quantity'],
+                    'unit' => $item['unit'] ?? null,
+                    'item_description' => $item['item_description'] ?? null,
+                ]);
+            }
+        });
 
         return redirect()->route('request-to-order.index')
             ->with('success', 'Order created successfully');
     }
-
     private function generateOrderNumber()
     {
         $prefix = 'ORD-';
