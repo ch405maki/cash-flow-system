@@ -73,7 +73,7 @@ const purchasingNavItems: NavItem[] = [
   },
   {
     title: 'Reports',
-    href: '/reports/vouchers',
+    href: '/reports',
     icon: BarChart3,
   },
 ];

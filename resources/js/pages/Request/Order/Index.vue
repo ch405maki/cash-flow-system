@@ -56,7 +56,6 @@ function getStatusVariant(status: string) {
   }
 }
 
-
 function goToShowRequest(requestId: number) {
   router.get(`/request/show/${requestId}`)
 }

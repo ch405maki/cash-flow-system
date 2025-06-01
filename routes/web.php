@@ -65,6 +65,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/po-summary', [ReportController::class, 'poSummary'])->name('reports.po-summary');
     Route::get('/reports/vouchers', [ReportController::class, 'voucherReports'])->name('reports.voucherReports');
 });
 
