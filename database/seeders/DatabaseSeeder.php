@@ -304,7 +304,7 @@ class DatabaseSeeder extends Seeder
             [
                 'request_no' => 'REQ-2023-005',
                 'request_date' => now()->subDays(6),
-                'purpose' => 'Classroom equipment',
+                'purpose' => 'Classroom equipments',
                 'status' => 'approved',
                 'department_id' => Department::where('department_name', 'Registrar')->first()->id,
                 'user_id' => User::where('username', 'staff')->first()->id,
