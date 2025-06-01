@@ -114,6 +114,24 @@ const staffNavItems: NavItem[] = [
   },
 ];
 
+const accountingNavItems: NavItem[] = [
+  {
+    title: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    title: 'Vouchers',
+    href: '/vouchers',
+    icon: ReceiptText,
+  },
+  {
+    title: 'Reports',
+    href: '/reports',
+    icon: BarChart3,
+  },
+];
+
 const footerNavItems: NavItem[] = [
   {
     title: 'Configurations',
@@ -140,6 +158,7 @@ const footerNavItems: NavItem[] = [
 
         <SidebarContent>
             <NavMain v-if="user?.role === 'executive_director'" :items="executiveNavItems" />
+            <NavMain v-if="user?.role === 'accounting'" :items="accountingNavItems" />
             <NavMain v-if="user?.role === 'property_custodian'" :items="propertyNavItems" />
             <NavMain v-if="user?.role === 'purchasing'" :items="purchasingNavItems" />
             <NavMain v-if="user?.role === 'staff' || user?.role === 'department_head'" :items="staffNavItems" />
