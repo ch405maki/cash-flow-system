@@ -413,3 +413,13 @@ const printArea = () =>{
     </div>
   </AppLayout>
 </template>
+
+<style scoped>
+  table tr {
+    padding: 0 !important;
+    line-height: 1.25 !important;
+  }
+  table td {
+    padding: 0.50rem !important;
+  }
+</style>

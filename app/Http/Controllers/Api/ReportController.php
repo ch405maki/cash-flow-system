@@ -26,7 +26,7 @@ class ReportController extends Controller
             ->orderBy('date', 'desc')
             ->get(['id', 'po_no', 'date', 'payee', 'amount', 'department_id']);
 
-        return Inertia::render('Reports/PurchaseOrder/Index', [
+        return Inertia::render('Reports/PurchaseOrders/Index', [
             'purchaseOrders' => $purchaseOrders
         ]);
     }
