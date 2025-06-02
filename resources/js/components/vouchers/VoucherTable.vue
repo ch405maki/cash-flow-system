@@ -56,7 +56,7 @@ function formatCurrency(amount: number): string {
           <TableHead class="px-4 py-2">Check Amount</TableHead>
           <TableHead class="px-4 py-2">Payee</TableHead>
           <TableHead class="px-4 py-2">Check Pay to</TableHead>
-          <TableHead class="px-4 py-2">Date</TableHead> <!-- Added date column -->
+          <TableHead class="px-4 py-2">Date</TableHead>
           <TableHead class="px-4 py-2 text-center">Status</TableHead>
           <TableHead class="px-4 py-2 text-center">Actions</TableHead>
         </TableRow>

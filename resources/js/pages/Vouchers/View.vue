@@ -13,16 +13,58 @@ import { type BreadcrumbItem } from '@/types';
 import { ArrowLeft, Printer } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
 
-const { props } = usePage();
-const accounts = props.accounts || [];
-const voucher = props.voucher;
-const roles = props.roles || {};
-const isSalary = props.isSalary || true;
+const props = defineProps<{
+    accounts: Array<{
+        id: number;
+        account_title: string;
+    }>;
+    voucher: {
+        id: number;
+        voucher_no: string;
+        payee: string;
+        check_payable_to: string;
+        purpose: string;
+        voucher_date: string;
+        check_amount: number;
+        check_no: string;
+        check_date: string;
+        status: string;
+        issue_date: string;
+        payment_date: string;
+        delivery_date: string;
+        type: string;
+        details: Array<{
+            id: number;
+            account_id: number;
+            charging_tag: string;
+            hours?: number;
+            rate?: number;
+            amount: number;
+        }>;
+    };
+    roles: {
+        approved_by?: {
+            first_name: string;
+            middle_name?: string;
+            last_name: string;
+        };
+        exec_director?: {
+            first_name: string;
+            middle_name?: string;
+            last_name: string;
+        };
+    };
+}>();
+
+const { props: pageProps } = usePage();
+const accounts = props.accounts || pageProps.accounts || [];
+const voucher = props.voucher || pageProps.voucher;
+const roles = props.roles || pageProps.roles || {};
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Vouchers', href: '/vouchers' },
-    { title: `View Voucher: ${voucher.voucher_no}`, href: `/vouchers/${voucher.id}` },
+    { title: `Voucher ${voucher.voucher_no}`, href: `/vouchers/${voucher.id}` },
 ];
 
 const formatDate = (dateString: string) => {
@@ -98,55 +140,55 @@ const amountToWords = (amount: number) => {
 };
 
 const printStyles = `
-  body {
+body {
     font-family: sans-serif;
     margin: 20px;
     font-size: 0.9em;
     -webkit-print-color-adjust: exact;
     color-adjust: exact;
-  }
-  table {
+}
+table {
     width: 100%;
     border-collapse: collapse;
-  }
-  td {
+}
+td {
     padding: 5px;
     vertical-align: top;
-  }
-  .header {
+}
+.header {
     text-align: center;
     font-weight: bold;
     margin-bottom: 20px;
-  }
-  .section-title {
+}
+.section-title {
     font-weight: bold;
     margin-top: 15px;
     margin-bottom: 5px;
-  }
-  .line-item {
+}
+.line-item {
     border-bottom: 1px solid black;
     padding-bottom: 3px;
     margin-bottom: 3px;
-  }
-  .signature-line {
+}
+.signature-line {
     border-bottom: 1px solid black;
     width: 70%;
     margin-top: 50px;
-  }
-  .footer-notes {
+}
+.footer-notes {
     margin-top: 50px;
     font-size: 0.8em;
-  }
-  .align-right {
+}
+.align-right {
     text-align: right;
-  }
-  .total-box {
+}
+.total-box {
     border: 1px solid black;
     padding: 5px;
     width: 150px;
     text-align: right;
     font-weight: bold;
-  }
+}
 `;
 
 const printVoucher = () => {
@@ -159,22 +201,22 @@ const printVoucher = () => {
     const printWindow = window.open('', '_blank');
     if (printWindow) {
         printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
+    <!DOCTYPE html>
+    <html>
         <head>
-          <title>Voucher ${voucher.voucher_no}</title>
-          <style>${printStyles}</style>
+            <title>Voucher ${voucher.voucher_no}</title>
+                <style>${printStyles}</style>
         </head>
         <body>
-          ${printContent}
-          <script>
+        ${printContent}
+        <script>
             setTimeout(() => {
-              window.print();
-              window.close();
+                window.print();
+            window.close();
             }, 100);
-          <\/script>
+        <\/script>
         </body>
-      </html>
+    </html>
     `);
         printWindow.document.close();
     }
@@ -194,11 +236,11 @@ const printVoucher = () => {
                     <p class="text-sm text-muted-foreground">Voucher Details</p>
                 </div>
                 <div class="flex gap-2">
-                    <Button variant="outline" @click="printVoucher" class="flex items-center gap-2">
+                    <Button variant="outline" @click="printVoucher" class="flex items-center gap-2" >
                         <Printer class="h-4 w-4" />
                         Print
                     </Button>
-                    <Button variant="outline" @click="router.visit('/vouchers')" class="flex items-center gap-2">
+                    <Button variant="outline" @click="router.visit('/vouchers')" class="flex items-center gap-2" >
                         <ArrowLeft class="h-4 w-4" />
                         Back
                     </Button>
@@ -244,12 +286,7 @@ const printVoucher = () => {
                         <tr>
                             <td class="p-2 font-medium text-muted-foreground border-r">STATUS:</td>
                             <td class="p-2 uppercase" colspan="3">
-                                <span class="py-1 px-3 rounded-full font-bold capitalize inline-block min-w-[100px]"
-                                    :class="{
-                                        'bg-yellow-100 text-yellow-800': voucher.status === 'pending',
-                                        'bg-green-100 text-green-800': voucher.status === 'paid',
-                                        'bg-red-100 text-red-800': voucher.status === 'rejected',
-                                    }">
+                                <span class="py-1 rounded-full font-bold capitalize min-w-[100px]" >
                                     {{ voucher.status }}
                                 </span>
                             </td>
@@ -313,7 +350,7 @@ const printVoucher = () => {
             <div id="printable-voucher" class="hidden">
                 <div class="header">
                     ARELLANO LAW FOUNDATION, INC. <br>
-                    {{ voucher.type.toUpperCase() }} Voucher
+                    {{ voucher.type.charAt(0).toUpperCase() + voucher.type.slice(1).toLowerCase() }} Voucher
                 </div>
 
                 <table>
@@ -353,7 +390,7 @@ const printVoucher = () => {
                 <!-- ACCOUNT CHARGED section-->
                 <div class="section-title">ACCOUNT CHARGED</div>
                 <table>
-                    <template v-if="isSalary">
+                    <template v-if="voucher.type === 'salary'">
                         <!-- Salary Voucher - Detailed Breakdown -->
                         <thead>
                             <tr>
@@ -375,13 +412,13 @@ const printVoucher = () => {
                                 <td
                                     style="text-align: right; border: 1px solid black; padding: 5px; font-weight: bold;">
                                     ₱{{formatCurrency(voucher.details.reduce((sum, detail) => sum +
-                                    Number(detail.amount), 0)) }}
+                                        Number(detail.amount), 0)) }}
                                 </td>
                             </tr>
                         </tfoot>
                     </template>
                     <template v-else>
-                        <!-- Non-Salary Voucher - General Charges -->
+                        <!-- Non-Salary Voucher - General Charges Only -->
                         <tr>
                             <td style="text-align: left; width: 70%;">GENERAL CHARGES</td>
                             <td style="text-align: right; width: 30%;">₱{{ formatCurrency(voucher.check_amount) }}</td>
