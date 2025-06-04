@@ -9,6 +9,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
+import { computed } from 'vue';
 import { type BreadcrumbItem } from '@/types';
 import { ArrowLeft, Printer } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
@@ -42,24 +43,30 @@ const props = defineProps<{
             amount: number;
         }>;
     };
-    roles: {
-        approved_by?: {
-            first_name: string;
-            middle_name?: string;
-            last_name: string;
-        };
-        exec_director?: {
-            first_name: string;
-            middle_name?: string;
-            last_name: string;
-        };
+    authUser: {
+        id: number;
+        name: string;
+        email: string;
+        // Add other fields as needed
+    };
+    signatories: {
+        full_name: string;
+        position: string;
     };
 }>();
 
 const { props: pageProps } = usePage();
 const accounts = props.accounts || pageProps.accounts || [];
 const voucher = props.voucher || pageProps.voucher;
-const roles = props.roles || pageProps.roles || {};
+const signatories = props.signatories || pageProps.signatories || {};
+
+const executiveDirector = computed(() =>
+    props.signatories.find(s => s.position === 'Executive Director')
+);
+
+const directorAccounting = computed(() =>
+    props.signatories.find(s => s.position === 'Director, Accounting')
+);
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -139,88 +146,19 @@ const amountToWords = (amount: number) => {
     return result;
 };
 
-const printStyles = `
-body {
-    font-family: sans-serif;
-    margin: 20px;
-    font-size: 0.9em;
-    -webkit-print-color-adjust: exact;
-    color-adjust: exact;
-}
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-td {
-    padding: 5px;
-    vertical-align: top;
-}
-.header {
-    text-align: center;
-    font-weight: bold;
-    margin-bottom: 20px;
-}
-.section-title {
-    font-weight: bold;
-    margin-top: 15px;
-    margin-bottom: 5px;
-}
-.line-item {
-    border-bottom: 1px solid black;
-    padding-bottom: 3px;
-    margin-bottom: 3px;
-}
-.signature-line {
-    border-bottom: 1px solid black;
-    width: 70%;
-    margin-top: 50px;
-}
-.footer-notes {
-    margin-top: 50px;
-    font-size: 0.8em;
-}
-.align-right {
-    text-align: right;
-}
-.total-box {
-    border: 1px solid black;
-    padding: 5px;
-    width: 150px;
-    text-align: right;
-    font-weight: bold;
-}
-`;
+const printArea = () => {
+    const printContents = document.getElementById('print-section')?.innerHTML;
+    const originalContents = document.body.innerHTML;
 
-const printVoucher = () => {
-    const printContent = document.getElementById('printable-voucher')?.innerHTML;
-    if (!printContent) {
+    if (printContents) {
+        document.body.innerHTML = printContents;
+        window.print();
+        document.body.innerHTML = originalContents;
+        location.reload();
+    } else {
         console.error('Print section not found');
-        return;
     }
-
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-        printWindow.document.write(`
-    <!DOCTYPE html>
-    <html>
-        <head>
-            <title>Voucher ${voucher.voucher_no}</title>
-                <style>${printStyles}</style>
-        </head>
-        <body>
-        ${printContent}
-        <script>
-            setTimeout(() => {
-                window.print();
-            window.close();
-            }, 100);
-        <\/script>
-        </body>
-    </html>
-    `);
-        printWindow.document.close();
-    }
-};
+}
 </script>
 
 <template>
@@ -236,11 +174,11 @@ const printVoucher = () => {
                     <p class="text-sm text-muted-foreground">Voucher Details</p>
                 </div>
                 <div class="flex gap-2">
-                    <Button variant="outline" @click="printVoucher" class="flex items-center gap-2" >
+                    <Button variant="default" @click="printArea" class="flex items-center gap-2">
                         <Printer class="h-4 w-4" />
                         Print
                     </Button>
-                    <Button variant="outline" @click="router.visit('/vouchers')" class="flex items-center gap-2" >
+                    <Button variant="outline" @click="router.visit('/vouchers')" class="flex items-center gap-2">
                         <ArrowLeft class="h-4 w-4" />
                         Back
                     </Button>
@@ -286,7 +224,7 @@ const printVoucher = () => {
                         <tr>
                             <td class="p-2 font-medium text-muted-foreground border-r">STATUS:</td>
                             <td class="p-2 uppercase" colspan="3">
-                                <span class="py-1 rounded-full font-bold capitalize min-w-[100px]" >
+                                <span class="py-1 rounded-full font-bold capitalize min-w-[100px]">
                                     {{ voucher.status }}
                                 </span>
                             </td>
@@ -347,151 +285,167 @@ const printVoucher = () => {
             </div>
 
             <!-- Hidden Printable Voucher -->
-            <div id="printable-voucher" class="hidden">
-                <div class="header">
-                    ARELLANO LAW FOUNDATION, INC. <br>
-                    {{ voucher.type.charAt(0).toUpperCase() + voucher.type.slice(1).toLowerCase() }} Voucher
-                </div>
+            <div id="print-section">
+    <div id="printable-voucher" class="hidden print:block">
+        <div class="text-center font-bold mb-5">
+            ARELLANO LAW FOUNDATION, INC. <br>
+            {{ voucher.type.charAt(0).toUpperCase() + voucher.type.slice(1).toLowerCase() }} Voucher
+        </div>
 
-                <table>
+        <table class="w-full">
+            <tr>
+                <td class="w-[70%]">
+                    Voucher No.: {{ voucher.voucher_no }} <br>
+                    Voucher Date: {{ formatDate(voucher.voucher_date) }}
+                </td>
+            </tr>
+        </table>
+
+        <div class="my-4"></div>
+
+        <table class="w-full">
+            <tr>
+                <td>Payee: {{ voucher.payee }} </td>
+            </tr>
+            <tr>
+                <td>Check Payable to: {{ voucher.check_payable_to }}</td>
+            </tr>
+            <tr>
+                <td>Check No./ Date: {{ formatDate(voucher.check_date) }} </td>
+            </tr>
+            <tr>
+                <td>Amount: ₱{{ formatCurrency(voucher.check_amount) }}</td>
+            </tr>
+        </table>
+        <div class="border-b border-black pb-1 mb-1"></div>
+        <div class="border-b border-black pb-1 mb-1"></div>
+        <div class="flex justify-between">
+            <div>Payment for {{ formatDate(voucher.payment_date) }}</div>
+            <div>₱{{ formatCurrency(voucher.check_amount) }}</div>
+        </div>
+
+        <div class="border-b border-black pb-1 mb-1"></div>
+        <div class="border-b border-black pb-1 mb-1"></div>
+        <!-- ACCOUNT CHARGED section-->
+        <div class="font-bold mt-4 mb-2">ACCOUNT CHARGED</div>
+        <table class="w-full">
+            <template v-if="voucher.type === 'salary'">
+                <!-- Salary Voucher - Detailed Breakdown -->
+                <thead>
                     <tr>
-                        <td width="70%">
-                            Voucher No.: {{ voucher.voucher_no }} <br>
-                            Voucher Date: {{ formatDate(voucher.voucher_date) }}
+                        <th class="text-left w-[70%]">Account Title</th>
+                        <th class="text-right w-[30%]">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="detail in voucher.details" :key="detail.id">
+                        <td class="text-left">
+                            {{accounts.find(a => a.id === detail.account_id)?.account_title || 'N/A'}}
+                        </td>
+                        <td class="text-right">₱{{ formatCurrency(detail.amount) }}</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td class="text-right"><strong>TOTAL AMOUNT:</strong></td>
+                        <td class="text-right border border-black p-1 font-bold">
+                            ₱{{formatCurrency(voucher.details.reduce((sum, detail) => sum +
+                                Number(detail.amount), 0))}}
                         </td>
                     </tr>
-                </table>
+                </tfoot>
+            </template>
+            <template v-else>
+                <!-- Non-Salary Voucher - General Charges Only -->
+                <tr>
+                    <td class="text-left w-[70%]">GENERAL CHARGES</td>
+                    <td class="text-right w-[30%]">₱{{ formatCurrency(voucher.check_amount) }}</td>
+                </tr>
+                <tr v-for="i in 5" :key="i">
+                    <td><br></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-right"><strong>TOTAL:</strong></td>
+                    <td class="text-right border border-black p-1 font-bold">
+                        ₱{{ formatCurrency(voucher.check_amount) }}
+                    </td>
+                </tr>
+            </template>
+        </table>
 
-                <br>
+        <div class="my-8"></div>
+        <div class="border-b border-black pb-1 mb-1"></div>
+        <div class="border-b border-black pb-1 mb-1"></div>
+        <div class="font-bold mt-4 mb-2">RECOMMENDING APPROVAL:</div>
 
-                <table>
-                    <tr>
-                        <td>Payee: {{ voucher.payee }} </td>
-                    </tr>
-                    <tr>
-                        <td>Check Payable to: {{ voucher.check_payable_to }}</td>
-                    </tr>
-                    <tr>
-                        <td>Check No./ Date: {{ formatDate(voucher.check_date) }} </td>
-                    </tr>
-                    <tr>
-                        <td>Amount: ₱{{ formatCurrency(voucher.check_amount) }}</td>
-                    </tr>
-                </table>
-                <div class="line-item"></div>
-                <div class="line-item"></div>
-                <div style="display: flex; justify-content: space-between;">
-                    <div>Payment for {{ formatDate(voucher.payment_date) }}</div>
-                    <div>₱{{ formatCurrency(voucher.check_amount) }}</div>
-                </div>
+        <div class="my-4"></div>
 
-                <div class="line-item"></div>
-                <div class="line-item"></div>
-                <!-- ACCOUNT CHARGED section-->
-                <div class="section-title">ACCOUNT CHARGED</div>
-                <table>
-                    <template v-if="voucher.type === 'salary'">
-                        <!-- Salary Voucher - Detailed Breakdown -->
-                        <thead>
-                            <tr>
-                                <th style="text-align: left; width: 70%;">Account Title</th>
-                                <th style="text-align: right; width: 30%;">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="detail in voucher.details" :key="detail.id">
-                                <td style="text-align: left;">
-                                    {{accounts.find(a => a.id === detail.account_id)?.account_title || 'N/A'}}
-                                </td>
-                                <td style="text-align: right;">₱{{ formatCurrency(detail.amount) }}</td>
-                            </tr>
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <td style="text-align: right;"><strong>TOTAL AMOUNT:</strong></td>
-                                <td
-                                    style="text-align: right; border: 1px solid black; padding: 5px; font-weight: bold;">
-                                    ₱{{formatCurrency(voucher.details.reduce((sum, detail) => sum +
-                                        Number(detail.amount), 0)) }}
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </template>
-                    <template v-else>
-                        <!-- Non-Salary Voucher - General Charges Only -->
-                        <tr>
-                            <td style="text-align: left; width: 70%;">GENERAL CHARGES</td>
-                            <td style="text-align: right; width: 30%;">₱{{ formatCurrency(voucher.check_amount) }}</td>
-                        </tr>
-                        <tr v-for="i in 5" :key="i">
-                            <td><br></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: right;"><strong>TOTAL:</strong></td>
-                            <td style="text-align: right; border: 1px solid black; padding: 5px; font-weight: bold;">
-                                ₱{{ formatCurrency(voucher.check_amount) }}
-                            </td>
-                        </tr>
-                    </template>
-                </table>
+        <table class="w-full">
+            <tr>
+                <td class="w-1/2">
+                    <div class="text-right w-1/6">
+                        <div class="my-4"></div>
+                        <div v-if="directorAccounting" class="relative inline-block text-sm uppercase">
+                            <img v-if="voucher.status === 'approved'" src="" alt="Signature"
+                                class="w-[100px] absolute -top-6 left-1/2 -translate-x-1/2 pointer-events-none" />
+                            <div class="border-b border-black px-2 whitespace-nowrap">{{
+                                directorAccounting.full_name.toUpperCase() }}</div>
+                            <div class="text-xs text-center">{{ directorAccounting.position }}</div>
+                        </div>
 
-                <br><br>
-                <div class="line-item"></div>
-                <div class="line-item"></div>
-                <div class="section-title">RECOMMENDING APPROVAL:</div>
-                <br>
+                        <div v-else class="text-xs text-gray-500">
+                            No Accounting Director assigned.
+                        </div>
+                    </div>
+                    <div class="font-bold uppercase">{{ voucher.status }}: </div>
+                </td>
+                <td class="w-1/2 align-top">
+                    I hereby certify to have received from the ARELLANO LAW FOUNDATION the sum of
+                    <strong>{{ amountToWords(Number(voucher.check_amount)) }} </strong>
+                    (₱{{ formatCurrency(voucher.check_amount) }}) as payment for the account specified
+                    above.
+                </td>
+            </tr>
+            <tr>
+                <td class="w-1/2">
+                    <div class="my-8"></div>
+                    <div class="text-right w-1/2">
+                        <div class="my-4"></div>
+                        <div v-if="executiveDirector" class="relative inline-block text-sm uppercase">
+                            <img v-if="voucher.status === 'approved'" src="" alt="Signature"
+                                class="w-[100px] absolute -top-6 left-1/2 -translate-x-1/2 pointer-events-none" />
+                            <div class="border-b border-black px-2 whitespace-nowrap">{{
+                                executiveDirector.full_name.toUpperCase() }}</div>
+                            <div class="text-xs text-center">{{ executiveDirector.position }}</div>
+                        </div>
 
-                <div>
-                    {{ roles.approved_by?.first_name }}
-                    <template v-if="roles.approved_by?.middle_name">
-                        {{ roles.approved_by.middle_name.charAt(0).toUpperCase() }}.
-                        {{ roles.approved_by.last_name }}
-                    </template>
-                </div>
-                <div><strong>Director, Accounting</strong></div>
+                        <div v-else class="text-xs text-gray-500">
+                            No Executive Director assigned.
+                        </div>
+                    </div>
+                </td>
+                <td class="w-1/2 align-top">
+                    <div class="my-8"></div>
+                    <div><strong>{{ "Payee Signature:".toUpperCase() }}</strong></div>
+                </td>
+            </tr>
+        </table>
 
-                <br>
-
-                <table>
-                    <tr>
-                        <td width="50%">
-                            <div class="section-title" style="text-transform: uppercase;">{{ voucher.status }}: </div>
-                            <br><br>
-                            <div>
-                                {{ roles.exec_director?.first_name }}
-                                <template v-if="roles.exec_director?.middle_name">
-                                    {{ roles.exec_director.middle_name.charAt(0).toUpperCase() }}.
-                                    {{ roles.exec_director.last_name }}
-                                </template>
-                            </div>
-                            <div><strong>Executive Director</strong></div>
-                        </td>
-                        <td width="50%" style="vertical-align: top;">
-                            I hereby certify to have received from the ARELLANO LAW FOUNDATION the sum of
-                            <strong>{{ amountToWords(Number(voucher.check_amount)) }} </strong>
-                            (₱{{ formatCurrency(voucher.check_amount) }}) as payment for the account specified above.
-                            <br><br><br><br><br>
-                            <div><strong>{{ "Payee Signature:".toUpperCase() }}</strong></div>
-                        </td>
-                    </tr>
-                </table>
-
-                <table style="border-collapse: collapse; width: 100%;">
-                    <tr>
-                        <td
-                            style="border: 1px solid black; width: 33%; padding: 8px; vertical-align: top; height: 100px;">
-                            <strong>PREPARED BY:</strong><br>
-                            <div style="margin-top: 40px; width: 80%;"></div>
-                        </td>
-                        <td
-                            style="border: 1px solid black; width: 33%; padding: 8px; vertical-align: top; height: 100px;">
-                            <strong>APPROVED BY:</strong><br>
-                            <div style="margin-top: 40px; width: 80%;"></div>
-                        </td>
-                    </tr>
-                </table>
-            </div>
+        <table class="w-full border-collapse border border-black mt-4">
+            <tr>
+                <td class="border border-black w-1/3 p-2 align-top h-[100px]">
+                    <strong>PREPARED BY:</strong><br>
+                    <div class="mt-10 w-4/5"></div>
+                </td>
+                <td class="border border-black w-1/3 p-2 align-top h-[100px]">
+                    <strong>APPROVED BY:</strong><br>
+                    <div class="mt-10 w-4/5"></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
         </div>
     </AppLayout>
 </template>

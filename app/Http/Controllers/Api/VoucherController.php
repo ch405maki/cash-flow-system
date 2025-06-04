@@ -28,7 +28,7 @@ class VoucherController extends Controller
         'check_no' => 'nullable|string|max:500',
         'check_payable_to' => 'required|string|max:500',
         'check_amount' => 'required|numeric|min:0',
-        'status' => 'required|in:pending,paid,rejected',
+        'status' => 'required|in:pending,approved,rejected',
         'type' => 'required|in:cash,salary',
         'user_id' => 'required|exists:users,id',
         'check' => 'nullable|array',
