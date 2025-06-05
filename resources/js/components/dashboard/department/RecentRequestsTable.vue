@@ -29,6 +29,15 @@ defineProps<{
 function goToShowRequest(requestId: number) {
   router.get(`/request/show/${requestId}`)
 }
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit'
+  })
+}
 </script>
 
 <template>
@@ -50,7 +59,7 @@ function goToShowRequest(requestId: number) {
               {{ request.request_no }}
             </td>
             <td class="p-4 align-middle">
-              {{ request.request_date }}
+              {{ formatDate(request.request_date) }}
             </td>
             <td class="p-4 align-middle">
               {{ request.user?.first_name }} {{ request.user?.last_name }}
