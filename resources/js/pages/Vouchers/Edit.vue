@@ -247,7 +247,7 @@ async function updateVoucher() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="pending">Pending</SelectItem>
-                                        <SelectItem value="paid">Paid</SelectItem>
+                                        <SelectItem value="approved">Approved</SelectItem>
                                         <SelectItem value="rejected">Rejected</SelectItem>
                                     </SelectContent>
                                 </Select>

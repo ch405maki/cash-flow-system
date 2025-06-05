@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { 
-    Head, 
-    useForm, 
-    usePage, 
-    router 
+import {
+    Head,
+    useForm,
+    usePage,
+    router
 } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,15 +25,15 @@ import {
     CardTitle,
 } from '@/components/ui/card'
 import {
-  Combobox,
-  ComboboxAnchor,
-  ComboboxEmpty,
-  ComboboxGroup,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxItemIndicator,
-  ComboboxList,
-  ComboboxTrigger
+    Combobox,
+    ComboboxAnchor,
+    ComboboxEmpty,
+    ComboboxGroup,
+    ComboboxInput,
+    ComboboxItem,
+    ComboboxItemIndicator,
+    ComboboxList,
+    ComboboxTrigger
 } from '@/components/ui/combobox'
 import { Plus, Trash2, ArrowLeft, Check, ChevronsUpDown, Search } from 'lucide-vue-next'
 import { useToast } from 'vue-toastification'
@@ -53,11 +53,11 @@ const accounts = props.accounts || [];
 const accountSearchQuery = ref('');
 
 const filteredAccounts = computed(() => {
-  if (!accountSearchQuery.value) return accounts;
-  
-  const query = accountSearchQuery.value.toLowerCase();
-  return accounts.filter(account => 
-    account.account_title.toLowerCase().includes(query))
+    if (!accountSearchQuery.value) return accounts;
+
+    const query = accountSearchQuery.value.toLowerCase();
+    return accounts.filter(account =>
+        account.account_title.toLowerCase().includes(query))
 });
 
 const form = useForm({
@@ -164,6 +164,7 @@ async function submitVoucher() {
 </script>
 
 <template>
+
     <Head title="Create Voucher" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
@@ -174,11 +175,7 @@ async function submitVoucher() {
                         <CardTitle>Create Voucher</CardTitle>
                         <CardDescription>Complete all required fields</CardDescription>
                     </div>
-                    <Button 
-                        variant="outline" 
-                        @click="router.visit('/vouchers')"
-                        class="flex items-center gap-2"
-                    >
+                    <Button variant="outline" @click="router.visit('/vouchers')" class="flex items-center gap-2">
                         <ArrowLeft class="h-4 w-4" />
                         Back
                     </Button>
@@ -226,7 +223,7 @@ async function submitVoucher() {
                                 <Label for="check_date">Check Date *</Label>
                                 <Input id="check_date" type="date" v-model="form.check_date" required />
                             </div>
-                            
+
                             <div class="grid gap-2">
                                 <Label for="check_payable_to">Payable To *</Label>
                                 <Input id="check_payable_to" v-model="form.check_payable_to" required />
@@ -251,79 +248,61 @@ async function submitVoucher() {
                     <div class="border rounded-lg p-4 mb-6" :class="{ 'opacity-50': isCashVoucher }">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="font-medium">Account Details</h3>
-                            <Button 
-                                type="button" 
-                                variant="outline" 
-                                size="sm" 
-                                @click="addDetailItem"
-                                :disabled="isCashVoucher"
-                            >
+                            <Button type="button" variant="outline" size="sm" @click="addDetailItem"
+                                :disabled="isCashVoucher">
                                 <Plus class="h-4 w-4 mr-2" />
                                 Add Item
                             </Button>
                         </div>
 
-                        <div 
-                            v-for="(detail, index) in form.check" 
-                            :key="index"
-                            class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 pb-4 border-b last:border-0"
-                        >
+                        <div v-for="(detail, index) in form.check" :key="index"
+                            class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 pb-4 border-b last:border-0">
                             <!-- Account Selection with Combobox -->
                             <div class="grid gap-2">
-                            <Label :for="`account-${index}`">Account <span v-if="!isCashVoucher">*</span></Label>
-                            <Combobox 
-                                v-model="detail.account_id" 
-                                :disabled="isCashVoucher"
-                                by="id"
-                            >
-                                <ComboboxAnchor as-child>
-                                <ComboboxTrigger as-child>
-                                    <Button 
-                                    variant="outline" 
-                                    class="w-full justify-between"
-                                    :disabled="isCashVoucher"
-                                    >
-                                    {{ accounts.find(a => a.id === detail.account_id)?.account_title || 'Select account' }}
-                                    <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                </ComboboxTrigger>
-                                </ComboboxAnchor>
+                                <Label :for="`account-${index}`">Account <span v-if="!isCashVoucher">*</span></Label>
+                                <Combobox v-model="detail.account_id" :disabled="isCashVoucher" by="id">
+                                    <ComboboxAnchor as-child>
+                                        <ComboboxTrigger as-child>
+                                            <Button variant="outline" class="w-full justify-between"
+                                                :disabled="isCashVoucher">
+                                                {{accounts.find(a => a.id === detail.account_id)?.account_title ||
+                                                'Select account' }}
+                                                <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                        </ComboboxTrigger>
+                                    </ComboboxAnchor>
 
-                                <ComboboxList class="max-h-[180px] overflow-y-auto">
-  <!-- Search Input (unchanged) -->
-  <div class="relative w-full items-center">
-    <ComboboxInput 
-      class="pl-9 focus-visible:ring-0 border-0 border-b rounded-none h-10" 
-      placeholder="Search accounts..."
-      v-model="accountSearchQuery"
-    />
-    <span class="absolute start-0 inset-y-0 flex items-center justify-center px-3">
-      <Search class="size-4 text-muted-foreground" />
-    </span>
-  </div>
+                                    <ComboboxList class="max-h-[180px] overflow-y-auto">
+                                        <!-- Search Input (unchanged) -->
+                                        <div class="relative w-full items-center">
+                                            <ComboboxInput
+                                                class="pl-9 focus-visible:ring-0 border-0 border-b rounded-none h-10"
+                                                placeholder="Search accounts..." v-model="accountSearchQuery" />
+                                            <span
+                                                class="absolute start-0 inset-y-0 flex items-center justify-center px-3">
+                                                <Search class="size-4 text-muted-foreground" />
+                                            </span>
+                                        </div>
 
-  <!-- Empty State -->
-  <ComboboxEmpty v-if="filteredAccounts.length === 0">
-    No accounts found.
-  </ComboboxEmpty>
+                                        <!-- Empty State -->
+                                        <ComboboxEmpty v-if="filteredAccounts.length === 0">
+                                            No accounts found.
+                                        </ComboboxEmpty>
 
-  <!-- Scrollable Group (Limited to 5 items) -->
-  <ComboboxGroup>
-    <div class="max-h-[150px] overflow-y-auto"> <!-- Scroll container -->
-      <ComboboxItem
-        v-for="(account, index) in filteredAccounts.slice(0)"
-        :key="account.id"
-        :value="account.id"
-      >
-        {{ account.account_title }}
-        <ComboboxItemIndicator>
-          <Check class="ml-auto h-4 w-4" />
-        </ComboboxItemIndicator>
-      </ComboboxItem>
-    </div>
-  </ComboboxGroup>
-</ComboboxList>
-                            </Combobox>
+                                        <!-- Scrollable Group (Limited to 5 items) -->
+                                        <ComboboxGroup>
+                                            <div class="max-h-[150px] overflow-y-auto"> <!-- Scroll container -->
+                                                <ComboboxItem v-for="(account, index) in filteredAccounts.slice(0)"
+                                                    :key="account.id" :value="account.id">
+                                                    {{ account.account_title }}
+                                                    <ComboboxItemIndicator>
+                                                        <Check class="ml-auto h-4 w-4" />
+                                                    </ComboboxItemIndicator>
+                                                </ComboboxItem>
+                                            </div>
+                                        </ComboboxGroup>
+                                    </ComboboxList>
+                                </Combobox>
                             </div>
 
                             <!-- Charging Tag -->
@@ -343,52 +322,29 @@ async function submitVoucher() {
                             <!-- Hours -->
                             <div class="grid gap-2">
                                 <Label :for="`hours-${index}`">Hours</Label>
-                                <Input 
-                                    :id="`hours-${index}`" 
-                                    type="number" 
-                                    step="0.01" 
-                                    v-model="detail.hours"
-                                    @blur="!isCashVoucher && calculateAmountFromRate(index)" 
-                                    placeholder="Optional"
-                                    :disabled="isCashVoucher"
-                                />
+                                <Input :id="`hours-${index}`" type="number" step="0.01" v-model="detail.hours"
+                                    @blur="!isCashVoucher && calculateAmountFromRate(index)" placeholder="Optional"
+                                    :disabled="isCashVoucher" />
                             </div>
 
                             <!-- Rate -->
                             <div class="grid gap-2">
                                 <Label :for="`rate-${index}`">Rate</Label>
-                                <Input 
-                                    :id="`rate-${index}`" 
-                                    type="number" 
-                                    step="0.01" 
-                                    v-model="detail.rate"
-                                    @blur="!isCashVoucher && calculateAmountFromRate(index)" 
-                                    placeholder="Optional"
-                                    :disabled="isCashVoucher"
-                                />
+                                <Input :id="`rate-${index}`" type="number" step="0.01" v-model="detail.rate"
+                                    @blur="!isCashVoucher && calculateAmountFromRate(index)" placeholder="Optional"
+                                    :disabled="isCashVoucher" />
                             </div>
 
                             <!-- Amount -->
                             <div class="grid gap-2">
                                 <Label :for="`amount-${index}`">Amount <span v-if="!isCashVoucher">*</span></Label>
                                 <div class="flex gap-2">
-                                    <Input 
-                                        :id="`amount-${index}`" 
-                                        type="number" 
-                                        step="0.01" 
-                                        v-model="detail.amount"
-                                        @change="!isCashVoucher && calculateTotalAmount" 
-                                        :required="!isCashVoucher" 
-                                        class="flex-1"
-                                        :disabled="isCashVoucher"
-                                    />
-                                    <Button 
-                                        type="button" 
-                                        variant="destructive" 
-                                        size="icon"
-                                        @click="removeDetailItem(index)" 
-                                        :disabled="form.check.length <= 1 || isCashVoucher"
-                                    >
+                                    <Input :id="`amount-${index}`" type="number" step="0.01" v-model="detail.amount"
+                                        @change="!isCashVoucher && calculateTotalAmount" :required="!isCashVoucher"
+                                        class="flex-1" :disabled="isCashVoucher" />
+                                    <Button type="button" variant="destructive" size="icon"
+                                        @click="removeDetailItem(index)"
+                                        :disabled="form.check.length <= 1 || isCashVoucher">
                                         <Trash2 class="h-4 w-4" />
                                     </Button>
                                 </div>

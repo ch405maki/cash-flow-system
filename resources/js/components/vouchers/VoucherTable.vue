@@ -56,7 +56,7 @@ function formatCurrency(amount: number): string {
           <TableHead class="px-4 py-2">Check Amount</TableHead>
           <TableHead class="px-4 py-2">Payee</TableHead>
           <TableHead class="px-4 py-2">Check Pay to</TableHead>
-          <TableHead class="px-4 py-2">Date</TableHead> <!-- Added date column -->
+          <TableHead class="px-4 py-2">Date</TableHead>
           <TableHead class="px-4 py-2 text-center">Status</TableHead>
           <TableHead class="px-4 py-2 text-center">Actions</TableHead>
         </TableRow>
@@ -84,7 +84,7 @@ function formatCurrency(amount: number): string {
               class="inline-block rounded-full px-8 py-0.5 text-xs font-semibold"
               :class="{
                 'bg-yellow-100 text-yellow-800': voucher.status === 'pending',
-                'bg-green-100 text-green-800': voucher.status === 'paid',
+                'bg-green-100 text-green-800': voucher.status === 'approved',
                 'bg-red-100 text-red-800': voucher.status === 'rejected',
               }"
             >
