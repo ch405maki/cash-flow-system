@@ -20,6 +20,11 @@ class ReportController extends Controller
         return Inertia::render('Reports/Index');
     }
 
+    public function requestSummary()
+    {
+        return Inertia::render('Reports/Requests/Index');
+    }
+
     public function poSummary()
     {
         $purchaseOrders = PurchaseOrder::with('department')

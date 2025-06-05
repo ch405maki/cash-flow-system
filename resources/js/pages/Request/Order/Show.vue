@@ -2,6 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Head, usePage } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
+import { Printer, ListChecks } from 'lucide-vue-next';
   import {
     Dialog,
     DialogContent,
@@ -20,6 +21,7 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table'
+import FormHeader from '@/components/reports/header/formHeder.vue'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -139,6 +141,20 @@ function formatDate(dateStr: string): string {
     day: '2-digit'
   })
 }
+
+const printArea = () =>{
+  const printContents = document.getElementById('print-section')?.innerHTML;
+  const originalContents = document.body.innerHTML;
+
+  if (printContents) {
+    document.body.innerHTML = printContents;
+    window.print();
+    document.body.innerHTML = originalContents;
+    location.reload();
+  } else {
+    console.error('Print section not found');
+  }
+}
 </script>
 
 <template>
@@ -151,7 +167,6 @@ function formatDate(dateStr: string): string {
         <h1 class="text-2xl font-bold">Request To Order Details</h1>
         
         <div class="space-x-2 flex items-center">
-          <Button @click="goBack" variant="outline">Back</Button>
           <!-- Approve Button with Dialog -->
           <div v-if="authUser.role == 'executive_director'" class="space-x-2 flex items-center">
             <Dialog v-model:open="showApproveModal">
@@ -303,10 +318,17 @@ function formatDate(dateStr: string): string {
               </DialogContent>
           </Dialog>
           </div>
+          <Button v-if="authUser.role === 'purchasing'" size="sm" @click="printArea"> <ListChecks />Mark As Done</Button>
+          <Button size="sm" @click="printArea"> <Printer />Print List</Button>
+          <Button size="sm" @click="goBack" variant="outline">Back</Button>
         </div>
       </div>
 
+      <div id="print-section">
       <div class="grid grid-cols-1 gap-4 md:grid-cols-1">
+        <div class="hidden print:block">
+            <FormHeader text="Approved Request To Order Items" :bordered="false" />
+        </div>
         <table class="w-full text-sm border border-border rounded-md">
           <tbody>
             <tr class="border-b">
@@ -332,29 +354,36 @@ function formatDate(dateStr: string): string {
       </div>
 
       <div>
-            <h2 class="text-xl font-semibold my-4">Order Details</h2>
-            <div>
-            <Table>
-              <TableCaption>Items in this order</TableCaption>
-                <TableHeader class="bg-muted">
-                <TableRow>
-                    <TableHead class="border p-2 w-10">#</TableHead>
-                    <TableHead class="border p-2">Item Description</TableHead>
-                    <TableHead class="border p-2">Quantity</TableHead>
-                    <TableHead class="border p-2">Unit</TableHead>
-                </TableRow>
-                </TableHeader>
-                <TableBody>
-                <TableRow v-for="(detail, index) in requestOrder.details" :key="detail.id">
-                    <TableCell class="border p-2">{{ index + 1 }}</TableCell>
-                    <TableCell class="border p-2">{{ detail.item_description }}</TableCell>
-                    <TableCell class="border p-2">{{ detail.quantity }}</TableCell>
-                    <TableCell class="border p-2">{{ detail.unit }}</TableCell> 
-                </TableRow>
-                </TableBody>
-            </Table>
-            </div>
+          <h2 class="text-xl font-semibold my-4">Order Details</h2>
+          <div>
+          <Table>
+            <TableCaption>      
+              <h3 class="flex items-center w-full mt-2">
+                <span class="flex-grow border-t border-dashed border-gray-300"></span>
+                <span class="mx-3 text-xs font-medium">Items to order</span>
+                <span class="flex-grow border-t border-dashed border-gray-300"></span>
+              </h3>
+            </TableCaption>
+              <TableHeader class="bg-muted">
+              <TableRow>
+                  <TableHead class="border p-2 w-10">#</TableHead>
+                  <TableHead class="border p-2">Item Description</TableHead>
+                  <TableHead class="border p-2">Quantity</TableHead>
+                  <TableHead class="border p-2">Unit</TableHead>
+              </TableRow>
+              </TableHeader>
+              <TableBody>
+              <TableRow v-for="(detail, index) in requestOrder.details" :key="detail.id">
+                  <TableCell class="border p-2">{{ index + 1 }}</TableCell>
+                  <TableCell class="border p-2">{{ detail.item_description }}</TableCell>
+                  <TableCell class="border p-2">{{ detail.quantity }}</TableCell>
+                  <TableCell class="border p-2">{{ detail.unit }}</TableCell> 
+              </TableRow>
+              </TableBody>
+          </Table>
+          </div>
         </div>
+      </div>
     </div>
   </AppLayout>
 </template>

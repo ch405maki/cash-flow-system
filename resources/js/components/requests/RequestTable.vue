@@ -10,10 +10,14 @@ import {
 import { Button } from '@/components/ui/button'
 import { defineProps } from 'vue'
 import { router } from '@inertiajs/vue3'
+import { FilePenLine, Eye  } from 'lucide-vue-next';
+import { usePage } from '@inertiajs/vue3';
 
 const props = defineProps<{
   requests: Array<any>
 }>()
+
+const user = usePage().props.auth.user;
 
 const getFullName = (user: any) =>
   `${user.first_name} ${user.last_name}`
@@ -43,7 +47,7 @@ function formatDate(dateStr: string): string {
         <TableRow>
           <TableHead>Request No</TableHead>
           <TableHead>Date</TableHead>
-          <TableHead>Purpose</TableHead>
+          <!-- <TableHead>Purpose</TableHead> -->
           <TableHead>Department</TableHead>
           <TableHead>Requested By</TableHead>
           <TableHead>Status</TableHead>
@@ -59,7 +63,7 @@ function formatDate(dateStr: string): string {
         >
           <TableCell>{{ request.request_no }}</TableCell>
           <TableCell>{{ formatDate(request.request_date) }}</TableCell>
-          <TableCell>{{ request.purpose }}</TableCell>
+          <!-- <TableCell>{{ request.purpose }}</TableCell> -->
           <TableCell>{{ request.department?.department_name }}</TableCell>
           <TableCell>{{ getFullName(request.user) }}</TableCell>
           <TableCell>
@@ -81,7 +85,17 @@ function formatDate(dateStr: string): string {
               size="sm"
               variant="outline"
               @click="goToShowRequest(request.id)"
+              v-if="user.role === 'staff' && request.status === 'pending'"
             >
+            <FilePenLine class="h-4"/>
+              Edit
+            </Button>
+            <Button
+              size="sm"
+              variant="default"
+              @click="goToShowRequest(request.id)"
+            >
+            <Eye class="h-4"/>
               Show
             </Button>
           </TableCell>

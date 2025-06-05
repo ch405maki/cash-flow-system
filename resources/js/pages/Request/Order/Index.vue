@@ -2,7 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Head } from '@inertiajs/vue3'
 import { router } from '@inertiajs/vue3'
-
+import { CirclePlus , ListChecks } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -59,6 +59,15 @@ function getStatusVariant(status: string) {
 function goToShowRequest(requestId: number) {
   router.get(`/request/show/${requestId}`)
 }
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit'
+  })
+}
 </script>
 
 <template>
@@ -68,9 +77,9 @@ function goToShowRequest(requestId: number) {
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="flex justify-between items-center">
         <h1 class="text-xl font-bold">Request To Order List</h1>
-        <div class="space-x-2">
-          <Button @click="goToList">List to Order</Button>
-          <Button @click="goToCreate">Create New Order</Button>
+        <div class="space-x-2 items-center">
+          <Button variant="outline" @click="goToList" class="h-8"><ListChecks /> List to Order</Button>
+          <Button @click="goToCreate" class="h-8"><CirclePlus />Create New Order</Button>
         </div>
       </div>
 
@@ -91,7 +100,7 @@ function goToShowRequest(requestId: number) {
           <TableBody>
             <TableRow v-for="request in props.requests" :key="request.id">
               <TableCell class="font-medium">{{ request.order_no }}</TableCell>
-              <TableCell>{{ new Date(request.order_date).toLocaleDateString() }}</TableCell>
+              <TableCell>{{ formatDate(request.order_date) }}</TableCell>
               <TableCell>{{ request.notes }}</TableCell>
               <TableCell>
                 <Badge
