@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Voucher;
 use App\Models\VoucherDetail;
 use App\Models\Account;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -91,7 +92,7 @@ class VoucherController extends Controller
             $validated['voucher_no'] = $voucher->voucher_no;
             
             $this->validateCashVoucherAmount($validated);
-            $this->updateVoucher($voucher, $validated);
+            $this->updateType($voucher, $validated);
             $this->syncVoucherDetails($voucher, $validated);
             
             return $this->successResponse(
@@ -120,6 +121,20 @@ class VoucherController extends Controller
             'voucher' => $voucher,
             'accounts' => Account::all(),
         ]);
+    }
+
+    public function approve(Voucher $voucher)
+    {
+        // Add any authorization checks here (e.g., only certain roles can approve)
+        // if (!auth()->user()->can('approve', $voucher)) {
+        //     abort(403);
+        // }
+
+        $voucher->update([
+            'status' => 'approved',
+        ]);
+
+        return redirect()->back()->with('success', 'Voucher approved successfully');
     }
 
 
@@ -205,7 +220,7 @@ class VoucherController extends Controller
     /**
      * Update an existing voucher
      */
-    protected function updateVoucher(Voucher $voucher, array $validated): void
+    protected function updateType(Voucher $voucher, array $validated): void
     {
         // For salary vouchers, calculate check_amount from details
         if ($validated['type'] === 'salary' && !empty($validated['check'])) {
