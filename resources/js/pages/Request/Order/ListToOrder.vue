@@ -5,6 +5,8 @@ import { Head } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button'
 import { useForm } from '@inertiajs/vue3';
 import { ref, computed, onMounted } from 'vue';
+import FormHeader from '@/components/reports/header/formHeder.vue'
+import { Printer, ListChecks } from 'lucide-vue-next';
 import {
   Table,
   TableBody,
@@ -112,6 +114,20 @@ const submit = () => {
     department_ids: [...new Set(items.map(item => item.department_id))]
   })).post(route('request-to-orders.store'));
 };
+
+const printArea = () =>{
+  const printContents = document.getElementById('print-section')?.innerHTML;
+  const originalContents = document.body.innerHTML;
+
+  if (printContents) {
+    document.body.innerHTML = printContents;
+    window.print();
+    document.body.innerHTML = originalContents;
+    location.reload();
+  } else {
+    console.error('Print section not found');
+  }
+}
 </script>
 
 <template>
@@ -119,8 +135,10 @@ const submit = () => {
   
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-      <h1 class="text-2xl font-bold mb-4">Create Request to Order</h1>
-      
+      <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold mb-4">Create Request to Order</h1>
+        <Button size="sm" @click="printArea"> <Printer />Print List</Button>
+      </div>
       <div v-if="Object.keys(form.errors).length > 0" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
         <p v-for="(error, field) in form.errors" :key="field" class="text-sm">
           {{ error }}
@@ -186,7 +204,7 @@ const submit = () => {
           </Table>
         </div>
         
-        <div class="mt-6">
+        <div class="mt-6 flex space-x-2">
           <Button
             @click="submit"
             :disabled="form.processing || form.selectedItems.length === 0"
@@ -194,12 +212,48 @@ const submit = () => {
             <span v-if="form.processing">Processing...</span>
             <span v-else>Create Order</span>
           </Button>
+          <Button
+            variant="outline"
+            @click="submit"
+            :disabled="form.processing || form.selectedItems.length === 0"
+          >
+            <span v-if="form.processing">Processing...</span>
+            <span v-else>Mark As Processed</span>
+          </Button>
         </div>
       </div>
       
       <div v-else class="bg-yellow-100 p-4 rounded">
         No available items to order.
       </div>
+    </div>
+
+    <!-- printed area -->
+    <div id="print-section"  class="hidden print:block">
+        <div :bordered="false">
+            <FormHeader text="Request to Order List" :bordered="false" />
+        </div>
+        <div class="overflow-x-auto rounded-md border">
+          <Table>
+            <TableCaption>A list of items to order.</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Item Description</TableHead>
+                <TableHead class="text-right w-[40px]">Quantity</TableHead>
+                <TableHead class="text-right w-[40px]">Unit</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-for="detail in allRequestDetails" :key="detail.id">
+                <TableCell>{{ detail.item_description }}</TableCell>
+                <TableCell class="text-right">
+                  {{ detail.quantity }}
+                </TableCell>
+                <TableCell class="text-right">{{ detail.unit }}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
     </div>
   </AppLayout>
 </template>

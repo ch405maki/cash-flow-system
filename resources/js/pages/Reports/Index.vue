@@ -18,7 +18,17 @@ const breadcrumbs: BreadcrumbItem[] = [
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="grid auto-rows-min gap-4 md:grid-cols-3">
-        <!-- Clickable Folder Card -->
+        <!-- Request Summary -->
+        <div 
+          class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border cursor-pointer hover:bg-muted/50 transition-colors"
+          @click="router.visit('/reports/request-summary')"
+        >
+          <div class="flex flex-col items-center justify-center h-full p-4">
+            <FolderOpen class="w-12 h-12 text-primary mb-2" />
+            <span class="text-sm font-medium">Request Summary</span>
+          </div>
+        </div>
+        <!-- Purchase Order -->
         <div 
           class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border cursor-pointer hover:bg-muted/50 transition-colors"
           @click="router.visit('/reports/po-summary')"
@@ -28,6 +38,8 @@ const breadcrumbs: BreadcrumbItem[] = [
             <span class="text-sm font-medium">Purchase Order Summary</span>
           </div>
         </div>
+        
+        <!-- Voucher Summary -->
         <div 
           class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border cursor-pointer hover:bg-muted/50 transition-colors"
           @click="router.visit('/reports/vouchers')"
@@ -36,9 +48,6 @@ const breadcrumbs: BreadcrumbItem[] = [
             <FolderOpen class="w-12 h-12 text-primary mb-2" />
             <span class="text-sm font-medium">Voucher Summary</span>
           </div>
-        </div>
-        <div class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-          <PlaceholderPattern />
         </div>
       </div>
       
