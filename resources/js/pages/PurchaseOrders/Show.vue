@@ -30,8 +30,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from 'vue-toastification'
-import { router } from '@inertiajs/vue3'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useForm } from '@inertiajs/vue3'
+import { Eraser, Printer, Rocket, X   } from 'lucide-vue-next';
 
 const toast = useToast()
 
@@ -88,6 +89,7 @@ const showForApproveModal = ref(false)
 const showRejectModal = ref(false)
 const showReleaseModal = ref(false)
 const showOrderModal = ref(false)
+const showAlert = ref(true)
 
 const form = useForm({
   status: '',
@@ -199,7 +201,7 @@ const printArea = () =>{
             </DialogContent>
           </Dialog>
           </div>
-          <div v-if="authUser.role === 'purchasing' && authUser.access === 3 " class="space-x-2 flex space-x-2">
+          <div v-if="authUser.role === 'purchasing' && authUser.access === 3" class="space-x-2 flex space-x-2">
             <Dialog v-model:open="showForApproveModal">
             <DialogTrigger as-child>
               <Button 
@@ -312,12 +314,27 @@ const printArea = () =>{
           </div>
         </div>
       </div>
+      <Alert v-if="showAlert" variant="success" class="relative pr-10">
+        <Rocket class="h-4 w-4 text-green-500" />
+        <AlertTitle>Remarks</AlertTitle>
+        <AlertDescription>
+          {{ purchaseOrder.remarks || 'No remarks' }}
+        </AlertDescription>
 
+        <!-- Dismiss Button -->
+        <button
+          class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground"
+          @click="showAlert = false"
+          aria-label="Dismiss"
+        >
+          <X class="h-4 w-4 text-purple-700" />
+        </button>
+      </Alert>
       <div id="print-section">
       <div class="hidden print:block">
         <FormHeader text="Purchase Order" />
       </div>
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-1">
+      <div class="grid grid-cols-1 md:grid-cols-1">
         <table class="w-full text-sm border border-border rounded-md">
           <tbody>
             <tr class="border-b">
@@ -332,29 +349,9 @@ const printArea = () =>{
               <td class="p-2 font-medium text-muted-foreground border-r">P.O. DATE:</td>
               <td class="p-2">{{ formatDate(purchaseOrder.date) }}</td>
             </tr>
-            <tr class="border-b">
-              <td class="p-2 font-medium text-muted-foreground border-r">DEPARTMENT:</td>
-              <td class="p-2 uppercase border-r">{{ purchaseOrder.department.department_name }}</td>
-              <td class="p-2 font-medium text-muted-foreground border-r">AMOUNT:</td>
-              <td class="p-2">{{ formatCurrency(purchaseOrder.amount) }}</td>
-            </tr>
           </tbody>
         </table>
-        <p class="text-xs italic hidden print:block">*Please deliver the following items immediately subject to the agreed terms and condition.</p>
-        <table class="w-full text-sm border border-border rounded-md">
-          <tbody>
-            <tr class="border-b">
-              <td class="p-2 font-medium text-muted-foreground border-r w-48">ACCOUNT CHARGE:</td>
-              <td class="p-2 uppercase border-r">{{ purchaseOrder.account.account_title }}</td>
-              <td class="p-2 font-medium text-muted-foreground border-r">REMARKS:</td>
-              <td class="p-2 uppercase">{{ purchaseOrder.remarks || 'No remarks' }}</td>
-            </tr>
-            <tr>
-              <td class="p-2 font-medium text-muted-foreground border-r">PURPOSE:</td>
-              <td class="p-2 uppercase" colspan="3">{{ purchaseOrder.purpose || 'No remarks' }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <p class="text-xs italic hidden print:block my-4">*Please deliver the following items immediately subject to the agreed terms and condition.</p>
       </div>
 
       <!-- Items Table -->
@@ -366,20 +363,18 @@ const printArea = () =>{
             <span class="flex-grow border-t border-dashed border-gray-300"></span>
           </h3>
         </TableCaption>
-        <TableHeader>
-          <TableRow>
-              <TableHead>Quantity</TableHead>
-              <TableHead>Unit/S</TableHead>
-              <TableHead>Description</TableHead>
-            <TableHead class="text-right">Unit Price</TableHead>
-            <TableHead class="text-right">Amount</TableHead>
-          </TableRow>
-        </TableHeader>
         <TableBody>
+          <TableRow>
+            <TableCell>Quantity</TableCell>
+            <TableCell>Unit/S</TableCell>
+            <TableCell>Description</TableCell>
+            <TableCell class="text-right">Unit Price</TableCell>
+            <TableCell class="text-right font-medium">Amount</TableCell>
+          </TableRow>
           <TableRow v-for="item in purchaseOrder.details" :key="item.id">
-              <TableCell>{{ item.quantity }}</TableCell>
-              <TableCell> {{ item.unit }}</TableCell>
-              <TableCell>{{ item.item_description }}</TableCell>
+            <TableCell>{{ item.quantity }}</TableCell>
+            <TableCell> {{ item.unit }}</TableCell>
+            <TableCell>{{ item.item_description }}</TableCell>
             <TableCell class="text-right">{{ formatCurrency(item.unit_price) }}</TableCell>
             <TableCell class="text-right font-medium">{{ formatCurrency(item.amount) }}</TableCell>
           </TableRow>
@@ -396,7 +391,7 @@ const printArea = () =>{
       <div class="flex justify-between mt-12 items-center">
           <div class="text-left w-1/2">
             <div class="flex  items-center text-sm  space-x-[55px]">
-              <p>For: Arrellano University Graduation Series</p>
+              <p>For: {{ purchaseOrder.purpose || 'No purpose' }}</p>
             </div>
           </div>
       </div>
@@ -417,11 +412,11 @@ const printArea = () =>{
           <div class="text-left w-1/2">
             <div class="flex  items-center text-sm uppercase space-x-[55px]">
               <h1>DEPARTMENT:</h1>
-              <h1>Medical and Dental</h1>
+              <h1>{{ purchaseOrder.department.department_name }}</h1>
             </div>
             <div class="flex  items-center text-sm uppercase space-x-[10px]">
               <h1>ACCOUNT CHARGES:</h1>
-              <h1>Medicine</h1>
+              <h1>{{ purchaseOrder.account.account_title }}</h1>
             </div>
           </div>
 
