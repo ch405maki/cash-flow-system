@@ -39,6 +39,10 @@ function goToCreate() {
   router.visit(`/purchase-order/create`)
 }
 
+function goToCanvas() {
+  router.visit(`/canvas/create`)
+}
+
 function viewRequest(id: number) {
   router.visit(`/request-to-order/${id}`) 
 }
@@ -74,7 +78,7 @@ function formatDate(dateStr: string): string {
       <div class="flex justify-between items-center">
         <h1 class="text-xl font-bold">Approved Request List</h1>
         <div class="space-x-2">
-          <Button variant="outline" size="sm" @click="goToCreate()" class="h-8">
+          <Button variant="outline" size="sm" @click="goToCanvas()" class="h-8">
             <PlusCircle class="h-4 w-4" />
             Create Canvas
           </Button>      

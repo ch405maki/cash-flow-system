@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { CirclePlus, Send, Eraser  } from 'lucide-vue-next';
 
 const toast = useToast();
 
@@ -127,15 +128,15 @@ const submitRequest = async () => {
       <div>
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-medium">Request Items</h3>
-          <Button type="button" variant="outline" @click="addItem">
-            Add Item
+          <Button size="sm" type="button" variant="outline" @click="addItem">
+            <CirclePlus />Add Item
           </Button>
         </div>
 
         <div v-for="(item, index) in form.items" :key="index" class="mb-6 space-y-4 border-b pb-6">
           <div class="grid grid-cols-1 gap-4 md:grid-cols-12">
             <!-- Quantity -->
-            <div class="md:col-span-2">
+            <div class="md:col-span-2"> 
               <Label :for="`quantity-${index}`">Quantity</Label>
               <Input
                 :id="`quantity-${index}`"
@@ -194,8 +195,8 @@ const submitRequest = async () => {
 
       <!-- Submit Button -->
       <div class="flex justify-end">
-        <Button type="submit">
-          Submit Request
+        <Button size="sm" type="submit">
+          <Send /> Submit Request
         </Button>
       </div>
     </form>

@@ -15,16 +15,19 @@ use App\Http\Controllers\Api\SignatoryController;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\VoucherController;
 use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\CanvasController;
+use App\Http\Controllers\Api\DashboardController;
 
 
 Route::get('/', function () {
     return Inertia::render('auth/Login');
 })->name('home');
 
-Route::get('dashboard', function () {   
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
+// Dashboard Route
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+});
+// Request Route
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/request', [RequestController::class, 'index'])->name('request.index');
     Route::get('/request/show/{request}', [RequestController::class, 'show'])->name('request.show');
@@ -80,6 +83,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/purchase-order/create', [PurchaseOrderController::class, 'create'])->name('purchase-order.create');
     Route::patch('/purchase-orders/{purchaseOrder}/status', [PurchaseOrderController::class, 'updateStatus'])->name('purchase-orders.status.update');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/canvas/create', [CanvasController::class, 'create'])
+        ->name('canvas.create');
 });
 
 require __DIR__.'/settings.php';
