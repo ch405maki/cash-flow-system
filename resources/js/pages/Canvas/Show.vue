@@ -67,68 +67,65 @@ const downloadFile = async () => {
 </script>
 
 <template>
-  <Head :title="`Canvas - ${canvas.original_filename}`" />
+<Head :title="`Canvas - ${canvas.original_filename}`" />
   
-  <AppLayout>
+<AppLayout>
     <div class="p-6">
-      <Card>
-        <CardHeader>
-          <div class="flex items-center gap-4">
-            <Button variant="outline" size="icon" @click="router.visit(route('canvas.index'))">
-              <ArrowLeft class="h-4 w-4" />
-            </Button>
-            <CardTitle class="text-2xl font-bold">
-              {{ canvas.original_filename }}
-            </CardTitle>
-          </div>
-        </CardHeader>
-
-        <CardContent class="grid gap-6">
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <h3 class="text-sm font-medium text-muted-foreground">Status</h3>
-              <Badge :class="statusVariants[canvas.status]" class="mt-1">
-                <component 
-                  :is="statusIcons[canvas.status]" 
-                  class="h-3 w-3 mr-1" 
-                />
-                <span class="capitalize">{{ canvas.status }}</span>
-              </Badge>
-            </div>
-
-            <div>
-              <h3 class="text-sm font-medium text-muted-foreground">Uploaded</h3>
-              <p class="mt-1 text-sm">
-                {{ new Date(canvas.created_at).toLocaleString() }}
-              </p>
-            </div>
-          </div>
-
-        <div>
-            <h3 class="text-sm font-medium text-muted-foreground">Remarks</h3>
-            <p class="mt-1 text-sm">
-                {{ canvas.remarks || 'No remarks provided' }}
-            </p>
+        <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-4">
+        <CardTitle class="text-2xl font-bold capitalize">
+            {{ canvas.original_filename }}
+        </CardTitle>
         </div>
-          <div>
-            <h3 class="text-sm font-medium text-muted-foreground">Note</h3>
-            <p class="mt-1 text-sm">
-              {{ canvas.note || 'No Notes provided' }}
-            </p>
-          </div>
-        </CardContent>
-
-        <CardFooter class="flex justify-end gap-2">
-          <Button 
-            @click="downloadFile" 
+        <div class="flex items-center gap-4">
+        <Button size="sm" variant="outline" @click="router.visit(route('canvas.index'))">
+            <ArrowLeft class="h-4 w-4" />
+        </Button>
+        <Button 
+            @click="downloadFile"
             class="gap-2"
+            size="sm"
             :disabled="isDownloading"
-          >
+        >
             <Download class="h-4 w-4" />
             <span>{{ isDownloading ? 'Downloading...' : 'Download File' }}</span>
-          </Button>
-        </CardFooter>
-      </Card>
+        </Button>
+        </div>
+        </div>
+
+        <div class="grid gap-6">
+            <div class="grid grid-cols-2 gap-4">
+            <div>
+                <h3 class="text-sm font-medium text-muted-foreground">Status</h3>
+                <Badge :class="statusVariants[canvas.status]" class="mt-1">
+                    <component 
+                    :is="statusIcons[canvas.status]" 
+                    class="h-3 w-3 mr-1" 
+                    />
+                    <span class="capitalize">{{ canvas.status }}</span>
+                </Badge>
+            </div>
+
+            <div>
+                <h3 class="text-sm font-medium text-muted-foreground">Uploaded</h3>
+                <p class="mt-1 text-sm">
+                    {{ new Date(canvas.created_at).toLocaleString() }}
+                </p>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-muted-foreground">Note</h3>
+                <p class="mt-1 text-sm">
+                    {{ canvas.note || 'No Notes provided' }}
+                </p>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-muted-foreground">Remarks</h3>
+                <p class="mt-1 text-sm">
+                    {{ canvas.remarks || 'No remarks provided' }}
+                </p>
+            </div>
+            </div>
+        </div>
     </div>
-  </AppLayout>
+</AppLayout>
 </template>

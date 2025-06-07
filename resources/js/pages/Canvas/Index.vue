@@ -1,7 +1,7 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { FileText, Clock, CheckCircle, XCircle, Download, Plus, Eye } from 'lucide-vue-next';
+import { FileText, Clock, CheckCircle, XCircle, Download, Eye, UploadCloud } from 'lucide-vue-next';
 import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import {
@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import CanvasUploadDialog from '@/components/canvas/CanvasUploadDialog.vue'
 
 defineProps({
   canvases: Array,
@@ -74,94 +75,82 @@ const showCanvas = (canvas) => {
   
   <AppLayout>
     <div class="p-6">
-      <Card>
-        <CardHeader class="flex flex-row items-center justify-between pb-2">
-          <CardTitle class="text-2xl font-bold">My Canvases</CardTitle>
-          <Button as-child>
-            <a :href="route('canvas.create')" class="flex items-center gap-2">
-              <Plus class="h-4 w-4" />
-              <span>Upload New</span>
-            </a>
-          </Button>
-        </CardHeader>
-        
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>File</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Remarks</TableHead>
-                <TableHead>Uploaded</TableHead>
-                <TableHead class="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow v-for="canvas in canvases" :key="canvas.id">
-                <TableCell>
-                  <div class="flex items-center gap-4">
-                    <FileText class="h-5 w-5 text-muted-foreground" />
-                    <div class="grid gap-1">
-                      <div class="font-medium">
-                        {{ canvas.original_filename }}
-                      </div>
-                      <div class="text-sm text-muted-foreground">
-                        {{ canvas.file_path }}
-                      </div>
-                    </div>
+    <div class="flex flex-row items-center justify-between pb-2">
+      <CardTitle class="text-2xl font-bold">Canvas</CardTitle>
+      <CanvasUploadDialog />
+    </div>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>File</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Note</TableHead>
+            <TableHead>Uploaded</TableHead>
+            <TableHead class="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow v-for="canvas in canvases" :key="canvas.id">
+            <TableCell>
+              <div class="flex items-center gap-4">
+                <FileText class="h-5 w-5 text-muted-foreground" />
+                <div class="grid gap-1">
+                  <div class="font-medium">
+                    {{ canvas.original_filename }}
                   </div>
-                </TableCell>
-                
-                <TableCell>
-                  <Badge :class="statusVariants[canvas.status]">
-                    <component 
-                      :is="statusIcons[canvas.status]" 
-                      class="h-3 w-3 mr-1" 
-                    />
-                    <span class="capitalize">{{ canvas.status }}</span>
-                  </Badge>
-                </TableCell>
-                
-                <TableCell>
-                  <div class="text-sm text-muted-foreground max-w-[200px] truncate">
-                    {{ canvas.remarks || '-' }}
-                  </div>
-                </TableCell>
-                
-                <TableCell>
-                  <div class="text-sm">
-                    {{ new Date(canvas.created_at).toLocaleDateString() }}
-                  </div>
-                </TableCell>
-                
-                <TableCell class="text-right">
-                  <div class="flex gap-2 justify-end">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      class="gap-1"
-                      @click="showCanvas(canvas)"
-                    >
-                      <Eye class="h-3.5 w-3.5" />
-                      <span>Show</span>
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      class="gap-1"
-                      @click="downloadFile(canvas)"
-                      :disabled="canvas.isDownloading"
-                    >
-                      <Download class="h-3.5 w-3.5" />
-                      <span>{{ canvas.isDownloading ? 'Downloading...' : 'Download' }}</span>
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                </div>
+              </div>
+            </TableCell>
+            
+            <TableCell>
+              <Badge :class="statusVariants[canvas.status]">
+                <component 
+                  :is="statusIcons[canvas.status]" 
+                  class="h-3 w-3 mr-1" 
+                />
+                <span class="capitalize">{{ canvas.status }}</span>
+              </Badge>
+            </TableCell>
+            
+            <TableCell>
+              <div class="text-sm text-muted-foreground max-w-[200px] truncate">
+                {{ canvas.note || 'No Notes' }}
+              </div>
+            </TableCell>
+            
+            <TableCell>
+              <div class="text-sm">
+                {{ new Date(canvas.created_at).toLocaleDateString() }}
+              </div>
+            </TableCell>
+            
+            <TableCell class="text-right">
+              <div class="flex gap-2 justify-end">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  class="gap-1"
+                  @click="showCanvas(canvas)"
+                >
+                  <Eye class="h-3.5 w-3.5" />
+                  <span>Show</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  class="gap-1"
+                  @click="downloadFile(canvas)"
+                  :disabled="canvas.isDownloading"
+                >
+                  <Download class="h-3.5 w-3.5" />
+                  <span>{{ canvas.isDownloading ? 'Downloading...' : 'Download' }}</span>
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
   </AppLayout>
 </template>
