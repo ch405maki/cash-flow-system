@@ -1,8 +1,7 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { FileText, Clock, CheckCircle, XCircle, Download, Eye, UploadCloud } from 'lucide-vue-next';
-import { router } from '@inertiajs/vue3';
+import { FileText, Clock, CheckCircle, XCircle, Download, Eye } from 'lucide-vue-next';
 import axios from 'axios';
 import {
   Table,
@@ -16,6 +15,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import CanvasUploadDialog from '@/components/canvas/CanvasUploadDialog.vue'
+import CanvasShowDialog from '@/components/canvas/CanvasShowDialog.vue'
+import { ref } from 'vue';
 
 defineProps({
   canvases: Array,
@@ -32,6 +33,10 @@ const statusVariants = {
   approved: 'bg-green-100 text-green-800 hover:bg-green-200',
   rejected: 'bg-red-100 text-red-800 hover:bg-red-200',
 };
+
+// Dialog state management
+const showDialog = ref(false);
+const selectedCanvas = ref(null);
 
 const downloadFile = async (canvas) => {
   try {
@@ -66,7 +71,8 @@ const downloadFile = async (canvas) => {
 };
 
 const showCanvas = (canvas) => {
-  router.get(route('canvas.show', canvas.id));
+  selectedCanvas.value = canvas;
+  showDialog.value = true;
 };
 </script>
 
@@ -75,10 +81,10 @@ const showCanvas = (canvas) => {
   
   <AppLayout>
     <div class="p-6">
-    <div class="flex flex-row items-center justify-between pb-2">
-      <CardTitle class="text-2xl font-bold">Canvas</CardTitle>
-      <CanvasUploadDialog />
-    </div>
+      <div class="flex flex-row items-center justify-between pb-2">
+        <CardTitle class="text-2xl font-bold">Canvas</CardTitle>
+        <CanvasUploadDialog />
+      </div>
 
       <Table>
         <TableHeader>
@@ -96,7 +102,7 @@ const showCanvas = (canvas) => {
               <div class="flex items-center gap-4">
                 <FileText class="h-5 w-5 text-muted-foreground" />
                 <div class="grid gap-1">
-                  <div class="font-medium">
+                  <div class="font-medium capitalize">
                     {{ canvas.original_filename }}
                   </div>
                 </div>
@@ -151,6 +157,14 @@ const showCanvas = (canvas) => {
           </TableRow>
         </TableBody>
       </Table>
+
+      <!-- Canvas Show Dialog -->
+      <CanvasShowDialog 
+        v-if="selectedCanvas"
+        :canvas="selectedCanvas" 
+        :open="showDialog"
+        @update:open="val => showDialog = val"
+      />
     </div>
   </AppLayout>
 </template>
