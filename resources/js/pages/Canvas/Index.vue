@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { FileText, Clock, CheckCircle, XCircle, Download, Eye } from 'lucide-vue-next';
@@ -71,21 +71,36 @@ const downloadFile = async (canvas) => {
 };
 
 const showCanvas = (canvas) => {
+  selectedCanvas.value = null; 
   selectedCanvas.value = canvas;
   showDialog.value = true;
 };
+
+
+const refreshCanvases = () => {
+  router.reload({ only: ['canvases'] });
+};
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit'
+  })
+}
 </script>
 
 <template>
   <Head title="My Canvases" />
   
   <AppLayout>
-    <div class="p-6">
-      <div class="flex flex-row items-center justify-between pb-2">
+    <div class="p-4">
+      <div class="flex flex-row items-center justify-between mb-4">
         <CardTitle class="text-2xl font-bold">Canvas</CardTitle>
         <CanvasUploadDialog />
       </div>
-
+    <div class="w-full text-sm border border-border rounded-md">
       <Table>
         <TableHeader>
           <TableRow>
@@ -127,7 +142,7 @@ const showCanvas = (canvas) => {
             
             <TableCell>
               <div class="text-sm">
-                {{ new Date(canvas.created_at).toLocaleDateString() }}
+                {{ formatDate(canvas.created_at) }}
               </div>
             </TableCell>
             
@@ -157,13 +172,14 @@ const showCanvas = (canvas) => {
           </TableRow>
         </TableBody>
       </Table>
-
+    </div>
       <!-- Canvas Show Dialog -->
       <CanvasShowDialog 
         v-if="selectedCanvas"
         :canvas="selectedCanvas" 
         :open="showDialog"
         @update:open="val => showDialog = val"
+        @updated="refreshCanvases"
       />
     </div>
   </AppLayout>

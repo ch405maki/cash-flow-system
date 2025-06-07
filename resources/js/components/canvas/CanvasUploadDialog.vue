@@ -38,7 +38,7 @@ const submit = () => {
       </Button>
     </DialogTrigger>
     
-    <DialogContent class="max-h-[90vh] overflow-y-auto">
+    <DialogContent class="sm:max-w-[625px] max-h-[90vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle>Upload New Canvas</DialogTitle>
       </DialogHeader>

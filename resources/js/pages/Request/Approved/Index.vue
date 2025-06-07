@@ -89,8 +89,8 @@ function formatDate(dateStr: string): string {
         </div>    
         </div>
 
-      <Table  class="w-full text-sm border border-border rounded-md">
-        <TableCaption>Approved Requests</TableCaption>  
+      <div class="w-full text-sm border border-border rounded-md">
+      <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Order No</TableHead>
@@ -121,6 +121,7 @@ function formatDate(dateStr: string): string {
           </TableRow>
         </TableBody>
       </Table>
+    </div>
     </div>
   </AppLayout>
 </template>

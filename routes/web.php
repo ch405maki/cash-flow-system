@@ -93,6 +93,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/canvas', [CanvasController::class, 'index'])->name('canvas.index');
     Route::get('/canvas/{canvas}', [CanvasController::class, 'show'])->name('canvas.show');
     Route::get('/canvas/{canvas}/download', [CanvasController::class, 'download'])->name('canvas.download');
+    Route::patch('/canvas/{canvas}', [CanvasController::class, 'update'])->name('canvas.update');
 });
 
 require __DIR__.'/settings.php';

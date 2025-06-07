@@ -59,6 +59,18 @@ class CanvasController extends Controller
         ]);
     }
 
+    public function update(Request $request, Canvas $canvas)
+    {
+        $validated = $request->validate([
+            'remarks' => 'nullable|string',
+            'status' => 'sometimes|in:pending,approved,rejected'
+        ]);
+
+        $canvas->update($validated);
+
+        return back();
+    }
+
     public function download(Canvas $canvas)
     {
         if (!Storage::disk('public')->exists('canvases/'.$canvas->file_path)) {
