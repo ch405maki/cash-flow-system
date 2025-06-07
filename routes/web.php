@@ -91,6 +91,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/canvas/create', [CanvasController::class, 'create'])->name('canvas.create');
     Route::post('/canvas', [CanvasController::class, 'store'])->name('canvas.store');
     Route::get('/canvas', [CanvasController::class, 'index'])->name('canvas.index');
+    Route::get('/canvas/{canvas}', [CanvasController::class, 'show'])->name('canvas.show');
+    Route::get('/canvas/{canvas}/download', [CanvasController::class, 'download'])->name('canvas.download');
 });
 
 require __DIR__.'/settings.php';

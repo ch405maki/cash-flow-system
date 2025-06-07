@@ -57,17 +57,17 @@ class CanvasController extends Controller
         ]);
     }
 
+    // app/Http/Controllers/Api/CanvasController.php
     public function download(Canvas $canvas)
     {
         if (!Storage::disk('public')->exists('canvases/'.$canvas->file_path)) {
             abort(404, 'File not found');
         }
 
-        return Storage::disk('public')
-            ->download(
-                'canvases/'.$canvas->file_path,
-                $canvas->original_filename
-            );
+        return response()->download(
+            Storage::disk('public')->path('canvases/'.$canvas->file_path),
+            $canvas->original_filename
+        );
     }
 
     protected function generateUniqueFilename($name, $extension)
@@ -82,5 +82,12 @@ class CanvasController extends Controller
         }
         
         return $filename;
+    }
+
+    public function show(Canvas $canvas)
+    {
+        return Inertia::render('Canvas/Show', [
+            'canvas' => $canvas,
+        ]);
     }
 }
