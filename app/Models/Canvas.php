@@ -12,6 +12,7 @@ class Canvas extends Model
 
     protected $fillable = [
         'status',
+        'note',
         'remarks',
         'file_path',
         'original_filename',

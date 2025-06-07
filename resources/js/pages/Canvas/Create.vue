@@ -1,10 +1,11 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
-import AppLayout from '@/Layouts/AppLayout.vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 import { UploadCloud } from 'lucide-vue-next';
 
 const form = useForm({
     file: null,
+    note: '',
     remarks: '',
 });
 
@@ -55,6 +56,19 @@ const submit = () => {
                     ></textarea>
                     <p v-if="form.errors.remarks" class="mt-2 text-sm text-red-600">
                         {{ form.errors.remarks }}
+                    </p>
+                </div>
+
+                <div class="space-y-2">
+                    <label for="note" class="block text-sm font-medium">Note</label>
+                    <textarea
+                        id="note"
+                        v-model="form.note"
+                        rows="3"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    ></textarea>
+                    <p v-if="form.errors.note" class="mt-2 text-sm text-red-600">
+                        {{ form.errors.note }}
                     </p>
                 </div>
 

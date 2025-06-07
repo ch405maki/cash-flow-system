@@ -20,6 +20,7 @@ class CanvasController extends Controller
     {
         $request->validate([
             'file' => 'required|file|max:10240', // 10MB max
+            'note' => 'nullable|string|max:500',
             'remarks' => 'nullable|string|max:500',
         ]);
 
@@ -35,6 +36,7 @@ class CanvasController extends Controller
 
         $canvas = Canvas::create([
             'status' => 'pending',
+            'note' => $request->note,
             'remarks' => $request->remarks,
             'file_path' => $filename,
             'original_filename' => $file->getClientOriginalName(),
@@ -57,7 +59,6 @@ class CanvasController extends Controller
         ]);
     }
 
-    // app/Http/Controllers/Api/CanvasController.php
     public function download(Canvas $canvas)
     {
         if (!Storage::disk('public')->exists('canvases/'.$canvas->file_path)) {

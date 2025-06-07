@@ -6,6 +6,8 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { Badge } from '@/components/ui/badge';
 import { Download, ArrowLeft, Clock, CheckCircle, XCircle } from 'lucide-vue-next';
 import { useForm, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import axios from 'axios';
 
 const props = defineProps({
   canvas: Object,
@@ -23,22 +25,43 @@ const statusVariants = {
   rejected: 'bg-red-100 text-red-800',
 };
 
+const isDownloading = ref(false);
+
 const downloadFile = async () => {
   try {
+    isDownloading.value = true;
+    
     const response = await axios.get(route('canvas.download', props.canvas.id), {
-      responseType: 'blob'
+      responseType: 'blob',
+      onDownloadProgress: (progressEvent) => {
+        if (progressEvent.total) {
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          console.log(`Download progress: ${percentCompleted}%`);
+        }
+      }
     });
     
+    // Create download link
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
     link.setAttribute('download', props.canvas.original_filename);
     document.body.appendChild(link);
     link.click();
-    link.remove();
-    window.URL.revokeObjectURL(url);
+    
+    // Cleanup
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+    }, 100);
+    
   } catch (error) {
     console.error('Download failed:', error);
+    alert(`Download failed: ${error.response?.data?.message || error.message}`);
+  } finally {
+    isDownloading.value = false;
   }
 };
 </script>
@@ -81,32 +104,28 @@ const downloadFile = async () => {
             </div>
           </div>
 
-          <div>
+        <div>
             <h3 class="text-sm font-medium text-muted-foreground">Remarks</h3>
             <p class="mt-1 text-sm">
-              {{ canvas.remarks || 'No remarks provided' }}
+                {{ canvas.remarks || 'No remarks provided' }}
             </p>
-          </div>
-
+        </div>
           <div>
-            <h3 class="text-sm font-medium text-muted-foreground">File Details</h3>
-            <div class="mt-1 grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p class="text-muted-foreground">Stored as:</p>
-                <p>{{ canvas.file_path }}</p>
-              </div>
-              <div>
-                <p class="text-muted-foreground">Uploaded by:</p>
-                <p>{{ canvas.creator?.name || 'Unknown' }}</p>
-              </div>
-            </div>
+            <h3 class="text-sm font-medium text-muted-foreground">Note</h3>
+            <p class="mt-1 text-sm">
+              {{ canvas.note || 'No Notes provided' }}
+            </p>
           </div>
         </CardContent>
 
         <CardFooter class="flex justify-end gap-2">
-          <Button @click="downloadFile" class="gap-2">
+          <Button 
+            @click="downloadFile" 
+            class="gap-2"
+            :disabled="isDownloading"
+          >
             <Download class="h-4 w-4" />
-            Download File
+            <span>{{ isDownloading ? 'Downloading...' : 'Download File' }}</span>
           </Button>
         </CardFooter>
       </Card>

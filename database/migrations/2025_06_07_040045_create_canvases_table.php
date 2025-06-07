@@ -11,9 +11,10 @@ return new class extends Migration
         Schema::create('canvases', function (Blueprint $table) {
             $table->id();
             $table->string('status')->default('draft');
+            $table->text('note')->nullable();
             $table->text('remarks')->nullable();
-            $table->string('file_path'); // stored filename
-            $table->string('original_filename'); // original upload name
+            $table->string('file_path');
+            $table->string('original_filename');
             $table->foreignId('created_by')->constrained('users');
             $table->timestamps();
             $table->softDeletes();
