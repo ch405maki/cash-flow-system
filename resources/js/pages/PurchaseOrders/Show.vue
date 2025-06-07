@@ -5,8 +5,6 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import FormHeader from '@/components/reports/header/formHeder.vue'
-import { Separator } from '@/components/ui/separator'
-import { Badge } from '@/components/ui/badge';
 import { computed } from 'vue';
 import {
   Table,
@@ -32,7 +30,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from 'vue-toastification'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useForm } from '@inertiajs/vue3'
-import { Eraser, Printer, Rocket, X   } from 'lucide-vue-next';
+import { BellRing, X   } from 'lucide-vue-next';
 
 const toast = useToast()
 
@@ -315,7 +313,7 @@ const printArea = () =>{
         </div>
       </div>
       <Alert v-if="showAlert" variant="success" class="relative pr-10">
-        <Rocket class="h-4 w-4 text-green-500" />
+        <BellRing class="h-4 w-4" /> 
         <AlertTitle>Remarks</AlertTitle>
         <AlertDescription>
           {{ purchaseOrder.remarks || 'No remarks' }}
