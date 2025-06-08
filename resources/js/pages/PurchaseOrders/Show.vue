@@ -15,6 +15,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableCaption,
 } from '@/components/ui/table';
 import {
   Dialog,
@@ -358,6 +359,13 @@ const printArea = () =>{
 
       <!-- Items Table -->
       <Table class="w-full text-sm border border-border rounded-md">
+        <TableCaption>      
+          <h3 class="flex items-center w-full mt-2">
+            <span class="flex-grow border-t border-dashed border-gray-300"></span>
+            <span class="mx-3 text-xs font-medium">Nothing Follows</span>
+            <span class="flex-grow border-t border-dashed border-gray-300"></span>
+          </h3>
+        </TableCaption>
         <TableHeader>
           <TableRow>
               <TableHead>Quantity</TableHead>
@@ -383,11 +391,6 @@ const printArea = () =>{
           </TableRow>
         </TableBody>
       </Table>
-      <h3 class="flex items-center w-full mt-2">
-        <span class="flex-grow border-t border-dashed border-gray-300"></span>
-        <span class="mx-3 text-xs font-medium">Nothing Follows</span>
-        <span class="flex-grow border-t border-dashed border-gray-300"></span>
-      </h3>
 
       <div class="hidden print:block">
       <div class="flex justify-between mt-12 items-center">

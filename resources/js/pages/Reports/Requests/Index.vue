@@ -2,7 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
-import PlaceholderPattern from '../components/PlaceholderPattern.vue';
+import PlaceholderPattern from '@/components/PlaceholderPattern.vue';
 import { Button } from '@/components/ui/button'
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -10,11 +10,19 @@ const breadcrumbs: BreadcrumbItem[] = [
         title: 'Dashboard',
         href: '/dashboard',
     },
+    {
+        title: 'Reports',
+        href: '/reports',
+    },
+    {
+        title: 'Request Summary',
+        href: '/',
+    },
 ];
 </script>
 
 <template>
-    <Head title="Dashboard" />
+    <Head title="Request Summary" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
