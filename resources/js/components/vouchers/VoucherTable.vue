@@ -14,6 +14,10 @@ import {
 
 const props = defineProps<{
   vouchers: Array<any>;
+  authUser: {
+    role: string;
+    [key: string]: any; // Allow for other fields
+  };
 }>();
 
 // Sort vouchers by date (newest first)
@@ -62,11 +66,7 @@ function formatCurrency(amount: number): string {
         </TableRow>
       </TableHeader>
       <TableBody>
-        <TableRow
-          v-for="voucher in sortedVouchers"
-          :key="voucher.id"
-          class="border-t hover:bg-muted/50"
-        >
+        <TableRow v-for="voucher in sortedVouchers" :key="voucher.id" class="border-t hover:bg-muted/50">
           <TableCell class="px-4 py-2 font-medium">{{ voucher.voucher_no }}</TableCell>
           <TableCell class="px-4 py-2 capitalize">{{ voucher.type }}</TableCell>
           <TableCell class="px-4 py-2">{{ getRole(voucher.user) }}</TableCell>
@@ -80,36 +80,26 @@ function formatCurrency(amount: number): string {
             {{ new Date(voucher.created_at || voucher.voucher_date).toLocaleDateString() }}
           </TableCell>
           <TableCell class="px-4 py-2 capitalize">
-            <span
-              class="inline-block rounded-full px-8 py-0.5 text-xs font-semibold"
-              :class="{
-                'bg-yellow-100 text-yellow-800': voucher.status === 'pending',
-                'bg-green-100 text-green-800': voucher.status === 'approved',
-                'bg-red-100 text-red-800': voucher.status === 'rejected',
-              }"
-            >
+            <span class="inline-block rounded-full px-8 py-0.5 text-xs font-semibold" :class="{
+              'bg-yellow-100 text-yellow-800': voucher.status === 'pending',
+              'bg-green-100 text-green-800': voucher.status === 'approved',
+              'bg-red-100 text-red-800': voucher.status === 'rejected',
+            }">
               {{ voucher.status }}
             </span>
           </TableCell>
           <TableCell class="px-4 py-2 space-x-2">
-            <Button
-              size="sm"
-              variant="outline"
-              @click="viewVoucher(voucher.id)"
-              class="hover:bg-blue-50"
-            >
-              <Eye class="h-4 w-4 mr-1"/>
+            <Button size="sm" variant="outline" @click="viewVoucher(voucher.id)" class="hover:bg-blue-50">
+              <Eye class="h-4 w-4 mr-1" />
               <span>View</span>
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              @click="goToEditVoucher(voucher.id)"
-              class="hover:bg-green-50"
-            >
-              <SquarePen class="h-4 w-4 mr-1"/>
+
+            <Button v-if="authUser.role !== 'executive_director'" size="sm" variant="outline"
+              @click="goToEditVoucher(voucher.id)" class="hover:bg-green-50">
+              <SquarePen class="h-4 w-4 mr-1" />
               <span>Edit</span>
             </Button>
+
           </TableCell>
         </TableRow>
       </TableBody>

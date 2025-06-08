@@ -15,11 +15,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
+
 const breadcrumbs: BreadcrumbItem[] = [
   {
     title: 'Dashboard',
     href: '/dashboard',
-  },{
+  }, {
     title: 'Vouchers',
     href: '/vouchers',
   },
@@ -40,33 +41,33 @@ const dateFilterOptions = [
 // Calculate date ranges and update label
 const updateDateRange = (period: string | null) => {
   const now = new Date();
-  
+
   if (!period) {
     dateRangeLabel.value = null;
     return { start: null, end: null };
   }
-  
+
   if (period === 'week') {
     const start = new Date(now);
     start.setDate(now.getDate() - 7);
     dateRangeLabel.value = 'Last Week';
     return { start, end: now };
   }
-  
+
   if (period === 'month') {
     const start = new Date(now);
     start.setMonth(now.getMonth() - 1);
     dateRangeLabel.value = 'Last Month';
     return { start, end: now };
   }
-  
+
   if (period === 'year') {
     const start = new Date(now);
     start.setFullYear(now.getFullYear() - 1);
     dateRangeLabel.value = 'Last Year';
     return { start, end: now };
   }
-  
+
   dateRangeLabel.value = null;
   return { start: null, end: null };
 };
@@ -79,7 +80,7 @@ watch(timeFilter, (newValue) => {
 // Filtered Vouchers
 const filteredVouchers = computed(() => {
   let result = [...props.vouchers];
-  
+
   // Apply search filter
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
@@ -94,7 +95,7 @@ const filteredVouchers = computed(() => {
         voucher.status?.toLowerCase().includes(query)
     );
   }
-  
+
   // Apply time filter
   if (timeFilter.value) {
     const { start, end } = updateDateRange(timeFilter.value);
@@ -107,7 +108,7 @@ const filteredVouchers = computed(() => {
       });
     }
   }
-  
+
   return result;
 });
 
@@ -119,11 +120,6 @@ function goToPage(url: string) {
   if (url) {
     router.visit(url)
   }
-}
-
-function clearFilters() {
-  searchQuery.value = "";
-  timeFilter.value = null;
 }
 
 const props = defineProps({
@@ -140,6 +136,7 @@ const props = defineProps({
 </script>
 
 <template>
+
   <Head title="Vouchers" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
@@ -151,71 +148,52 @@ const props = defineProps({
           <Select v-model="timeFilter">
             <SelectTrigger class="w-[180px]">
               <div class="flex items-center gap-2">
-                  <Filter class="h-4 w-4" />
-                  <SelectValue placeholder="Filter by date" />
-                </div>
+                <Filter class="h-4 w-4" />
+                <SelectValue placeholder="Filter by date" />
+              </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem 
-                v-for="option in dateFilterOptions" 
-                :key="option.value" 
-                :value="option.value"
-              >
+              <SelectItem v-for="option in dateFilterOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
               </SelectItem>
             </SelectContent>
           </Select>
 
           <div class="flex items-center gap-2">
-            <Input
-              type="search"
-              placeholder="Search vouchers..."
-              class="w-[200px] lg:w-[300px]"
-              v-model="searchQuery"
-            />
+            <Input type="search" placeholder="Search vouchers..." class="w-[200px] lg:w-[300px]"
+              v-model="searchQuery" />
           </div>
-          <Button variant="default" size="sm" @click="goToCreate()">
-            <PlusCircle class="h-4 w-4"/>
+          <!-- Only show if the user is NOT an executive_director -->
+          <Button v-if="authUser.role !== 'executive_director'" variant="default" size="sm" @click="goToCreate()">
+            <PlusCircle class="h-4 w-4" />
             Create New Voucher
           </Button>
+
         </div>
       </div>
-      
+
       <!-- Filter Status Indicator -->
       <div v-if="dateRangeLabel" class="flex items-center gap-2 text-sm">
         <span class="text-muted-foreground">Showing:</span>
         <span class="font-medium">{{ dateRangeLabel }}'s vouchers</span>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          @click="timeFilter = null"
-          class="h-6 px-2 text-muted-foreground"
-        >
+        <Button variant="ghost" size="sm" @click="timeFilter = null" class="h-6 px-2 text-muted-foreground">
           Clear
         </Button>
       </div>
 
-      <VoucherTable :vouchers="filteredVouchers" />
+      <VoucherTable :vouchers="vouchers" :authUser="authUser" />
 
       <div class="mt-4 flex items-center justify-between">
         <div class="flex-1 text-sm text-muted-foreground">
           Showing {{ filteredVouchers.length }} of {{ vouchers.length }} vouchers
         </div>
         <div class="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="!vouchers.prev_page_url"
-            @click="goToPage(vouchers.prev_page_url)"
-          >
+          <Button variant="outline" size="sm" :disabled="!vouchers.prev_page_url"
+            @click="goToPage(vouchers.prev_page_url)">
             Previous
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="!vouchers.next_page_url"
-            @click="goToPage(vouchers.next_page_url)"
-          >
+          <Button variant="outline" size="sm" :disabled="!vouchers.next_page_url"
+            @click="goToPage(vouchers.next_page_url)">
             Next
           </Button>
         </div>

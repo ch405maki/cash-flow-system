@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\QueryException;
 use Inertia\Inertia;
@@ -42,9 +43,17 @@ class VoucherController extends Controller
 
     public function index()
     {
+
+        $user = Auth::user();
+        
         return Inertia::render('Vouchers/Index', [
             'vouchers' => Voucher::with(['user', 'details'])->get(),
             'accounts' => Account::all(),
+            'authUser' => [
+                'id' => $user->id,
+                'role' => $user->role,
+                'access' => $user->access_id,
+            ]
         ]);
     }
 

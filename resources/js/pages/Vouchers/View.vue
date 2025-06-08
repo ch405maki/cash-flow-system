@@ -17,51 +17,27 @@ import FormHeader from '@/components/reports/header/formHeder.vue'
 import { useToast } from 'vue-toastification'
 
 const toast = useToast();
-const props = defineProps<{
-    accounts: Array<{
-        id: number;
-        account_title: string;
-    }>;
+const props = defineProps({
+    accounts: {
+        type: Array,
+        default: () => [],
+        required: true,
+    },
     voucher: {
-        id: number;
-        voucher_no: string;
-        payee: string;
-        check_payable_to: string;
-        purpose: string;
-        voucher_date: string;
-        check_amount: number;
-        check_no: string;
-        check_date: string;
-        status: string;
-        issue_date: string;
-        payment_date: string;
-        delivery_date: string;
-        type: string;
-        details: Array<{
-            id: number;
-            account_id: number;
-            charging_tag: string;
-            hours?: number;
-            rate?: number;
-            amount: number;
-        }>;
-    };
+        type: Object,
+        required: true,
+    },
     authUser: {
-        id: number;
-        name: string;
-        email: string;
-        // Add other fields as needed
-    };
+        type: Object,
+        required: true,
+    },
     signatories: {
-        full_name: string;
-        position: string;
-    };
-}>();
+        type: Object,
+        required: true,
+    }
+});
 
-const { props: pageProps } = usePage();
-const accounts = props.accounts || pageProps.accounts || [];
-const voucher = props.voucher || pageProps.voucher;
-const signatories = props.signatories || pageProps.signatories || {};
+const { accounts, voucher, authUser, signatories } = props;
 
 const executiveDirector = computed(() =>
     props.signatories.find(s => s.position === 'Executive Director')
@@ -167,17 +143,22 @@ const approveVoucher = async () => {
     try {
         await router.patch(`/vouchers/${voucher.id}/approve`);
         toast.success('Voucher Approved Successfully');
-        
-        
-        
+
+
+
         // OR Option 2: Inertia reload
         router.visit(route('vouchers.view', { voucher: voucher.id }));
-        
+
     } catch (error) {
         toast.error('Failed to approve voucher');
         console.error('Error:', error);
     }
 }
+
+const isExecutiveDirector = computed(() => {
+    return authUser?.role === 'executive_director';
+});
+
 </script>
 
 <template>
@@ -197,15 +178,13 @@ const approveVoucher = async () => {
                         <Printer class="h-4 w-4" />
                         Print
                     </Button>
-                    <Button 
-                        v-if="voucher.status !== 'approved'"
-                        variant="default" 
-                        @click="approveVoucher" 
-                        class="flex items-center gap-2 bg-green-500 text-white hover:bg-green-400"
-                    >
+                    <Button v-if="voucher.status !== 'approved' && !isExecutiveDirector"
+                        variant="default" @click="approveVoucher"
+                        class="flex items-center gap-2 bg-green-500 text-white hover:bg-green-400">
                         <Check class="h-4 w-4" />
                         Approve
                     </Button>
+
                     <Button variant="outline" @click="router.visit('/vouchers')" class="flex items-center gap-2">
                         <ArrowLeft class="h-4 w-4" />
                         Back
