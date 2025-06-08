@@ -4,12 +4,14 @@
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
       <div class="flex justify-between items-center">
-        <h1 class="text-xl font-bold">For Approval Request to Order</h1>
+        <div>
+          <h1 class="text-xl font-bold">For Approval Request to Order</h1>
+          <p class="text-sm">Created Orders</p>
+        </div>
       </div>
       <!-- Table -->
        <div class="rounded-lg border">
          <Table>
-           <TableCaption>-------- Created Orders --------</TableCaption>
            <TableHeader>
              <TableRow>
                <TableHead>Order No</TableHead>
