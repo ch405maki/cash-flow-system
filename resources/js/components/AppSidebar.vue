@@ -3,6 +3,7 @@ import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
 import {
@@ -22,16 +23,18 @@ import AppLogo from './AppLogo.vue';
 
 const user = usePage().props.auth.user;
 
-const executiveNavItems: NavItem[] = [
+const executiveMainItems: NavItem[] = [
   {
     title: 'Dashboard',
     href: '/dashboard',
     icon: LayoutDashboard,
   },
+];
+const executiveApprovalItems: NavItem[] = [
   {
-    title: 'Request Approval',
-    href: '/for-approval',
-    icon: ClipboardCheck,
+    title: 'Approved Request',
+    href: '/approved-request',
+    icon: FileCheck2,
   },
   {
     title: 'Purchase Approval',
@@ -43,6 +46,8 @@ const executiveNavItems: NavItem[] = [
     href: '/vouchers',
     icon: ReceiptText,
   },
+];
+const executiveReportItems: NavItem[] = [
   {
     title: 'Reports',
     href: '/reports',
@@ -157,11 +162,36 @@ const footerNavItems: NavItem[] = [
         </SidebarHeader>
 
         <SidebarContent>
-            <NavMain v-if="user?.role === 'executive_director'" :items="executiveNavItems" />
-            <NavMain v-if="user?.role === 'accounting'" :items="accountingNavItems" />
-            <NavMain v-if="user?.role === 'property_custodian'" :items="propertyNavItems" />
-            <NavMain v-if="user?.role === 'purchasing'" :items="purchasingNavItems" />
-            <NavMain v-if="user?.role === 'staff' || user?.role === 'department_head'" :items="staffNavItems" />
+          <SidebarGroup class="px-2 py-0">
+            <div v-if="user?.role === 'executive_director'">
+              <SidebarGroupLabel>Platform</SidebarGroupLabel>
+              <NavMain :items="executiveMainItems" />
+              <SidebarGroupLabel>Approval</SidebarGroupLabel>
+              <NavMain :items="executiveApprovalItems" />
+              <SidebarGroupLabel>Reports</SidebarGroupLabel>
+              <NavMain :items="executiveReportItems" />
+            </div>
+            
+            <div v-if="user?.role === 'accounting'">
+              <SidebarGroupLabel>Platform</SidebarGroupLabel>
+              <NavMain :items="accountingNavItems" />
+            </div>
+
+            <div v-if="user?.role === 'property_custodian'">
+              <SidebarGroupLabel>Platform</SidebarGroupLabel>
+              <NavMain :items="propertyNavItems" />
+            </div>
+
+            <div v-if="user?.role === 'purchasing'">
+              <SidebarGroupLabel>Platform</SidebarGroupLabel>
+              <NavMain :items="purchasingNavItems" />
+            </div>
+
+            <div v-if="user?.role === 'staff' || user?.role === 'department_head'">
+              <SidebarGroupLabel>Platform</SidebarGroupLabel>
+              <NavMain :items="staffNavItems" />
+            </div>
+          </SidebarGroup>
         </SidebarContent>
 
         <SidebarFooter>
