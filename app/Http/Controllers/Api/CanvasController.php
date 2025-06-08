@@ -11,6 +11,18 @@ use Inertia\Inertia;
 
 class CanvasController extends Controller
 {
+    public function index()
+    {
+        $canvases = Canvas::with('creator')
+            ->where('created_by', auth()->id())
+            ->latest()
+            ->get();
+
+        return Inertia::render('Canvas/Index', [
+            'canvases' => $canvases,
+        ]);
+    }
+    
     public function create()
     {
         return Inertia::render('Canvas/Create');
@@ -19,7 +31,7 @@ class CanvasController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|max:10240', // 10MB max
+            'file' => 'required|file|max:10240',
             'note' => 'nullable|string|max:500',
             'remarks' => 'nullable|string|max:500',
         ]);
@@ -45,18 +57,6 @@ class CanvasController extends Controller
 
         return redirect()->route('canvas.index')
             ->with('success', 'Canvas uploaded successfully!');
-    }
-
-    public function index()
-    {
-        $canvases = Canvas::with('creator')
-            ->where('created_by', auth()->id())
-            ->latest()
-            ->get();
-
-        return Inertia::render('Canvas/Index', [
-            'canvases' => $canvases,
-        ]);
     }
 
     public function update(Request $request, Canvas $canvas)
