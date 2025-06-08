@@ -66,6 +66,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/vouchers/{voucher}/preview', [ReportController::class, 'preview'])->name('vouchers.preview');
     Route::get('/vouchers/{voucher}/pdf', [ReportController::class, 'generateVoucherReports'])->name('vouchers.pdf');
     Route::get('/reports/vouchers/{voucher}/report', [ReportController::class, 'generateVoucherReports'])->name('vouchers.report');
+    
+    Route::patch('/vouchers/{voucher}/approve', [VoucherController::class, 'approve'])->name('vouchers.approve');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
