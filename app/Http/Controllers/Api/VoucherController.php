@@ -12,7 +12,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+
 use Illuminate\Database\QueryException;
 use Inertia\Inertia;
 
@@ -126,26 +128,69 @@ class VoucherController extends Controller
     {
         $voucher->load(['user', 'details.account']);
         
-        return inertia('Vouchers/View', [
+        return Inertia::render('Vouchers/View', [ // Changed to Inertia::render()
             'voucher' => $voucher,
             'accounts' => Account::all(),
+            'authUser' => [ // Make sure to include authUser if needed
+                'id' => auth()->id(),
+                'access_id' => auth()->user()->access_id,
+                'role' => auth()->user()->role,
+            ],
+            'signatories' => [ // Include signatories if needed
+                // Your signatories data here
+            ],
         ]);
     }
 
-    public function approve(Voucher $voucher)
+    public function updateStatus(Voucher $voucher, Request $request)
     {
-        // Add any authorization checks here (e.g., only certain roles can approve)
-        // if (!auth()->user()->can('approve', $voucher)) {
-        //     abort(403);
-        // }
-
-        $voucher->update([
-            'status' => 'approved',
+        $request->validate([
+            'action' => 'required|in:approve,reject'
         ]);
 
-        return redirect()->back()->with('success', 'Voucher approved successfully');
+        // Authorization check - only executive director can approve/reject
+        if (auth()->user()->role !== 'executive_director' || auth()->user()->access_id !== 1) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $status = $request->action === 'approve' ? 'approved' : 'rejected';
+        
+        $voucher->update([
+            'status' => $status,
+            // You might want to add who approved/rejected and when
+            'action_by' => auth()->id(),
+            'action_at' => now(),
+        ]);
+
+        $message = $request->action === 'approve' 
+            ? 'Voucher approved successfully' 
+            : 'Voucher rejected successfully';
+
+        return redirect()->back()->with('success', $message);
     }
 
+   public function forEod($id, Request $request)
+{
+    $request->validate(['password' => 'required']);
+    $user = auth()->user();
+
+    if (!Hash::check($request->password, $user->password)) {
+        return back()->withErrors(['password' => 'Incorrect password']);
+    }
+
+    $voucher = Voucher::findOrFail($id);
+    
+    if ($voucher->status === 'approved') {
+        return back()->withErrors(['status' => 'Voucher is already approved']);
+    }
+
+    $voucher->update(['status' => 'approved']);
+    
+    return back()->with([
+        'success' => 'Voucher approved successfully',
+        'voucher' => $voucher->fresh()
+    ]);
+}
 
     protected function generateVoucherNumber(): string
     {

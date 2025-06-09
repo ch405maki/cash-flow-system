@@ -9,14 +9,39 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
-import { computed } from 'vue';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { computed, ref, watch } from 'vue';
 import { type BreadcrumbItem } from '@/types';
-import { ArrowLeft, Printer, Check } from 'lucide-vue-next';
+import { ArrowLeft, Printer, Check, X } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
 import FormHeader from '@/components/reports/header/formHeder.vue'
+import PasswordVerificationDialog from '@/components/PasswordVerificationDialog.vue';
 import { useToast } from 'vue-toastification'
 
+
+
 const toast = useToast();
+const page = usePage();
+
+// Watch for flash messages
+watch(() => page.props.flash, (flash) => {
+  if (flash.success) {
+    toast.success(flash.success);
+  }
+  if (flash.error) {
+    toast.error(flash.error);
+  }
+}, { deep: true });
+
 const props = defineProps({
     accounts: {
         type: Array,
@@ -139,25 +164,20 @@ const printArea = () => {
     }
 }
 
-const approveVoucher = async () => {
+const updateVoucherStatus = async (action) => {
     try {
-        await router.patch(`/vouchers/${voucher.id}/approve`);
-        toast.success('Voucher Approved Successfully');
-
-
-
-        // OR Option 2: Inertia reload
+        await router.patch(`/vouchers/${voucher.id}/status`, { action });
+        toast.success(`Voucher ${action === 'approve' ? 'Approved' : 'Rejected'} Successfully`);
         router.visit(route('vouchers.view', { voucher: voucher.id }));
-
     } catch (error) {
-        toast.error('Failed to approve voucher');
+        toast.error(`Failed to ${action} voucher`);
         console.error('Error:', error);
     }
 }
 
-const isExecutiveDirector = computed(() => {
-    return authUser?.role === 'executive_director';
-});
+const approveVoucher = () => updateVoucherStatus('approve');
+const rejectVoucher = () => updateVoucherStatus('reject');
+
 
 </script>
 
@@ -178,12 +198,28 @@ const isExecutiveDirector = computed(() => {
                         <Printer class="h-4 w-4" />
                         Print
                     </Button>
-                    <Button v-if="voucher.status !== 'approved' && !isExecutiveDirector"
-                        variant="default" @click="approveVoucher"
-                        class="flex items-center gap-2 bg-green-500 text-white hover:bg-green-400">
-                        <Check class="h-4 w-4" />
-                        Approve
-                    </Button>
+                    <template v-if="authUser.role === 'executive_director' && voucher.status !== 'approved' && voucher.status !== 'rejected'">
+  <PasswordVerificationDialog :voucher-id="voucher.id">
+    <template #trigger>
+      <Button 
+        variant="default" 
+        class="flex items-center gap-2 bg-green-500 text-white hover:bg-green-400"
+      >
+        <Check class="h-4 w-4" />
+        Approve
+      </Button>
+    </template>
+  </PasswordVerificationDialog>
+  
+  <Button 
+    variant="default" 
+    @click="rejectVoucher"
+    class="flex items-center gap-2 bg-red-500 text-white hover:bg-red-400"
+  >
+    <X class="h-4 w-4" />
+    Reject
+  </Button>
+</template>
 
                     <Button variant="outline" @click="router.visit('/vouchers')" class="flex items-center gap-2">
                         <ArrowLeft class="h-4 w-4" />
