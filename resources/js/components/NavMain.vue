@@ -55,6 +55,7 @@
             <SidebarMenuButton 
                 as-child 
                 :is-active="item.href === page.url"
+                :class="{ 'border border-purple-300/50': item.href === page.url }"
                 :tooltip="item.title"
             >
                 <Link :href="item.href">
