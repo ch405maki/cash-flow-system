@@ -34,12 +34,12 @@ const page = usePage();
 
 // Watch for flash messages
 watch(() => page.props.flash, (flash) => {
-  if (flash.success) {
-    toast.success(flash.success);
-  }
-  if (flash.error) {
-    toast.error(flash.error);
-  }
+    if (flash.success) {
+        toast.success(flash.success);
+    }
+    if (flash.error) {
+        toast.error(flash.error);
+    }
 }, { deep: true });
 
 const props = defineProps({
@@ -199,27 +199,26 @@ const rejectVoucher = () => updateVoucherStatus('reject');
                         Print
                     </Button>
                     <template v-if="authUser.role === 'executive_director' && voucher.status !== 'approved' && voucher.status !== 'rejected'">
-  <PasswordVerificationDialog :voucher-id="voucher.id">
-    <template #trigger>
-      <Button 
-        variant="default" 
-        class="flex items-center gap-2 bg-green-500 text-white hover:bg-green-400"
-      >
-        <Check class="h-4 w-4" />
-        Approve
-      </Button>
-    </template>
-  </PasswordVerificationDialog>
-  
-  <Button 
-    variant="default" 
-    @click="rejectVoucher"
-    class="flex items-center gap-2 bg-red-500 text-white hover:bg-red-400"
-  >
-    <X class="h-4 w-4" />
-    Reject
-  </Button>
-</template>
+                        <PasswordVerificationDialog :voucher-id="voucher.id" action="approve">
+                            <template #trigger>
+                                <Button variant="default"
+                                    class="flex items-center gap-2 bg-green-500 text-white hover:bg-green-400">
+                                    <Check class="h-4 w-4" />
+                                    Approve
+                                </Button>
+                            </template>
+                        </PasswordVerificationDialog>
+
+                        <PasswordVerificationDialog :voucher-id="voucher.id" action="reject">
+                            <template #trigger>
+                                <Button variant="default"
+                                    class="flex items-center gap-2 bg-red-500 text-white hover:bg-red-400">
+                                    <X class="h-4 w-4" />
+                                    Reject
+                                </Button>
+                            </template>
+                        </PasswordVerificationDialog>
+                    </template>
 
                     <Button variant="outline" @click="router.visit('/vouchers')" class="flex items-center gap-2">
                         <ArrowLeft class="h-4 w-4" />

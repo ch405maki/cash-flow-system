@@ -65,10 +65,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/vouchers/{voucher}/pdf', [ReportController::class, 'generateVoucherReports'])->name('vouchers.pdf');
     Route::get('/reports/vouchers/{voucher}/report', [ReportController::class, 'generateVoucherReports'])->name('vouchers.report');
     
-    Route::patch('/vouchers/{voucher}/status', [VoucherController::class, 'updateStatus'])
-    ->name('vouchers.status.update');
-    Route::patch('/vouchers/{voucher}/approve', [VoucherController::class, 'forEod'])
-    ->name('vouchers.approve');
+    Route::patch('/vouchers/{voucher}/forEod', [VoucherController::class, 'forEod'])
+     ->name('vouchers.eod');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

@@ -26,12 +26,12 @@
       </div>
       <div v-if="error" class="text-red-500 text-sm">{{ error }}</div>
       <DialogFooter>
-        <Button type="button" variant="outline" @click="close">
-          Cancel
+        <Button type="button" variant="outline" @click="clear">
+          Clear
         </Button>
         <Button type="button" @click="verify" :disabled="loading">
           <span v-if="loading">Verifying...</span>
-          <span v-else>Verify</span>
+          <span v-else>Confirm</span>
         </Button>
       </DialogFooter>
     </DialogContent>
@@ -65,27 +65,31 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  action: {
+    type: String,
+    required: true,
+    validator: (value: string) => ['approve', 'reject'].includes(value),
+  },
 });
+
+const emit = defineEmits(['clear', 'success']);
 
 const verify = async () => {
   try {
     loading.value = true;
     error.value = '';
     
-    await router.patch(`/vouchers/${props.voucherId}/approve`, {
+    await router.patch(`/vouchers/${props.voucherId}/forEod`, {
       password: password.value,
+      action: props.action, // Send the action to backend
     }, {
-      preserveScroll: true,
       onSuccess: () => {
-        toast.success('Voucher approved successfully!');
+        toast.success(`Voucher ${props.action === 'approve' ? 'approved' : 'rejected'} successfully!`);
+        router.visit(`/vouchers/${props.voucherId}/view`);
       },
       onError: (err) => {
-        if (err.password) {
-          error.value = err.password;
-        }
-        if (err.status) {
-          toast.error(err.status);
-        }
+        if (err.password) error.value = err.password;
+        if (err.status) toast.error(err.status);
       },
       onFinish: () => {
         loading.value = false;
@@ -97,8 +101,9 @@ const verify = async () => {
   }
 };
 
-const close = () => {
+const clear = () => {
   password.value = '';
   error.value = '';
+  emit('clear');
 };
 </script>

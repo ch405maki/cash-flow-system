@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Voucher;
 use App\Models\VoucherDetail;
 use App\Models\Account;
+use App\Models\Signatory;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -136,58 +137,49 @@ class VoucherController extends Controller
                 'access_id' => auth()->user()->access_id,
                 'role' => auth()->user()->role,
             ],
-            'signatories' => [ // Include signatories if needed
-                // Your signatories data here
-            ],
+            'signatories' => Signatory::all(),
         ]);
     }
 
-    public function updateStatus(Voucher $voucher, Request $request)
-    {
-        $request->validate([
-            'action' => 'required|in:approve,reject'
-        ]);
-
-        // Authorization check - only executive director can approve/reject
-        if (auth()->user()->role !== 'executive_director' || auth()->user()->access_id !== 1) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        $status = $request->action === 'approve' ? 'approved' : 'rejected';
-        
-        $voucher->update([
-            'status' => $status,
-            // You might want to add who approved/rejected and when
-            'action_by' => auth()->id(),
-            'action_at' => now(),
-        ]);
-
-        $message = $request->action === 'approve' 
-            ? 'Voucher approved successfully' 
-            : 'Voucher rejected successfully';
-
-        return redirect()->back()->with('success', $message);
-    }
+    
 
    public function forEod($id, Request $request)
 {
-    $request->validate(['password' => 'required']);
+    $request->validate([
+        'password' => 'required',
+        'action' => 'required|in:approve,reject' // Validate the action parameter
+    ]);
+
     $user = auth()->user();
 
+    // Password verification
     if (!Hash::check($request->password, $user->password)) {
         return back()->withErrors(['password' => 'Incorrect password']);
     }
 
     $voucher = Voucher::findOrFail($id);
     
+    // Check current status
     if ($voucher->status === 'approved') {
         return back()->withErrors(['status' => 'Voucher is already approved']);
     }
 
-    $voucher->update(['status' => 'approved']);
+    if ($voucher->status === 'rejected') {
+        return back()->withErrors(['status' => 'Voucher is already rejected']);
+    }
+
+    // Determine the action
+    $action = $request->input('action');
+    $newStatus = $action === 'approve' ? 'approved' : 'rejected';
+    $message = $action === 'approve' 
+        ? 'Voucher approved successfully' 
+        : 'Voucher rejected successfully';
+
+    // Update the voucher
+    $voucher->update(['status' => $newStatus]);
     
     return back()->with([
-        'success' => 'Voucher approved successfully',
+        'success' => $message,
         'voucher' => $voucher->fresh()
     ]);
 }
