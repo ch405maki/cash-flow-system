@@ -23,6 +23,7 @@ import AppLogo from './AppLogo.vue';
 
 const user = usePage().props.auth.user;
 
+
 const executiveMainItems: NavItem[] = [
   {
     title: 'Dashboard',
@@ -33,7 +34,7 @@ const executiveMainItems: NavItem[] = [
 const executiveApprovalItems: NavItem[] = [
   {
     title: 'Order Request',
-    href: '/approved-request',
+    href: '/for-approval',
     icon: FileCheck2,
   },
   {
