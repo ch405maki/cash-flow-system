@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -18,8 +19,12 @@ import {
   Package,
   ListTodo,
 } from 'lucide-vue-next';
-
 import AppLogo from './AppLogo.vue';
+
+interface DropdownNavItem extends NavItem {
+    children?: NavItem[];
+    isOpen?: boolean;
+}
 
 const user = usePage().props.auth.user;
 
@@ -32,12 +37,12 @@ const executiveMainItems: NavItem[] = [
 ];
 const executiveApprovalItems: NavItem[] = [
   {
-    title: 'Approved Request',
-    href: '/approved-request',
+    title: 'Order Request',
+    href: '/for-approval',
     icon: FileCheck2,
   },
   {
-    title: 'Purchase Approval',
+    title: 'Purchase Request',
     href: '/purchase-orders',
     icon: ShoppingCart,
   },
@@ -45,13 +50,6 @@ const executiveApprovalItems: NavItem[] = [
     title: 'Vouchers',
     href: '/vouchers',
     icon: ReceiptText,
-  },
-];
-const executiveReportItems: NavItem[] = [
-  {
-    title: 'Reports',
-    href: '/reports',
-    icon: BarChart3,
   },
 ];
 
@@ -70,16 +68,6 @@ const purchasingNavItems: NavItem[] = [
     title: 'Purchase Approval',
     href: '/purchase-orders',
     icon: ShoppingCart,
-  },
-  {
-    title: 'Vouchers',
-    href: '/vouchers',
-    icon: ReceiptText,
-  },
-  {
-    title: 'Reports',
-    href: '/reports',
-    icon: BarChart3,
   },
 ];
 
@@ -130,12 +118,21 @@ const accountingNavItems: NavItem[] = [
     href: '/vouchers',
     icon: ReceiptText,
   },
-  {
-    title: 'Reports',
-    href: '/reports',
-    icon: BarChart3,
-  },
 ];
+
+const reportItems = ref<DropdownNavItem[]>([
+    {
+        title: 'Reports',
+        href: '/reports',
+        icon: BarChart3,
+        isOpen: false,
+        children: [
+        { title: 'Request Summary', href: '/reports/request-summary'},
+        { title: 'Purchase Order Summary', href: '/reports/po-summary'},
+        { title: 'Voucher Summary', href: '/reports/vouchers'},
+        ],
+    },
+  ]);
 
 const footerNavItems: NavItem[] = [
   {
@@ -162,40 +159,34 @@ const footerNavItems: NavItem[] = [
         </SidebarHeader>
 
         <SidebarContent>
-          <SidebarGroup class="px-2 py-0">
-            <div v-if="user?.role === 'executive_director'">
-              <SidebarGroupLabel>Platform</SidebarGroupLabel>
-              <NavMain :items="executiveMainItems" />
-              <SidebarGroupLabel>Approval</SidebarGroupLabel>
-              <NavMain :items="executiveApprovalItems" />
-              <SidebarGroupLabel>Reports</SidebarGroupLabel>
-              <NavMain :items="executiveReportItems" />
-            </div>
-            
-            <div v-if="user?.role === 'accounting'">
-              <SidebarGroupLabel>Platform</SidebarGroupLabel>
-              <NavMain :items="accountingNavItems" />
-            </div>
+          <div v-if="user?.role === 'executive_director'">
+            <NavMain :items="executiveMainItems" group-label="Navigation"/>
+            <NavMain :items="executiveApprovalItems" group-label="For Approval"/>
+            <NavMain :items="reportItems" group-label="Reports" />
+          </div>
+          
+          <div v-if="user?.role === 'accounting'">
+            <NavMain :items="accountingNavItems" group-label="Navigation"/>
+            <NavMain :items="reportItems" group-label="Reports" />
+          </div>
 
-            <div v-if="user?.role === 'property_custodian'">
-              <SidebarGroupLabel>Platform</SidebarGroupLabel>
-              <NavMain :items="propertyNavItems" />
-            </div>
+          <div v-if="user?.role === 'property_custodian'">
+            <NavMain :items="propertyNavItems" group-label="Navigation"/>
+            <NavMain :items="reportItems" group-label="Reports" />
+          </div>
 
-            <div v-if="user?.role === 'purchasing'">
-              <SidebarGroupLabel>Platform</SidebarGroupLabel>
-              <NavMain :items="purchasingNavItems" />
-            </div>
+          <div v-if="user?.role === 'purchasing'">
+            <NavMain :items="purchasingNavItems" group-label="Navigation"/>
+            <NavMain :items="reportItems" group-label="Reports" />
+          </div>
 
-            <div v-if="user?.role === 'staff' || user?.role === 'department_head'">
-              <SidebarGroupLabel>Platform</SidebarGroupLabel>
-              <NavMain :items="staffNavItems" />
-            </div>
-          </SidebarGroup>
+          <div v-if="user?.role === 'staff' || user?.role === 'department_head'">
+            <NavMain :items="staffNavItems" group-label="Navigation"/>
+          </div>
         </SidebarContent>
 
         <SidebarFooter>
-            <NavFooter :items="footerNavItems" />
+            <NavFooter :items="footerNavItems"/>
             <NavUser />
         </SidebarFooter>
     </Sidebar>
