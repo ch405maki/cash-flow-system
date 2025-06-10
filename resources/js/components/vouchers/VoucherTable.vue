@@ -46,6 +46,27 @@ function formatCurrency(amount: number): string {
     currency: 'PHP'
   }).format(amount);
 }
+
+function formatDate(dateString: string): string {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+}
+
+// Add this helper function to format dates for display
+function formatDisplayDate(dateString: string): string {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
 </script>
 
 <template>
@@ -77,7 +98,7 @@ function formatCurrency(amount: number): string {
           <TableCell class="px-4 py-2">{{ voucher.payee }}</TableCell>
           <TableCell class="px-4 py-2">{{ voucher.check_payable_to }}</TableCell>
           <TableCell class="px-4 py-2">
-            {{ new Date(voucher.created_at || voucher.voucher_date).toLocaleDateString() }}
+            {{ formatDisplayDate(voucher.created_at || voucher.voucher_date) }}
           </TableCell>
           <TableCell class="px-4 py-2 capitalize">
             <span class="inline-block rounded-full px-8 py-0.5 text-xs font-semibold" :class="{

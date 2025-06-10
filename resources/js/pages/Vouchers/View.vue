@@ -198,7 +198,8 @@ const rejectVoucher = () => updateVoucherStatus('reject');
                         <Printer class="h-4 w-4" />
                         Print
                     </Button>
-                    <template v-if="authUser.role === 'executive_director' && voucher.status !== 'approved' && voucher.status !== 'rejected'">
+                    <template
+                        v-if="authUser.role === 'executive_director' && voucher.status !== 'approved' && voucher.status !== 'rejected'">
                         <PasswordVerificationDialog :voucher-id="voucher.id" action="approve">
                             <template #trigger>
                                 <Button variant="default"

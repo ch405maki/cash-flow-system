@@ -81,22 +81,46 @@ watch(timeFilter, (newValue) => {
 const filteredVouchers = computed(() => {
   let result = [...props.vouchers];
 
-  // Apply search filter
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
-    result = result.filter(
-      (voucher: any) =>
+    result = result.filter((voucher: any) => {
+      // Get dates (fall back to each other if not available)
+      const date = new Date(voucher.created_at || voucher.voucher_date);
+
+      // Format dates for searching
+      const formattedDate = date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }).toLowerCase();
+
+      // Format month name separately for "June" searches
+      const monthName = date.toLocaleDateString('en-US', { month: 'long' }).toLowerCase();
+
+      // Check if query matches any date part
+      const matchesDate =
+        formattedDate.includes(query) ||
+        monthName.includes(query) ||
+        date.getFullYear().toString().includes(query) ||
+        date.getDate().toString().includes(query) ||
+        (date.getMonth() + 1).toString().includes(query); // Supports "6" for June
+
+      return (
+        // Existing search fields
         voucher.voucher_no?.toLowerCase().includes(query) ||
         voucher.type?.toLowerCase().includes(query) ||
         voucher.purpose?.toLowerCase().includes(query) ||
         voucher.check_amount?.toString().toLowerCase().includes(query) ||
         voucher.payee?.toLowerCase().includes(query) ||
         voucher.check_payable_to?.toLowerCase().includes(query) ||
-        voucher.status?.toLowerCase().includes(query)
-    );
+        voucher.status?.toLowerCase().includes(query) ||
+        // Date search
+        matchesDate
+      );
+    });
   }
 
-  // Apply time filter
+  // Keep your existing time filter logic
   if (timeFilter.value) {
     const { start, end } = updateDateRange(timeFilter.value);
     if (start && end) {
@@ -181,7 +205,7 @@ const props = defineProps({
         </Button>
       </div>
 
-      <VoucherTable :vouchers="vouchers" :authUser="authUser" />
+      <VoucherTable :vouchers="filteredVouchers" :authUser="authUser" />
 
       <div class="mt-4 flex items-center justify-between">
         <div class="flex-1 text-sm text-muted-foreground">
