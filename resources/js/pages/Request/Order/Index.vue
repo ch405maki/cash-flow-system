@@ -76,7 +76,10 @@ function formatDate(dateStr: string): string {
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="flex justify-between items-center">
-        <h1 class="text-xl font-bold">Request To Order List</h1>
+        <div>
+          <h1 class="text-xl font-bold">Request To Order List</h1>
+          <p class="text-sm">Created Order List</p>
+        </div>
         <div class="space-x-2 items-center">
           <Button variant="outline" @click="goToList" class="h-8"><ListChecks /> List to Order</Button>
           <Button @click="goToCreate" class="h-8"><CirclePlus />Create New Order</Button>
@@ -84,10 +87,8 @@ function formatDate(dateStr: string): string {
       </div>
 
       <!-- Table -->
-      <h1 class="text-lg">Created Order List</h1>
       <div class="rounded-lg border">
         <Table>
-          <TableCaption>-------- Created Orders --------</TableCaption>
           <TableHeader>
             <TableRow>
               <TableHead>Order No</TableHead>

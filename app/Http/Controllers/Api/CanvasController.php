@@ -3,12 +3,104 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Canvas;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str; // Add this import
 use Inertia\Inertia;
 
 class CanvasController extends Controller
 {
-    public function create(){
+    public function index()
+    {
+        $canvases = Canvas::with('creator')
+            ->where('created_by', auth()->id())
+            ->latest()
+            ->get();
+
+        return Inertia::render('Canvas/Index', [
+            'canvases' => $canvases,
+        ]);
+    }
+    
+    public function create()
+    {
         return Inertia::render('Canvas/Create');
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|max:10240',
+            'note' => 'nullable|string|max:500',
+            'remarks' => 'nullable|string|max:500',
+        ]);
+
+        $file = $request->file('file');
+        
+        // Generate safe filename while preserving original
+        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        $extension = $file->getClientOriginalExtension();
+        $filename = $this->generateUniqueFilename($originalName, $extension);
+        
+        // Store in public disk
+        $filePath = $file->storeAs('canvases', $filename, 'public');
+
+        $canvas = Canvas::create([
+            'status' => 'pending',
+            'note' => $request->note,
+            'remarks' => $request->remarks,
+            'file_path' => $filename,
+            'original_filename' => $file->getClientOriginalName(),
+            'created_by' => auth()->id(),
+        ]);
+
+        return redirect()->route('canvas.index')
+            ->with('success', 'Canvas uploaded successfully!');
+    }
+
+    public function update(Request $request, Canvas $canvas)
+    {
+        $validated = $request->validate([
+            'remarks' => 'nullable|string',
+            'status' => 'sometimes|in:pending,approved,rejected'
+        ]);
+
+        $canvas->update($validated);
+
+        return back();
+    }
+
+    public function download(Canvas $canvas)
+    {
+        if (!Storage::disk('public')->exists('canvases/'.$canvas->file_path)) {
+            abort(404, 'File not found');
+        }
+
+        return response()->download(
+            Storage::disk('public')->path('canvases/'.$canvas->file_path),
+            $canvas->original_filename
+        );
+    }
+
+    protected function generateUniqueFilename($name, $extension)
+    {
+        $slug = Str::slug($name);
+        $filename = "{$slug}.{$extension}";
+        
+        $counter = 1;
+        while (Storage::disk('public')->exists("canvases/{$filename}")) {
+            $filename = "{$slug}-{$counter}.{$extension}";
+            $counter++;
+        }
+        
+        return $filename;
+    }
+
+    public function show(Canvas $canvas)
+    {
+        return Inertia::render('Canvas/Show', [
+            'canvas' => $canvas,
+        ]);
     }
 }
