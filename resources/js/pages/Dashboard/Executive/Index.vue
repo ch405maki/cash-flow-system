@@ -41,10 +41,10 @@ const breadcrumbs: BreadcrumbItem[] = [
             
             <h1 class="text-lg font-medium">Recent Requests</h1>
             
-            <!-- <RecentRequestsTable 
+            <RecentRequestsTable 
                 :is-department-user="isDepartmentUser" 
                 :recent-requests="recentRequests" 
-            /> -->
+            />
         </div>
     </AppLayout>
 </template>

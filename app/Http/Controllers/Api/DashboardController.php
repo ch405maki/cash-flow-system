@@ -163,7 +163,7 @@ class DashboardController extends Controller
                             ->whereYear('created_at', Carbon::now()->year)
                             ->count(),
                 'toOrderApproval' => RequestToOrder::where('status', 'for_eod')->count(),
-                'to_order' => Request::where('status', 'to_order')->count(),
+                'poApproval' => PurchaseOrder::where('status', 'for_approval')->count(),
                 'rejected' => RequestToOrder::where('status', 'rejected')->count(),
             ];
         

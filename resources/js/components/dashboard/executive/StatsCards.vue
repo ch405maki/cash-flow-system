@@ -14,7 +14,7 @@ defineProps<{
     totalPO: number;
     totalRequest: number;
     toOrderApproval: number;
-    to_order: number;
+    poApproval: number;
     rejected: number;
   };
 }>()
@@ -112,7 +112,7 @@ const currentMonth = new Date().toLocaleString('default', { month: 'long' });
         <ShoppingCart class="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div class="text-2xl font-bold">{{ statusCounts.to_order }}</div>
+        <div class="text-2xl font-bold">{{ statusCounts.poApproval }}</div>
         <p class="text-xs text-muted-foreground">
           For Approval P. O.
         </p>

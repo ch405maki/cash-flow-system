@@ -32,7 +32,7 @@ const executiveMainItems: NavItem[] = [
 ];
 const executiveApprovalItems: NavItem[] = [
   {
-    title: 'Approved Request',
+    title: 'Order Request',
     href: '/approved-request',
     icon: FileCheck2,
   },
@@ -166,7 +166,7 @@ const footerNavItems: NavItem[] = [
             <div v-if="user?.role === 'executive_director'">
               <SidebarGroupLabel>Platform</SidebarGroupLabel>
               <NavMain :items="executiveMainItems" />
-              <SidebarGroupLabel>Approval</SidebarGroupLabel>
+              <SidebarGroupLabel>For Approval</SidebarGroupLabel>
               <NavMain :items="executiveApprovalItems" />
               <SidebarGroupLabel>Reports</SidebarGroupLabel>
               <NavMain :items="executiveReportItems" />
