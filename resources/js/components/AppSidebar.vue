@@ -37,7 +37,7 @@ const executiveApprovalItems: NavItem[] = [
     icon: FileCheck2,
   },
   {
-    title: 'Purchase Approval',
+    title: 'Purchase Request',
     href: '/purchase-orders',
     icon: ShoppingCart,
   },

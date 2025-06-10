@@ -41,7 +41,8 @@ function formatDate(dateStr: string): string {
 </script>
 
 <template>
-  <div v-if="isDepartmentUser && recentRequests.length > 0" class="rounded-xl border">
+  <div v-if="isDepartmentUser && recentRequests.length > 0" class="rounded-xl border mt-4">
+    <h2 class="p-4 text-base font-semibold">Recent Request from departments</h2>
     <div class="relative w-full overflow-auto">
       <table class="w-full caption-bottom text-sm">
         <thead class="[&_tr]:border-b">
@@ -55,7 +56,7 @@ function formatDate(dateStr: string): string {
         </thead>
         <tbody class="[&_tr:last-child]:border-0">
           <tr v-for="request in recentRequests" :key="request.id" class="border-b transition-colors hover:bg-muted/50">
-            <td class="p-4 align-middle font-medium cursor-pointer hover:underline hover:text-purple-700"  @click="goToShowRequest(request.id)">
+            <td class="p-4 align-middle font-medium cursor-pointer hover:underline hover:text-purple-700 text-purple-800"  @click="goToShowRequest(request.id)">
               {{ request.request_no }}
             </td>
             <td class="p-4 align-middle">

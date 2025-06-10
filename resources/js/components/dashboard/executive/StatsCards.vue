@@ -11,13 +11,17 @@ import { router } from '@inertiajs/vue3'
 
 defineProps<{
   statusCounts: {
-    totalPO: number;
     totalRequest: number;
+    totalPO: number;
     toOrderApproval: number;
     poApproval: number;
     rejected: number;
+    totalRequestToOrder: number;
+    totalPurchaseOrderAmount: number;
+    pendingRequestToOrder: number;
   };
-}>()
+}>();
+
 
 const goToRequestApproval = () => {
   router.get('/for-approval');
@@ -137,5 +141,27 @@ const currentMonth = new Date().toLocaleString('default', { month: 'long' });
         </p>
       </CardContent>
     </Card>
+
+    <!-- <Card class="h-full">
+      <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle class="text-sm font-medium">Request to Order (This Month)</CardTitle>
+        <ShoppingCart class="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div class="text-2xl font-bold">{{ statusCounts.totalRequestToOrder }}</div>
+        <p class="text-xs text-muted-foreground">Created this month</p>
+      </CardContent>
+    </Card>
+
+    <Card class="h-full">
+      <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle class="text-sm font-medium">PO Amount (This Month)</CardTitle>
+        <Users class="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div class="text-2xl font-bold">₱{{ statusCounts.totalPurchaseOrderAmount.toLocaleString() }}</div>
+        <p class="text-xs text-muted-foreground">Total amount</p>
+      </CardContent>
+    </Card> -->
   </div>
 </template>
