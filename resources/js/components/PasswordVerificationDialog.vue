@@ -5,7 +5,7 @@
     </DialogTrigger>
     <DialogContent class="sm:max-w-[425px]">
       <DialogHeader>
-        <DialogTitle>Verify Your Identity</DialogTitle>
+        <DialogTitle>Password Confirmation</DialogTitle>
         <DialogDescription>
           Please enter your password to confirm this action.
         </DialogDescription>
