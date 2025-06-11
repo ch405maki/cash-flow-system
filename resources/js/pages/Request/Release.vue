@@ -172,7 +172,7 @@ const releaseItems = async () => {
       const updated = response.data.data.request.details.find(d => d.id === detail.id);
       return updated ? {
         ...detail,
-        released_quantity: Number(updated.released_quantity)
+        released_quantity: Number(updated.released_quantity) // Ensure number type
       } : detail;
     });
 
@@ -259,17 +259,18 @@ const toggleSelectAll = (checked: boolean) => {
         <h1 class="text-xl font-bold">Partially Release Requested Items (Editable)</h1>
         <div class="flex justify-between items-center mb-2">
           <h3 class="text-sm font-medium">Items List</h3>
-          <Button type="button" @click="addDetail" variant="outline" size="sm">
-            Add Item
-          </Button>
         </div>
         <form @submit.prevent="submit" class="space-y-4">
           <div class="border overflow-hidden">
             <Table>
               <TableHeader class="bg-gray-100 dark:bg-gray-800">
                 <TableRow>
+                  <TableHead class="w-[40px] border-r text-xs text-center">
+                    Release
+                  </TableHead>
+                  <TableHead class="w-[100px] border-r text-xs">Release Qty</TableHead>
                   <TableHead class="w-[100px] border-r text-xs">Quantity</TableHead>
-                  <TableHead class="w-[150px] border-r text-xs">Unit</TableHead>
+                  <TableHead class="w-[100px] border-r text-xs">Unit</TableHead>
                   <TableHead class="border-r text-xs">Description</TableHead>
                   <TableHead class="w-[40px] text-xs text-right">Action</TableHead>
                 </TableRow>
@@ -280,6 +281,34 @@ const toggleSelectAll = (checked: boolean) => {
                   :key="index"
                   class="border-b"
                 >
+                  <TableCell class="border-r">
+                    <div class="flex justify-center items-center">
+                      <Checkbox 
+                        :id="'select-' + index"
+                        :checked="selectedItems.includes(detail.id)"
+                        @update:checked="(checked) => {
+                          if (checked) {
+                            selectedItems.push(detail.id);
+                          } else {
+                            selectedItems = selectedItems.filter(id => id !== detail.id);
+                          }
+                        }"
+                        class="h-4 mr-4 w-4 border-zinc-600"
+                      />
+                    </div>
+                  </TableCell>
+
+                  <TableCell class="border-r p-2">
+                    <Input
+                      :id="'released-' + index"
+                      type="number"
+                      v-model.number="detail.released_quantity"
+                      :max="detail.quantity - detail.released_quantity"
+                      min="0"
+                      :disabled="!selectedItems.includes(detail.id)"
+                      class="border border-gray-300 rounded text-xs h-8 w-full"
+                    />
+                  </TableCell>
 
                   <TableCell class="border-r p-2">
                     <Input
@@ -289,6 +318,7 @@ const toggleSelectAll = (checked: boolean) => {
                       min="1"
                       required
                       class="border border-gray-300 rounded text-xs h-8 w-full"
+                      readonly
                     />
                   </TableCell>
 
@@ -299,6 +329,7 @@ const toggleSelectAll = (checked: boolean) => {
                       placeholder="e.g. kg, pcs"
                       required
                       class="border border-gray-300 rounded text-xs h-8 w-full"
+                      readonly
                     />
                   </TableCell>
 
@@ -309,6 +340,7 @@ const toggleSelectAll = (checked: boolean) => {
                       placeholder="Item description"
                       required
                       class="border border-gray-300 rounded text-xs h-8 w-full"
+                      readonly
                     />
                   </TableCell>
 
@@ -329,8 +361,16 @@ const toggleSelectAll = (checked: boolean) => {
             </Table>
           </div>
           
-          <div class="flex justify-end items-center">
-            
+          <div class="flex justify-between items-center">
+            <div class="flex items-center  gap-2">
+              <Checkbox 
+                id="select-all"
+                :checked="selectedItems.length === form.details.length"
+                @update:checked="toggleSelectAll"
+                class="h-4 w-4"
+              />
+              <Label>Select All</Label>
+            </div>
             <div class="flex gap-2">
               <Button
                 type="button"
@@ -341,9 +381,14 @@ const toggleSelectAll = (checked: boolean) => {
                 <Link :href="route('request.index')">Cancel</Link>
               </Button>
 
-              <Button type="submit" size="sm" :disabled="processing">
-                <span v-if="processing" class="text-xs">Saving...</span>
-                <span v-else class="text-xs">Save Items</span>
+              <Button 
+                type="button" 
+                @click="releaseItems"
+                size="sm"
+                :disabled="selectedItems.length === 0 || isReleasing"
+              >
+                <span v-if="isReleasing" class="text-xs">Releasing...</span>
+                <span v-else class="text-xs">Release Selected Items</span>
               </Button>
             </div>
           </div>

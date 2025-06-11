@@ -2,7 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import RequestForm from '@/components/requests/RequestForm.vue';
-import RequestTable from '@/components/requests/RequestTable.vue';
+import RejectedRequestTable from '@/components/requests/RequestTable.vue';
 import { type BreadcrumbItem } from '@/types';
 import { router } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
@@ -52,11 +52,11 @@ const props = defineProps({
 });
 
 // Filtered requests
-const filteredRequests = ref(props.requests);
+const filteredRejectedRequests = ref(props.requests);
 
 // Watch for filter changes
 watch([departmentFilter, statusFilter], () => {
-  filteredRequests.value = props.requests.filter(request => {
+  filteredRejectedRequests.value = props.requests.filter(request => {
     const departmentMatch = departmentFilter.value === 'all' || 
                         request.department?.department_name === departmentFilter.value;
     const statusMatch = statusFilter.value === 'all' || 
@@ -70,12 +70,9 @@ watch([departmentFilter, statusFilter], () => {
   <Head title="Create Request" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+    <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
       <div class="flex justify-between items-center">
-        <h1 class="text-xl font-bold">
-          Requests
-          <p class="text-sm font-medium text-muted-foreground capitalize"></p>
-        </h1>
+        <h1 class="text-xl font-bold">Rejected Requests</h1>
         <div class="flex gap-4 items-center">
           <!-- Department Filter -->
           <div class="w-[180px]" v-if="authUser.role !== 'staff' && authUser.role !== 'department_head'">
@@ -147,7 +144,7 @@ watch([departmentFilter, statusFilter], () => {
         </div>
       </div>
 
-      <RequestTable :requests="filteredRequests" />
+      <RejectedRequestTable :requests="filteredRejectedRequests" />
     </div>
   </AppLayout>
 </template>
