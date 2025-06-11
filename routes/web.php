@@ -34,7 +34,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/request/show/{request}', [RequestController::class, 'show'])->name('request.show');
     Route::get('/request/create', [RequestController::class, 'create'])->name('request.create');
     Route::get('/requests/{request}/edit', [RequestController::class, 'edit'])->name('requests.edit');
+    Route::get('/requests/{request}/release', [RequestController::class, 'release'])->name('requests.release');
     Route::patch('/requests/{request}/status', [RequestController::class, 'updateStatus'])->name('request.updateStatus');
+
+    Route::get('/request/rejected', [RequestController::class, 'rejected'])->name('request.rejected');
 });
 
 // RequestToOrderController Route

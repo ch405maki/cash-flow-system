@@ -35,6 +35,7 @@ const form = ref({
   ]
 });
 
+const submitting = ref(false);
 
 const statusOptions = [
   { value: 'pending', label: 'Pending' },
@@ -43,10 +44,10 @@ const statusOptions = [
 ];
 
 const unitOptions = [
-  { value: 'pcs', label: 'Pieces' },
-  { value: 'box', label: 'Box' },
-  { value: 'set', label: 'Set' },
-  { value: 'kg', label: 'Kilogram' }
+  { value: 'pcs', label: 'Piece/s' },
+  { value: 'box', label: 'Box/es' },
+  { value: 'set', label: 'Set/s' },
+  { value: 'kg', label: 'Kilogram/s' }
 ];
 
 const addItem = () => {
@@ -62,19 +63,22 @@ const removeItem = (index: number) => {
 };
 
 const submitRequest = async () => {
+  if (submitting.value) return; // prevent double click
+  
+  submitting.value = true;
   try {
     const response = await axios.post('/api/requests', form.value);
-    
+
     toast.success('Request created successfully!', {
       timeout: 3000
     });
-    
-    // Reset form after successful submission
+
+    // Reset form
     form.value = {
       request_date: new Date().toISOString().split('T')[0],
       purpose: '',
       status: 'pending',
-      department_id: props.authUser.department_id,    
+      department_id: props.authUser.department_id,
       user_id: props.authUser.id,
       items: [
         {
@@ -84,11 +88,9 @@ const submitRequest = async () => {
         }
       ]
     };
-    
   } catch (error) {
     if (axios.isAxiosError(error)) {
       if (error.response?.status === 422) {
-        // Handle validation errors
         const errors = error.response.data.errors;
         for (const field in errors) {
           toast.error(errors[field][0], {
@@ -105,8 +107,11 @@ const submitRequest = async () => {
         timeout: 3000
       });
     }
+  } finally {
+    submitting.value = false;
   }
 };
+
 </script>
 
 <template>
@@ -120,7 +125,7 @@ const submitRequest = async () => {
           v-model="form.purpose"
           placeholder="Enter purpose of the request"
           required
-          class="min-h-[100px]"
+          class="min-h-[100px] mt-2"
         />
       </div>
 
@@ -195,8 +200,9 @@ const submitRequest = async () => {
 
       <!-- Submit Button -->
       <div class="flex justify-end">
-        <Button size="sm" type="submit">
-          <Send /> Submit Request
+        <Button size="sm" type="submit" :disabled="submitting">
+          <Send class="mr-2 h-4 w-4" />
+          {{ submitting ? 'Submitting...' : 'Submit Request' }}
         </Button>
       </div>
     </form>
