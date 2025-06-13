@@ -247,7 +247,7 @@ class DatabaseSeeder extends Seeder
             'role' => 'purchasing',
             'status' => 'active',
             'department_id' => Department::where('department_name', 'Supply')->first()->id,
-            'access_id' => Access::where('access_level', 'Write')->first()->id,
+            'access_id' => Access::where('access_level', 'Approver')->first()->id,
         ],
         [
             'username' => 'accounting',

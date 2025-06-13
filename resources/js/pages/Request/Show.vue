@@ -59,7 +59,7 @@
     });
 
     function navigateToEdit() {
-        router.get(`/requests/${props.request.id}/edit`);
+        router.get(`/requests/${props.request.id}/release`);
     }
 
     // Status update function
@@ -94,7 +94,8 @@
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-4 space-y-4">
         <div class="flex items-center justify-between">
-            <h1 class="text-xl font-bold">Request Details</h1>
+
+            <h1 class="text-lg font-semibold">Request Details</h1>
             <div class="ml-auto space-x-2">
             <!-- Executive access -->
             <div v-if="user.role === 'executive_director'" class="flex items-center gap-2">
@@ -244,7 +245,7 @@
                     <Button 
                         variant="default" 
                         size="sm" 
-                        :disabled="request.status === 'to_property' || form.processing"
+                        :disabled="request.status === 'to_property' || request.status === 'rejected' || form.processing"
                     >
                         Send To Property
                     </Button>
@@ -281,7 +282,7 @@
                         variant="outline" 
                         size="sm" 
                         @click="submitStatusUpdate('rejected', '')"
-                        :disabled="request.status === 'rejected' || form.processing"
+                        :disabled="request.status === 'to_property' || form.processing"
                     >
                         Reject
                 </Button>
@@ -302,7 +303,8 @@
                             'text-green-600': request.status === 'approved',
                             'text-green-700': request.status === 'released',
                             'text-red-600': request.status === 'rejected',
-                            'text-yellow-600': request.status === 'pending'
+                            'text-yellow-800': request.status === 'pending',
+                            'text-yellow-600': request.status === 'to_property'
                         }">
                         {{ request.status }}
                     </span>
@@ -323,7 +325,7 @@
         </div>
 
         <div>
-            <h2 class="text-xl font-semibold my-4">Items</h2>
+            <h2 class="text-lg font-semibold my-4">Items</h2>
             <div>
             <Table>
                 <TableHeader class="bg-muted">

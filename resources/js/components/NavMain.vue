@@ -69,7 +69,7 @@
             <template v-else>
             <Collapsible :open="item.isOpen" class="group/collapsible">
                 <SidebarMenuItem>
-                <CollapsibleTrigger asChild @click="toggleDropdown(item)">
+                <CollapsibleTrigger :class="{ 'border border-purple-300/50': item.isOpen }" asChild @click="toggleDropdown(item)" >
                     <SidebarMenuButton 
                     :is-active="item.children?.some(child => child.href === page.url)"
                     :tooltip="item.title"

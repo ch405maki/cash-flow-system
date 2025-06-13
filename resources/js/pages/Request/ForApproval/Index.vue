@@ -6,7 +6,7 @@
       <div class="flex justify-between items-center">
         <div>
           <h1 class="text-xl font-bold">For Approval Request to Order</h1>
-          <p class="text-sm">Created Orders</p>
+          <p class="text-sm">Created Order(s) For Approval</p>
         </div>
       </div>
       <!-- Table -->
@@ -18,7 +18,7 @@
                <TableHead>Date Request</TableHead>
                <TableHead>Notes</TableHead>
                <TableHead class="w-[100px]">Status</TableHead>
-               <TableHead class="text-center">Actions</TableHead>
+               <TableHead class="text-right">Actions</TableHead>
              </TableRow>
            </TableHeader>
            <TableBody>
@@ -34,7 +34,7 @@
                    {{ request.status }}
                  </Badge>
                </TableCell>
-               <TableCell class="text-center">
+               <TableCell class="text-right">
                  <Button size="sm" variant="outline" @click="viewRequest(request.id)">
                    View
                  </Button>

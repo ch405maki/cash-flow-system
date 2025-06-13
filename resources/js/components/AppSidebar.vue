@@ -71,7 +71,8 @@ const purchasingNavItems: NavItem[] = [
   },
 ];
 
-const propertyNavItems: NavItem[] = [
+// Property Custodian
+const custodianNavItems: NavItem[] = [
   {
     title: 'Dashboard',
     href: '/dashboard',
@@ -87,25 +88,52 @@ const propertyNavItems: NavItem[] = [
     href: '/request-to-order',
     icon: Package,
   },
+];
+
+const custodianApprovalItems: NavItem[] = [
   {
-    title: 'For Approval Request',
+    title: 'For Approval',
     href: '/for-approval',
     icon: ClipboardCheck,
   },
 ];
 
+const custodianReportItems = ref<DropdownNavItem[]>([
+    {
+        title: 'Reports',
+        href: '/reports',
+        icon: BarChart3,
+        isOpen: false,
+        children: [
+        { title: 'Completed Request', href: '/reports/request-summary'},
+        { title: 'Approved Request', href: '/reports/request-summary'},
+        { title: 'Rejected Request', href: '/reports/request-summary'},
+        ],
+    },
+  ]);
+
+// Staff
 const staffNavItems: NavItem[] = [
   {
     title: 'Dashboard',
     href: '/dashboard',
     icon: LayoutDashboard,
   },
-  {
-    title: 'Requests',
-    href: '/request',
-    icon: FileText,
-  },
 ];
+const staffRequestItems = ref<DropdownNavItem[]>([
+    {
+        title: 'Request',
+        href: '/reports',
+        icon: FileText,
+        isOpen: false,
+        children: [
+        { title: 'Request', href: '/request'},
+        { title: 'To Receive', href: '/request/to-receive'},
+        { title: 'Completed', href: '#'},
+        { title: 'Rejected', href: '/request/rejected'},
+        ],
+    },
+  ]);
 
 // IF FINANCE DIRECTOR
 const directorNavItems: NavItem[] = [
@@ -126,6 +154,7 @@ const directorNavItems: NavItem[] = [
   },
 ];
 
+// Accounting
 const accountingNavItems: NavItem[] = [
   {
     title: 'Dashboard',
@@ -190,8 +219,9 @@ const footerNavItems: NavItem[] = [
           </div>
 
           <div v-if="user?.role === 'property_custodian'">
-            <NavMain :items="propertyNavItems" group-label="Navigation"/>
-            <NavMain :items="reportItems" group-label="Reports" />
+            <NavMain :items="custodianNavItems" group-label="Navigation"/>
+            <NavMain :items="custodianApprovalItems" group-label="Order Request"/>
+            <NavMain :items="custodianReportItems" group-label="Reports" />
           </div>
 
           <div v-if="user?.role === 'purchasing'">
@@ -201,6 +231,7 @@ const footerNavItems: NavItem[] = [
 
           <div v-if="user?.role === 'staff' ">
             <NavMain :items="staffNavItems" group-label="Navigation"/>
+            <NavMain :items="staffRequestItems" group-label="Request"/>
           </div>
 
           <div v-if="user?.role === 'department_head' ">

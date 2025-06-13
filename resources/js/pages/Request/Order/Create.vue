@@ -132,11 +132,10 @@ const submitForm = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    <SelectItem value="pc">pc</SelectItem>
-                    <SelectItem value="box">box</SelectItem>
-                    <SelectItem value="kg">kg</SelectItem>
-                    <SelectItem value="liter">liter</SelectItem>
-                    <SelectItem value="pack">pack</SelectItem>
+                    <SelectItem value="pc">pc/s</SelectItem>
+                    <SelectItem value="box">box/es</SelectItem>
+                    <SelectItem value="kg">kg/s</SelectItem>
+                    <SelectItem value="pack">pack/s</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>
