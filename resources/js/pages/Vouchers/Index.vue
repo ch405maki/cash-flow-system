@@ -164,13 +164,13 @@ const props = defineProps({
   <Head title="Vouchers" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+    <div class="flex h-full flex-1 flex-col gap-3.5 rounded-xl p-4">
       <div class="flex justify-between items-center">
         <h1 class="text-xl font-bold">Vouchers</h1>
         <div class="flex gap-2">
           <!-- Date Filter Select -->
           <Select v-model="timeFilter">
-            <SelectTrigger class="w-[180px]">
+            <SelectTrigger class="w-[180px] h-8">
               <div class="flex items-center gap-2">
                 <Filter class="h-4 w-4" />
                 <SelectValue placeholder="Filter by date" />
@@ -184,7 +184,7 @@ const props = defineProps({
           </Select>
 
           <div class="flex items-center gap-2">
-            <Input type="search" placeholder="Search vouchers..." class="w-[200px] lg:w-[300px]"
+            <Input type="search" placeholder="Search vouchers..." class="w-[200px] lg:w-[300px] h-8"
               v-model="searchQuery" />
           </div>
           <!-- Only show if the user is NOT an executive_director -->

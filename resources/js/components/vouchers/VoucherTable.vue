@@ -83,8 +83,6 @@ function formatDisplayDate(dateString: string): string {
         <TableRow>
           <TableHead class="px-4 py-2">Voucher No</TableHead>
           <TableHead class="px-4 py-2">Type</TableHead>
-          <TableHead class="px-4 py-2">Created By</TableHead>
-          <TableHead class="px-4 py-2">Purpose</TableHead>
           <TableHead class="px-4 py-2">Check Amount</TableHead>
           <TableHead class="px-4 py-2">Payee</TableHead>
           <TableHead class="px-4 py-2">Check Pay to</TableHead>
@@ -97,8 +95,6 @@ function formatDisplayDate(dateString: string): string {
         <TableRow v-for="voucher in sortedVouchers" :key="voucher.id" class="border-t hover:bg-muted/50">
           <TableCell class="px-4 py-2 font-medium">{{ voucher.voucher_no }}</TableCell>
           <TableCell class="px-4 py-2 capitalize">{{ voucher.type }}</TableCell>
-          <TableCell class="px-4 py-2">{{ getRole(voucher.user) }}</TableCell>
-          <TableCell class="px-4 py-2">{{ voucher.purpose }}</TableCell>
           <TableCell class="px-4 py-2 font-mono tabular-nums">
             {{ formatCurrency(voucher.check_amount) }}
           </TableCell>
