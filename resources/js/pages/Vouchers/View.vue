@@ -24,7 +24,8 @@ import { type BreadcrumbItem } from '@/types';
 import { ArrowLeft, Printer, Check, X } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
 import FormHeader from '@/components/reports/header/formHeder.vue'
-import PasswordVerificationDialog from '@/components/PasswordVerificationDialog.vue';
+import EodVerificationDialog from '@/components/vouchers/EodVerificationDialog.vue';
+import DirectorVerificationDialog from '@/components/vouchers/DirectorVerificationDialog.vue';
 import { useToast } from 'vue-toastification'
 
 
@@ -164,21 +165,6 @@ const printArea = () => {
     }
 }
 
-const updateVoucherStatus = async (action) => {
-    try {
-        await router.patch(`/vouchers/${voucher.id}/status`, { action });
-        toast.success(`Voucher ${action === 'approve' ? 'Approved' : 'Rejected'} Successfully`);
-        router.visit(route('vouchers.view', { voucher: voucher.id }));
-    } catch (error) {
-        toast.error(`Failed to ${action} voucher`);
-        console.error('Error:', error);
-    }
-}
-
-const approveVoucher = () => updateVoucherStatus('approve');
-const rejectVoucher = () => updateVoucherStatus('reject');
-
-
 </script>
 
 <template>
@@ -199,8 +185,8 @@ const rejectVoucher = () => updateVoucherStatus('reject');
                         Print
                     </Button>
                     <template
-                        v-if="authUser.role === 'executive_director' && voucher.status !== 'approved' && voucher.status !== 'rejected'">
-                        <PasswordVerificationDialog :voucher-id="voucher.id" action="approve">
+                        v-if="authUser.role === 'executive_director' && voucher.status === 'for_eod' && voucher.status !== 'rejected'">
+                        <EodVerificationDialog :voucher-id="voucher.id" action="approve">
                             <template #trigger>
                                 <Button variant="default"
                                     class="flex items-center gap-2 bg-green-500 text-white hover:bg-green-400">
@@ -208,9 +194,9 @@ const rejectVoucher = () => updateVoucherStatus('reject');
                                     Approve
                                 </Button>
                             </template>
-                        </PasswordVerificationDialog>
+                        </EodVerificationDialog>
 
-                        <PasswordVerificationDialog :voucher-id="voucher.id" action="reject">
+                        <EodVerificationDialog :voucher-id="voucher.id" action="reject">
                             <template #trigger>
                                 <Button variant="default"
                                     class="flex items-center gap-2 bg-red-500 text-white hover:bg-red-400">
@@ -218,7 +204,30 @@ const rejectVoucher = () => updateVoucherStatus('reject');
                                     Reject
                                 </Button>
                             </template>
-                        </PasswordVerificationDialog>
+                        </EodVerificationDialog>
+                    </template>
+
+                    <template
+                        v-if="authUser.role === 'department_head' && voucher.status === 'draft' && voucher.status !== 'rejected'">
+                        <DirectorVerificationDialog :voucher-id="voucher.id" action="forEod">
+                            <template #trigger>
+                                <Button variant="default"
+                                    class="flex items-center gap-2 bg-green-500 text-white hover:bg-green-400">
+                                    <Check class="h-4 w-4" />
+                                    For EOD Approval
+                                </Button>
+                            </template>
+                        </DirectorVerificationDialog>
+
+                        <DirectorVerificationDialog :voucher-id="voucher.id" action="reject">
+                            <template #trigger>
+                                <Button variant="default"
+                                    class="flex items-center gap-2 bg-red-500 text-white hover:bg-red-400">
+                                    <X class="h-4 w-4" />
+                                    Reject
+                                </Button>
+                            </template>
+                        </DirectorVerificationDialog>
                     </template>
 
                     <Button variant="outline" @click="router.visit('/vouchers')" class="flex items-center gap-2">

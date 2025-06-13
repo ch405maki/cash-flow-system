@@ -33,7 +33,7 @@ class VoucherController extends Controller
         'check_no' => 'nullable|string|max:500',
         'check_payable_to' => 'required|string|max:500',
         'check_amount' => 'required|numeric|min:0',
-        'status' => 'required|in:pending,approved,rejected',
+        'status' => 'required|in:for_eod,approved,rejected,draft',
         'type' => 'required|in:cash,salary',
         'user_id' => 'required|exists:users,id',
         'check' => 'nullable|array',
@@ -141,7 +141,46 @@ class VoucherController extends Controller
         ]);
     }
 
+    public function forDirector($id, Request $request)
+    {
+        $request->validate([
+            'password' => 'required',
+            'action' => 'required|in:forEod,reject' // Validate the action parameter
+        ]);
 
+        $user = auth()->user();
+
+        // Password verification
+        if (!Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['password' => 'Incorrect password']);
+        }
+
+        $voucher = Voucher::findOrFail($id);
+
+        // Check current status
+        if ($voucher->status === 'for_eod') {
+            return back()->withErrors(['status' => 'Voucher is already sent']);
+        }
+
+        if ($voucher->status === 'rejected') {
+            return back()->withErrors(['status' => 'Voucher is already rejected']);
+        }
+
+        // Determine the action
+        $action = $request->input('action');
+        $newStatus = $action === 'forEod' ? 'for_eod' : 'rejected';
+        $message = $action === 'ForEod'
+            ? 'Voucher sent to Executive Director'
+            : 'Voucher rejected successfully';
+
+        // Update the voucher
+        $voucher->update(['status' => $newStatus]);
+
+        return back()->with([
+            'success' => $message,
+            'voucher' => $voucher->fresh()
+        ]);
+    }
 
     public function forEod($id, Request $request)
     {

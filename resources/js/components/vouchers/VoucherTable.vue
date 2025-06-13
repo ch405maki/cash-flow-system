@@ -20,10 +20,17 @@ const props = defineProps<{
   };
 }>();
 
-// Sort vouchers by date (newest first)
+// Sort vouchers by date (newest first) and filter based on user role
 const sortedVouchers = computed(() => {
-  return [...props.vouchers].sort((a, b) => {
-    // Use created_at if available, otherwise fall back to voucher_date
+  let filteredVouchers = [...props.vouchers];
+  
+  // If user is executive_director, filter out vouchers with status 'for_director'
+  if (props.authUser.role === 'executive_director') {
+    filteredVouchers = filteredVouchers.filter(voucher => voucher.status !== 'draft');
+  }
+  
+  // Sort the remaining vouchers
+  return filteredVouchers.sort((a, b) => {
     const dateA = a.created_at || a.voucher_date;
     const dateB = b.created_at || b.voucher_date;
     return new Date(dateB).getTime() - new Date(dateA).getTime();

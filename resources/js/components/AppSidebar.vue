@@ -107,6 +107,25 @@ const staffNavItems: NavItem[] = [
   },
 ];
 
+// IF FINANCE DIRECTOR
+const directorNavItems: NavItem[] = [
+  {
+    title: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    title: 'Requests',
+    href: '/request',
+    icon: FileText,
+  },
+  {
+    title: 'Vouchers',
+    href: '/vouchers',
+    icon: ReceiptText,
+  },
+];
+
 const accountingNavItems: NavItem[] = [
   {
     title: 'Dashboard',
@@ -180,8 +199,12 @@ const footerNavItems: NavItem[] = [
             <NavMain :items="reportItems" group-label="Reports" />
           </div>
 
-          <div v-if="user?.role === 'staff' || user?.role === 'department_head'">
+          <div v-if="user?.role === 'staff' ">
             <NavMain :items="staffNavItems" group-label="Navigation"/>
+          </div>
+
+          <div v-if="user?.role === 'department_head' ">
+            <NavMain :items="directorNavItems" group-label="Navigation"/>
           </div>
         </SidebarContent>
 
