@@ -9,59 +9,61 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
-import { computed } from 'vue';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { computed, ref, watch } from 'vue';
 import { type BreadcrumbItem } from '@/types';
-import { ArrowLeft, Printer, Check } from 'lucide-vue-next';
+import { ArrowLeft, Printer, Check, X } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
 import FormHeader from '@/components/reports/header/formHeder.vue'
+import EodVerificationDialog from '@/components/vouchers/EodVerificationDialog.vue';
+import DirectorVerificationDialog from '@/components/vouchers/DirectorVerificationDialog.vue';
 import { useToast } from 'vue-toastification'
 
-const toast = useToast();
-const props = defineProps<{
-    accounts: Array<{
-        id: number;
-        account_title: string;
-    }>;
-    voucher: {
-        id: number;
-        voucher_no: string;
-        payee: string;
-        check_payable_to: string;
-        purpose: string;
-        voucher_date: string;
-        check_amount: number;
-        check_no: string;
-        check_date: string;
-        status: string;
-        issue_date: string;
-        payment_date: string;
-        delivery_date: string;
-        type: string;
-        details: Array<{
-            id: number;
-            account_id: number;
-            charging_tag: string;
-            hours?: number;
-            rate?: number;
-            amount: number;
-        }>;
-    };
-    authUser: {
-        id: number;
-        name: string;
-        email: string;
-        // Add other fields as needed
-    };
-    signatories: {
-        full_name: string;
-        position: string;
-    };
-}>();
 
-const { props: pageProps } = usePage();
-const accounts = props.accounts || pageProps.accounts || [];
-const voucher = props.voucher || pageProps.voucher;
-const signatories = props.signatories || pageProps.signatories || {};
+
+const toast = useToast();
+const page = usePage();
+
+// Watch for flash messages
+watch(() => page.props.flash, (flash) => {
+    if (flash.success) {
+        toast.success(flash.success);
+    }
+    if (flash.error) {
+        toast.error(flash.error);
+    }
+}, { deep: true });
+
+const props = defineProps({
+    accounts: {
+        type: Array,
+        default: () => [],
+        required: true,
+    },
+    voucher: {
+        type: Object,
+        required: true,
+    },
+    authUser: {
+        type: Object,
+        required: true,
+    },
+    signatories: {
+        type: Object,
+        required: true,
+    }
+});
+
+const { accounts, voucher, authUser, signatories } = props;
 
 const executiveDirector = computed(() =>
     props.signatories.find(s => s.position === 'Executive Director')
@@ -163,21 +165,6 @@ const printArea = () => {
     }
 }
 
-const approveVoucher = async () => {
-    try {
-        await router.patch(`/vouchers/${voucher.id}/approve`);
-        toast.success('Voucher Approved Successfully');
-        
-        
-        
-        // OR Option 2: Inertia reload
-        router.visit(route('vouchers.view', { voucher: voucher.id }));
-        
-    } catch (error) {
-        toast.error('Failed to approve voucher');
-        console.error('Error:', error);
-    }
-}
 </script>
 
 <template>
@@ -197,15 +184,52 @@ const approveVoucher = async () => {
                         <Printer class="h-4 w-4" />
                         Print
                     </Button>
-                    <Button 
-                        v-if="voucher.status !== 'approved'"
-                        variant="default" 
-                        @click="approveVoucher" 
-                        class="flex items-center gap-2 bg-green-500 text-white hover:bg-green-400"
-                    >
-                        <Check class="h-4 w-4" />
-                        Approve
-                    </Button>
+                    <template
+                        v-if="authUser.role === 'executive_director' && voucher.status === 'for_eod' && voucher.status !== 'rejected'">
+                        <EodVerificationDialog :voucher-id="voucher.id" action="approve">
+                            <template #trigger>
+                                <Button variant="default"
+                                    class="flex items-center gap-2 bg-green-500 text-white hover:bg-green-400">
+                                    <Check class="h-4 w-4" />
+                                    Approve
+                                </Button>
+                            </template>
+                        </EodVerificationDialog>
+
+                        <EodVerificationDialog :voucher-id="voucher.id" action="reject">
+                            <template #trigger>
+                                <Button variant="default"
+                                    class="flex items-center gap-2 bg-red-500 text-white hover:bg-red-400">
+                                    <X class="h-4 w-4" />
+                                    Reject
+                                </Button>
+                            </template>
+                        </EodVerificationDialog>
+                    </template>
+
+                    <template
+                        v-if="authUser.role === 'department_head' && voucher.status === 'draft' && voucher.status !== 'rejected'">
+                        <DirectorVerificationDialog :voucher-id="voucher.id" action="forEod">
+                            <template #trigger>
+                                <Button variant="default"
+                                    class="flex items-center gap-2 bg-green-500 text-white hover:bg-green-400">
+                                    <Check class="h-4 w-4" />
+                                    For EOD Approval
+                                </Button>
+                            </template>
+                        </DirectorVerificationDialog>
+
+                        <DirectorVerificationDialog :voucher-id="voucher.id" action="reject">
+                            <template #trigger>
+                                <Button variant="default"
+                                    class="flex items-center gap-2 bg-red-500 text-white hover:bg-red-400">
+                                    <X class="h-4 w-4" />
+                                    Reject
+                                </Button>
+                            </template>
+                        </DirectorVerificationDialog>
+                    </template>
+
                     <Button variant="outline" @click="router.visit('/vouchers')" class="flex items-center gap-2">
                         <ArrowLeft class="h-4 w-4" />
                         Back

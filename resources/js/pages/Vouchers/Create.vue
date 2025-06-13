@@ -71,7 +71,7 @@ const form = useForm({
     check_no: null,
     check_payable_to: '',
     check_amount: null,
-    status: 'pending',
+    status: 'draft',
     type: '',
     user_id: props.auth.user.id,
     check: [
@@ -168,7 +168,7 @@ async function submitVoucher() {
     <Head title="Create Voucher" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <Card class="mt-6 mx-auto w-full">
+        <div class="mt-6 mx-auto w-full">
             <CardHeader>
                 <div class="flex justify-between items-start">
                     <div>
@@ -382,6 +382,6 @@ async function submitVoucher() {
                     </CardFooter>
                 </form>
             </CardContent>
-        </Card>
+        </div>
     </AppLayout>
 </template>
