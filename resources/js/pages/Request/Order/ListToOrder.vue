@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { useForm } from '@inertiajs/vue3';
 import { ref, computed, onMounted } from 'vue';
 import FormHeader from '@/components/reports/header/formHeder.vue'
-import { Printer, ListChecks } from 'lucide-vue-next';
+import { Printer, Rocket } from 'lucide-vue-next';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   Table,
   TableBody,
@@ -223,8 +224,14 @@ const printArea = () =>{
         </div>
       </div>
       
-      <div v-else class="bg-yellow-100 p-4 rounded">
-        No available items to order.
+      <div v-else>
+        <Alert variant="success" class="relative pr-10">
+          <Rocket class="h-4 w-4 text-green-500" />
+          <AlertTitle>Note</AlertTitle>
+          <AlertDescription>
+            No available items to order.
+          </AlertDescription>
+        </Alert>
       </div>
     </div>
 

@@ -158,6 +158,7 @@ class DashboardController extends Controller
         
         // Recent RequestToOrders
         $requestToOrders = RequestToOrder::with(['user', 'details'])
+            ->where('status', 'for_eod')
             ->orderBy('order_date', 'desc')
             ->limit(10)
             ->get()

@@ -54,6 +54,27 @@ class RequestController extends Controller
         ]);
     }
 
+    public function toReceive()
+    {
+        $user = Auth::user();
+
+        $requests = Request::with(['department', 'user', 'details'])
+            ->whereIn('status', ['to_property', 'to_order'])
+            ->where('department_id', $user->department_id)
+            ->get();
+
+        return Inertia::render('Request/ToReceive', [
+            'requests' => $requests,
+            'departments' => Department::all(),
+            'authUser' => [
+                'id' => $user->id,
+                'role' => $user->role,
+                'department_id' => $user->department_id,
+            ],
+        ]);
+    }
+
+
     public function rejected()
     {
         $user = Auth::user();
@@ -151,7 +172,7 @@ class RequestController extends Controller
         $errors['request_no'] = [
             'The request number must be unique.',
             'Suggested available number: ' . $this->generateRequestNumber()
-        ];
+        ];  
     }
     
     return response()->json([

@@ -24,7 +24,7 @@ class RequestToOrderController extends Controller
         $user = Auth::user();
 
         $requests = RequestToOrder::with('details')
-            ->whereIn('status', ['pending', 'for_eod'])
+            ->whereIn('status', ['pending'])
             ->get();
 
         $forOrders = Request::with(['department', 'user', 'details'])

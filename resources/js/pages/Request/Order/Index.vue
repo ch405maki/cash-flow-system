@@ -4,6 +4,7 @@ import { Head } from '@inertiajs/vue3'
 import { router } from '@inertiajs/vue3'
 import { CirclePlus , ListChecks } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
+import { FileText } from 'lucide-vue-next'
 import {
   Table,
   TableCaption,
@@ -87,7 +88,7 @@ function formatDate(dateStr: string): string {
       </div>
 
       <!-- Table -->
-      <div class="rounded-lg border">
+      <div v-if="requests.length > 0" class="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -119,6 +120,12 @@ function formatDate(dateStr: string): string {
             </TableRow>
           </TableBody>
         </Table>
+      </div>
+
+      <div v-else-if="requests" class="flex h-48 flex-col items-center justify-center rounded-xl border">
+        <FileText class="h-8 w-8 text-muted-foreground" />
+        <p class="mt-2 text-sm text-muted-foreground">No request to order found</p>
+        <p class="text-xs text-muted-foreground">On process requests will appear here</p>
       </div>
     </div>
   </AppLayout>
