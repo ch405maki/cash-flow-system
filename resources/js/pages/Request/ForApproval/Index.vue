@@ -6,7 +6,7 @@
       <div class="flex justify-between items-center">
         <div>
           <h1 class="text-xl font-bold">For Approval Request to Order</h1>
-          <p class="text-sm">Created Orders</p>
+          <p class="text-sm">Created Order(s) For Approval</p>
         </div>
       </div>
       <!-- Table -->

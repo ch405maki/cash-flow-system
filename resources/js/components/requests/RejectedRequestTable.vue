@@ -12,6 +12,7 @@ import { defineProps } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { FilePenLine, Eye  } from 'lucide-vue-next';
 import { usePage } from '@inertiajs/vue3';
+import { FileText } from 'lucide-vue-next'
 
 const props = defineProps<{
   requests: Array<any>
@@ -46,7 +47,7 @@ function formatDate(dateStr: string): string {
 </script>
 
 <template>
-  <div class="rounded-lg border">
+  <div v-if="requests.length > 0" class="rounded-lg border">
     <Table>
       <TableHeader>
         <TableRow>
@@ -109,4 +110,10 @@ function formatDate(dateStr: string): string {
       </TableBody>
     </Table>
   </div>
+
+  <div v-else-if="requests" class="flex h-48 flex-col items-center justify-center rounded-xl border">
+    <FileText class="h-8 w-8 text-muted-foreground" />
+    <p class="mt-2 text-sm text-muted-foreground">No rejected requests found</p>
+    <p class="text-xs text-muted-foreground">Rejected requests from your department will appear here</p>
+</div>
 </template>

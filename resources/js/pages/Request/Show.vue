@@ -282,7 +282,7 @@
                         variant="outline" 
                         size="sm" 
                         @click="submitStatusUpdate('rejected', '')"
-                        :disabled="request.status === 'rejected' || form.processing"
+                        :disabled="request.status === 'to_property' || form.processing"
                     >
                         Reject
                 </Button>
@@ -303,7 +303,8 @@
                             'text-green-600': request.status === 'approved',
                             'text-green-700': request.status === 'released',
                             'text-red-600': request.status === 'rejected',
-                            'text-yellow-600': request.status === 'pending'
+                            'text-yellow-800': request.status === 'pending',
+                            'text-yellow-600': request.status === 'to_property'
                         }">
                         {{ request.status }}
                     </span>

@@ -187,10 +187,22 @@ const submitForm = async () => {
                 <Input id="quantity" type="number" v-model.number="newItem.quantity" min="1" />
               </div>
 
-              <div class="space-y-2 md:col-span-2">
-                <Label for="unit">Unit</Label>
-                <Input id="unit" v-model="newItem.unit" />
-              </div>
+              <div class="md:col-span-2 space-y-2">
+              <Label for="quantity">Unit</Label>
+              <Select v-model="newItem.unit">
+                <SelectTrigger class="w-full">
+                  <SelectValue placeholder="Select a unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="pc">pc/s</SelectItem>
+                    <SelectItem value="box">box/es</SelectItem>
+                    <SelectItem value="kg">kg/s</SelectItem>
+                    <SelectItem value="pack">pack/s</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
 
               <div class="space-y-2 md:col-span-2">
                 <Label for="unit_price">Unit Price</Label>

@@ -1,5 +1,13 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3'
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table'
 
 defineProps<{
   recentPurchaseOrders: Array<any>;
@@ -7,7 +15,9 @@ defineProps<{
 
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric', month: 'short', day: '2-digit',
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
   });
 }
 
@@ -17,29 +27,48 @@ function goToPO(id: number) {
 </script>
 
 <template>
-  <div class="rounded-xl border mt-4">
-    <h2 class="p-4 text-base font-semibold">Recent Purchase Orders</h2>
-    <div class="relative w-full overflow-auto">
-      <table class="w-full text-sm">
-        <thead>
-          <tr class="border-b">
-            <th class="p-4 text-left">PO No</th>
-            <th class="p-4 text-left">Date</th>
-            <th class="p-4 text-left">Payee</th>
-            <th class="p-4 text-left">Amount</th>
-            <th class="p-4 text-left">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="po in recentPurchaseOrders" :key="po.id" class="border-b">
-            <td class="p-4 align-middle font-medium cursor-pointer hover:underline hover:text-purple-700 text-purple-800" @click="goToPO(po.id)">{{ po.po_no }}</td>
-            <td class="p-4">{{ formatDate(po.date) }}</td>
-            <td class="p-4">{{ po.payee }}</td>
-            <td class="p-4">₱{{ po.amount.toLocaleString() }}</td>
-            <td class="p-4">{{ po.status }}</td>
-          </tr>
-        </tbody>
-      </table>
+  <div class="border rounded-xl mt-4 overflow-auto">
+    <div class="px-4 py-3 bg-muted/40">
+      <h2 class="text-base font-semibold">Recent Purchase Orders</h2>
     </div>
+
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead class="text-left">PO No</TableHead>
+          <TableHead class="text-left">Date</TableHead>
+          <TableHead class="text-left">Payee</TableHead>
+          <TableHead class="text-left">Amount</TableHead>
+          <TableHead class="text-left">Status</TableHead>
+        </TableRow>
+      </TableHeader>
+
+      <TableBody>
+        <TableRow
+          v-for="po in recentPurchaseOrders"
+          :key="po.id"
+          class="hover:bg-muted/20 transition-colors cursor-pointer"
+          @click="goToPO(po.id)"
+        >
+          <TableCell class="font-medium text-purple-800 hover:underline hover:text-purple-700">
+            {{ po.po_no }}
+          </TableCell>
+          <TableCell>{{ formatDate(po.date) }}</TableCell>
+          <TableCell>{{ po.payee }}</TableCell>
+          <TableCell>₱{{ po.amount.toLocaleString() }}</TableCell>
+          <TableCell class="capitalize">
+            <span
+              :class="{
+                'text-green-600': po.status === 'approved',
+                'text-yellow-600': po.status === 'pending',
+                'text-red-600': po.status === 'rejected'
+              }"
+            >
+              {{ po.status.replace('_', ' ') }}
+            </span>
+          </TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
   </div>
 </template>
