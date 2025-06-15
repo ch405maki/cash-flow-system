@@ -41,7 +41,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/request/to-receive', [RequestController::class, 'toReceive'])->name('request.to-receive');
 });
 
-// RequestToOrderController Route
+// Request To Order Route
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/request-to-order', [RequestToOrderController::class, 'index'])->name('request-to-order.index');
     Route::get('/request-to-order/create', [RequestToOrderController::class, 'create'])->name('request-to-order.create');
@@ -61,6 +61,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/approved-request/show/{request}', [ApprovedRequestController::class, 'show'])->name('approved-request.show');
 });
 
+// Voucher Route
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/vouchers', [VoucherController::class, 'index'])->name('vouchers.index');
     Route::get('/vouchers/create', [VoucherController::class, 'create'])->name('vouchers.create');
@@ -74,6 +75,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/vouchers/{voucher}/approve', [VoucherController::class, 'approve'])->name('vouchers.approve');
 });
 
+// Report Route
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/po-summary', [ReportController::class, 'poSummary'])->name('reports.po-summary');
@@ -81,7 +83,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/reports/vouchers', [ReportController::class, 'voucherReports'])->name('reports.voucherReports');
 });
 
-
+// Purchase Order Route
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])
         ->name('purchase-orders.index');
@@ -93,6 +95,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/purchase-orders/{purchaseOrder}/status', [PurchaseOrderController::class, 'updateStatus'])->name('purchase-orders.status.update');
 });
 
+// Canvas Route
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/canvas/create', [CanvasController::class, 'create'])->name('canvas.create');
     Route::post('/canvas', [CanvasController::class, 'store'])->name('canvas.store');

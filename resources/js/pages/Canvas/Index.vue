@@ -89,12 +89,17 @@ function formatDate(dateStr: string): string {
     day: '2-digit'
   })
 }
+
+const breadcrumbs = [
+  { title: 'Dashboard', href: '/dashboard' },
+  { title: 'Canvas', href: '/' },
+] 
 </script>
 
 <template>
   <Head title="My Canvases" />
   
-  <AppLayout>
+  <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-4">
       <div class="flex flex-row items-center justify-between mb-4">
         <CardTitle class="text-2xl font-bold">Canvas</CardTitle>

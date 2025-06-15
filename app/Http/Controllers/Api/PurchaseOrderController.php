@@ -73,7 +73,6 @@ class PurchaseOrderController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            // Removed po_no from validation
             'payee' => 'required|string',
             'check_payable_to' => 'required|string',
             'date' => 'required|date',
