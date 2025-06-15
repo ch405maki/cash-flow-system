@@ -87,8 +87,8 @@ function formatDisplayDate(dateString: string): string {
           <TableHead class="px-4 py-2">Payee</TableHead>
           <TableHead class="px-4 py-2">Check Pay to</TableHead>
           <TableHead class="px-4 py-2">Date</TableHead>
-          <TableHead class="px-4 py-2 text-center">Status</TableHead>
-          <TableHead class="px-4 py-2 text-center">Actions</TableHead>
+          <TableHead class="px-4 py-2 ">Status</TableHead>
+          <TableHead class="px-4 py-2 ">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
