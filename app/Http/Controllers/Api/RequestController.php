@@ -34,7 +34,7 @@ class RequestController extends Controller
         if (in_array($user->role, ['admin', 'executive_director', 'property_custodian'])) {
             // Admin-level users: See all non-pending requests
             $requests = Request::with(['department', 'user', 'details'])
-                ->whereIn('status', ['to_property', 'partially_released', 'to_order'])
+                ->whereIn('status', ['propertyCustodian', 'partially_released', 'to_order'])
                 ->get();
         } else {
             $requests = Request::with(['department', 'user', 'details'])
@@ -59,7 +59,7 @@ class RequestController extends Controller
         $user = Auth::user();
 
         $requests = Request::with(['department', 'user', 'details'])
-            ->whereIn('status', ['to_property', 'to_order'])
+            ->whereIn('status', ['propertyCustodian', 'to_order'])
             ->where('department_id', $user->department_id)
             ->get();
 
@@ -295,7 +295,7 @@ class RequestController extends Controller
     public function updateStatus(HttpRequest $httpRequest, Request $request)
     {
         $validated = $httpRequest->validate([
-            'status' => 'required|in:approved,rejected,to_property,to_order,released',
+            'status' => 'required|in:approved,rejected,propertyCustodian,to_order,released',
             'password' => 'required_if:status, approved,to_property,to_order,released'
         ]);
 

@@ -88,7 +88,7 @@ class DashboardController extends Controller
         $user = auth()->user();
         
         $requests = Request::with(['user', 'details'])
-            ->where('status', 'to_property')
+            ->where('status', 'propertyCustodian')
             ->orderBy('request_date', 'desc')
             ->limit(10)
             ->get()
@@ -112,7 +112,7 @@ class DashboardController extends Controller
             });
             
         $statusCounts = [
-            'pending' => Request::where('status', 'to_property')->count(),
+            'pending' => Request::where('status', 'propertyCustodian')->count(),
             'to_order' => Request::where('status', 'to_order')->count(),
             'approval' => RequestToOrder::where('status', 'pending')->count(),
             'rejected' => RequestToOrder::where('status', 'rejected')->count(),
@@ -133,7 +133,7 @@ class DashboardController extends Controller
         
         // Recent Requests
         $requests = Request::with(['user', 'details'])
-            ->where('status', 'to_property')
+            ->where('status', 'propertyCustodian')
             ->orderBy('request_date', 'desc')
             ->limit(10)
             ->get()
@@ -158,7 +158,7 @@ class DashboardController extends Controller
         
         // Recent RequestToOrders
         $requestToOrders = RequestToOrder::with(['user', 'details'])
-            ->where('status', 'for_eod')
+            ->where('status', 'forEOD')
             ->orderBy('order_date', 'desc')
             ->limit(10)
             ->get()
@@ -220,8 +220,8 @@ class DashboardController extends Controller
                         ->where('status', 'approved')
                         ->whereYear('created_at', now()->year)
                         ->count(),
-            'toOrderApproval' => RequestToOrder::where('status', 'for_eod')->count(),
-            'poApproval' => PurchaseOrder::where('status', 'for_approval')->count(),
+            'toOrderApproval' => RequestToOrder::where('status', 'forEOD')->count(),
+            'poApproval' => PurchaseOrder::where('status', 'forEOD')->count(),
             'rejected' => RequestToOrder::where('status', 'rejected')->count(),
             
             // Additional metrics

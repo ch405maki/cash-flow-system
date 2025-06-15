@@ -8,6 +8,7 @@ import { SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
 import {
+  ListCollapse,
   LayoutDashboard,
   FileText,
   ClipboardCheck,
@@ -40,6 +41,11 @@ const executiveApprovalItems: NavItem[] = [
     title: 'Order Request',
     href: '/for-approval',
     icon: FileCheck2,
+  },
+  {
+    title: 'Purchase Canvas',
+    href: '/canvas',
+    icon: ListCollapse,
   },
   {
     title: 'Purchase Request',

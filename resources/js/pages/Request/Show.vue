@@ -245,7 +245,7 @@
                     <Button 
                         variant="default" 
                         size="sm" 
-                        :disabled="request.status === 'to_property' || request.status === 'rejected' || form.processing"
+                        :disabled="request.status === 'propertyCustodian' || request.status === 'rejected' || form.processing"
                     >
                         Send To Property
                     </Button>
@@ -269,7 +269,7 @@
                     </div>
                     <DialogFooter>
                         <Button 
-                            @click="submitStatusUpdate('to_property', password)"
+                            @click="submitStatusUpdate('propertyCustodian', password)"
                             :disabled="!password || form.processing"
                             >
                             <span v-if="form.processing">Processing...</span>

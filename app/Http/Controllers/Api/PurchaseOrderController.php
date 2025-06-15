@@ -28,9 +28,9 @@ class PurchaseOrderController extends Controller
                 ->latest()
                 ->paginate(10);
         } else {
-            // Get only purchase orders with status 'for_approval'
+            // Get only purchase orders with status 'forEOD'
             $purchaseOrders = PurchaseOrder::with(['user', 'department', 'account', 'details'])
-                ->where('status', 'for_approval')
+                ->where('status', 'forEOD')
                 ->latest()
                 ->paginate(10);
         }
@@ -130,7 +130,7 @@ class PurchaseOrderController extends Controller
     public function updateStatus(Request $request, PurchaseOrder $purchaseOrder)
     {
         $validated = $request->validate([
-            'status' => 'required|in:approved,rejected,released,to_order,for_approval,',
+            'status' => 'required|in:approved,rejected,released,to_order,forEOD,',
             'password' => 'required|string',
             'remarks' => 'nullable|string|max:500'
         ]);

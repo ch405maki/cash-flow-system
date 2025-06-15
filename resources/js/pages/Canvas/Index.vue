@@ -18,9 +18,10 @@ import CanvasUploadDialog from '@/components/canvas/CanvasUploadDialog.vue'
 import CanvasShowDialog from '@/components/canvas/CanvasShowDialog.vue'
 import { ref } from 'vue';
 
-defineProps({
-  canvases: Array,
-});
+defineProps<{
+  canvases: Array<any>;
+  authUserRole: string;
+}>();
 
 const statusIcons = {
   pending: Clock,
@@ -32,6 +33,7 @@ const statusVariants = {
   pending: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
   approved: 'bg-green-100 text-green-800 hover:bg-green-200',
   rejected: 'bg-red-100 text-red-800 hover:bg-red-200',
+  forEOD: 'bg-purple-100 text-purple-800 hover:bg-purple-200',
 };
 
 // Dialog state management
@@ -103,7 +105,9 @@ const breadcrumbs = [
     <div class="p-4">
       <div class="flex flex-row items-center justify-between mb-4">
         <CardTitle class="text-2xl font-bold">Canvas</CardTitle>
-        <CanvasUploadDialog />
+        <div v-if="authUserRole === 'purchasing'">
+          <CanvasUploadDialog />
+        </div>
       </div>
     <div class="w-full text-sm border border-border rounded-md">
       <Table>
@@ -179,10 +183,11 @@ const breadcrumbs = [
       </Table>
     </div>
       <!-- Canvas Show Dialog -->
-      <CanvasShowDialog 
+      <CanvasShowDialog
         v-if="selectedCanvas"
-        :canvas="selectedCanvas" 
+        :canvas="selectedCanvas"
         :open="showDialog"
+        :user-role="authUserRole"
         @update:open="val => showDialog = val"
         @updated="refreshCanvases"
       />

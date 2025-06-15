@@ -15,7 +15,8 @@ const toast = useToast();
 
 const props = defineProps({
   canvas: Object,
-  open: Boolean
+  open: Boolean,
+  userRole: String,
 });
 
 const emit = defineEmits(['update:open', 'updated']);
@@ -30,6 +31,7 @@ const statusVariants = {
   pending: 'bg-yellow-100 text-yellow-800',
   approved: 'bg-green-100 text-green-800',
   rejected: 'bg-red-100 text-red-800',
+  forEOD: 'bg-purple-100 text-purple-800',
 };
 
 const isDownloading = ref(false);
@@ -160,17 +162,35 @@ function formatDate(dateStr: string): string {
         </div>
         </div>
       </div>
-
       <div class="sticky bottom-0 bg-background pt-4 border-t">
         <div class="flex justify-between">
+          <div v-if="userRole === 'executive_director'" class="space-x-2">
+            <Button 
+            variant="default" 
+            @click="updateStatus('approved')"
+            :disabled="form.processing"
+          >
+            <Check class="h-4 w-4 mr-1" />
+            Approve
+          </Button>
+          <Button 
+              variant="destructive" 
+              @click="updateStatus('rejected')"
+              :disabled="form.processing || !form.remarks.trim()"
+              >
+              <X class="h-4 w-4 mr-1" />
+              Reject
+          </Button>
+          </div>
+
           <div v-if="canvas.status === 'pending'" class="flex gap-2">
             <Button 
               variant="default" 
-              @click="updateStatus('approved')"
+              @click="updateStatus('forEOD')"
               :disabled="form.processing"
             >
               <Check class="h-4 w-4 mr-1" />
-              Approve
+              Submit for EOD
             </Button>
             <Button 
                 variant="destructive" 
@@ -180,7 +200,6 @@ function formatDate(dateStr: string): string {
                 <X class="h-4 w-4 mr-1" />
                 Reject
             </Button>
-
           </div>
           <Button 
             @click="downloadFile"
