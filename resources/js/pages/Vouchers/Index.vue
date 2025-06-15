@@ -81,22 +81,46 @@ watch(timeFilter, (newValue) => {
 const filteredVouchers = computed(() => {
   let result = [...props.vouchers];
 
-  // Apply search filter
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
-    result = result.filter(
-      (voucher: any) =>
+    result = result.filter((voucher: any) => {
+      // Get dates (fall back to each other if not available)
+      const date = new Date(voucher.created_at || voucher.voucher_date);
+
+      // Format dates for searching
+      const formattedDate = date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }).toLowerCase();
+
+      // Format month name separately for "June" searches
+      const monthName = date.toLocaleDateString('en-US', { month: 'long' }).toLowerCase();
+
+      // Check if query matches any date part
+      const matchesDate =
+        formattedDate.includes(query) ||
+        monthName.includes(query) ||
+        date.getFullYear().toString().includes(query) ||
+        date.getDate().toString().includes(query) ||
+        (date.getMonth() + 1).toString().includes(query); // Supports "6" for June
+
+      return (
+        // Existing search fields
         voucher.voucher_no?.toLowerCase().includes(query) ||
         voucher.type?.toLowerCase().includes(query) ||
         voucher.purpose?.toLowerCase().includes(query) ||
         voucher.check_amount?.toString().toLowerCase().includes(query) ||
         voucher.payee?.toLowerCase().includes(query) ||
         voucher.check_payable_to?.toLowerCase().includes(query) ||
-        voucher.status?.toLowerCase().includes(query)
-    );
+        voucher.status?.toLowerCase().includes(query) ||
+        // Date search
+        matchesDate
+      );
+    });
   }
 
-  // Apply time filter
+  // Keep your existing time filter logic
   if (timeFilter.value) {
     const { start, end } = updateDateRange(timeFilter.value);
     if (start && end) {
@@ -140,13 +164,13 @@ const props = defineProps({
   <Head title="Vouchers" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+    <div class="flex h-full flex-1 flex-col gap-3.5 rounded-xl p-4">
       <div class="flex justify-between items-center">
         <h1 class="text-xl font-bold">Vouchers</h1>
         <div class="flex gap-2">
           <!-- Date Filter Select -->
           <Select v-model="timeFilter">
-            <SelectTrigger class="w-[180px]">
+            <SelectTrigger class="w-[180px] h-8">
               <div class="flex items-center gap-2">
                 <Filter class="h-4 w-4" />
                 <SelectValue placeholder="Filter by date" />
@@ -160,7 +184,7 @@ const props = defineProps({
           </Select>
 
           <div class="flex items-center gap-2">
-            <Input type="search" placeholder="Search vouchers..." class="w-[200px] lg:w-[300px]"
+            <Input type="search" placeholder="Search vouchers..." class="w-[200px] lg:w-[300px] h-8"
               v-model="searchQuery" />
           </div>
           <!-- Only show if the user is NOT an executive_director -->
@@ -181,7 +205,7 @@ const props = defineProps({
         </Button>
       </div>
 
-      <VoucherTable :vouchers="vouchers" :authUser="authUser" />
+      <VoucherTable :vouchers="filteredVouchers" :authUser="authUser" />
 
       <div class="mt-4 flex items-center justify-between">
         <div class="flex-1 text-sm text-muted-foreground">

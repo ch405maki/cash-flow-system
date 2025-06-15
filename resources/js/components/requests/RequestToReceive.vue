@@ -78,7 +78,7 @@ function formatDate(dateStr: string): string {
               class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize"
               :class="{
                 'bg-indigo-100 text-indigo-800': request.status === 'partially_released',
-                'bg-orange-100 text-yellow-600': request.status === 'to_property',
+                'bg-orange-100 text-orange-800': request.status === 'request to order',
                 'bg-yellow-100 text-yellow-800': request.status === 'pending',
                 'bg-green-100 text-green-800': request.status === 'approved',
                 'bg-red-100 text-red-800': request.status === 'rejected',
@@ -115,6 +115,6 @@ function formatDate(dateStr: string): string {
   <div v-else-if="requests" class="flex h-48 flex-col items-center justify-center rounded-xl border">
     <FileText class="h-8 w-8 text-muted-foreground" />
     <p class="mt-2 text-sm text-muted-foreground">No requests found</p>
-    <p class="text-xs text-muted-foreground">On process requests from your department will appear here</p>
+    <p class="text-xs text-muted-foreground">Requests from your department will appear here</p>
   </div>
 </template>

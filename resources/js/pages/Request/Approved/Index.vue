@@ -114,7 +114,7 @@ function formatDate(dateStr: string): string {
               </Badge>
             </TableCell>
             <TableCell class="text-center">
-              <Button size="sm" variant="outline" @click="viewRequest(request.id)">
+              <Button size="sm" @click="viewRequest(request.id)">
                 View
               </Button>
             </TableCell>

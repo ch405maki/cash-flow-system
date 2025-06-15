@@ -20,10 +20,17 @@ const props = defineProps<{
   };
 }>();
 
-// Sort vouchers by date (newest first)
+// Sort vouchers by date (newest first) and filter based on user role
 const sortedVouchers = computed(() => {
-  return [...props.vouchers].sort((a, b) => {
-    // Use created_at if available, otherwise fall back to voucher_date
+  let filteredVouchers = [...props.vouchers];
+  
+  // If user is executive_director, filter out vouchers with status 'for_director'
+  if (props.authUser.role === 'executive_director') {
+    filteredVouchers = filteredVouchers.filter(voucher => voucher.status !== 'draft');
+  }
+  
+  // Sort the remaining vouchers
+  return filteredVouchers.sort((a, b) => {
     const dateA = a.created_at || a.voucher_date;
     const dateB = b.created_at || b.voucher_date;
     return new Date(dateB).getTime() - new Date(dateA).getTime();
@@ -46,6 +53,27 @@ function formatCurrency(amount: number): string {
     currency: 'PHP'
   }).format(amount);
 }
+
+function formatDate(dateString: string): string {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+}
+
+// Add this helper function to format dates for display
+function formatDisplayDate(dateString: string): string {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
 </script>
 
 <template>
@@ -55,8 +83,6 @@ function formatCurrency(amount: number): string {
         <TableRow>
           <TableHead class="px-4 py-2">Voucher No</TableHead>
           <TableHead class="px-4 py-2">Type</TableHead>
-          <TableHead class="px-4 py-2">Created By</TableHead>
-          <TableHead class="px-4 py-2">Purpose</TableHead>
           <TableHead class="px-4 py-2">Check Amount</TableHead>
           <TableHead class="px-4 py-2">Payee</TableHead>
           <TableHead class="px-4 py-2">Check Pay to</TableHead>
@@ -69,15 +95,13 @@ function formatCurrency(amount: number): string {
         <TableRow v-for="voucher in sortedVouchers" :key="voucher.id" class="border-t hover:bg-muted/50">
           <TableCell class="px-4 py-2 font-medium">{{ voucher.voucher_no }}</TableCell>
           <TableCell class="px-4 py-2 capitalize">{{ voucher.type }}</TableCell>
-          <TableCell class="px-4 py-2">{{ getRole(voucher.user) }}</TableCell>
-          <TableCell class="px-4 py-2">{{ voucher.purpose }}</TableCell>
           <TableCell class="px-4 py-2 font-mono tabular-nums">
             {{ formatCurrency(voucher.check_amount) }}
           </TableCell>
           <TableCell class="px-4 py-2">{{ voucher.payee }}</TableCell>
           <TableCell class="px-4 py-2">{{ voucher.check_payable_to }}</TableCell>
           <TableCell class="px-4 py-2">
-            {{ new Date(voucher.created_at || voucher.voucher_date).toLocaleDateString() }}
+            {{ formatDisplayDate(voucher.created_at || voucher.voucher_date) }}
           </TableCell>
           <TableCell class="px-4 py-2 capitalize">
             <span class="inline-block rounded-full px-8 py-0.5 text-xs font-semibold" :class="{

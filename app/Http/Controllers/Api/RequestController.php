@@ -38,11 +38,53 @@ class RequestController extends Controller
                 ->get();
         } else {
             $requests = Request::with(['department', 'user', 'details'])
+                ->where('status', 'pending')
                 ->where('department_id', $user->department_id)
                 ->get();
         }
 
         return Inertia::render('Request/Index', [
+            'requests' => $requests,
+            'departments' => Department::all(),
+            'authUser' => [
+                'id' => $user->id,
+                'role' => $user->role,
+                'department_id' => $user->department_id,
+            ],
+        ]);
+    }
+
+    public function toReceive()
+    {
+        $user = Auth::user();
+
+        $requests = Request::with(['department', 'user', 'details'])
+            ->whereIn('status', ['to_property', 'to_order'])
+            ->where('department_id', $user->department_id)
+            ->get();
+
+        return Inertia::render('Request/ToReceive', [
+            'requests' => $requests,
+            'departments' => Department::all(),
+            'authUser' => [
+                'id' => $user->id,
+                'role' => $user->role,
+                'department_id' => $user->department_id,
+            ],
+        ]);
+    }
+
+
+    public function rejected()
+    {
+        $user = Auth::user();
+
+        $requests = Request::with(['department', 'user', 'details'])
+            ->where('status', 'rejected')
+            ->where('department_id', $user->department_id)
+            ->get();
+
+        return Inertia::render('Request/Rejected', [
             'requests' => $requests,
             'departments' => Department::all(),
             'authUser' => [
@@ -130,7 +172,7 @@ class RequestController extends Controller
         $errors['request_no'] = [
             'The request number must be unique.',
             'Suggested available number: ' . $this->generateRequestNumber()
-        ];
+        ];  
     }
     
     return response()->json([
@@ -173,6 +215,14 @@ class RequestController extends Controller
     public function edit(Request $request)
     {
         return Inertia::render('Request/Edit', [
+            'request' => $request->load(['details','user', 'department']),
+            'departments' => Department::all(),
+        ]);
+    }
+
+    public function release(Request $request)
+    {
+        return Inertia::render('Request/Release', [
             'request' => $request->load(['details','user', 'department']),
             'departments' => Department::all(),
         ]);

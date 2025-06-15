@@ -4,19 +4,33 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
 import StatsCards from '@/components/dashboard/executive/StatsCards.vue';
 import RecentRequestsTable from '@/components/dashboard/executive/RecentRequestsTable.vue';
+import RecentRequestToOrdersTable from '@/components/dashboard/executive/RecentRequestToOrdersTable.vue';
+import RecentPurchaseOrdersTable from '@/components/dashboard/executive/RecentPurchaseOrdersTable.vue';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const props = defineProps<{
-    isDepartmentUser: boolean;
-    recentRequests: Array<any>;
-    statusCounts: {
-        pending: number;
-        approved: number;
-        to_order: number;
-        rejected: number;
-        total: number;
-    };
-    userRole: string;
-    username: string;
+  isDepartmentUser: boolean;
+  recentRequests: Array<any>;
+  recentRequestToOrders: Array<any>;
+  recentPurchaseOrders: Array<any>;
+  statusCounts: {
+    totalRequest: number;
+    totalPO: number;
+    toOrderApproval: number;
+    poApproval: number;
+    rejected: number;
+    totalRequestToOrder: number;
+    totalPurchaseOrderAmount: number;
+    pendingRequestToOrder: number;
+  };
+  monthlyMetrics: {
+    requests: Record<number, number>;
+    requestToOrders: Record<number, number>;
+    purchaseOrders: Record<number, number>;
+    purchaseOrderAmounts: Record<number, number>;
+  };
+  userRole: string;
+  username: string;
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -28,23 +42,47 @@ const breadcrumbs: BreadcrumbItem[] = [
 </script>
 
 <template>
-    <Head title="Dashboard" />
+  <Head title="Dashboard" />
 
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-            <h1 class="text-lg font-medium">
-                Executive Director Dashboard
-                <p class="text-sm text-muted-foreground capitalize">Welcome, {{ username }}</p>
-            </h1>
-            
-            <StatsCards :status-counts="statusCounts" />
-            
-            <h1 class="text-lg font-medium">Recent Requests</h1>
-            
-            <!-- <RecentRequestsTable 
-                :is-department-user="isDepartmentUser" 
-                :recent-requests="recentRequests" 
-            /> -->
+  <AppLayout :breadcrumbs="breadcrumbs">
+    <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+      <h1 class="text-lg font-medium">
+        Executive Director Dashboard
+        <p class="text-sm text-muted-foreground capitalize">Welcome, {{ username }}</p>
+      </h1>
+
+      <StatsCards :status-counts="statusCounts" />
+
+      <Tabs default-value="requests" class="mt-4 w-full">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-medium">Recent Data</h2>
+          <TabsList class="grid w-full max-w-xl grid-cols-4">
+            <TabsTrigger value="requests">Requests</TabsTrigger>
+            <TabsTrigger value="requestToOrders">Request to Orders</TabsTrigger>
+            <TabsTrigger value="purchaseOrders">Purchase Orders</TabsTrigger>
+            <TabsTrigger >Vouchers</TabsTrigger>
+          </TabsList>
         </div>
-    </AppLayout>
+
+        <TabsContent value="requests">
+          <RecentRequestsTable
+            :is-department-user="isDepartmentUser"
+            :recent-requests="recentRequests"
+          />
+        </TabsContent>
+
+        <TabsContent value="requestToOrders">
+          <RecentRequestToOrdersTable
+            :recent-request-to-orders="recentRequestToOrders"
+          />
+        </TabsContent>
+
+        <TabsContent value="purchaseOrders">
+          <RecentPurchaseOrdersTable
+            :recent-purchase-orders="recentPurchaseOrders"
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
+  </AppLayout>
 </template>

@@ -34,7 +34,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/request/show/{request}', [RequestController::class, 'show'])->name('request.show');
     Route::get('/request/create', [RequestController::class, 'create'])->name('request.create');
     Route::get('/requests/{request}/edit', [RequestController::class, 'edit'])->name('requests.edit');
+    Route::get('/requests/{request}/release', [RequestController::class, 'release'])->name('requests.release');
     Route::patch('/requests/{request}/status', [RequestController::class, 'updateStatus'])->name('request.updateStatus');
+
+    Route::get('/request/rejected', [RequestController::class, 'rejected'])->name('request.rejected');
+    Route::get('/request/to-receive', [RequestController::class, 'toReceive'])->name('request.to-receive');
 });
 
 // RequestToOrderController Route
@@ -67,7 +71,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/vouchers/{voucher}/pdf', [ReportController::class, 'generateVoucherReports'])->name('vouchers.pdf');
     Route::get('/reports/vouchers/{voucher}/report', [ReportController::class, 'generateVoucherReports'])->name('vouchers.report');
     
-    Route::patch('/vouchers/{voucher}/approve', [VoucherController::class, 'approve'])->name('vouchers.approve');
+    Route::patch('/vouchers/{voucher}/forDirector', [VoucherController::class, 'forDirector'])
+     ->name('vouchers.director');
+    Route::patch('/vouchers/{voucher}/forEod', [VoucherController::class, 'forEod'])
+     ->name('vouchers.eod');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

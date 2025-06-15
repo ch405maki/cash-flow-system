@@ -239,19 +239,7 @@ async function updateVoucher() {
                                 <Input id="purpose" v-model="form.purpose" required />
                             </div>
 
-                            <div class="grid gap-2">
-                                 <Label for="status">Status *</Label>
-                                    <Select v-model="form.status" required>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="pending">Pending</SelectItem>
-                                        <SelectItem value="approved">Approved</SelectItem>
-                                        <SelectItem value="rejected">Rejected</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                            
 
                         </div>
                     </div>

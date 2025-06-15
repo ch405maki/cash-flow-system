@@ -7,12 +7,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Voucher;
 use App\Models\VoucherDetail;
 use App\Models\Account;
+use App\Models\Signatory;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+
 use Illuminate\Database\QueryException;
 use Inertia\Inertia;
 
@@ -30,7 +33,7 @@ class VoucherController extends Controller
         'check_no' => 'nullable|string|max:500',
         'check_payable_to' => 'required|string|max:500',
         'check_amount' => 'required|numeric|min:0',
-        'status' => 'required|in:pending,approved,rejected',
+        'status' => 'required|in:for_eod,approved,rejected,draft',
         'type' => 'required|in:cash,salary',
         'user_id' => 'required|exists:users,id',
         'check' => 'nullable|array',
@@ -45,7 +48,7 @@ class VoucherController extends Controller
     {
 
         $user = Auth::user();
-        
+
         return Inertia::render('Vouchers/Index', [
             'vouchers' => Voucher::with(['user', 'details'])->get(),
             'accounts' => Account::all(),
@@ -68,13 +71,13 @@ class VoucherController extends Controller
     {
         return DB::transaction(function () use ($request) {
             $validated = $this->validateRequest($request);
-            
+
             // Explicitly remove voucher_no if somehow provided
             unset($validated['voucher_no']);
-            
+
             $this->handleCashVoucherDetails($validated);
             $voucher = $this->createVoucher($validated);
-            
+
             return $this->successResponse(
                 'Voucher created successfully',
                 $voucher->load(['user', 'details']),
@@ -96,14 +99,14 @@ class VoucherController extends Controller
     {
         return DB::transaction(function () use ($request, $voucher) {
             $validated = $this->validateRequest($request);
-            
+
             // Lock the voucher number to the existing value
             $validated['voucher_no'] = $voucher->voucher_no;
-            
+
             $this->validateCashVoucherAmount($validated);
             $this->updateType($voucher, $validated);
             $this->syncVoucherDetails($voucher, $validated);
-            
+
             return $this->successResponse(
                 'Voucher updated successfully',
                 $voucher->fresh(['user', 'details']),
@@ -125,39 +128,112 @@ class VoucherController extends Controller
     public function view(Voucher $voucher)
     {
         $voucher->load(['user', 'details.account']);
-        
-        return inertia('Vouchers/View', [
+
+        return Inertia::render('Vouchers/View', [ // Changed to Inertia::render()
             'voucher' => $voucher,
             'accounts' => Account::all(),
+            'authUser' => [ // Make sure to include authUser if needed
+                'id' => auth()->id(),
+                'access_id' => auth()->user()->access_id,
+                'role' => auth()->user()->role,
+            ],
+            'signatories' => Signatory::all(),
         ]);
     }
 
-    public function approve(Voucher $voucher)
+    public function forDirector($id, Request $request)
     {
-        // Add any authorization checks here (e.g., only certain roles can approve)
-        // if (!auth()->user()->can('approve', $voucher)) {
-        //     abort(403);
-        // }
-
-        $voucher->update([
-            'status' => 'approved',
+        $request->validate([
+            'password' => 'required',
+            'action' => 'required|in:forEod,reject' // Validate the action parameter
         ]);
 
-        return redirect()->back()->with('success', 'Voucher approved successfully');
+        $user = auth()->user();
+
+        // Password verification
+        if (!Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['password' => 'Incorrect password']);
+        }
+
+        $voucher = Voucher::findOrFail($id);
+
+        // Check current status
+        if ($voucher->status === 'for_eod') {
+            return back()->withErrors(['status' => 'Voucher is already sent']);
+        }
+
+        if ($voucher->status === 'rejected') {
+            return back()->withErrors(['status' => 'Voucher is already rejected']);
+        }
+
+        // Determine the action
+        $action = $request->input('action');
+        $newStatus = $action === 'forEod' ? 'for_eod' : 'rejected';
+        $message = $action === 'ForEod'
+            ? 'Voucher sent to Executive Director'
+            : 'Voucher rejected successfully';
+
+        // Update the voucher
+        $voucher->update(['status' => $newStatus]);
+
+        return back()->with([
+            'success' => $message,
+            'voucher' => $voucher->fresh()
+        ]);
     }
 
+    public function forEod($id, Request $request)
+    {
+        $request->validate([
+            'password' => 'required',
+            'action' => 'required|in:approve,reject' // Validate the action parameter
+        ]);
+
+        $user = auth()->user();
+
+        // Password verification
+        if (!Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['password' => 'Incorrect password']);
+        }
+
+        $voucher = Voucher::findOrFail($id);
+
+        // Check current status
+        if ($voucher->status === 'approved') {
+            return back()->withErrors(['status' => 'Voucher is already approved']);
+        }
+
+        if ($voucher->status === 'rejected') {
+            return back()->withErrors(['status' => 'Voucher is already rejected']);
+        }
+
+        // Determine the action
+        $action = $request->input('action');
+        $newStatus = $action === 'approve' ? 'approved' : 'rejected';
+        $message = $action === 'approve'
+            ? 'Voucher approved successfully'
+            : 'Voucher rejected successfully';
+
+        // Update the voucher
+        $voucher->update(['status' => $newStatus]);
+
+        return back()->with([
+            'success' => $message,
+            'voucher' => $voucher->fresh()
+        ]);
+    }
 
     protected function generateVoucherNumber(): string
     {
         $prefix = 'V-' . now()->format('Y') . '-';
         $lastVoucher = Voucher::where('voucher_no', 'like', $prefix . '%')
-                            ->orderBy('voucher_no', 'desc')
-                            ->first();
-        
-        $sequence = $lastVoucher 
+            ->orderBy('voucher_no', 'desc')
+            ->first();
+
+        $sequence = $lastVoucher
             ? (int) str_replace($prefix, '', $lastVoucher->voucher_no) + 1
             : 1;
-        
+
         return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 
@@ -167,15 +243,15 @@ class VoucherController extends Controller
     protected function validateRequest(Request $request): array
     {
         $rules = $this->voucherValidationRules;
-        
+
         // If updating, ignore unique rule for current voucher
         if ($request->isMethod('patch') || $request->isMethod('put')) {
             $voucherId = $request->route('voucher')?->id;
             if ($voucherId) {
-                $rules['voucher_no'] = 'required|string|unique:vouchers,voucher_no,'.$voucherId;
+                $rules['voucher_no'] = 'required|string|unique:vouchers,voucher_no,' . $voucherId;
             }
         }
-        
+
         return $request->validate($rules);
     }
 
@@ -189,11 +265,11 @@ class VoucherController extends Controller
         }
 
         $checkCollection = collect($validated['check']);
-        
+
         // Distribute amount evenly if any amount is null
-        if ($checkCollection->contains(fn ($item) => is_null($item['amount']))) {
+        if ($checkCollection->contains(fn($item) => is_null($item['amount']))) {
             $evenAmount = round($validated['check_amount'] / $checkCollection->count(), 2);
-            $validated['check'] = $checkCollection->map(fn ($item) => [
+            $validated['check'] = $checkCollection->map(fn($item) => [
                 ...$item,
                 'amount' => $item['amount'] ?? $evenAmount
             ])->toArray();
@@ -235,7 +311,7 @@ class VoucherController extends Controller
         if ($validated['type'] === 'salary' && !empty($validated['check'])) {
             $validated['check_amount'] = collect($validated['check'])->sum('amount');
         }
-        
+
         $voucher->update(collect($validated)->except('check')->toArray());
     }
 
@@ -279,7 +355,7 @@ class VoucherController extends Controller
     protected function createVoucherDetails(Voucher $voucher, array $details): void
     {
         $voucher->details()->createMany(
-            array_map(fn ($detail) => $this->mapDetailAttributes($detail), $details)
+            array_map(fn($detail) => $this->mapDetailAttributes($detail), $details)
         );
     }
 
@@ -304,14 +380,14 @@ class VoucherController extends Controller
     {
         if (!empty($validated['check'])) {
             $sumAmount = collect($validated['check'])->sum('amount');
-            
+
             // For cash vouchers, amount must match exactly
             if ($validated['type'] === 'cash' && abs($sumAmount - $validated['check_amount']) > 0.01) {
                 throw ValidationException::withMessages([
                     'check_amount' => 'For cash vouchers, check amount must equal the sum of all item amounts'
                 ]);
             }
-            
+
             // For salary vouchers, update the check amount to match details
             if ($validated['type'] === 'salary') {
                 $validated['check_amount'] = $sumAmount;

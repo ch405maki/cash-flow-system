@@ -208,7 +208,7 @@ const printArea = () =>{
           <Dialog v-model:open="showRejectModal">
               <DialogTrigger as-child>
                   <Button
-                  variant="default"
+                  variant="destructive"
                   size="sm"
                   :disabled="requestOrder.status == 'rejected' || form.processing"
                   >
@@ -284,9 +284,9 @@ const printArea = () =>{
            <Dialog v-model:open="showRejectCustodianModal">
               <DialogTrigger as-child>
                   <Button
-                  variant="default"
+                  variant="destructive"
                   size="sm"
-                  :disabled="requestOrder.status == 'rejected' || form.processing"
+                  :disabled="requestOrder.status == 'for_eod' || form.processing"
                   >
                   Reject
                   </Button>

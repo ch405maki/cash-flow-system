@@ -6,7 +6,7 @@
       <div class="flex justify-between items-center">
         <div>
           <h1 class="text-xl font-bold">For Approval Request to Order</h1>
-          <p class="text-sm">Created Orders</p>
+          <p class="text-sm">Created Order(s) For Approval</p>
         </div>
       </div>
       <!-- Table -->
@@ -18,14 +18,14 @@
                <TableHead>Date Request</TableHead>
                <TableHead>Notes</TableHead>
                <TableHead class="w-[100px]">Status</TableHead>
-               <TableHead class="text-center">Actions</TableHead>
+               <TableHead class="text-right">Actions</TableHead>
              </TableRow>
            </TableHeader>
            <TableBody>
              <TableRow v-for="request in props.requests" :key="request.id">
                <TableCell class="font-medium">{{ request.order_no }}</TableCell>
-               <TableCell>{{ new Date(request.order_date).toLocaleDateString() }}</TableCell>
-               <TableCell>{{ request.notes }}</TableCell>
+               <TableCell>{{ formatDate(request.order_date) }}</TableCell>
+               <TableCell>{{ request.notes || 'No Note(s) Attatched'}}</TableCell>
                <TableCell>
                  <Badge
                    :variant="getStatusVariant(request.status)"
@@ -34,7 +34,7 @@
                    {{ request.status }}
                  </Badge>
                </TableCell>
-               <TableCell class="text-center">
+               <TableCell class="text-right">
                  <Button size="sm" variant="outline" @click="viewRequest(request.id)">
                    View
                  </Button>
@@ -104,5 +104,14 @@ function getStatusVariant(status: string) {
 
 function goToShowRequest(requestId: number) {
   router.get(`/request/show/${requestId}`)
+}
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit'
+  })
 }
 </script>

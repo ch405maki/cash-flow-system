@@ -73,7 +73,7 @@ watch([departmentFilter, statusFilter], () => {
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="flex justify-between items-center">
         <h1 class="text-xl font-bold">
-          Requests
+          Requests On Process
           <p class="text-sm font-medium text-muted-foreground capitalize"></p>
         </h1>
         <div class="flex gap-4 items-center">
@@ -138,12 +138,6 @@ watch([departmentFilter, statusFilter], () => {
               </SelectContent>
             </Select>
           </div>
-
-          <!-- Create Button -->
-          <Button v-if="authUser.role == 'staff'" variant="default" size="sm" @click="goToCreate()" class="h-8">
-            <PlusCircle class="h-4 w-4 mr-2" />
-            Create Request
-          </Button>
         </div>
       </div>
 

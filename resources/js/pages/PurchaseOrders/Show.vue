@@ -330,10 +330,10 @@ const printArea = () =>{
       </Alert>
       <div id="print-section">
       <div class="hidden print:block">
-        <FormHeader text="Purchase Order" />
+        <FormHeader text="Purchase Order" :bordered="false"  />
       </div>
       <div class="grid grid-cols-1 md:grid-cols-1">
-        <table class="w-full text-sm border border-border rounded-md">
+        <table class="w-full text-sm border border-border rounded-md mb-2">
           <tbody>
             <tr class="border-b">
               <td class="p-2 font-medium text-muted-foreground border-r w-48">COMPANY NAME:</td>
@@ -349,11 +349,11 @@ const printArea = () =>{
             </tr>
           </tbody>
         </table>
-        <p class="text-xs italic hidden print:block my-4">*Please deliver the following items immediately subject to the agreed terms and condition.</p>
+        <p class="text-xs italic hidden print:block">*Please deliver the following items immediately subject to the agreed terms and condition.</p>
       </div>
 
       <!-- Items Table -->
-      <Table class="w-full text-sm border border-border rounded-md">
+      <Table class="w-full text-sm border border-border rounded-md mt-2">
         <TableCaption>      
           <h3 class="flex items-center w-full mt-2">
             <span class="flex-grow border-t border-dashed border-gray-300"></span>
