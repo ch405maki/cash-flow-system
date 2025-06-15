@@ -27,6 +27,7 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
+
 // Request Route
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/request', [RequestController::class, 'index'])->name('request.index');
@@ -36,6 +37,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/requests/{request}/status', [RequestController::class, 'updateStatus'])->name('request.updateStatus');
 });
 
+// RequestToOrderController Route
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/request-to-order', [RequestToOrderController::class, 'index'])->name('request-to-order.index');
     Route::get('/request-to-order/create', [RequestToOrderController::class, 'create'])->name('request-to-order.create');
@@ -88,8 +90,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/canvas/create', [CanvasController::class, 'create'])
-        ->name('canvas.create');
+    Route::get('/canvas/create', [CanvasController::class, 'create'])->name('canvas.create');
+    Route::post('/canvas', [CanvasController::class, 'store'])->name('canvas.store');
+    Route::get('/canvas', [CanvasController::class, 'index'])->name('canvas.index');
+    Route::get('/canvas/{canvas}', [CanvasController::class, 'show'])->name('canvas.show');
+    Route::get('/canvas/{canvas}/download', [CanvasController::class, 'download'])->name('canvas.download');
+    Route::patch('/canvas/{canvas}', [CanvasController::class, 'update'])->name('canvas.update');
 });
 
 require __DIR__.'/settings.php';
