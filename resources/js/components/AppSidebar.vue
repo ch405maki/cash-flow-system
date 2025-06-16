@@ -177,7 +177,7 @@ const reportItems = ref<DropdownNavItem[]>([
         children: [
         { title: 'Request Summary', href: '/reports/request-summary'},
         { title: 'Purchase Order Summary', href: '/reports/po-summary'},
-        { title: 'Voucher Summary', href: '/reports/vouchers'},
+        { title: 'Voucher Summary', href: '/reports/voucher-summary'},
         ],
     },
   ]);

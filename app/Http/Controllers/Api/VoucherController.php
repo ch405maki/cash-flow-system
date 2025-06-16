@@ -182,6 +182,18 @@ class VoucherController extends Controller
         ]);
     }
 
+    public function voucherSummary()
+    {
+        $vouchers = Voucher::all()
+            ->where('status', 'approved')
+            ->orderBy('date', 'desc')
+            ->get(['id', 'po_no', 'date', 'payee', 'amount', 'department_id']);
+
+        return Inertia::render('Reports/PurchaseOrders/Index', [
+            'purchaseOrders' => $purchaseOrders
+        ]);
+    }
+
     public function forEod($id, Request $request)
     {
         $request->validate([

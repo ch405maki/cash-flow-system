@@ -37,6 +37,17 @@ class ReportController extends Controller
         ]);
     }
 
+    public function voucherSummary()
+    {
+        $vouchers = Voucher::where('status', 'approved')
+            ->orderBy('voucher_date', 'desc')
+            ->get(['id', 'voucher_no', 'voucher_date', 'payee', 'check_amount', 'type']);
+
+        return Inertia::render('Reports/Vouchers/Index', [
+            'vouchers' => $vouchers
+        ]);
+    }
+
     public function voucherReports()
     {
         return Inertia::render('Reports/Vouchers/Reports', [
