@@ -75,7 +75,14 @@ const directorAccounting = computed(() =>
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Vouchers', href: '/vouchers' },
+    { 
+        title: 'Vouchers', 
+        href: voucher.status === 'for_eod'
+            ? '/voucher-approval' 
+            : voucher.status === 'for_check' 
+                ? '/approved-voucher' 
+                : '/vouchers' 
+    },
     { title: `Voucher ${voucher.voucher_no}`, href: `/vouchers/${voucher.id}` },
 ];
 
@@ -151,6 +158,17 @@ const amountToWords = (amount: number) => {
     return result;
 };
 
+function formatStatus(status: string): string {
+  switch (status) {
+    case 'for_eod':
+      return 'For EOD Approval';
+    case 'for_check':
+      return 'For Check Releasing';
+    default:
+      return status; // Keep as-is (e.g., "draft", "approved")
+  }
+}
+
 const printArea = () => {
     const printContents = document.getElementById('print-section')?.innerHTML;
     const originalContents = document.body.innerHTML;
@@ -208,7 +226,8 @@ const printArea = () => {
                     </template>
 
                     <template
-                        v-if="authUser.role === 'department_head' && voucher.status === 'draft' && voucher.status !== 'rejected'">
+                    v-if="voucher.status == 'draft' && authUser.access_id == '3'"
+                        >
                         <DirectorVerificationDialog :voucher-id="voucher.id" action="forEod">
                             <template #trigger>
                                 <Button variant="default"
@@ -230,10 +249,6 @@ const printArea = () => {
                         </DirectorVerificationDialog>
                     </template>
 
-                    <Button variant="outline" @click="router.visit('/vouchers')" class="flex items-center gap-2">
-                        <ArrowLeft class="h-4 w-4" />
-                        Back
-                    </Button>
                 </div>
             </div>
 
@@ -277,7 +292,7 @@ const printArea = () => {
                             <td class="p-2 font-medium text-muted-foreground border-r">STATUS:</td>
                             <td class="p-2 uppercase" colspan="3">
                                 <span class="py-1 rounded-full font-bold capitalize min-w-[100px]">
-                                    {{ voucher.status }}
+                                    {{ formatStatus(voucher.status) }}
                                 </span>
                             </td>
                         </tr>
@@ -338,7 +353,7 @@ const printArea = () => {
 
             <!-- Hidden Printable Voucher -->
             <div id="print-section">
-                <div id="printable-voucher" class="hidden print:block mx-4">
+                <div id="printable-voucher" class="hidden print:block mx-4 print:text-[9pt]">
                     <div class="text-center font-bold mb-5">
                         <FormHeader
                             :text="voucher.type.charAt(0).toUpperCase() + voucher.type.slice(1).toLowerCase() + ' Voucher'"
@@ -440,7 +455,7 @@ const printArea = () => {
                                 <div class="text-right w-1/6">
                                     <div class="my-4"></div>
                                     <div v-if="directorAccounting" class="relative inline-block text-sm uppercase">
-                                        <img v-if="voucher.status === 'approved'" src="" alt="Signature"
+                                        <img v-if="voucher.status === 'for_check'" src="" alt="Signature"
                                             class="w-[100px] absolute -top-6 left-1/2 -translate-x-1/2 pointer-events-none" />
                                         <div class="border-b border-black px-2 whitespace-nowrap">{{
                                             directorAccounting.full_name.toUpperCase() }}</div>
@@ -451,7 +466,7 @@ const printArea = () => {
                                         No Accounting Director assigned.
                                     </div>
                                 </div>
-                                <div class="font-bold uppercase">{{ voucher.status }}: </div>
+                                <div class="font-bold uppercase">{{ formatStatus(voucher.status) }}: </div>
                             </td>
                             <td class="w-1/2 align-top">
                                 I hereby certify to have received from the ARELLANO LAW FOUNDATION the sum of
@@ -466,7 +481,7 @@ const printArea = () => {
                                 <div class="text-right w-1/2">
                                     <div class="my-4"></div>
                                     <div v-if="executiveDirector" class="relative inline-block text-sm uppercase">
-                                        <img v-if="voucher.status === 'approved'" src="" alt="Signature"
+                                        <img v-if="voucher.status === 'for_check'" src="" alt="Signature"
                                             class="w-[100px] absolute -top-6 left-1/2 -translate-x-1/2 pointer-events-none" />
                                         <div class="border-b border-black px-2 whitespace-nowrap">{{
                                             executiveDirector.full_name.toUpperCase() }}</div>

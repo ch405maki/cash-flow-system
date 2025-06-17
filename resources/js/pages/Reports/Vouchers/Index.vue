@@ -120,7 +120,7 @@ function goToVoucher(id: number) {
         <Rocket class="h-4 w-4 text-green-500" />
         <AlertTitle>Notice</AlertTitle>
         <AlertDescription>
-          This is a collection of approved vouchers.
+          This is a collection of approved vouchers ready for check releasing.
         </AlertDescription>
 
         <!-- Dismiss Button -->
@@ -150,6 +150,7 @@ function goToVoucher(id: number) {
             <label class="block text-sm font-medium mb-1">End Date</label>
             <Input type="date" v-model="endDate" class="h-8" />
         </div>
+        
 
         <!-- Voucher Type Dropdown (Wider) -->
         <div class="flex flex-col col-span-5 h-full">

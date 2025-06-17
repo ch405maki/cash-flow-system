@@ -41,6 +41,7 @@ import axios from 'axios'
 import { ref, computed } from 'vue'
 import { type BreadcrumbItem } from '@/types';
 
+
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Vouchers', href: '/vouchers' },
@@ -175,10 +176,6 @@ async function submitVoucher() {
                         <CardTitle>Create Voucher</CardTitle>
                         <CardDescription>Complete all required fields</CardDescription>
                     </div>
-                    <Button variant="outline" @click="router.visit('/vouchers')" class="flex items-center gap-2">
-                        <ArrowLeft class="h-4 w-4" />
-                        Back
-                    </Button>
                 </div>
             </CardHeader>
 
@@ -266,7 +263,7 @@ async function submitVoucher() {
                                             <Button variant="outline" class="w-full justify-between"
                                                 :disabled="isCashVoucher">
                                                 {{accounts.find(a => a.id === detail.account_id)?.account_title ||
-                                                'Select account' }}
+                                                    'Select account'}}
                                                 <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                             </Button>
                                         </ComboboxTrigger>

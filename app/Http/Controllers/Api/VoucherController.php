@@ -33,7 +33,7 @@ class VoucherController extends Controller
         'check_no' => 'nullable|string|max:500',
         'check_payable_to' => 'required|string|max:500',
         'check_amount' => 'required|numeric|min:0',
-        'status' => 'required|in:for_eod,approved,rejected,draft',
+        'status' => 'required|in:for_eod,for_check,rejected,draft',
         'type' => 'required|in:cash,salary',
         'user_id' => 'required|exists:users,id',
         'check' => 'nullable|array',
@@ -50,7 +50,9 @@ class VoucherController extends Controller
         $user = Auth::user();
 
         return Inertia::render('Vouchers/Index', [
-            'vouchers' => Voucher::with(['user', 'details'])->get(),
+            'vouchers' => Voucher::with(['user', 'details'])
+                                ->whereIn('status', ['draft', 'rejected'])
+                                ->get(),
             'accounts' => Account::all(),
             'authUser' => [
                 'id' => $user->id,
@@ -199,8 +201,8 @@ class VoucherController extends Controller
         $voucher = Voucher::findOrFail($id);
 
         // Check current status
-        if ($voucher->status === 'approved') {
-            return back()->withErrors(['status' => 'Voucher is already approved']);
+        if ($voucher->status === 'for_check') {
+            return back()->withErrors(['status' => 'Voucher is already approved for check releasing']);
         }
 
         if ($voucher->status === 'rejected') {
@@ -209,7 +211,7 @@ class VoucherController extends Controller
 
         // Determine the action
         $action = $request->input('action');
-        $newStatus = $action === 'approve' ? 'approved' : 'rejected';
+        $newStatus = $action === 'approve' ? 'for_check' : 'rejected';
         $message = $action === 'approve'
             ? 'Voucher approved successfully'
             : 'Voucher rejected successfully';

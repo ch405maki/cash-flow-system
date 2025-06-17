@@ -48,7 +48,7 @@ const executiveApprovalItems: NavItem[] = [
   },
   {
     title: 'Vouchers',
-    href: '/vouchers',
+    href: '/voucher-approval',
     icon: ReceiptText,
   },
 ];
@@ -135,25 +135,6 @@ const staffRequestItems = ref<DropdownNavItem[]>([
     },
   ]);
 
-// IF FINANCE DIRECTOR
-const directorNavItems: NavItem[] = [
-  {
-    title: 'Dashboard',
-    href: '/dashboard',
-    icon: LayoutDashboard,
-  },
-  {
-    title: 'Requests',
-    href: '/request',
-    icon: FileText,
-  },
-  {
-    title: 'Vouchers',
-    href: '/vouchers',
-    icon: ReceiptText,
-  },
-];
-
 // Accounting
 const accountingNavItems: NavItem[] = [
   {
@@ -164,6 +145,19 @@ const accountingNavItems: NavItem[] = [
   {
     title: 'Vouchers',
     href: '/vouchers',
+    icon: ReceiptText,
+  },
+  {
+    title: 'Vouchers For Approval',
+    href: '/voucher-approval',
+    icon: ReceiptText,
+  },
+];
+
+const accountingCheckNavItems: NavItem[] = [
+  {
+    title: 'For Check',
+    href: '/approved-voucher',
     icon: ReceiptText,
   },
 ];
@@ -215,6 +209,7 @@ const footerNavItems: NavItem[] = [
           
           <div v-if="user?.role === 'accounting'">
             <NavMain :items="accountingNavItems" group-label="Navigation"/>
+            <NavMain :items="accountingCheckNavItems" group-label="Check"/>
             <NavMain :items="reportItems" group-label="Reports" />
           </div>
 
@@ -229,14 +224,11 @@ const footerNavItems: NavItem[] = [
             <NavMain :items="reportItems" group-label="Reports" />
           </div>
 
-          <div v-if="user?.role === 'staff' ">
+          <div v-if="user?.role === 'staff' || user?.role === 'department_head'">
             <NavMain :items="staffNavItems" group-label="Navigation"/>
-            <NavMain :items="staffRequestItems" group-label="Request"/>
+            <NavMain :items="staffRequestItems" group-label="Requests"/>
           </div>
 
-          <div v-if="user?.role === 'department_head' ">
-            <NavMain :items="directorNavItems" group-label="Navigation"/>
-          </div>
         </SidebarContent>
 
         <SidebarFooter>

@@ -22,7 +22,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     href: '/dashboard',
   }, {
     title: 'Vouchers',
-    href: '/vouchers',
+    href: '/approved-voucher',
   },
 ];
 
@@ -187,10 +187,9 @@ const props = defineProps({
             <Input type="search" placeholder="Search vouchers..." class="w-[200px] lg:w-[300px] h-8"
               v-model="searchQuery" />
           </div>
-
+          
           <!-- Only show if the user is NOT an executive_director and staff -->
-          <Button v-if="authUser.role !== 'executive_director' && authUser.access_id !== '3'" variant="default"
-            size="sm" @click="goToCreate()">
+          <Button v-if="authUser.role !== 'executive_director' && authUser.access_id !== '3' " variant="default" size="sm" @click="goToCreate()">
             <PlusCircle class="h-4 w-4" />
             Create New Voucher
           </Button>

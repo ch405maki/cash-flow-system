@@ -24,10 +24,6 @@ const props = defineProps<{
 const sortedVouchers = computed(() => {
   let filteredVouchers = [...props.vouchers];
   
-  // If user is executive_director, filter out vouchers with status 'for_director'
-  if (props.authUser.role === 'executive_director') {
-    filteredVouchers = filteredVouchers.filter(voucher => voucher.status !== 'draft');
-  }
   
   // Sort the remaining vouchers
   return filteredVouchers.sort((a, b) => {
@@ -43,7 +39,8 @@ function viewVoucher(id: number) {
   router.get(`/vouchers/${id}/view`);
 }
 
-function goToEditVoucher(id: number) {
+function goToEditVoucher(id: number, e: Event) {
+  e.stopPropagation(); // Prevent the row click event from firing
   router.get(`/vouchers/${id}/edit`);
 }
 
@@ -74,6 +71,17 @@ function formatDisplayDate(dateString: string): string {
     day: 'numeric'
   });
 }
+
+function formatStatus(status: string): string {
+  switch (status) {
+    case 'for_eod':
+      return 'For EOD Approval';
+    case 'for_check':
+      return 'For Check Releasing';
+    default:
+      return status; // Keep as-is (e.g., "draft", "approved")
+  }
+}
 </script>
 
 <template>
@@ -87,12 +95,12 @@ function formatDisplayDate(dateString: string): string {
           <TableHead class="px-4 py-2">Payee</TableHead>
           <TableHead class="px-4 py-2">Check Pay to</TableHead>
           <TableHead class="px-4 py-2">Date</TableHead>
-          <TableHead class="px-4 py-2 ">Status</TableHead>
-          <TableHead class="px-4 py-2 ">Actions</TableHead>
+          <TableHead class="px-4 py-2 text-center">Status</TableHead>
+          <TableHead class="px-4 py-2 "></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        <TableRow v-for="voucher in sortedVouchers" :key="voucher.id" class="border-t hover:bg-muted/50">
+        <TableRow @click="viewVoucher(voucher.id)" v-for="voucher in sortedVouchers" :key="voucher.id" class="border-t hover:bg-muted/50 hover:cursor-pointer" title="View Voucher">
           <TableCell class="px-4 py-2 font-medium">{{ voucher.voucher_no }}</TableCell>
           <TableCell class="px-4 py-2 capitalize">{{ voucher.type }}</TableCell>
           <TableCell class="px-4 py-2 font-mono tabular-nums">
@@ -105,25 +113,25 @@ function formatDisplayDate(dateString: string): string {
           </TableCell>
           <TableCell class="px-4 py-2 capitalize">
             <span class="inline-block rounded-full px-8 py-0.5 text-xs font-semibold" :class="{
-              'bg-yellow-100 text-yellow-800': voucher.status === 'pending',
-              'bg-green-100 text-green-800': voucher.status === 'approved',
+              'bg-yellow-100 text-yellow-800': voucher.status === 'draft',
+              'bg-green-100 text-green-800': voucher.status === 'for_check',
               'bg-red-100 text-red-800': voucher.status === 'rejected',
+              'bg-blue-100 text-blue-800': voucher.status === 'for_eod',
             }">
-              {{ voucher.status }}
+              {{ formatStatus(voucher.status) }}
             </span>
           </TableCell>
           <TableCell class="px-4 py-2 space-x-2">
-            <Button size="sm" variant="outline" @click="viewVoucher(voucher.id)" class="hover:bg-blue-50">
-              <Eye class="h-4 w-4 mr-1" />
-              <span>View</span>
-            </Button>
-
-            <Button v-if="authUser.role !== 'executive_director'" size="sm" variant="outline"
-              @click="goToEditVoucher(voucher.id)" class="hover:bg-green-50">
+            <Button 
+              v-if="authUser.role !== 'executive_director'" 
+              size="sm" 
+              variant="outline"
+              @click.stop="goToEditVoucher(voucher.id, $event)" 
+              class="hover:bg-green-50"
+            >
               <SquarePen class="h-4 w-4 mr-1" />
               <span>Edit</span>
             </Button>
-
           </TableCell>
         </TableRow>
       </TableBody>
