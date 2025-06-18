@@ -49,7 +49,6 @@ function formatDate(dateStr: string): string {
             <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Order #</th>
             <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Date</th>
             <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Requested By</th>
-            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Status</th>
           </tr>
         </thead>
         <tbody class="[&_tr:last-child]:border-0">
@@ -62,16 +61,6 @@ function formatDate(dateStr: string): string {
             </td>
             <td class="p-4 align-middle">
               {{ request.user?.first_name }} {{ request.user?.last_name }}
-            </td>
-            <td class="p-4 align-middle capitalize">
-              <span :class="{
-                'text-yellow-500': request.status === 'pending',
-                'text-green-500': request.status === 'approved',
-                'text-blue-500': request.status === 'to_order',
-                'text-red-500': request.status === 'rejected'
-              }">
-                {{ request.status }}
-              </span>
             </td>
           </tr>
         </tbody>

@@ -4,6 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
 import StatsCards from '@/components/dashboard/purchasing/StatsCards.vue';
 import RecentRequestsTable from '@/components/dashboard/purchasing/RecentRequestsTable.vue';
+import FrequentItemsChart from '@/components/dashboard/purchasing/FrequentItemsChart.vue';
 
 const props = defineProps<{
     isDepartmentUser: boolean;
@@ -14,6 +15,12 @@ const props = defineProps<{
         to_order: number;
         rejected: number;
     };
+    frequentItems: Array<{
+        item_description: string;
+        total_quantity: number;
+        request_count: number;
+        unit?: string;
+    }>;
     userRole: string;
     username: string;
 }>();
@@ -37,16 +44,28 @@ const breadcrumbs: BreadcrumbItem[] = [
             </h1>
             
             <StatsCards :status-counts="statusCounts" />
-            
-            <h1 class="text-lg font-medium">
-                Recent Approved Request
-                <p class="text-sm text-muted-foreground capitalize">For (purchase order / canvas)</p>
-            </h1>
-            
-            <RecentRequestsTable 
-                :is-department-user="isDepartmentUser" 
-                :recent-requests="recentRequests" 
-            />
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+                <!-- First Column -->
+                <div class="space-y-4">
+                    <h3 class="font-medium text-gray-900">
+                        Recent Approved Requests
+                        <p class="text-sm text-gray-500">For (purchase order / canvas)</p>
+                    </h3>
+                    <RecentRequestsTable 
+                        :is-department-user="isDepartmentUser" 
+                        :recent-requests="recentRequests" 
+                        class="mt-2"
+                    />
+                </div>
+                                
+                <!-- Second Column -->
+                <div>
+                    <h3 class="font-medium text-gray-900">Most Requested Items</h3>
+                    <p class="text-sm text-gray-500">Chart for most number of request</p>
+                    <FrequentItemsChart :items="frequentItems" />
+                </div>
+            </div>
         </div>
     </AppLayout>
 </template>

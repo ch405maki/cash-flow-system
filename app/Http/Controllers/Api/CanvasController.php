@@ -42,7 +42,7 @@ class CanvasController extends Controller
         $user = Auth::user();
 
         $canvases = Canvas::with('creator')
-            ->whereIn('status', ['approved', 'poCreated'])
+            ->whereIn('status', ['approved', 'poCreated','forEOD'])
             ->where('created_by', $user->id)
             ->latest()
             ->get();
