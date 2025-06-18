@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { computed } from 'vue'; // Add computed import
 import { router } from '@inertiajs/vue3';
-import { SquarePen, Eye } from 'lucide-vue-next';
+import { SquarePen, FileText, Eye } from 'lucide-vue-next';
 import {
   Table,
   TableHeader,
@@ -74,9 +74,9 @@ function formatDisplayDate(dateString: string): string {
 
 function formatStatus(status: string): string {
   switch (status) {
-    case 'for_eod':
+    case 'forEOD':
       return 'For EOD Approval';
-    case 'for_check':
+    case 'forCheck':
       return 'For Check Releasing';
     default:
       return status; // Keep as-is (e.g., "draft", "approved")
@@ -85,7 +85,7 @@ function formatStatus(status: string): string {
 </script>
 
 <template>
-  <div class="rounded-lg border">
+  <div v-if="vouchers.length > 0"class="rounded-lg border">
     <Table class="w-full table-auto text-left text-sm">
       <TableHeader>
         <TableRow>
@@ -114,16 +114,16 @@ function formatStatus(status: string): string {
           <TableCell class="px-4 py-2 capitalize">
             <span class="inline-block rounded-full px-8 py-0.5 text-xs font-semibold" :class="{
               'bg-yellow-100 text-yellow-800': voucher.status === 'draft',
-              'bg-green-100 text-green-800': voucher.status === 'for_check',
+              'bg-green-100 text-green-800': voucher.status === 'forCheck',
               'bg-red-100 text-red-800': voucher.status === 'rejected',
-              'bg-blue-100 text-blue-800': voucher.status === 'for_eod',
+              'bg-blue-100 text-blue-800': voucher.status === 'forEOD',
             }">
               {{ formatStatus(voucher.status) }}
             </span>
           </TableCell>
           <TableCell class="px-4 py-2 space-x-2">
             <Button 
-              v-if="authUser.role !== 'executive_director'" 
+              v-if="authUser.role === 'accounting' && voucher.status !== 'forEOD'" 
               size="sm" 
               variant="outline"
               @click.stop="goToEditVoucher(voucher.id, $event)" 
@@ -136,5 +136,11 @@ function formatStatus(status: string): string {
         </TableRow>
       </TableBody>
     </Table>
+  </div>
+
+  <div v-else-if="vouchers" class="flex h-48 flex-col items-center justify-center rounded-xl border">
+    <FileText class="h-8 w-8 text-muted-foreground" />
+    <p class="mt-2 text-sm text-muted-foreground">No pending vouchers for approval found</p>
+    <p class="text-xs text-muted-foreground">Vouchers for approval from Director of Finance will appear here</p>
   </div>
 </template>

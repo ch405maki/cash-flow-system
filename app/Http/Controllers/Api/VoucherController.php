@@ -33,7 +33,7 @@ class VoucherController extends Controller
         'check_no' => 'nullable|string|max:500',
         'check_payable_to' => 'required|string|max:500',
         'check_amount' => 'required|numeric|min:0',
-        'status' => 'required|in:for_eod,for_check,rejected,draft',
+        'status' => 'required|in:forEOD,forCheck,rejected,draft',
         'type' => 'required|in:cash,salary',
         'user_id' => 'required|exists:users,id',
         'check' => 'nullable|array',
@@ -160,7 +160,7 @@ class VoucherController extends Controller
         $voucher = Voucher::findOrFail($id);
 
         // Check current status
-        if ($voucher->status === 'for_eod') {
+        if ($voucher->status === 'forEOD') {
             return back()->withErrors(['status' => 'Voucher is already sent']);
         }
 
@@ -170,7 +170,7 @@ class VoucherController extends Controller
 
         // Determine the action
         $action = $request->input('action');
-        $newStatus = $action === 'forEod' ? 'for_eod' : 'rejected';
+        $newStatus = $action === 'forEod' ? 'forEOD' : 'rejected';
         $message = $action === 'ForEod'
             ? 'Voucher sent to Executive Director'
             : 'Voucher rejected successfully';
@@ -201,7 +201,7 @@ class VoucherController extends Controller
         $voucher = Voucher::findOrFail($id);
 
         // Check current status
-        if ($voucher->status === 'for_check') {
+        if ($voucher->status === 'forCheck') {
             return back()->withErrors(['status' => 'Voucher is already approved for check releasing']);
         }
 
@@ -211,7 +211,7 @@ class VoucherController extends Controller
 
         // Determine the action
         $action = $request->input('action');
-        $newStatus = $action === 'approve' ? 'for_check' : 'rejected';
+        $newStatus = $action === 'approve' ? 'forCheck' : 'rejected';
         $message = $action === 'approve'
             ? 'Voucher approved successfully'
             : 'Voucher rejected successfully';
@@ -304,9 +304,6 @@ class VoucherController extends Controller
         return $voucher;
     }
 
-    /**
-     * Update an existing voucher
-     */
     protected function updateType(Voucher $voucher, array $validated): void
     {
         // For salary vouchers, calculate check_amount from details

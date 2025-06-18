@@ -206,10 +206,10 @@ async function updateVoucher() {
 
                         <!-- Column 2 -->
                         <div class="space-y-4">
-                            <div class="grid gap-2">
+                             <div class="grid gap-2" v-if="voucher.status === 'forCheck'">
                                 <Label for="check_no">Check Number *</Label>
                                 <Input id="check_no" v-model="form.check_no" />
-                            </div>
+                            </div>  
 
                             <div class="grid gap-2">
                                 <Label for="check_date">Check Date *</Label>
