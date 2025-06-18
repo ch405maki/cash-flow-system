@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Request;
 use App\Models\RequestToOrder;
+use App\Models\RequestToOrderDetail;
 use App\Models\PurchaseOrder;
 use App\Models\User;
 use App\Models\Canvas;
 use Illuminate\Http\Request as HttpRequest;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
@@ -122,11 +124,22 @@ class DashboardController extends Controller
             'approval' => RequestToOrder::where('status', 'pending')->count(),
             'rejected' => RequestToOrder::where('status', 'rejected')->count(),
         ];
+
+        $frequentItems = RequestToOrderDetail::select(
+            'item_description',
+            DB::raw('SUM(quantity) as total_quantity'),
+            DB::raw('COUNT(*) as request_count')
+        )
+        ->groupBy('item_description')
+        ->orderByDesc('request_count')
+        ->limit(10)
+        ->get();
         
         return Inertia::render('Dashboard/Custodian/Index', [
             'isDepartmentUser' => true,
             'recentRequests' => $requests,
             'statusCounts' => $statusCounts,
+            'frequentItems' => $frequentItems,
             'userRole' => $user->role,
             'username' => $user->username,
         ]);
@@ -167,10 +180,21 @@ class DashboardController extends Controller
             'approved_po' => PurchaseOrder::where('status', 'approved')->count(),
         ];
         
+        $frequentItems = RequestToOrderDetail::select(
+            'item_description',
+            DB::raw('SUM(quantity) as total_quantity'),
+            DB::raw('COUNT(*) as request_count')
+        )
+        ->groupBy('item_description')
+        ->orderByDesc('request_count')
+        ->limit(10)
+        ->get();
+        
         return Inertia::render('Dashboard/Purchasing/Index', [
             'isDepartmentUser' => true,
             'recentRequests' => $requests,
             'statusCounts' => $statusCounts,
+            'frequentItems' => $frequentItems,
             'userRole' => $user->role,
             'username' => $user->username,
         ]);
