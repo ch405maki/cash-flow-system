@@ -27,15 +27,15 @@ import { type BreadcrumbItem } from '@/types';
 import { router } from '@inertiajs/vue3';
 import { Check, ChevronsUpDown, Search } from 'lucide-vue-next'
 import {
-  Combobox,
-  ComboboxAnchor,
-  ComboboxEmpty,
-  ComboboxGroup,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxItemIndicator,
-  ComboboxList,
-  ComboboxTrigger
+    Combobox,
+    ComboboxAnchor,
+    ComboboxEmpty,
+    ComboboxGroup,
+    ComboboxInput,
+    ComboboxItem,
+    ComboboxItemIndicator,
+    ComboboxList,
+    ComboboxTrigger
 } from '@/components/ui/combobox'
 
 const { props } = usePage();
@@ -45,12 +45,12 @@ const voucher = props.voucher;
 const accountSearchQuery = ref('')
 
 const filteredAccounts = computed(() => {
-  if (!accountSearchQuery.value) return accounts
-  
-  const query = accountSearchQuery.value.toLowerCase()
-  return accounts.filter(account => 
-    account.account_title.toLowerCase().includes(query)
-  )
+    if (!accountSearchQuery.value) return accounts
+
+    const query = accountSearchQuery.value.toLowerCase()
+    return accounts.filter(account =>
+        account.account_title.toLowerCase().includes(query)
+    )
 })
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -109,7 +109,7 @@ const addDetailItem = () => {
 const removeDetailItem = async (index) => {
     if (form.check.length > 1) {
         const detail = form.check[index];
-        
+
         // If this is an existing record (has an ID), confirm deletion
         if (detail.id) {
             try {
@@ -120,7 +120,7 @@ const removeDetailItem = async (index) => {
                 return;
             }
         }
-        
+
         form.check.splice(index, 1);
         calculateTotalAmount();
     }
@@ -147,7 +147,7 @@ async function updateVoucher() {
         // Check for duplicate account IDs before submitting
         const accountIds = form.check.map(item => item.account_id);
         const uniqueAccountIds = new Set(accountIds);
-        
+
         if (accountIds.length !== uniqueAccountIds.size) {
             toast.error('Duplicate account entries with the same name detected.');
             return;
@@ -172,10 +172,11 @@ async function updateVoucher() {
 </script>
 
 <template>
+
     <Head :title="`Voucher Details - ${voucher.voucher_no}`" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <Card class="mt-6 mx-auto w-full">
+        <div class="mt-6 mx-auto w-full">
             <CardHeader>
                 <CardTitle>Voucher {{ voucher.voucher_no }}</CardTitle>
                 <CardDescription>Update voucher details</CardDescription>
@@ -207,7 +208,7 @@ async function updateVoucher() {
                         <div class="space-y-4">
                             <div class="grid gap-2">
                                 <Label for="check_no">Check Number *</Label>
-                                <Input id="check_no" v-model="form.check_no"/>
+                                <Input id="check_no" v-model="form.check_no" />
                             </div>
 
                             <div class="grid gap-2">
@@ -225,13 +226,8 @@ async function updateVoucher() {
                         <div class="space-y-4">
                             <div class="grid gap-2">
                                 <Label for="check_amount">Check Amount *</Label>
-                                <Input 
-                                    id="check_amount" 
-                                    type="number" 
-                                    step="0.01" 
-                                    v-model="form.check_amount"
-                                    :disabled="!isCashVoucher"
-                                />
+                                <Input id="check_amount" type="number" step="0.01" v-model="form.check_amount"
+                                    :disabled="!isCashVoucher" />
                             </div>
 
                             <div class="grid gap-2">
@@ -239,19 +235,7 @@ async function updateVoucher() {
                                 <Input id="purpose" v-model="form.purpose" required />
                             </div>
 
-                            <div class="grid gap-2">
-                                 <Label for="status">Status *</Label>
-                                    <Select v-model="form.status" required>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="pending">Pending</SelectItem>
-                                        <SelectItem value="approved">Approved</SelectItem>
-                                        <SelectItem value="rejected">Rejected</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+
 
                         </div>
                     </div>
@@ -260,78 +244,60 @@ async function updateVoucher() {
                     <div v-if="form.type !== 'cash'" class="border rounded-lg p-4 mb-6">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="font-medium">Update Accounts</h3>
-                            <Button 
-                                type="button" 
-                                variant="outline" 
-                                size="sm" 
-                                @click="addDetailItem"
-                                :disabled="form.type === 'cash'"
-                            >
+                            <Button type="button" variant="outline" size="sm" @click="addDetailItem"
+                                :disabled="form.type === 'cash'">
                                 <Plus class="h-4 w-4 mr-2" />
                                 Add Account
                             </Button>
                         </div>
 
-                        <div 
-                            v-for="(detail, index) in form.check" 
-                            :key="index"
-                            class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 pb-4 border-b last:border-0"
-                        >
+                        <div v-for="(detail, index) in form.check" :key="index"
+                            class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 pb-4 border-b last:border-0">
                             <!-- Account Selection with Combobox -->
                             <div class="grid gap-2">
-                            <Label :for="`account-${index}`">Account *</Label>
-                            <Combobox 
-                                v-model="detail.account_id" 
-                                :disabled="form.type === 'cash'"
-                                by="id"
-                            >
-                                <ComboboxAnchor as-child>
-                                <ComboboxTrigger as-child>
-                                    <Button 
-                                    variant="outline" 
-                                    class="w-full justify-between"
-                                    :disabled="form.type === 'cash'"
-                                    >
-                                    {{ accounts.find(a => a.id == detail.account_id)?.account_title || 'Select account' }}
-                                    <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                </ComboboxTrigger>
-                                </ComboboxAnchor>
+                                <Label :for="`account-${index}`">Account *</Label>
+                                <Combobox v-model="detail.account_id" :disabled="form.type === 'cash'" by="id">
+                                    <ComboboxAnchor as-child>
+                                        <ComboboxTrigger as-child>
+                                            <Button variant="outline" class="w-full justify-between"
+                                                :disabled="form.type === 'cash'">
+                                                {{accounts.find(a => a.id == detail.account_id)?.account_title ||
+                                                'Select account' }}
+                                                <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                        </ComboboxTrigger>
+                                    </ComboboxAnchor>
 
-                                <ComboboxList class="max-h-[180px] overflow-y-auto">
-                                <div class="relative w-full items-center">
-                                    <ComboboxInput 
-                                    class="pl-9 focus-visible:ring-0 border-0 border-b rounded-none h-10" 
-                                    placeholder="Search accounts..."
-                                    v-model="accountSearchQuery"
-                                    />
-                                    <span class="absolute start-0 inset-y-0 flex items-center justify-center px-3">
-                                    <Search class="size-4 text-muted-foreground" />
-                                    </span>
-                                </div>
+                                    <ComboboxList class="max-h-[180px] overflow-y-auto">
+                                        <div class="relative w-full items-center">
+                                            <ComboboxInput
+                                                class="pl-9 focus-visible:ring-0 border-0 border-b rounded-none h-10"
+                                                placeholder="Search accounts..." v-model="accountSearchQuery" />
+                                            <span
+                                                class="absolute start-0 inset-y-0 flex items-center justify-center px-3">
+                                                <Search class="size-4 text-muted-foreground" />
+                                            </span>
+                                        </div>
 
-                                <ComboboxEmpty v-if="filteredAccounts.length === 0">
-                                    No accounts found.
-                                </ComboboxEmpty>
+                                        <ComboboxEmpty v-if="filteredAccounts.length === 0">
+                                            No accounts found.
+                                        </ComboboxEmpty>
 
-                                <ComboboxGroup>
-                                    <div class="max-h-[150px] overflow-y-auto">
-                                    <ComboboxItem
-                                        v-for="account in filteredAccounts.slice(0, 5)"
-                                        :key="account.id"
-                                        :value="account.id.toString()"
-                                    >
-                                        {{ account.account_title }}
-                                        <ComboboxItemIndicator>
-                                        <Check class="ml-auto h-4 w-4" />
-                                        </ComboboxItemIndicator>
-                                    </ComboboxItem>
-                                    </div>
-                                </ComboboxGroup>
-                                </ComboboxList>
-                            </Combobox>
+                                        <ComboboxGroup>
+                                            <div class="max-h-[150px] overflow-y-auto">
+                                                <ComboboxItem v-for="account in filteredAccounts.slice(0, 5)"
+                                                    :key="account.id" :value="account.id.toString()">
+                                                    {{ account.account_title }}
+                                                    <ComboboxItemIndicator>
+                                                        <Check class="ml-auto h-4 w-4" />
+                                                    </ComboboxItemIndicator>
+                                                </ComboboxItem>
+                                            </div>
+                                        </ComboboxGroup>
+                                    </ComboboxList>
+                                </Combobox>
                             </div>
-                            
+
 
                             <!-- Charging Tag -->
                             <div class="grid gap-2">
@@ -350,59 +316,36 @@ async function updateVoucher() {
                             <!-- Hours -->
                             <div class="grid gap-2">
                                 <Label :for="`hours-${index}`">Hours</Label>
-                                <Input 
-                                    :id="`hours-${index}`" 
-                                    type="number" 
-                                    step="0.01" 
-                                    v-model="detail.hours"
-                                    @blur="calculateAmountFromRate(index)" 
-                                    placeholder="Optional"
-                                    :disabled="form.type === 'cash'"
-                                />
+                                <Input :id="`hours-${index}`" type="number" step="0.01" v-model="detail.hours"
+                                    @blur="calculateAmountFromRate(index)" placeholder="Optional"
+                                    :disabled="form.type === 'cash'" />
                             </div>
 
                             <!-- Rate -->
                             <div class="grid gap-2">
                                 <Label :for="`rate-${index}`">Rate</Label>
-                                <Input 
-                                    :id="`rate-${index}`" 
-                                    type="number" 
-                                    step="0.01" 
-                                    v-model="detail.rate"
-                                    @blur="calculateAmountFromRate(index)" 
-                                    placeholder="Optional"
-                                    :disabled="form.type === 'cash'"
-                                />
+                                <Input :id="`rate-${index}`" type="number" step="0.01" v-model="detail.rate"
+                                    @blur="calculateAmountFromRate(index)" placeholder="Optional"
+                                    :disabled="form.type === 'cash'" />
                             </div>
 
                             <!-- Amount -->
                             <div class="grid gap-2">
                                 <Label :for="`amount-${index}`">Amount *</Label>
                                 <div class="flex gap-2">
-                                    <Input 
-                                        :id="`amount-${index}`" 
-                                        type="number" 
-                                        step="0.01" 
-                                        v-model="detail.amount"
-                                        @change="calculateTotalAmount" 
-                                        required 
-                                        class="flex-1"
-                                        :disabled="form.type === 'cash'"
-                                    />
-                                    <Button 
-                                        type="button" 
-                                        variant="destructive" 
-                                        size="icon"
-                                        @click="removeDetailItem(index)" 
-                                        :disabled="form.check.length <= 1 || form.type === 'cash'"
-                                    >
+                                    <Input :id="`amount-${index}`" type="number" step="0.01" v-model="detail.amount"
+                                        @change="calculateTotalAmount" required class="flex-1"
+                                        :disabled="form.type === 'cash'" />
+                                    <Button type="button" variant="destructive" size="icon"
+                                        @click="removeDetailItem(index)"
+                                        :disabled="form.check.length <= 1 || form.type === 'cash'">
                                         <Trash2 class="h-4 w-4" />
                                     </Button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Dates Section -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                         <div class="grid gap-2">
@@ -433,6 +376,6 @@ async function updateVoucher() {
                     </CardFooter>
                 </form>
             </CardContent>
-        </Card>
+        </div>
     </AppLayout>
 </template>
