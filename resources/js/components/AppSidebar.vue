@@ -71,7 +71,12 @@ const purchasingNavItems: NavItem[] = [
     icon: FileCheck2,
   },
   {
-    title: 'Purchase Approval',
+    title: 'Canvas For Approval',
+    href: '/canvas/approval',
+    icon: ShoppingCart,
+  },
+  {
+    title: 'P. O. For Approval',
     href: '/purchase-orders',
     icon: ShoppingCart,
   },

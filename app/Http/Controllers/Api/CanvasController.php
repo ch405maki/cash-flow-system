@@ -25,12 +25,30 @@ class CanvasController extends Controller
         } else {
             // Everyone else sees only the canvases they created
             $canvases = Canvas::with('creator')
+                ->whereIn('status', ['forEOD', 'pending'])
                 ->where('created_by', $user->id)
                 ->latest()
                 ->get();
         }
 
         return Inertia::render('Canvas/Index', [
+            'canvases' => $canvases,
+            'authUserRole' => $user->role,
+        ]);
+    }
+
+    public function approval()
+    {
+        $user = Auth::user();
+
+        $canvases = Canvas::with('creator')
+            ->whereIn('status', ['approved', 'poCreated'])
+            ->where('created_by', $user->id)
+            ->latest()
+            ->get();
+
+
+        return Inertia::render('Canvas/CanvasApproval', [
             'canvases' => $canvases,
             'authUserRole' => $user->role,
         ]);
@@ -77,7 +95,7 @@ class CanvasController extends Controller
     {
         $validated = $request->validate([
             'remarks' => 'nullable|string',
-            'status' => 'sometimes|in:pending,approved,rejected,forEOD'
+            'status' => 'sometimes|in:pending,approved,rejected,forEOD,poCreated'
         ]);
 
         $canvas->update($validated);

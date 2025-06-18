@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { FileText, Clock, CheckCircle, XCircle, Download, Eye } from 'lucide-vue-next';
+import { FileText, UserRoundCheck, Clock, CheckCircle, XCircle, Download, Eye } from 'lucide-vue-next';
 import axios from 'axios';
 import {
   Table,
@@ -27,6 +27,7 @@ const statusIcons = {
   pending: Clock,
   approved: CheckCircle,
   rejected: XCircle,
+  forEOD: UserRoundCheck,
 };
 
 const statusVariants = {
@@ -109,19 +110,19 @@ const breadcrumbs = [
           <CanvasUploadDialog />
         </div>
       </div>
-    <div class="w-full text-sm border border-border rounded-md">
+    <div v-if="canvases.length > 0" class="w-full text-sm border border-border rounded-md">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>File</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Note</TableHead>
+            <TableHead>Remarks</TableHead>
             <TableHead>Uploaded</TableHead>
             <TableHead class="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow v-for="canvas in canvases" :key="canvas.id">
+          <TableRow @click="showCanvas(canvas)" v-for="canvas in canvases" :key="canvas.id" class="hover:cursor-pointer" title="Click to View">
             <TableCell>
               <div class="flex items-center gap-4">
                 <FileText class="h-5 w-5 text-muted-foreground" />
@@ -145,7 +146,7 @@ const breadcrumbs = [
             
             <TableCell>
               <div class="text-sm text-muted-foreground max-w-[200px] truncate">
-                {{ canvas.note || 'No Notes' }}
+                {{ canvas.remarks || 'No Notes' }}
               </div>
             </TableCell>
             
@@ -157,15 +158,6 @@ const breadcrumbs = [
             
             <TableCell class="text-right">
               <div class="flex gap-2 justify-end">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  class="gap-1"
-                  @click="showCanvas(canvas)"
-                >
-                  <Eye class="h-3.5 w-3.5" />
-                  <span>Show</span>
-                </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -182,6 +174,13 @@ const breadcrumbs = [
         </TableBody>
       </Table>
     </div>
+
+    <div v-else class="flex h-48 flex-col items-center justify-center rounded-xl border">
+      <FileText class="h-8 w-8 text-muted-foreground" />
+      <p class="mt-2 text-sm text-muted-foreground">No recent canvas found</p>
+      <p class="text-xs text-muted-foreground">Canvas from purchasing will appear here</p>
+    </div>
+    
       <!-- Canvas Show Dialog -->
       <CanvasShowDialog
         v-if="selectedCanvas"

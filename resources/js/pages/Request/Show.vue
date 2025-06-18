@@ -247,7 +247,7 @@
                         size="sm" 
                         :disabled="request.status === 'propertyCustodian' || request.status === 'rejected' || form.processing"
                     >
-                        Send To Property
+                        Approve
                     </Button>
                     </DialogTrigger>
                     <DialogContent>
