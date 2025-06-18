@@ -43,7 +43,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/request/to-receive', [RequestController::class, 'toReceive'])->name('request.to-receive');
 });
 
-// RequestToOrderController Route
+// Request To Order Route
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/request-to-order', [RequestToOrderController::class, 'index'])->name('request-to-order.index');
     Route::get('/request-to-order/create', [RequestToOrderController::class, 'create'])->name('request-to-order.create');
@@ -63,6 +63,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/approved-request/show/{request}', [ApprovedRequestController::class, 'show'])->name('approved-request.show');
 });
 
+// Voucher Route
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/vouchers', [VoucherController::class, 'index'])->name('vouchers.index');
     Route::get('/vouchers/create', [VoucherController::class, 'create'])->name('vouchers.create');
@@ -84,6 +85,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/approved-voucher', [ApprovedVoucherController::class, 'index'])->name('approved-voucher.index');
 });
 
+// Report Route
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/po-summary', [ReportController::class, 'poSummary'])->name('reports.po-summary');
@@ -91,7 +93,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/reports/voucher-summary', [ReportController::class, 'voucherSummary'])->name('reports.voucher-summary');
 });
 
-
+// Purchase Order Route
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])
         ->name('purchase-orders.index');
@@ -103,10 +105,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/purchase-orders/{purchaseOrder}/status', [PurchaseOrderController::class, 'updateStatus'])->name('purchase-orders.status.update');
 });
 
+// Canvas Route
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/canvas/create', [CanvasController::class, 'create'])->name('canvas.create');
     Route::post('/canvas', [CanvasController::class, 'store'])->name('canvas.store');
     Route::get('/canvas', [CanvasController::class, 'index'])->name('canvas.index');
+
+    Route::get('/canvas/approval', [CanvasController::class, 'approval'])->name('canvas.approval');
     Route::get('/canvas/{canvas}', [CanvasController::class, 'show'])->name('canvas.show');
     Route::get('/canvas/{canvas}/download', [CanvasController::class, 'download'])->name('canvas.download');
     Route::patch('/canvas/{canvas}', [CanvasController::class, 'update'])->name('canvas.update');

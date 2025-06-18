@@ -7,15 +7,17 @@ use App\Models\Request;
 use App\Models\RequestToOrder;
 use App\Models\PurchaseOrder;
 use App\Models\User;
+use App\Models\Canvas;
 use Illuminate\Http\Request as HttpRequest;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         
         // Redirect to appropriate dashboard based on user role
         if (in_array($user->role, ['staff', 'department_head'])) {
@@ -26,6 +28,9 @@ class DashboardController extends Controller
         }
         elseif ($user->role === 'executive_director') {
             return $this->executiveDashboard();
+        }
+        elseif ($user->role === 'purchasing') {
+            return $this->purchasingDashboard();
         }
         
         // Default dashboard for other roles
@@ -88,7 +93,7 @@ class DashboardController extends Controller
         $user = auth()->user();
         
         $requests = Request::with(['user', 'details'])
-            ->where('status', 'to_property')
+            ->where('status', 'propertyCustodian')
             ->orderBy('request_date', 'desc')
             ->limit(10)
             ->get()
@@ -112,7 +117,7 @@ class DashboardController extends Controller
             });
             
         $statusCounts = [
-            'pending' => Request::where('status', 'to_property')->count(),
+            'pending' => Request::where('status', 'propertyCustodian')->count(),
             'to_order' => Request::where('status', 'to_order')->count(),
             'approval' => RequestToOrder::where('status', 'pending')->count(),
             'rejected' => RequestToOrder::where('status', 'rejected')->count(),
@@ -127,13 +132,57 @@ class DashboardController extends Controller
         ]);
     }
 
+    protected function purchasingDashboard()
+    {
+        $user = Auth::user();
+        
+        $requests = RequestToOrder::with(['user', 'details'])
+            ->where('status', 'forPO')
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function ($request) {
+                return [
+                    'id' => $request->id,
+                    'order_no' => $request->order_no,
+                    'request_date' => $request->order_date,
+                    'note' => $request->note,
+                    'status' => $request->status,
+                    'user' => $request->user ? $request->user->only(['first_name', 'last_name']) : null,
+                    'details' => $request->details->map(function ($detail) {
+                        return [
+                            'id' => $detail->id,
+                            'quantity' => $detail->quantity,
+                            'unit' => $detail->unit,
+                            'item_description' => $detail->item_description,
+                        ];
+                    }),
+                ];
+            });
+            
+        $statusCounts = [
+            'approved_request' => RequestToOrder::where('status', 'forPO')->count(),
+            'canvas_approval' => Canvas::where('status', 'forEOD')->count(),
+            'po_approval' => PurchaseOrder::where('status', 'forEOD')->count(),
+            'approved_po' => PurchaseOrder::where('status', 'approved')->count(),
+        ];
+        
+        return Inertia::render('Dashboard/Purchasing/Index', [
+            'isDepartmentUser' => true,
+            'recentRequests' => $requests,
+            'statusCounts' => $statusCounts,
+            'userRole' => $user->role,
+            'username' => $user->username,
+        ]);
+    }
+
     protected function executiveDashboard()
     {
         $user = auth()->user();
         
         // Recent Requests
         $requests = Request::with(['user', 'details'])
-            ->where('status', 'to_property')
+            ->where('status', 'propertyCustodian')
             ->orderBy('request_date', 'desc')
             ->limit(10)
             ->get()
@@ -158,7 +207,7 @@ class DashboardController extends Controller
         
         // Recent RequestToOrders
         $requestToOrders = RequestToOrder::with(['user', 'details'])
-            ->where('status', 'for_eod')
+            ->where('status', 'forEOD')
             ->orderBy('order_date', 'desc')
             ->limit(10)
             ->get()
@@ -220,8 +269,8 @@ class DashboardController extends Controller
                         ->where('status', 'approved')
                         ->whereYear('created_at', now()->year)
                         ->count(),
-            'toOrderApproval' => RequestToOrder::where('status', 'for_eod')->count(),
-            'poApproval' => PurchaseOrder::where('status', 'for_approval')->count(),
+            'toOrderApproval' => RequestToOrder::where('status', 'forEOD')->count(),
+            'poApproval' => PurchaseOrder::where('status', 'forEOD')->count(),
             'rejected' => RequestToOrder::where('status', 'rejected')->count(),
             
             // Additional metrics

@@ -20,7 +20,7 @@ class ApprovedRequestController extends Controller
     public function index()
     {
         $requests = RequestToOrder::with('details')
-            ->where('status', 'for_po')
+            ->where('status', 'forPO')
             ->get();
 
         return Inertia::render('Request/Approved/Index', [

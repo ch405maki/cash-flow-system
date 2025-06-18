@@ -174,7 +174,7 @@ const printArea = () =>{
                   <Button
                   variant="default"
                   size="sm"
-                  :disabled="requestOrder.status == 'for_po' || form.processing"
+                  :disabled="requestOrder.status == 'forPO' || form.processing"
                   >
                   Approve for PO
                   </Button>
@@ -249,7 +249,7 @@ const printArea = () =>{
                   <Button
                   variant="default"
                   size="sm"
-                  :disabled="requestOrder.status == 'for_eod' || form.processing"
+                  :disabled="requestOrder.status == 'forEOD' || form.processing"
                   >
                   For EOD Approval
                   </Button>
@@ -286,7 +286,7 @@ const printArea = () =>{
                   <Button
                   variant="destructive"
                   size="sm"
-                  :disabled="requestOrder.status == 'for_eod' || form.processing"
+                  :disabled="requestOrder.status == 'forEOD' || form.processing"
                   >
                   Reject
                   </Button>

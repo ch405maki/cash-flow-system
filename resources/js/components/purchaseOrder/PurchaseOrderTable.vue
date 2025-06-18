@@ -10,9 +10,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { router } from '@inertiajs/vue3'
-import { 
-  FileText,
-} from 'lucide-vue-next'
+import { FileText } from 'lucide-vue-next'
 
 
 defineProps({
@@ -37,7 +35,7 @@ function goToPO(id: number) {
 </script>
 
 <template>
-  <div v-if="purchaseOrders.length > 0" class="rounded-md border">
+  <div v-if="purchaseOrders.data.length > 0" class="rounded-md border">
     <Table>
       <TableHeader>
         <TableRow>
@@ -52,14 +50,14 @@ function goToPO(id: number) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        <TableRow v-for="po in purchaseOrders.data" :key="po.id">
+        <TableRow @click="goToPO(po.id)" class="hover:cursor-pointer hover:underline" v-for="po in purchaseOrders.data" :key="po.id">
           <TableCell class="font-medium">{{ po.po_no }}</TableCell>
           <TableCell>{{ formatDate(po.date) }}</TableCell>
           <TableCell>{{ po.payee }}</TableCell>
           <TableCell>{{ po.department.department_name }}</TableCell>
           <TableCell>{{ po.amount.toLocaleString() }}</TableCell>
           <TableCell>
-            <Badge>
+            <Badge class="capitalize">  
               {{ po?.status || 'N/A' }}
             </Badge>
           </TableCell>
@@ -74,7 +72,7 @@ function goToPO(id: number) {
     </Table>
   </div>
 
-  <div v-else-if="purchaseOrders" class="flex h-48 flex-col items-center justify-center rounded-xl border">
+  <div v-else="purchaseOrders.data" class="flex h-48 flex-col items-center justify-center rounded-xl border">
     <FileText class="h-8 w-8 text-muted-foreground" />
     <p class="mt-2 text-sm text-muted-foreground">No pending purchase order found</p>
     <p class="text-xs text-muted-foreground">Purchase order for approval from Property Custodian will appear here</p>

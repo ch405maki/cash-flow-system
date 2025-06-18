@@ -137,11 +137,11 @@ class RequestToOrderController extends Controller
         }
 
         $order = RequestToOrder::findOrFail($id);
-        if ($order->status === 'for_po') {
+        if ($order->status === 'forPO') {
             return back()->withErrors(['status' => 'Already approved']);
         }
 
-        $order->update(['status' => 'for_po']);
+        $order->update(['status' => 'forPO']);
         return back()->with('success', 'Request approved');
     }
 
@@ -155,11 +155,11 @@ class RequestToOrderController extends Controller
         }
 
         $order = RequestToOrder::findOrFail($id);
-        if ($order->status === 'for_eod') {
+        if ($order->status === 'forEOD') {
             return back()->withErrors(['status' => 'Already sent for EOD approval']);
         }
 
-        $order->update(['status' => 'for_eod']);
+        $order->update(['status' => 'forEOD']);
         return back()->with('success', 'Request sent for EOD approval');
     }
 
