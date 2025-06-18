@@ -9,59 +9,61 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
-import { computed } from 'vue';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { computed, ref, watch } from 'vue';
 import { type BreadcrumbItem } from '@/types';
-import { ArrowLeft, Printer, Check } from 'lucide-vue-next';
+import { ArrowLeft, Printer, Check, X } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
 import FormHeader from '@/components/reports/header/formHeder.vue'
+import EodVerificationDialog from '@/components/vouchers/EodVerificationDialog.vue';
+import DirectorVerificationDialog from '@/components/vouchers/DirectorVerificationDialog.vue';
 import { useToast } from 'vue-toastification'
 
-const toast = useToast();
-const props = defineProps<{
-    accounts: Array<{
-        id: number;
-        account_title: string;
-    }>;
-    voucher: {
-        id: number;
-        voucher_no: string;
-        payee: string;
-        check_payable_to: string;
-        purpose: string;
-        voucher_date: string;
-        check_amount: number;
-        check_no: string;
-        check_date: string;
-        status: string;
-        issue_date: string;
-        payment_date: string;
-        delivery_date: string;
-        type: string;
-        details: Array<{
-            id: number;
-            account_id: number;
-            charging_tag: string;
-            hours?: number;
-            rate?: number;
-            amount: number;
-        }>;
-    };
-    authUser: {
-        id: number;
-        name: string;
-        email: string;
-        // Add other fields as needed
-    };
-    signatories: {
-        full_name: string;
-        position: string;
-    };
-}>();
 
-const { props: pageProps } = usePage();
-const accounts = props.accounts || pageProps.accounts || [];
-const voucher = props.voucher || pageProps.voucher;
-const signatories = props.signatories || pageProps.signatories || {};
+
+const toast = useToast();
+const page = usePage();
+
+// Watch for flash messages
+watch(() => page.props.flash, (flash) => {
+    if (flash.success) {
+        toast.success(flash.success);
+    }
+    if (flash.error) {
+        toast.error(flash.error);
+    }
+}, { deep: true });
+
+const props = defineProps({
+    accounts: {
+        type: Array,
+        default: () => [],
+        required: true,
+    },
+    voucher: {
+        type: Object,
+        required: true,
+    },
+    authUser: {
+        type: Object,
+        required: true,
+    },
+    signatories: {
+        type: Object,
+        required: true,
+    }
+});
+
+const { accounts, voucher, authUser, signatories } = props;
 
 const executiveDirector = computed(() =>
     props.signatories.find(s => s.position === 'Executive Director')
@@ -73,7 +75,14 @@ const directorAccounting = computed(() =>
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Vouchers', href: '/vouchers' },
+    { 
+        title: 'Vouchers', 
+        href: voucher.status === 'for_eod'
+            ? '/voucher-approval' 
+            : voucher.status === 'for_check' 
+                ? '/approved-voucher' 
+                : '/vouchers' 
+    },
     { title: `Voucher ${voucher.voucher_no}`, href: `/vouchers/${voucher.id}` },
 ];
 
@@ -149,6 +158,17 @@ const amountToWords = (amount: number) => {
     return result;
 };
 
+function formatStatus(status: string): string {
+  switch (status) {
+    case 'for_eod':
+      return 'For EOD Approval';
+    case 'for_check':
+      return 'For Check Releasing';
+    default:
+      return status; // Keep as-is (e.g., "draft", "approved")
+  }
+}
+
 const printArea = () => {
     const printContents = document.getElementById('print-section')?.innerHTML;
     const originalContents = document.body.innerHTML;
@@ -163,21 +183,6 @@ const printArea = () => {
     }
 }
 
-const approveVoucher = async () => {
-    try {
-        await router.patch(`/vouchers/${voucher.id}/approve`);
-        toast.success('Voucher Approved Successfully');
-        
-        
-        
-        // OR Option 2: Inertia reload
-        router.visit(route('vouchers.view', { voucher: voucher.id }));
-        
-    } catch (error) {
-        toast.error('Failed to approve voucher');
-        console.error('Error:', error);
-    }
-}
 </script>
 
 <template>
@@ -197,19 +202,53 @@ const approveVoucher = async () => {
                         <Printer class="h-4 w-4" />
                         Print
                     </Button>
-                    <Button 
-                        v-if="voucher.status !== 'approved'"
-                        variant="default" 
-                        @click="approveVoucher" 
-                        class="flex items-center gap-2 bg-green-500 text-white hover:bg-green-400"
-                    >
-                        <Check class="h-4 w-4" />
-                        Approve
-                    </Button>
-                    <Button variant="outline" @click="router.visit('/vouchers')" class="flex items-center gap-2">
-                        <ArrowLeft class="h-4 w-4" />
-                        Back
-                    </Button>
+                    <template
+                        v-if="authUser.role === 'executive_director' && voucher.status === 'for_eod' && voucher.status !== 'rejected'">
+                        <EodVerificationDialog :voucher-id="voucher.id" action="approve">
+                            <template #trigger>
+                                <Button variant="default"
+                                    class="flex items-center gap-2 bg-green-500 text-white hover:bg-green-400">
+                                    <Check class="h-4 w-4" />
+                                    Approve
+                                </Button>
+                            </template>
+                        </EodVerificationDialog>
+
+                        <EodVerificationDialog :voucher-id="voucher.id" action="reject">
+                            <template #trigger>
+                                <Button variant="default"
+                                    class="flex items-center gap-2 bg-red-500 text-white hover:bg-red-400">
+                                    <X class="h-4 w-4" />
+                                    Reject
+                                </Button>
+                            </template>
+                        </EodVerificationDialog>
+                    </template>
+
+                    <template
+                    v-if="voucher.status == 'draft' && authUser.access_id == '3'"
+                        >
+                        <DirectorVerificationDialog :voucher-id="voucher.id" action="forEod">
+                            <template #trigger>
+                                <Button variant="default"
+                                    class="flex items-center gap-2 bg-green-500 text-white hover:bg-green-400">
+                                    <Check class="h-4 w-4" />
+                                    For EOD Approval
+                                </Button>
+                            </template>
+                        </DirectorVerificationDialog>
+
+                        <DirectorVerificationDialog :voucher-id="voucher.id" action="reject">
+                            <template #trigger>
+                                <Button variant="default"
+                                    class="flex items-center gap-2 bg-red-500 text-white hover:bg-red-400">
+                                    <X class="h-4 w-4" />
+                                    Reject
+                                </Button>
+                            </template>
+                        </DirectorVerificationDialog>
+                    </template>
+
                 </div>
             </div>
 
@@ -253,7 +292,7 @@ const approveVoucher = async () => {
                             <td class="p-2 font-medium text-muted-foreground border-r">STATUS:</td>
                             <td class="p-2 uppercase" colspan="3">
                                 <span class="py-1 rounded-full font-bold capitalize min-w-[100px]">
-                                    {{ voucher.status }}
+                                    {{ formatStatus(voucher.status) }}
                                 </span>
                             </td>
                         </tr>
@@ -314,7 +353,7 @@ const approveVoucher = async () => {
 
             <!-- Hidden Printable Voucher -->
             <div id="print-section">
-                <div id="printable-voucher" class="hidden print:block mx-4">
+                <div id="printable-voucher" class="hidden print:block mx-4 print:text-[9pt]">
                     <div class="text-center font-bold mb-5">
                         <FormHeader
                             :text="voucher.type.charAt(0).toUpperCase() + voucher.type.slice(1).toLowerCase() + ' Voucher'"
@@ -416,7 +455,7 @@ const approveVoucher = async () => {
                                 <div class="text-right w-1/6">
                                     <div class="my-4"></div>
                                     <div v-if="directorAccounting" class="relative inline-block text-sm uppercase">
-                                        <img v-if="voucher.status === 'approved'" src="" alt="Signature"
+                                        <img v-if="voucher.status === 'for_check'" src="" alt="Signature"
                                             class="w-[100px] absolute -top-6 left-1/2 -translate-x-1/2 pointer-events-none" />
                                         <div class="border-b border-black px-2 whitespace-nowrap">{{
                                             directorAccounting.full_name.toUpperCase() }}</div>
@@ -427,7 +466,7 @@ const approveVoucher = async () => {
                                         No Accounting Director assigned.
                                     </div>
                                 </div>
-                                <div class="font-bold uppercase">{{ voucher.status }}: </div>
+                                <div class="font-bold uppercase">{{ formatStatus(voucher.status) }}: </div>
                             </td>
                             <td class="w-1/2 align-top">
                                 I hereby certify to have received from the ARELLANO LAW FOUNDATION the sum of
@@ -442,7 +481,7 @@ const approveVoucher = async () => {
                                 <div class="text-right w-1/2">
                                     <div class="my-4"></div>
                                     <div v-if="executiveDirector" class="relative inline-block text-sm uppercase">
-                                        <img v-if="voucher.status === 'approved'" src="" alt="Signature"
+                                        <img v-if="voucher.status === 'for_check'" src="" alt="Signature"
                                             class="w-[100px] absolute -top-6 left-1/2 -translate-x-1/2 pointer-events-none" />
                                         <div class="border-b border-black px-2 whitespace-nowrap">{{
                                             executiveDirector.full_name.toUpperCase() }}</div>

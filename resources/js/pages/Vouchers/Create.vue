@@ -41,6 +41,7 @@ import axios from 'axios'
 import { ref, computed } from 'vue'
 import { type BreadcrumbItem } from '@/types';
 
+
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Vouchers', href: '/vouchers' },
@@ -71,7 +72,7 @@ const form = useForm({
     check_no: null,
     check_payable_to: '',
     check_amount: null,
-    status: 'pending',
+    status: 'draft',
     type: '',
     user_id: props.auth.user.id,
     check: [
@@ -168,17 +169,13 @@ async function submitVoucher() {
     <Head title="Create Voucher" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <Card class="mt-6 mx-auto w-full">
+        <div class="mt-6 mx-auto w-full">
             <CardHeader>
                 <div class="flex justify-between items-start">
                     <div>
                         <CardTitle>Create Voucher</CardTitle>
                         <CardDescription>Complete all required fields</CardDescription>
                     </div>
-                    <Button variant="outline" @click="router.visit('/vouchers')" class="flex items-center gap-2">
-                        <ArrowLeft class="h-4 w-4" />
-                        Back
-                    </Button>
                 </div>
             </CardHeader>
 
@@ -266,7 +263,7 @@ async function submitVoucher() {
                                             <Button variant="outline" class="w-full justify-between"
                                                 :disabled="isCashVoucher">
                                                 {{accounts.find(a => a.id === detail.account_id)?.account_title ||
-                                                'Select account' }}
+                                                    'Select account'}}
                                                 <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                             </Button>
                                         </ComboboxTrigger>
@@ -382,6 +379,6 @@ async function submitVoucher() {
                     </CardFooter>
                 </form>
             </CardContent>
-        </Card>
+        </div>
     </AppLayout>
 </template>
