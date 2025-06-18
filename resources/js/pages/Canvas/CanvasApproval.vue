@@ -21,6 +21,9 @@ const props = defineProps<{
 
 
 /* split once, reuse everywhere */
+const pendingCanvases  = computed(() =>
+  props.canvases.filter(c => c.status === 'forEOD')
+)
 const approvedCanvases  = computed(() =>
   props.canvases.filter(c => c.status === 'approved')
 )
@@ -108,12 +111,18 @@ const breadcrumbs = [
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-4 space-y-4">
-    <Tabs default-value="approved" class="w-full">
-        <div class="flex items-center justify-between">
+    <Tabs default-value="forEOD" class="w-full">
+        <div class="flex items-center justify-between pb-2">
             <h1 class="text-xl font-bold">Canvas</h1>
 
             <!-- Tabs list: only as wide as its content -->
             <TabsList class="flex gap-2">
+                <TabsTrigger
+                  value="forEOD"
+                  class="px-3 py-1.5 text-sm leading-none"
+                  >
+                  For Approval
+                </TabsTrigger>
                 <TabsTrigger
                 value="approved"
                 class="px-3 py-1.5 text-sm leading-none"
@@ -131,6 +140,17 @@ const breadcrumbs = [
 
 
         <!-- Approved Tab -->
+        <TabsContent value="forEOD">
+            <TableOrEmpty :items="pendingCanvases" empty-text="No for approval canvases" />
+            <CanvasTable
+            :canvases="pendingCanvases"
+            :status-icons="statusIcons"
+            :status-variants="statusVariants"
+            @show="showCanvas"
+            @download="downloadFile"
+            />
+        </TabsContent>
+        
         <TabsContent value="approved">
             <TableOrEmpty :items="approvedCanvases" empty-text="No approved canvases" />
             <CanvasTable

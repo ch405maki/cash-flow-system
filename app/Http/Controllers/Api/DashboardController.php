@@ -41,7 +41,7 @@ class DashboardController extends Controller
     
     protected function departmentDashboard()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         
         $requests = Request::with(['user', 'details'])
             ->where('department_id', $user->department_id)
@@ -90,7 +90,7 @@ class DashboardController extends Controller
 
     protected function custodianDashboard()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         
         $requests = Request::with(['user', 'details'])
             ->where('status', 'propertyCustodian')
@@ -178,7 +178,7 @@ class DashboardController extends Controller
 
     protected function executiveDashboard()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         
         // Recent Requests
         $requests = Request::with(['user', 'details'])

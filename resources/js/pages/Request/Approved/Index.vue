@@ -75,8 +75,10 @@ function formatDate(dateStr: string): string {
 
 <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
-      <div class="flex justify-between items-center">
-        <h1 class="text-xl font-bold">Approved Request List</h1>
+      <div class="flex justify-between items-center"> 
+        <h1 class="text-xl font-bold">Approved Request List
+          <p class="text-sm font-normal">Order list for creation of purchase order</p>
+        </h1>
         <div class="space-x-2">
           <Button variant="outline" size="sm" @click="goToCanvas()" class="h-8">
             <PlusCircle class="h-4 w-4" />

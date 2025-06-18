@@ -46,11 +46,10 @@ function goToPO(id: number) {
           <TableHead>Amount</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Account</TableHead>
-          <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        <TableRow @click="goToPO(po.id)" class="hover:cursor-pointer hover:underline" v-for="po in purchaseOrders.data" :key="po.id">
+        <TableRow @click="goToPO(po.id)" class="hover:cursor-pointer hover:underline" v-for="po in purchaseOrders.data" :key="po.id" title="View Purchase Order">
           <TableCell class="font-medium">{{ po.po_no }}</TableCell>
           <TableCell>{{ formatDate(po.date) }}</TableCell>
           <TableCell>{{ po.payee }}</TableCell>
@@ -62,11 +61,6 @@ function goToPO(id: number) {
             </Badge>
           </TableCell>
           <TableCell>{{ po.account.account_title }}</TableCell>
-          <TableCell>
-              <Button variant="outline" size="sm" @click="goToPO(po.id)">
-                View
-              </Button>
-          </TableCell>
         </TableRow>
       </TableBody>
     </Table>
