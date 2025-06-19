@@ -14,7 +14,6 @@ import {
   FileText,
 } from 'lucide-vue-next'
 
-
 defineProps({
   purchaseOrders: {
     type: Object,
@@ -31,13 +30,26 @@ function formatDate(dateStr: string): string {
   })
 }
 
-function goToPO(id: number) {
-  router.visit(`/purchase-orders/${id}`)
+function createVoucher(purchaseOrder: any) {
+  // Navigate to voucher create page with PO data
+  router.visit('/vouchers/for-voucher/createForVoucher', {
+    method: 'get',
+    data: {
+      po_id: purchaseOrder.id,
+      payee: purchaseOrder.payee,
+      check_payable_to: purchaseOrder.check_payable_to,
+      purpose: purchaseOrder.purpose,
+      amount: purchaseOrder.amount,
+      department_id: purchaseOrder.department_id,
+      account_id: purchaseOrder.account_id,
+      // Include any other fields you want to pre-populate
+    }
+  })
 }
 </script>
 
 <template>
-  <div v-if="purchaseOrders.length > 0" class="rounded-md border">
+  <div class="rounded-md border">
     <Table>
       <TableHeader>
         <TableRow>
@@ -65,18 +77,16 @@ function goToPO(id: number) {
           </TableCell>
           <TableCell>{{ po.account.account_title }}</TableCell>
           <TableCell>
-              <Button variant="outline" size="sm" @click="goToPO(po.id)">
-                View
+              <Button 
+                variant="outline" 
+                size="sm"
+                @click="createVoucher(po)"
+              >
+                Create Voucher
               </Button>
           </TableCell>
         </TableRow>
       </TableBody>
     </Table>
-  </div>
-
-  <div v-else-if="purchaseOrders" class="flex h-48 flex-col items-center justify-center rounded-xl border">
-    <FileText class="h-8 w-8 text-muted-foreground" />
-    <p class="mt-2 text-sm text-muted-foreground">No pending purchase order found</p>
-    <p class="text-xs text-muted-foreground">Purchase order for approval from Property Custodian will appear here</p>
   </div>
 </template>

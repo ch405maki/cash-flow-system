@@ -66,18 +66,12 @@ class VoucherController extends Controller
     public function forVoucher() {
 
         $user = Auth::user();
-        if ($user->role === 'purchasing') {
-            // Get all purchase orders regardless of status
-            $purchaseOrders = PurchaseOrder::with(['user', 'department', 'account', 'details'])
-                ->latest()
-                ->paginate(10);
-        } else {
-            // Get only purchase orders with status 'for_approval'
-            $purchaseOrders = PurchaseOrder::with(['user', 'department', 'account', 'details'])
-                ->where('status', 'for_approval')
-                ->latest()
-                ->paginate(10);
-        }
+        // Get only purchase orders with status 'for_approval'
+        $purchaseOrders = PurchaseOrder::with(['user', 'department', 'account', 'details'])
+            ->where('status', 'approved')
+            ->latest()
+            ->paginate(10);
+        
     
         return Inertia::render('Vouchers/ForVoucher/Index', ['purchaseOrders' => $purchaseOrders]);
     }
@@ -85,6 +79,13 @@ class VoucherController extends Controller
     public function create()
     {
         return Inertia::render('Vouchers/Create', [
+            'accounts' => Account::orderBy('account_title')->get()
+        ]);
+    }
+
+    public function createForVoucher()
+    {
+        return Inertia::render('Vouchers/ForVoucher/CreateForVoucher', [
             'accounts' => Account::orderBy('account_title')->get()
         ]);
     }

@@ -12,7 +12,7 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
   {
     title: 'Purchase Orders',
-    href: '/request/create',
+    href: '/for-voucher',
   },
 ];
 
@@ -26,7 +26,12 @@ defineProps({
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
-      <h1 class="text-xl font-bold">Purchase Orders</h1>
+      <div class="flex justify-between items-center">
+        <h1 class="text-xl font-bold">Purchase Orders</h1>
+        <div class="flex gap-2">
+        </div>
+      </div>
+      
 
       <ApprovedPurchaseOrderTable :purchase-orders="purchaseOrders" />
 
