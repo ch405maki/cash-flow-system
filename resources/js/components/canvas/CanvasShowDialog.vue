@@ -2,34 +2,40 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Download, ArrowLeft, Clock, CheckCircle, XCircle, Check, X, Pencil } from 'lucide-vue-next';
+import { Download, ArrowLeft, Clock, CheckCircle, UserRoundCheck, XCircle, Check, X, Pencil } from 'lucide-vue-next';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, computed, watch } from 'vue'
 import axios from 'axios';
-import { watch } from 'vue';
 import { useToast } from 'vue-toastification';
 
 const toast = useToast();
 
 const props = defineProps({
   canvas: Object,
-  open: Boolean
+  open: Boolean,
+  userRole: String,
 });
 
 const emit = defineEmits(['update:open', 'updated']);
+const isApproved = computed(
+  () => props.canvas.status === 'approved' || props.canvas.status === 'poCreated'
+)
+
 
 const statusIcons = {
   pending: Clock,
   approved: CheckCircle,
   rejected: XCircle,
+  forEOD: UserRoundCheck,
 };
 
 const statusVariants = {
   pending: 'bg-yellow-100 text-yellow-800',
   approved: 'bg-green-100 text-green-800',
   rejected: 'bg-red-100 text-red-800',
+  forEOD: 'bg-purple-100 text-purple-800',
 };
 
 const isDownloading = ref(false);
@@ -86,19 +92,20 @@ const downloadFile = async () => {
 
 const updateStatus = (status) => {
   if (status === 'rejected' && !form.remarks.trim()) {
-    toast.error('Remarks are required when rejecting.');
-    return;
+    toast.error('Remarks are required when rejecting.')
+    return
   }
 
-  form.status = status;
+  form.status = status
   form.patch(route('canvas.update', props.canvas.id), {
     preserveScroll: true,
     onSuccess: () => {
-      emit('updated');
-      toast.success(`Canvas ${status} successfully.`);
+      emit('updated')               
+      emit('update:open', false) 
+      toast.success(`Canvas ${status} successfully.`)
     },
-  });
-};
+  })
+}
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr)
@@ -140,7 +147,7 @@ function formatDate(dateStr: string): string {
           </div>
         </div>
 
-        <Alert variant="success" class="relative pr-10">
+        <Alert variant="default" class="relative pr-10">
           <Bell class="h-4 w-4 text-green-500" />
           <AlertTitle>Note</AlertTitle>
           <AlertDescription>
@@ -148,26 +155,40 @@ function formatDate(dateStr: string): string {
           </AlertDescription>
         </Alert>
 
+        <!-- Remarks section -->
         <div>
-        <h3 class="text-sm font-medium text-muted-foreground">Remarks</h3>
-        <p class="text-xs text-red-500 mb-2 italic">* Remarks are required when rejecting the canvas.</p>
-        <div>
-        <Textarea
+          <template v-if="!isApproved">
+            <h3 class="text-sm font-medium text-muted-foreground">Remarks</h3>
+            <p class="text-xs text-red-500 mb-2 italic">
+              * Remarks are required.
+            </p>
+            
+            <Textarea
             v-model="form.remarks"
             placeholder="Enter your remarks"
             class="mb-2"
-        />
-        </div>
+            />
+          </template>
+
+          <template v-else-if="isApproved">
+            <h3 class="text-sm font-medium text-muted-foreground">Remarks</h3>
+            <Alert variant="success" class="mb-2">
+              <CheckCircle class="h-4 w-4 text-green-600" />
+              <AlertTitle>Final Remarks</AlertTitle>
+              <AlertDescription>
+                {{ form.remarks || 'No remarks were provided.' }}
+              </AlertDescription>
+            </Alert>
+          </template>
         </div>
       </div>
-
       <div class="sticky bottom-0 bg-background pt-4 border-t">
         <div class="flex justify-between">
-          <div v-if="canvas.status === 'pending'" class="flex gap-2">
-            <Button 
+          <div v-if="userRole === 'executive_director'" class="space-x-2">
+              <Button 
               variant="default" 
               @click="updateStatus('approved')"
-              :disabled="form.processing"
+              :disabled="form.processing || !form.remarks.trim()"
             >
               <Check class="h-4 w-4 mr-1" />
               Approve
@@ -177,10 +198,38 @@ function formatDate(dateStr: string): string {
                 @click="updateStatus('rejected')"
                 :disabled="form.processing || !form.remarks.trim()"
                 >
-                <X class="h-4 w-4 mr-1" />
+                <X class="h-4 w-4" />
                 Reject
             </Button>
+          </div>
 
+          <div v-if="canvas.status === 'pending'" class="flex gap-2">
+            <Button 
+              variant="default" 
+              @click="updateStatus('forEOD')"
+              :disabled="form.processing"
+            >
+              <Check class="h-4 w-4" />
+              Submit for EOD
+            </Button>
+            <Button 
+                variant="destructive" 
+                @click="updateStatus('rejected')"
+                :disabled="form.processing || !form.remarks.trim()"
+                >
+                <X class="h-4 w-4" />
+                Reject
+            </Button>
+          </div>
+          <div v-if="canvas.status === 'approved'" class="flex gap-2">
+            <Button 
+              variant="default" 
+              @click="updateStatus('poCreated')"
+              :disabled="form.processing"
+            >
+              <Check class="h-4 w-4" />
+              Tag As Created
+            </Button>
           </div>
           <Button 
             @click="downloadFile"

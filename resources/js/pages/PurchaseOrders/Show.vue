@@ -205,7 +205,7 @@ const printArea = () =>{
               <Button 
                 variant="default" 
                 size="sm" 
-                :disabled="purchaseOrder.status === 'approved' || form.processing"
+                :disabled="purchaseOrder.status === 'forEOD' || purchaseOrder.status === 'approved' || form.processing"
               >
                 Submit
               </Button>
@@ -240,7 +240,7 @@ const printArea = () =>{
               </div>
               <DialogFooter>
                 <Button 
-                  @click="submitStatusUpdate('for_approval')"
+                  @click="submitStatusUpdate('forEOD')"
                   :disabled="!form.password || form.processing"
                 >
                   <span v-if="form.processing">Processing...</span>
@@ -256,7 +256,7 @@ const printArea = () =>{
               <Button 
                 variant="outline"
                 size="sm" 
-                :disabled="purchaseOrder.status === 'approved' || form.processing"
+                :disabled="purchaseOrder.status === 'forEOD' || purchaseOrder.status === 'approved' || form.processing"
               >
                 Reject
               </Button>

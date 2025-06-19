@@ -43,7 +43,7 @@ class UserController extends Controller
                 'last_name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:8',
-                'role' => 'required|in:super_admin,admin,staff',
+                'role' => 'required|string',
                 'status' => 'required|in:active,inactive',
                 'department_id' => 'required|exists:departments,id',
                 'access_id' => 'required|exists:accesses,id'

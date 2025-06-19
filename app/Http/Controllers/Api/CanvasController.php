@@ -8,20 +8,52 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str; // Add this import
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class CanvasController extends Controller
 {
     public function index()
     {
-        $canvases = Canvas::with('creator')
-            ->where('created_by', auth()->id())
-            ->latest()
-            ->get();
+        $user = Auth::user();
+
+        if ($user->role === 'executive_director') {
+            // Executive Director sees every canvas waiting for EOD sign‑off
+            $canvases = Canvas::with('creator')
+                ->where('status', 'forEOD')
+                ->latest()
+                ->get();
+        } else {
+            // Everyone else sees only the canvases they created
+            $canvases = Canvas::with('creator')
+                ->whereIn('status', ['forEOD', 'pending'])
+                ->where('created_by', $user->id)
+                ->latest()
+                ->get();
+        }
 
         return Inertia::render('Canvas/Index', [
             'canvases' => $canvases,
+            'authUserRole' => $user->role,
         ]);
     }
+
+    public function approval()
+    {
+        $user = Auth::user();
+
+        $canvases = Canvas::with('creator')
+            ->whereIn('status', ['approved', 'poCreated','forEOD'])
+            ->where('created_by', $user->id)
+            ->latest()
+            ->get();
+
+
+        return Inertia::render('Canvas/CanvasApproval', [
+            'canvases' => $canvases,
+            'authUserRole' => $user->role,
+        ]);
+    }
+
     
     public function create()
     {
@@ -63,7 +95,7 @@ class CanvasController extends Controller
     {
         $validated = $request->validate([
             'remarks' => 'nullable|string',
-            'status' => 'sometimes|in:pending,approved,rejected'
+            'status' => 'sometimes|in:pending,approved,rejected,forEOD,poCreated'
         ]);
 
         $canvas->update($validated);

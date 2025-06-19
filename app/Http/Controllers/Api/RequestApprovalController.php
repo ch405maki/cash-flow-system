@@ -22,7 +22,7 @@ class RequestApprovalController extends Controller
         $user = Auth::user();
 
         $requests = RequestToOrder::with('details')
-            ->whereIn('status', ['for_eod'])
+            ->whereIn('status', ['forEOD'])
             ->get();
 
         return Inertia::render('Request/ForApproval/Index', [
