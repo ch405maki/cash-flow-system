@@ -286,7 +286,10 @@ const printArea = () => {
                     <tbody>
                         <tr class="border-b">
                             <td class="p-2 font-medium text-muted-foreground border-r w-48">CHECK NUMBER:</td>
-                            <td class="p-2 uppercase border-r">{{ voucher.check_no }}</td>
+                            <td class="p-2 border-r">
+                                <span v-if="voucher.status !== 'forCheck'"> *To be filled-up by accounting upon check releasing*</span>
+                                <span v-else>{{ voucher.check_no }}</span>
+                            </td>
                             <td class="p-2 font-medium text-muted-foreground border-r">CHECK DATE:</td>
                             <td class="p-2">{{ formatDate(voucher.check_date) }}</td>
                         </tr>

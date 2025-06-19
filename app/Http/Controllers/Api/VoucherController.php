@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 
+use App\Models\PurchaseOrder;
 use App\Models\Voucher;
 use App\Models\VoucherDetail;
 use App\Models\Account;
@@ -60,6 +61,25 @@ class VoucherController extends Controller
                 'access' => $user->access_id,
             ]
         ]);
+    }
+
+    public function forVoucher() {
+
+        $user = Auth::user();
+        if ($user->role === 'purchasing') {
+            // Get all purchase orders regardless of status
+            $purchaseOrders = PurchaseOrder::with(['user', 'department', 'account', 'details'])
+                ->latest()
+                ->paginate(10);
+        } else {
+            // Get only purchase orders with status 'for_approval'
+            $purchaseOrders = PurchaseOrder::with(['user', 'department', 'account', 'details'])
+                ->where('status', 'for_approval')
+                ->latest()
+                ->paginate(10);
+        }
+    
+        return Inertia::render('Vouchers/ForVoucher/Index', ['purchaseOrders' => $purchaseOrders]);
     }
 
     public function create()

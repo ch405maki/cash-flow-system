@@ -143,6 +143,11 @@ const accountingNavItems: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
+    title: 'For Voucher',
+    href: '/for-voucher',
+    icon: ReceiptText,
+  },
+  {
     title: 'Vouchers',
     href: '/vouchers',
     icon: ReceiptText,

@@ -80,6 +80,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/vouchers/{voucher}/forEod', [VoucherController::class, 'forEod'])
      ->name('vouchers.eod');
 
+    Route::get('/for-voucher', [VoucherController::class, 'forVoucher'])->name('for-voucher.index');
     Route::get('/voucher-approval', [VoucherApprovalController::class, 'index'])->name('voucher-approval.index');
     Route::get('/approved-voucher', [ApprovedVoucherController::class, 'index'])->name('approved-voucher.index');
 });
