@@ -176,7 +176,7 @@ const printArea = () =>{
                   size="sm"
                   :disabled="requestOrder.status == 'forPO' || form.processing"
                   >
-                  Approve for PO
+                  Approve For Purchasing
                   </Button>
               </DialogTrigger>
               <DialogContent>

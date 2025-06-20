@@ -8,12 +8,15 @@ interface FrequentItem {
   unit?: string
 }
 
-const props = defineProps<{ items: FrequentItem[] }>()
+const props = defineProps<{
+  items: FrequentItem[];
+  key?: number;
+}>();
 
 /* --- soft violet tones --- */
-const violetBar   = 'rgba(139, 92, 246, 0.70)'   // indigo‑500 @ 70 %
-const violetEdge  = 'rgba(124,  58, 237, 1.00)' // indigo‑600
-const lavenderLine= 'rgba(167,139,250,0.90)'    // indigo‑300 @ 90 %
+const violetBar   = 'rgba(139, 92, 246, 0.70)'  
+const violetEdge  = 'rgba(124,  58, 237, 1.00)' 
+const lavenderLine= 'rgba(167,139,250,0.90)' 
 
 const chartData = {
   labels: props.items.map(i => i.item_description),
