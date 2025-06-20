@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\VoucherApprovalController;
 use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\RequestToOrderController;
 use App\Http\Controllers\Api\ApprovedRequestController;
+use App\Http\Controllers\Api\ApprovedPurchaseOrderController;
 use App\Http\Controllers\Api\ApprovedVoucherController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\SignatoryController;
@@ -66,7 +67,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Voucher Route
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/vouchers', [VoucherController::class, 'index'])->name('vouchers.index');
-    Route::get('/vouchers/for-voucher/createForVoucher', [VoucherController::class, 'createForVoucher'])->name('vouchers.createForVoucher');
+    Route::get('/vouchers/for-voucher/createForVoucher', [ApprovedPurchaseOrderController::class, 'createForVoucher'])->name('vouchers.createForVoucher');
     Route::get('/vouchers/create', [VoucherController::class, 'create'])->name('vouchers.create');
     Route::get('/vouchers/{voucher}/edit', [VoucherController::class, 'edit'])->name('vouchers.edit');
     Route::put('/vouchers/{voucher}', [VoucherController::class, 'update'])->name('vouchers.update');
@@ -82,7 +83,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/vouchers/{voucher}/forEod', [VoucherController::class, 'forEod'])
      ->name('vouchers.eod');
 
-    Route::get('/for-voucher', [VoucherController::class, 'forVoucher'])->name('for-voucher.index');
+    Route::get('/for-voucher', [ApprovedPurchaseOrderController::class, 'forVoucher'])->name('for-voucher.index');
     Route::get('/voucher-approval', [VoucherApprovalController::class, 'index'])->name('voucher-approval.index');
     Route::get('/approved-voucher', [ApprovedVoucherController::class, 'index'])->name('approved-voucher.index');
 });
