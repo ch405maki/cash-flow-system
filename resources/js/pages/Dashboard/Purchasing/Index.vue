@@ -2,9 +2,12 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
+import { Button } from '@/components/ui/button';
 import StatsCards from '@/components/dashboard/purchasing/StatsCards.vue';
 import RecentRequestsTable from '@/components/dashboard/purchasing/RecentRequestsTable.vue';
 import FrequentItemsChart from '@/components/dashboard/purchasing/FrequentItemsChart.vue';
+import { Expand, Minimize } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 const props = defineProps<{
     isDepartmentUser: boolean;
@@ -31,6 +34,14 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/dashboard',
     },
 ];
+
+const isChartExpanded = ref(false);
+const chartRefreshKey = ref(0); // Add this ref for forcing refresh
+
+const toggleChartExpand = () => {
+  isChartExpanded.value = !isChartExpanded.value;
+  chartRefreshKey.value++; // Increment to force refresh
+};
 </script>
 
 <template>
@@ -45,9 +56,9 @@ const breadcrumbs: BreadcrumbItem[] = [
             
             <StatsCards :status-counts="statusCounts" />
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-                <!-- First Column -->
-                <div class="space-y-4">
+            <div class="grid grid-cols-1 gap-4 py-4" :class="{'md:grid-cols-[1fr_1.5fr]': !isChartExpanded}">
+                <!-- Recent Requests Column (hidden when chart is expanded) -->
+                <div class="space-y-4" v-if="!isChartExpanded">
                     <h3 class="font-medium text-gray-900">
                         Recent Approved Requests
                         <p class="text-sm text-gray-500">For (purchase order / canvas)</p>
@@ -59,11 +70,18 @@ const breadcrumbs: BreadcrumbItem[] = [
                     />
                 </div>
                                 
-                <!-- Second Column -->
-                <div>
-                    <h3 class="font-medium text-gray-900">Most Requested Items</h3>
-                    <p class="text-sm text-gray-500">Chart for most number of request</p>
-                    <FrequentItemsChart :items="frequentItems" />
+                <!-- Chart Column (always visible) -->
+                <div :class="{'col-span-1': !isChartExpanded, 'col-span-1 md:col-span-2': isChartExpanded}">
+                    <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="font-medium text-gray-900">Most Requested Items</h3>
+                        <p class="text-sm text-gray-500">Chart for most number of request</p>
+                    </div>
+                    <Button variant="secondary" @click="toggleChartExpand">
+                        <component :is="isChartExpanded ? Minimize : Expand" />
+                    </Button>
+                    </div>
+                    <FrequentItemsChart :items="frequentItems" :key="chartRefreshKey" />
                 </div>
             </div>
         </div>

@@ -118,25 +118,30 @@ const submitForm = async () => {
     <div class="p-6 space-y-6">
       <h1 class="text-2xl font-bold">Create Purchase Order</h1>
 
-      <form @submit.prevent="submitForm" class="space-y-6">
+      <form @submit.prevent="submitForm" class="space-y-2">
         <!-- Basic Information Section -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          <div class="space-y-2">
-            <Label for="date">Date</Label>
-            <Input id="date" type="date" v-model="form.date" required />
-          </div>
-
-          <div class="space-y-2">
-            <Label for="payee">Payee</Label>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Payee Field -->
+          <div class="space-y-2 md:col-span-2">
+            <Label for="payee">Company Name</Label>
             <Input id="payee" v-model="form.payee" required />
           </div>
+        </div>
 
-          <div class="space-y-2">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="space-y-2 md:col-span-2">
             <Label for="check_payable_to">Check Payable To</Label>
             <Input id="check_payable_to" v-model="form.check_payable_to" required />
           </div>
 
+          <!-- Date Field -->
+          <div class="space-y-2 md:col-span-1">
+            <Label for="date">P. O. Date</Label>
+            <Input id="date" type="date" v-model="form.date" required />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="space-y-2">
             <Label for="department_id">Department</Label>
             <Select v-model="form.department_id" required>
@@ -164,7 +169,9 @@ const submitForm = async () => {
               </SelectContent>
             </Select>
           </div>
+        </div>
 
+        <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
           <div class="space-y-2">
             <Label for="purpose">Purpose</Label>
             <Textarea id="purpose" v-model="form.purpose" required />
@@ -172,10 +179,9 @@ const submitForm = async () => {
         </div>
 
         <!-- Items Section -->
-        <div class="space-y-4">
-          <h2 class="text-xl font-semibold">Items</h2>
-
-          <div class="border rounded-lg p-4 space-y-4">
+        <div class="space-y-2">
+          <h2 class="text-xl font-semibold mt-4">Items</h2>
+          <div class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
               <div class="space-y-2 md:col-span-6">
                 <Label for="item_description">Description</Label>
@@ -234,7 +240,7 @@ const submitForm = async () => {
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Amount
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th class="text-right px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -256,7 +262,7 @@ const submitForm = async () => {
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {{ item.amount.toFixed(2) }}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                       <Button
                         variant="destructive"
                         size="sm"
