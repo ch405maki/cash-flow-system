@@ -43,7 +43,6 @@ class PurchaseOrderController extends Controller
 
     public function show(PurchaseOrder $purchaseOrder)
     {
-
         $user = Auth::user();
 
         return Inertia::render('PurchaseOrders/Show', [
@@ -61,12 +60,14 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
-    public function create(PurchaseRequest $request)
+    public function create(Request $request)
     {
+        $canvasId = $request->query('canvas_id');
         return Inertia::render('PurchaseOrders/Create', [
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'departments' => Department::orderBy('department_name')->get(['id', 'department_name']),
             'accounts' => Account::orderBy('account_title')->get(['id', 'account_title']),
+            'canvas_id' => $canvasId,
         ]);
     }
 

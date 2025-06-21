@@ -24,7 +24,6 @@ interface Props {
   user_id: number;
   departments?: Array<{ id: number; department_name: string }>;
   accounts?: Array<{ id: number; account_title: string }>;
-  canvas_id?: string;
 }
 
 const props = defineProps<Props>();
@@ -51,7 +50,6 @@ const form = ref({
   department_id: '',
   account_id: '',
   details: [] as PurchaseOrderDetail[],
-  canvas_id: props.canvas_id || null,
 });
 
 const newItem = ref<PurchaseOrderDetail>({
@@ -119,7 +117,7 @@ const submitForm = async () => {
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-6 space-y-6">
       <h1 class="text-2xl font-bold">Create Purchase Order</h1>
-      <p v-if="canvas_id" class="text-xs text-gray-500">Linked to Canvas ID: {{ canvas_id }}</p>
+
       <form @submit.prevent="submitForm" class="space-y-2">
         <!-- Basic Information Section -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex items-center">

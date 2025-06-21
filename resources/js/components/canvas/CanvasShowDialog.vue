@@ -111,11 +111,21 @@ const updateStatus = (status) => {
   form.patch(route('canvas.update', props.canvas.id), {
     preserveScroll: true,
     onSuccess: () => {
-      emit('updated')               
-      emit('update:open', false) 
+      emit('updated')
+      emit('update:open', false)
       toast.success(`Canvas ${status} successfully.`)
     },
   })
+}
+
+function goToCreate() {
+  const canvasId = props.canvas?.id
+  
+  if (canvasId) {
+    router.visit(`/purchase-order/create?canvas_id=${canvasId}`);
+  } else {
+    router.visit('/purchase-order/create');
+  }
 }
 
 function viewRequest(id: number) {
@@ -238,11 +248,19 @@ function viewRequest(id: number) {
           <div v-if="canvas.status === 'approved'" class="flex gap-2">
             <Button 
               variant="default" 
-              @click="updateStatus('poCreated')"
+              @click="goToCreate()"
               :disabled="form.processing"
             >
               <Check class="h-4 w-4" />
               Create P. O.
+            </Button>
+            <Button 
+              variant="default" 
+              @click="updateStatus('poCreated')"
+              :disabled="form.processing"
+            >
+              <Check class="h-4 w-4" />
+              Tag As Done
             </Button>
           </div>
           <Button 

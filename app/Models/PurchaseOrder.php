@@ -10,10 +10,11 @@ class PurchaseOrder extends Model
 {
     protected $fillable = [
         'po_no', 'payee', 'check_payable_to', 'date', 'amount',
-        'purpose', 'status', 'remarks', 'user_id', 'department_id', 'account_id'
+        'purpose', 'status', 'remarks', 'user_id', 'department_id', 
+        'account_id', 'canvas_id', 'tagging'
     ];
 
-    public function user(): BelongsTo
+    public function user(): BelongsTo   
     {
         return $this->belongsTo(User::class);
     }
@@ -31,5 +32,11 @@ class PurchaseOrder extends Model
     public function details(): HasMany
     {
         return $this->hasMany(PurchaseOrderDetail::class, 'po_id');
+    }
+
+    // Add this new relationship
+    public function canvas(): BelongsTo
+    {
+        return $this->belongsTo(Canvas::class);
     }
 }
