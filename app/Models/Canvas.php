@@ -30,8 +30,8 @@ class Canvas extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function requestToOrder()
+    public function request_to_order() 
     {
-        return $this->belongsTo(RequestToOrder::class);
+        return $this->belongsTo(RequestToOrder::class, 'request_to_order_id');
     }
 }

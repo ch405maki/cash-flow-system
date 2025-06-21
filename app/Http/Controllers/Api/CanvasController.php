@@ -41,19 +41,17 @@ class CanvasController extends Controller
     {
         $user = Auth::user();
 
-        $canvases = Canvas::with('creator')
+        $canvases = Canvas::with(['creator', 'request_to_order']) 
             ->whereIn('status', ['approved', 'poCreated','forEOD'])
             ->where('created_by', $user->id)
             ->latest()
             ->get();
-
 
         return Inertia::render('Canvas/CanvasApproval', [
             'canvases' => $canvases,
             'authUserRole' => $user->role,
         ]);
     }
-
     
     public function create()
     {
