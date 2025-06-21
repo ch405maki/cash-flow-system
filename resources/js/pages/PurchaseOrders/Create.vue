@@ -120,9 +120,8 @@ const submitForm = async () => {
   <Head title="Create Purchase Order" />
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-6 space-y-6">
-      <h1 class="text-2xl font-bold">Create Purchase Order</h1>
-      <p v-if="canvas_id" class="text-xs text-gray-500">Linked to Canvas ID: {{ canvas_id }}</p>
       <form @submit.prevent="submitForm" class="space-y-2">
+        <h1 class="text-2xl font-bold">Create Purchase Order</h1>
         <!-- Basic Information Section -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex items-center">
           <!-- Payee Field -->
@@ -135,11 +134,11 @@ const submitForm = async () => {
             <Label for="tagging">Tagging</Label>
             <RadioGroup v-model="form.tagging" class="flex">
               <div class="flex items-center space-x-2">
-                <RadioGroupItem id="with_canvas" value="with_canvas" />
+                <RadioGroupItem id="with_canvas" value="with_canvas" :disabled="true" />
                 <Label for="with_canvas">With Canvas</Label>
               </div>
               <div class="flex items-center space-x-2">
-                <RadioGroupItem id="no_canvas" value="no_canvas" />
+                <RadioGroupItem id="no_canvas" value="no_canvas" :disabled="true" />
                 <Label for="no_canvas">No Canvas</Label>
               </div>
             </RadioGroup>

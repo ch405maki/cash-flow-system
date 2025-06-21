@@ -75,7 +75,7 @@ function getStatusVariant(status: string) {
             Create P. O.
           </Button>  
         </div>    
-        </div>
+      </div>
 
       <div class="w-full text-sm border border-border rounded-md">
       <Table>

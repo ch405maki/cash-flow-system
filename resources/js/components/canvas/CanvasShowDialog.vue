@@ -206,7 +206,7 @@ function viewRequest(id: number) {
         </div>
       </div>
       <div class="sticky bottom-0 bg-background pt-4 border-t">
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center">
           <div v-if="userRole === 'executive_director'" class="space-x-2">
               <Button 
                 variant="default" 
@@ -244,34 +244,29 @@ function viewRequest(id: number) {
                 Reject
             </Button>
           </div>
-          <!-- Work to Create P.O. -->
-          <div v-if="canvas.status === 'approved'" class="flex gap-2">
+        </div>
+        <!-- Work to Create P.O. -->
+          <div class="flex gap-2 justify-end items-right">
+            <div v-if="canvas.status === 'approved'">
+              <Button 
+                variant="default" 
+                @click="goToCreate()"
+                :disabled="form.processing"
+              >
+                <Check class="h-4 w-4" />
+                Create P. O.
+              </Button>
+            </div>
             <Button 
-              variant="default" 
-              @click="goToCreate()"
-              :disabled="form.processing"
+              @click="downloadFile"
+              class="gap-2"
+              variant="outline"
+              :disabled="isDownloading"
             >
-              <Check class="h-4 w-4" />
-              Create P. O.
-            </Button>
-            <Button 
-              variant="default" 
-              @click="updateStatus('poCreated')"
-              :disabled="form.processing"
-            >
-              <Check class="h-4 w-4" />
-              Tag As Done
+              <Download class="h-4 w-4" />
+              <span>{{ isDownloading ? 'Downloading...' : 'Download File' }}</span>
             </Button>
           </div>
-          <Button 
-            @click="downloadFile"
-            class="gap-2"
-            :disabled="isDownloading"
-          >
-            <Download class="h-4 w-4" />
-            <span>{{ isDownloading ? 'Downloading...' : 'Download File' }}</span>
-          </Button>
-        </div>
       </div>
     </DialogContent>
   </Dialog>

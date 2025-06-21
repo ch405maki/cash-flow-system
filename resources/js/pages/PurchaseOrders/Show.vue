@@ -30,7 +30,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from 'vue-toastification'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useForm } from '@inertiajs/vue3'
-import { BellRing, X   } from 'lucide-vue-next';
+import { BellRing, X , AlertCircle  } from 'lucide-vue-next';
 
 const toast = useToast()
 
@@ -44,6 +44,10 @@ const props = defineProps<{
     amount: number;
     department: {
       department_name: string;
+    };
+    canvas: {
+      id: number;
+      remarks: string;
     };
     // Add other fields as needed
   };
@@ -312,13 +316,43 @@ const printArea = () =>{
           </div>
         </div>
       </div>
-      <Alert v-if="showAlert" variant="success" class="relative pr-10">
-        <BellRing class="h-4 w-4" /> 
+        <Alert 
+            v-if="showAlert && purchaseOrder.tagging === 'with_canvas'" 
+            variant="warning" 
+            class="relative pr-10"
+          >
+            <AlertCircle class="h-4 w-4" />
+            <AlertTitle>Canvas Information</AlertTitle>
+            <AlertDescription>
+              <template v-if="purchaseOrder.canvas">
+                <h1 class="capitalize">Filename: {{ purchaseOrder.canvas.original_filename }}</h1>
+                <h1 class="capitalize">Remarks: {{ purchaseOrder.canvas.remarks }}</h1>
+              </template>
+              <template v-else>
+                (Canvas details not available)
+              </template>
+            </AlertDescription>
+            <!-- Dismiss Button -->
+            <button
+              class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground"
+              @click="showAlert = false"
+              aria-label="Dismiss"
+            >
+              <X class="h-4 w-4 text-yellow-700" />
+            </button>
+        </Alert>
+
+      <!-- Allert Remarks -->
+      <Alert 
+        v-if="showAlert && purchaseOrder.remarks" 
+        variant="success" 
+        class="relative pr-10"
+      >
+        <BellRing class="h-4 w-4" />
         <AlertTitle>Remarks</AlertTitle>
         <AlertDescription>
-          {{ purchaseOrder.remarks || 'No remarks' }}
+          {{ purchaseOrder.remarks }}
         </AlertDescription>
-
         <!-- Dismiss Button -->
         <button
           class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground"
@@ -328,6 +362,7 @@ const printArea = () =>{
           <X class="h-4 w-4 text-purple-700" />
         </button>
       </Alert>
+
       <div id="print-section">
       <div class="hidden print:block">
         <FormHeader text="Purchase Order" :bordered="false"  />
@@ -419,7 +454,7 @@ const printArea = () =>{
           </div>
 
         <div class="text-right w-1/2">
-          <p class="text-xs mb-10">Approved By</p>
+          <p class="text-xs mb-10 mr-[60px]">Approved By</p>
           
           <div v-if="executiveDirector" class="relative inline-block text-sm uppercase">
             <img

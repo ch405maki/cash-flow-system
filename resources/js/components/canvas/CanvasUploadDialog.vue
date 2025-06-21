@@ -41,9 +41,9 @@ const submit = () => {
 <template>
   <Dialog v-model:open="isOpen">
     <DialogTrigger as-child>
-      <Button class="gap-2">
+      <Button size="sm" class="gap-2">
         <UploadCloud class="h-4 w-4" />
-        <span>Upload New</span>
+        <span>Upload Canvas</span>
       </Button>
     </DialogTrigger>
     

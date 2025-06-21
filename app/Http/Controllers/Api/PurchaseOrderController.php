@@ -41,7 +41,6 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
-
     public function show(PurchaseOrder $purchaseOrder)
     {
         $user = Auth::user();
@@ -51,7 +50,8 @@ class PurchaseOrderController extends Controller
                 'user',
                 'department', 
                 'account',
-                'details'
+                'details',
+                'canvas'
             ]),
             'authUser' => [
                 'id' => $user->id,
