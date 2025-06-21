@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('vouchers', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('po_id')->unique()->constrained('purchase_orders');
             $table->string('voucher_no');
             $table->date('voucher_date');
             $table->date('issue_date');
