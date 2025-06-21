@@ -19,25 +19,34 @@ use Illuminate\Support\Facades\Auth;
 
 class PurchaseOrderController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
-
+        $status = $request->query('status');
+        
+        $query = PurchaseOrder::with(['user', 'department', 'account', 'details'])
+                    ->latest();
+        
         if ($user->role === 'purchasing') {
-            // Get all purchase orders regardless of status
-            $purchaseOrders = PurchaseOrder::with(['user', 'department', 'account', 'details'])
-                ->latest()
-                ->paginate(10);
+            // Purchasing can see all statuses, but filter if specific status requested
+            if ($status && in_array($status, ['draft', 'forEOD', 'approved', 'rejected'])) {
+                $query->where('status', $status);
+            }
         } else {
-            // Get only purchase orders with status 'forEOD'
-            $purchaseOrders = PurchaseOrder::with(['user', 'department', 'account', 'details'])
-                ->where('status', 'forEOD')
-                ->latest()
-                ->paginate(10);
+            // Non-purchasing users can only see 'forEOD' status
+            $query->where('status', 'forEOD');
+            
+            // But allow them to filter if they specifically request 'forEOD'
+            if ($status === 'forEOD') {
+                $query->where('status', 'forEOD');
+            }
         }
+
+        $purchaseOrders = $query->paginate(10);
 
         return Inertia::render('PurchaseOrders/Index', [
             'purchaseOrders' => $purchaseOrders,
+            'filters' => $request->only(['status']), // Pass the current filter back to frontend
         ]);
     }
 
@@ -57,6 +66,7 @@ class PurchaseOrderController extends Controller
                 'id' => $user->id,
                 'role' => $user->role,
                 'access' => $user->access_id,
+                'name' => $user->first_name,
             ],
         ]);
     }

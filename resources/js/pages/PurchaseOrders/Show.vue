@@ -420,62 +420,63 @@ const printArea = () =>{
         </TableBody>
       </Table>
 
-      <div class="hidden print:block">
-      <div class="flex justify-between mt-12 items-center">
-          <div class="text-left w-1/2">
-            <div class="flex  items-center text-sm  space-x-[55px]">
-              <p>For: {{ purchaseOrder.purpose || 'No purpose' }}</p>
-            </div>
-          </div>
-      </div>
-
-      <div class="flex justify-between mt-12 items-center">
-          <div class="text-left w-1/2">
-            <div class="text-sm">
-              <p>PLEASE NOTE: All orders for equipment and supplies are made only on this form and signed by Executive Director.</p>
-              <p>Orders made on other forms and Signed by other person's shall not be honored.</p>
-            </div>
-          </div>
-          <div class="text-right w-1/2">
-              <div class="inline-block text-sm border-black uppercase font-semibold">Arellano Law Foundation</div>
-          </div>
-      </div>
-
-      <div class="flex justify-between mt-12 items-center">
-          <div class="text-left w-1/2">
-            <div class="flex  items-center text-sm uppercase space-x-[55px]">
-              <h1>DEPARTMENT:</h1>
-              <h1>{{ purchaseOrder.department.department_name }}</h1>
-            </div>
-            <div class="flex  items-center text-sm uppercase space-x-[10px]">
-              <h1>ACCOUNT CHARGES:</h1>
-              <h1>{{ purchaseOrder.account.account_title }}</h1>
-            </div>
-          </div>
-
-        <div class="text-right w-1/2">
-          <p class="text-xs mb-10 mr-[60px]">Approved By</p>
-          
-          <div v-if="executiveDirector" class="relative inline-block text-sm uppercase">
-            <img
-              v-if="purchaseOrder.status === 'approved'"
-              src="/images/signatures/oed_signature.png"
-              alt="Signature"
-              class="w-[100px] absolute -top-6 left-1/2 -translate-x-1/2 pointer-events-none"
-            />
-            <div class="border-b border-black px-2">
-                {{ executiveDirector.full_name }}
+      <div class="hidden print:block" >
+        <div class="flex justify-between mt-12 items-center">
+            <div class="text-left w-1/2">
+              <div class="flex  items-center text-sm  space-x-[55px]">
+                <p>For: {{ purchaseOrder.purpose || 'No purpose' }}</p>
               </div>
-              <p class="text-xs mt-1">{{ executiveDirector.position }}</p>
             </div>
+        </div>
+
+        <div class="flex justify-between mt-12 items-center">
+            <div class="text-left w-1/2">
+              <div class="text-sm">
+                <p>PLEASE NOTE: All orders for equipment and supplies are made only on this form and signed by Executive Director.</p>
+                <p>Orders made on other forms and Signed by other person's shall not be honored.</p>
+              </div>
+            </div>
+            <div class="text-right w-1/2">
+                <div class="inline-block text-sm border-black uppercase font-semibold">Arellano Law Foundation</div>
+            </div>
+        </div>
+
+        <div class="flex justify-between mt-12 items-center">
+            <div class="text-left w-1/2">
+              <div class="flex  items-center text-sm uppercase space-x-[55px]">
+                <h1>DEPARTMENT:</h1>
+                <h1>{{ purchaseOrder.department.department_name }}</h1>
+              </div>
+              <div class="flex  items-center text-sm uppercase space-x-[10px]">
+                <h1>ACCOUNT CHARGES:</h1>
+                <h1>{{ purchaseOrder.account.account_title }}</h1>
+              </div>
+            </div>
+
+          <div class="text-right w-1/2">
+            <p class="text-xs mb-10 mr-[60px]">Approved By</p>
             
-            <div v-else class="text-xs text-gray-500">
-              No Executive Director assigned.
+            <div v-if="executiveDirector" class="relative inline-block text-sm uppercase">
+              <img
+                v-if="purchaseOrder.status === 'approved'"
+                src="/images/signatures/oed_signature.png"
+                alt="Signature"
+                class="w-[100px] absolute -top-6 left-1/2 -translate-x-1/2 pointer-events-none"
+              />
+              <div class="border-b border-black px-2">
+                  {{ executiveDirector.full_name }}
+                </div>
+                <p class="text-xs mt-1 mr-[30px]">{{ executiveDirector.position }}</p>
+              </div>
+              
+              <div v-else class="text-xs text-gray-500">
+                No Executive Director assigned.
+              </div>
             </div>
           </div>
+          <p class="italic text-zinc-400 text-sm">{{ authUser.name }}</p>
         </div>
       </div>
-    </div>
     </div>
   </AppLayout>
 </template>

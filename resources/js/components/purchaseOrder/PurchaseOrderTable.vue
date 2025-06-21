@@ -68,7 +68,7 @@ function goToPO(id: number) {
 
   <div v-else="purchaseOrders.data" class="flex h-48 flex-col items-center justify-center rounded-xl border">
     <FileText class="h-8 w-8 text-muted-foreground" />
-    <p class="mt-2 text-sm text-muted-foreground">No pending purchase order found</p>
-    <p class="text-xs text-muted-foreground">Purchase order for approval from Property Custodian will appear here</p>
+    <p class="mt-2 text-sm text-muted-foreground">No purchase order found</p>
+    <p class="text-xs text-muted-foreground">Purchase order list will appear here</p>
   </div>
 </template>

@@ -16,9 +16,12 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
 ];
 
-defineProps({
-  purchaseOrders: Object
-});
+const props = defineProps<{
+  purchaseOrders: any,
+  filters: {
+    status?: string
+  }
+}>();
 </script>
 
 <template>
@@ -26,7 +29,12 @@ defineProps({
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
-      <h1 class="text-xl font-bold">Purchase Orders</h1>
+      <h1 class="text-xl font-bold">
+        <span v-if="filters.status == 'draft'">Draft</span>
+        <span v-if="filters.status == 'forEOD'">For Approval</span>
+        <span v-if="filters.status == 'approved'">Approved</span>
+        <span v-if="filters.status == 'rejected'">Rejected</span>
+        Purchase Orders</h1>
 
       <PurchaseOrderTable :purchase-orders="purchaseOrders" />
 

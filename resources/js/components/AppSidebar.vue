@@ -29,6 +29,7 @@ interface DropdownNavItem extends NavItem {
 
 const user = usePage().props.auth.user;
 
+// Executive Nav
 const executiveMainItems: NavItem[] = [
   {
     title: 'Dashboard',
@@ -58,7 +59,7 @@ const executiveApprovalItems: NavItem[] = [
     icon: ReceiptText,
   },
 ];
-
+// Purchasing Nav
 const purchasingNavItems: NavItem[] = [
   {
     title: 'Dashboard',
@@ -75,12 +76,21 @@ const purchasingNavItems: NavItem[] = [
     href: '/canvas/approval',
     icon: ShoppingCart,
   },
+];
+const purchasingPONavItems = ref<DropdownNavItem[]>([
   {
     title: 'Purchase Order',
-    href: '/purchase-orders',
+    href: '#',
     icon: ShoppingCart,
+    isOpen: false,
+    children: [
+      { title: 'Draft', href: '/purchase-orders?status=draft' },
+      { title: 'For Approval', href: '/purchase-orders?status=forEOD' },
+      { title: 'Approved', href: '/purchase-orders?status=approved' },
+      { title: 'Rejected', href: '/purchase-orders?status=rejected' },
+    ],
   },
-];
+]);
 
 // Property Custodian
 const custodianNavItems: NavItem[] = [
@@ -100,7 +110,6 @@ const custodianNavItems: NavItem[] = [
     icon: Package,
   },
 ];
-
 const custodianApprovalItems: NavItem[] = [
   {
     title: 'For Approval',
@@ -108,7 +117,6 @@ const custodianApprovalItems: NavItem[] = [
     icon: ClipboardCheck,
   },
 ];
-
 const custodianReportItems = ref<DropdownNavItem[]>([
     {
         title: 'Reports',
@@ -169,7 +177,6 @@ const accountingNavItems: NavItem[] = [
     icon: ReceiptText,
   },
 ];
-
 const accountingCheckNavItems: NavItem[] = [
   {
     title: 'For Check Releasing',
@@ -237,6 +244,7 @@ const footerNavItems: NavItem[] = [
 
           <div v-if="user?.role === 'purchasing'">
             <NavMain :items="purchasingNavItems" group-label="Navigation"/>
+            <NavMain :items="purchasingPONavItems"/>
             <NavMain :items="reportItems" group-label="Reports" />
           </div>
 
