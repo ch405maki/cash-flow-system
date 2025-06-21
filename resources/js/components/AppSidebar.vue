@@ -154,12 +154,17 @@ const accountingNavItems: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
+    title: 'For Voucher',
+    href: '/for-voucher',
+    icon: ReceiptText,
+  },
+  {
     title: 'Vouchers',
     href: '/vouchers',
     icon: ReceiptText,
   },
   {
-    title: 'Vouchers For Approval',
+    title: 'Voucher For Approval',
     href: '/voucher-approval',
     icon: ReceiptText,
   },
@@ -167,7 +172,7 @@ const accountingNavItems: NavItem[] = [
 
 const accountingCheckNavItems: NavItem[] = [
   {
-    title: 'For Check',
+    title: 'For Check Releasing',
     href: '/approved-voucher',
     icon: ReceiptText,
   },

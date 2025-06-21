@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Voucher extends Model
 {
     protected $fillable = [
-        'voucher_no', 'voucher_date', 'issue_date', 'payment_date', 'type',
+        'po_id', 'voucher_no', 'voucher_date', 'issue_date', 'payment_date', 'type',
         'payee', 'check_no', 'check_date', 'check_amount', 'check_payable_to',
         'delivery_date', 'purpose', 'status', 'user_id'
     ];
@@ -22,5 +22,10 @@ class Voucher extends Model
     public function details(): HasMany
     {
         return $this->hasMany(VoucherDetail::class);
+    }
+
+    public function purchaseOrder(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseOrder::class, 'po_id');
     }
 }

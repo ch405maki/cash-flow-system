@@ -39,7 +39,7 @@ class ReportController extends Controller
 
     public function voucherSummary()
     {
-        $vouchers = Voucher::where('status', 'for_check')
+        $vouchers = Voucher::where('status', 'forCheck')
             ->orderBy('voucher_date', 'desc')
             ->get(['id', 'voucher_no', 'voucher_date', 'payee', 'check_amount', 'type']);
 

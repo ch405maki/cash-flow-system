@@ -75,13 +75,13 @@ const directorAccounting = computed(() =>
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { 
-        title: 'Vouchers', 
-        href: voucher.status === 'for_eod'
-            ? '/voucher-approval' 
-            : voucher.status === 'for_check' 
-                ? '/approved-voucher' 
-                : '/vouchers' 
+    {
+        title: 'Vouchers',
+        href: authUser.role == 'executive_director'
+            ? '/voucher-approval'
+            : authUser.role == 'accounting' && authUser.acces_id == '3'
+                ? '/approved-voucher'
+                : '/vouchers'
     },
     { title: `Voucher ${voucher.voucher_no}`, href: `/vouchers/${voucher.id}` },
 ];
@@ -159,14 +159,14 @@ const amountToWords = (amount: number) => {
 };
 
 function formatStatus(status: string): string {
-  switch (status) {
-    case 'for_eod':
-      return 'For EOD Approval';
-    case 'for_check':
-      return 'For Check Releasing';
-    default:
-      return status; // Keep as-is (e.g., "draft", "approved")
-  }
+    switch (status) {
+        case 'forEOD':
+            return 'For EOD Approval';
+        case 'forCheck':
+            return 'For Check Releasing';
+        default:
+            return status; // Keep as-is (e.g., "draft", "approved")
+    }
 }
 
 const printArea = () => {
@@ -202,52 +202,54 @@ const printArea = () => {
                         <Printer class="h-4 w-4" />
                         Print
                     </Button>
-                    <template
-                        v-if="authUser.role === 'executive_director' && voucher.status === 'for_eod' && voucher.status !== 'rejected'">
+                    <template v-if="authUser.role == 'executive_director' && authUser.access_id == '1' && voucher.status !== 'rejected'">
                         <EodVerificationDialog :voucher-id="voucher.id" action="approve">
                             <template #trigger>
-                                <Button variant="default"
-                                    class="flex items-center gap-2 bg-green-500 text-white hover:bg-green-400">
+                                <Button variant="default" class="flex items-center gap-2"
+                                    :class="voucher.status === 'forCheck' ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-green-500 text-white hover:bg-green-400'"
+                                    :disabled="voucher.status === 'forCheck'">
                                     <Check class="h-4 w-4" />
-                                    Approve
+                                    <span v-if="voucher.status == 'forCheck'">For Check Releasing </span>
+                                    <span v-else>Approve </span>
                                 </Button>
                             </template>
                         </EodVerificationDialog>
 
                         <EodVerificationDialog :voucher-id="voucher.id" action="reject">
                             <template #trigger>
-                                <Button variant="default"
-                                    class="flex items-center gap-2 bg-red-500 text-white hover:bg-red-400">
-                                    <X class="h-4 w-4" />
+                                <Button variant="default" class="flex items-center gap-2"
+                                    :class="voucher.status === 'forCheck' ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-red-500 text-white hover:bg-red-400'"
+                                    :disabled="voucher.status === 'forCheck'">
                                     Reject
                                 </Button>
                             </template>
                         </EodVerificationDialog>
                     </template>
 
-                    <template
-                    v-if="voucher.status == 'draft' && authUser.access_id == '3'"
-                        >
-                        <DirectorVerificationDialog :voucher-id="voucher.id" action="forEod">
-                            <template #trigger>
-                                <Button variant="default"
-                                    class="flex items-center gap-2 bg-green-500 text-white hover:bg-green-400">
-                                    <Check class="h-4 w-4" />
-                                    For EOD Approval
-                                </Button>
-                            </template>
-                        </DirectorVerificationDialog>
+                    <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status !== 'forCheck'">
+    <DirectorVerificationDialog :voucher-id="voucher.id" action="forEod">
+        <template #trigger>
+            <Button variant="default" class="flex items-center gap-2"
+                :class="voucher.status == 'forEOD' ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-green-500 text-white hover:bg-green-400'"
+                :disabled="voucher.status == 'forEOD'">
+                <Check class="h-4 w-4" />
+                <span v-if="voucher.status == 'forEOD'"> Sent to EOD</span>
+                <span v-else>For EOD Approval</span>
+            </Button>
+        </template>
+    </DirectorVerificationDialog>
 
-                        <DirectorVerificationDialog :voucher-id="voucher.id" action="reject">
-                            <template #trigger>
-                                <Button variant="default"
-                                    class="flex items-center gap-2 bg-red-500 text-white hover:bg-red-400">
-                                    <X class="h-4 w-4" />
-                                    Reject
-                                </Button>
-                            </template>
-                        </DirectorVerificationDialog>
-                    </template>
+    <DirectorVerificationDialog :voucher-id="voucher.id" action="reject">
+        <template #trigger>
+            <Button variant="default" class="flex items-center gap-2"
+                :class="voucher.status === 'forEOD' ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-red-500 text-white hover:bg-red-400'"
+                :disabled="voucher.status === 'forEOD'">
+                <X class="h-4 w-4" />
+                Reject
+            </Button>
+        </template>
+    </DirectorVerificationDialog>
+</template>
 
                 </div>
             </div>
@@ -284,7 +286,10 @@ const printArea = () => {
                     <tbody>
                         <tr class="border-b">
                             <td class="p-2 font-medium text-muted-foreground border-r w-48">CHECK NUMBER:</td>
-                            <td class="p-2 uppercase border-r">{{ voucher.check_no }}</td>
+                            <td class="p-2 border-r">
+                                <span v-if="voucher.status !== 'forCheck'"> *To be filled-up by accounting upon check releasing*</span>
+                                <span v-else>{{ voucher.check_no }}</span>
+                            </td>
                             <td class="p-2 font-medium text-muted-foreground border-r">CHECK DATE:</td>
                             <td class="p-2">{{ formatDate(voucher.check_date) }}</td>
                         </tr>
@@ -455,7 +460,7 @@ const printArea = () => {
                                 <div class="text-right w-1/6">
                                     <div class="my-4"></div>
                                     <div v-if="directorAccounting" class="relative inline-block text-sm uppercase">
-                                        <img v-if="voucher.status === 'for_check'" src="" alt="Signature"
+                                        <img v-if="voucher.status === 'forCheck'" src="" alt="Signature"
                                             class="w-[100px] absolute -top-6 left-1/2 -translate-x-1/2 pointer-events-none" />
                                         <div class="border-b border-black px-2 whitespace-nowrap">{{
                                             directorAccounting.full_name.toUpperCase() }}</div>
@@ -481,7 +486,7 @@ const printArea = () => {
                                 <div class="text-right w-1/2">
                                     <div class="my-4"></div>
                                     <div v-if="executiveDirector" class="relative inline-block text-sm uppercase">
-                                        <img v-if="voucher.status === 'for_check'" src="" alt="Signature"
+                                        <img v-if="voucher.status === 'forCheck'" src="" alt="Signature"
                                             class="w-[100px] absolute -top-6 left-1/2 -translate-x-1/2 pointer-events-none" />
                                         <div class="border-b border-black px-2 whitespace-nowrap">{{
                                             executiveDirector.full_name.toUpperCase() }}</div>

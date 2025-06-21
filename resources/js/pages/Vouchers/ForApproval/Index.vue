@@ -188,11 +188,7 @@ const props = defineProps({
               v-model="searchQuery" />
           </div>
           
-          <!-- Only show if the user is NOT an executive_director and staff -->
-          <Button v-if="authUser.role !== 'executive_director' && authUser.access_id !== '3' " variant="default" size="sm" @click="goToCreate()">
-            <PlusCircle class="h-4 w-4" />
-            Create New Voucher
-          </Button>
+          
 
         </div>
       </div>
