@@ -30,15 +30,11 @@ interface Props {
 const props = defineProps<Props>();
 const toast = useToast();
 
+type TaggingType = 'with_canvas' | 'no_canvas';
+
 const breadcrumbs: BreadcrumbItem[] = [
-  {
-    title: 'Dashboard',
-    href: '/dashboard',
-  },
-  {
-    title: 'Create Purchase Order',
-    href: '/',
-  },
+  { title: 'Dashboard', href: '/dashboard', },
+  { title: 'Create Purchase Order', href: '/',},
 ];
 
 const form = ref({
@@ -52,6 +48,7 @@ const form = ref({
   account_id: '',
   details: [] as PurchaseOrderDetail[],
   canvas_id: props.canvas_id || null,
+  tagging: props.canvas_id ? 'with_canvas' : 'no_canvas' as TaggingType, // Add this line
 });
 
 const newItem = ref<PurchaseOrderDetail>({
@@ -95,13 +92,18 @@ const calculateTotal = () => {
 
 const submitForm = async () => {
   try {
+    // Validate tagging and canvas_id
+    if (form.value.tagging === 'with_canvas' && !form.value.canvas_id) {
+      toast.error('Canvas ID is required when tagging is "With Canvas"');
+      return;
+    }
+
     // Calculate total amount
     form.value.amount = calculateTotal();
 
     const response = await axios.post('/api/purchase-orders', form.value);
 
     toast.success('Purchase Order created successfully!');
-    // Redirect or reset form as needed
     window.location.href = `/purchase-orders/${response.data.id}`;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {
@@ -131,14 +133,14 @@ const submitForm = async () => {
           <!-- add 2 check box with canvas, no canvas -->
           <div class="space-y-2">
             <Label for="tagging">Tagging</Label>
-            <RadioGroup default-value="option-one" class="flex">
+            <RadioGroup v-model="form.tagging" class="flex">
               <div class="flex items-center space-x-2">
-                <RadioGroupItem id="option-one" value="option-one" />
-                <Label for="option-one">With Canvas</Label>
+                <RadioGroupItem id="with_canvas" value="with_canvas" />
+                <Label for="with_canvas">With Canvas</Label>
               </div>
               <div class="flex items-center space-x-2">
-                <RadioGroupItem id="option-two" value="option-two" />
-                <Label for="option-two">No Canvas</Label>
+                <RadioGroupItem id="no_canvas" value="no_canvas" />
+                <Label for="no_canvas">No Canvas</Label>
               </div>
             </RadioGroup>
           </div>

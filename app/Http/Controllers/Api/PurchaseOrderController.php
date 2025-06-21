@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderDetail;
 use App\Models\Account;
+use App\Models\Canvas;
 use App\Models\Department;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -88,9 +89,18 @@ class PurchaseOrderController extends Controller
             'details.*.item_description' => 'required|string',
             'details.*.unit_price' => 'required|numeric|min:0',
             'details.*.amount' => 'required|numeric|min:0',
+            'tagging' => 'required|in:with_canvas,no_canvas',
+            'canvas_id' => 'nullable|exists:canvases,id',
         ]);
 
-        // Generate PO number directly in controller
+        // Validate canvas_id is required if tagging is 'with_canvas'
+        if ($validated['tagging'] === 'with_canvas' && empty($validated['canvas_id'])) {
+            return response()->json([
+                'message' => 'Canvas ID is required when tagging is "with_canvas"'
+            ], 422);
+        }
+
+        // Generate PO number
         $yearMonth = date('Ym');
         $lastPO = PurchaseOrder::where('po_no', 'like', "PO{$yearMonth}%")
             ->orderBy('po_no', 'desc')
@@ -114,6 +124,17 @@ class PurchaseOrderController extends Controller
 
             foreach ($validated['details'] as $detail) {
                 $purchaseOrder->details()->create($detail);
+            }
+
+            // Update Canvas status if this PO is linked to a canvas
+            if ($validated['tagging'] === 'with_canvas' && $validated['canvas_id']) {
+                $canvas = Canvas::find($validated['canvas_id']);
+                if ($canvas) {
+                    $canvas->update([
+                        'status' => 'poCreated',
+                        'purchase_order_id' => $purchaseOrder->id // Optionally store the PO ID
+                    ]);
+                }
             }
 
             DB::commit();

@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PurchaseOrder extends Model
 {
+    protected $casts = [
+        'tagging' => 'string',
+    ];
+
     protected $fillable = [
         'po_no', 'payee', 'check_payable_to', 'date', 'amount',
         'purpose', 'status', 'remarks', 'user_id', 'department_id', 
