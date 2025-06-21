@@ -133,6 +133,9 @@ function viewRequest(id: number) {
         <DialogDescription v-if="hasLinkedOrder" class="hover:underline hover:cursor-pointer hover:text-violet-800" @click="viewRequest(canvas.request_to_order.id)">
           Linked to Order # {{ canvas.request_to_order.order_no }} | {{ formatDate(canvas.request_to_order.order_date) }}
         </DialogDescription>
+        <DialogDescription v-else>
+          Not linked to any order. 
+        </DialogDescription>
       </DialogHeader>
 
       <div class="grid gap-6 py-4">
@@ -231,6 +234,7 @@ function viewRequest(id: number) {
                 Reject
             </Button>
           </div>
+          <!-- Work to Create P.O. -->
           <div v-if="canvas.status === 'approved'" class="flex gap-2">
             <Button 
               variant="default" 
@@ -238,7 +242,7 @@ function viewRequest(id: number) {
               :disabled="form.processing"
             >
               <Check class="h-4 w-4" />
-              Tag As Created
+              Create P. O.
             </Button>
           </div>
           <Button 

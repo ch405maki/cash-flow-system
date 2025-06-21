@@ -54,7 +54,6 @@ function getStatusVariant(status: string) {
       return 'default'
   }
 }
-
 </script>
 
 <template>

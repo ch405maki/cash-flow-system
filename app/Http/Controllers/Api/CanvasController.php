@@ -17,14 +17,14 @@ class CanvasController extends Controller
         $user = Auth::user();
 
         if ($user->role === 'executive_director') {
-            // Executive Director sees every canvas waiting for EOD sign‑off
-            $canvases = Canvas::with('creator')
+            // Executive Director sees every canvas waiting for EOD sign-off
+            $canvases = Canvas::with(['creator', 'request_to_order'])
                 ->where('status', 'forEOD')
                 ->latest()
                 ->get();
         } else {
             // Everyone else sees only the canvases they created
-            $canvases = Canvas::with('creator')
+            $canvases = Canvas::with(['creator', 'request_to_order'])
                 ->whereIn('status', ['forEOD', 'pending'])
                 ->where('created_by', $user->id)
                 ->latest()
