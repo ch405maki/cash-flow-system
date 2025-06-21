@@ -296,11 +296,13 @@ class RequestController extends Controller
     {
         $validated = $httpRequest->validate([
             'status' => 'required|in:approved,rejected,propertyCustodian,to_order,released',
-            'password' => 'required_if:status, approved,to_property,to_order,released'
+            'password' => 'required_if:status,approved,propertyCustodian,to_order,released'
         ]);
 
-        // Verify password for approval
-        if ($validated['status'] === 'approved') {
+        // Verify password f    or all statuses that require it
+        $passwordRequiredStatuses = ['approved', 'propertyCustodian', 'to_order', 'released'];
+        
+        if (in_array($validated['status'], $passwordRequiredStatuses)) {
             if (!Hash::check($validated['password'], auth()->user()->password)) {
                 return back()->withErrors([
                     'password' => 'Invalid password'
