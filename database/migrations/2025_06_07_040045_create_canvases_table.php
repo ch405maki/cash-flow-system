@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('file_path');
             $table->string('original_filename');
             $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('request_to_order_id')->nullable()->constrained('request_to_orders');
             $table->timestamps();
             $table->softDeletes();
         });

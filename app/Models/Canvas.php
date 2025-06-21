@@ -16,7 +16,8 @@ class Canvas extends Model
         'remarks',
         'file_path',
         'original_filename',
-        'created_by'
+        'created_by',
+        'request_to_order_id'
     ];
 
     protected $casts = [
@@ -27,5 +28,10 @@ class Canvas extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function requestToOrder()
+    {
+        return $this->belongsTo(RequestToOrder::class);
     }
 }

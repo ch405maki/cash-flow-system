@@ -62,10 +62,11 @@ class CanvasController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'file' => 'required|file|max:10240',
             'note' => 'nullable|string|max:500',
             'remarks' => 'nullable|string|max:500',
+            'request_to_order_id' => 'nullable|exists:request_to_orders,id',
         ]);
 
         $file = $request->file('file');
@@ -75,17 +76,25 @@ class CanvasController extends Controller
         $extension = $file->getClientOriginalExtension();
         $filename = $this->generateUniqueFilename($originalName, $extension);
         
-        // Store in public disk
+        // Store in public disk (we use $filename but keep $filePath for potential logging)
         $filePath = $file->storeAs('canvases', $filename, 'public');
 
-        $canvas = Canvas::create([
+        $canvasData = [
             'status' => 'pending',
-            'note' => $request->note,
-            'remarks' => $request->remarks,
-            'file_path' => $filename,
+            'note' => $validated['note'] ?? null, // Safe access with null coalescing
+            'remarks' => $validated['remarks'] ?? null, // Safe access with null coalescing
+            'file_path' => $filename, // Using just the filename is fine if that's your schema
             'original_filename' => $file->getClientOriginalName(),
-            'created_by' => auth()->id(),
-        ]);
+            'created_by' => Auth::id(),
+        ];
+
+        // Only add request_to_order_id if provided
+        if (!empty($validated['request_to_order_id'])) {
+            $canvasData['request_to_order_id'] = $validated['request_to_order_id'];
+        }
+
+        // We keep the $canvas variable as it might be useful for logging/events
+        $canvas = Canvas::create($canvasData);
 
         return redirect()->route('canvas.index')
             ->with('success', 'Canvas uploaded successfully!');

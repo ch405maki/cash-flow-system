@@ -31,4 +31,9 @@ class RequestToOrder extends Model
     {
         return $this->hasMany(RequestToOrderDetail::class);
     }
+
+    public function canvases()
+    {
+        return $this->hasMany(Canvas::class);
+    }
 }
