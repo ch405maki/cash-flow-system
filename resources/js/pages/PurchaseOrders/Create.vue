@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from 'vue-toastification';
 import axios from 'axios';
 import { ref } from 'vue';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
 interface PurchaseOrderDetail {
   quantity: number;
@@ -113,18 +114,31 @@ const submitForm = async () => {
 
 <template>
   <Head title="Create Purchase Order" />
-
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-6 space-y-6">
       <h1 class="text-2xl font-bold">Create Purchase Order</h1>
 
       <form @submit.prevent="submitForm" class="space-y-2">
         <!-- Basic Information Section -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex items-center">
           <!-- Payee Field -->
           <div class="space-y-2 md:col-span-2">
             <Label for="payee">Company Name</Label>
             <Input id="payee" v-model="form.payee" required />
+          </div>
+          <!-- add 2 check box with canvas, no canvas -->
+          <div class="space-y-2">
+            <Label for="tagging">Tagging</Label>
+            <RadioGroup default-value="option-one" class="flex">
+              <div class="flex items-center space-x-2">
+                <RadioGroupItem id="option-one" value="option-one" />
+                <Label for="option-one">With Canvas</Label>
+              </div>
+              <div class="flex items-center space-x-2">
+                <RadioGroupItem id="option-two" value="option-two" />
+                <Label for="option-two">No Canvas</Label>
+              </div>
+            </RadioGroup>
           </div>
         </div>
 
