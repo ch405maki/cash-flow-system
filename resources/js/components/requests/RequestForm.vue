@@ -5,9 +5,10 @@ import { useToast } from 'vue-toastification';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { CirclePlus, Send, Eraser  } from 'lucide-vue-next';
+import { CirclePlus, Send, ChevronLeft } from 'lucide-vue-next';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 const toast = useToast();
 
@@ -19,6 +20,12 @@ const props = defineProps<{
   }
 }>();
 
+interface RequestItem {
+  quantity: number;
+  unit: string;
+  item_description: string;
+}
+
 // Form data
 const form = ref({
   request_date: new Date().toISOString().split('T')[0],
@@ -26,44 +33,64 @@ const form = ref({
   status: 'pending',
   department_id: props.authUser.department_id,
   user_id: props.authUser.id,
-  items: [
-    {
-      quantity: 1,
-      unit: 'pcs',
-      item_description: ''
-    }
-  ]
+  items: [] as RequestItem[],
+});
+
+const newItem = ref<RequestItem>({
+  quantity: 1,
+  unit: 'pcs',
+  item_description: ''
 });
 
 const submitting = ref(false);
-
-const statusOptions = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'rejected', label: 'Rejected' }
-];
+const showPreview = ref(false);
 
 const unitOptions = [
   { value: 'pcs', label: 'Piece/s' },
   { value: 'box', label: 'Box/es' },
   { value: 'set', label: 'Set/s' },
-  { value: 'kg', label: 'Kilogram/s' }
+  { value: 'kg', label: 'Kilogram/s' },
+  { value: 'pack', label: 'Pack/s' }
 ];
 
 const addItem = () => {
-  form.value.items.push({
-    quantity: 1,
-    unit: 'pcs',
-    item_description: ''
-  });
+  if (!newItem.value.item_description) {
+    toast.error('Item description is required');
+    return;
+  }
+
+  form.value.items.push({ ...newItem.value });
+  resetNewItem();
 };
 
 const removeItem = (index: number) => {
   form.value.items.splice(index, 1);
 };
 
+const resetNewItem = () => {
+  newItem.value = {
+    quantity: 1,
+    unit: 'pcs',
+    item_description: ''
+  };
+};
+
+const showConfirmation = () => {
+  if (form.value.items.length === 0) {
+    toast.error('Please add at least one item');
+    return;
+  }
+
+  if (!form.value.purpose) {
+    toast.error('Purpose is required');
+    return;
+  }
+
+  showPreview.value = true;
+};
+
 const submitRequest = async () => {
-  if (submitting.value) return; // prevent double click
+  if (submitting.value) return;
   
   submitting.value = true;
   try {
@@ -80,14 +107,10 @@ const submitRequest = async () => {
       status: 'pending',
       department_id: props.authUser.department_id,
       user_id: props.authUser.id,
-      items: [
-        {
-          quantity: 1,
-          unit: 'pcs',
-          item_description: ''
-        }
-      ]
+      items: []
     };
+    resetNewItem();
+    showPreview.value = false;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       if (error.response?.status === 422) {
@@ -112,11 +135,19 @@ const submitRequest = async () => {
   }
 };
 
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
 </script>
 
 <template>
   <div>
-    <form @submit.prevent="submitRequest" class="space-y-6">
+    <form @submit.prevent="showConfirmation" class="space-y-6">
       <!-- Purpose -->
       <div>
         <Label for="purpose">Purpose</Label>
@@ -129,82 +160,219 @@ const submitRequest = async () => {
         />
       </div>
 
-      <!-- Items List -->
-      <div>
-        <div class="flex items-center justify-between mb-4">
+      <!-- Items Section -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
           <h3 class="text-lg font-medium">Request Items</h3>
-          <Button size="sm" type="button" variant="outline" @click="addItem">
-            <CirclePlus />Add Item
-          </Button>
         </div>
 
-        <div v-for="(item, index) in form.items" :key="index" class="mb-6 space-y-4 border-b pb-6">
-          <div class="grid grid-cols-1 gap-4 md:grid-cols-12">
-            <!-- Quantity -->
-            <div class="md:col-span-2"> 
-              <Label :for="`quantity-${index}`">Quantity</Label>
-              <Input
-                :id="`quantity-${index}`"
-                v-model.number="item.quantity"
-                type="number"
-                min="1"
-                required
-              />
-            </div>
+        <!-- New Item Form -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+          <!-- Description -->
+          <div class="md:col-span-6 space-y-2">
+            <Label for="item_description">Description</Label>
+            <Input 
+              id="item_description" 
+              v-model="newItem.item_description" 
+              placeholder="Item description"
+            />
+          </div>
 
-            <!-- Unit -->
-            <div class="md:col-span-2">
-              <Label :for="`unit-${index}`">Unit</Label>
-              <Select v-model="item.unit" required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select unit" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem
-                    v-for="unit in unitOptions"
-                    :key="unit.value"
+          <!-- Quantity -->
+          <div class="md:col-span-2 space-y-2">
+            <Label for="quantity">Quantity</Label>
+            <Input 
+              id="quantity" 
+              type="number" 
+              v-model.number="newItem.quantity" 
+              min="1" 
+            />
+          </div>
+
+          <!-- Unit -->
+          <div class="md:col-span-2 space-y-2">
+            <Label for="unit">Unit</Label>
+            <Select v-model="newItem.unit">
+              <SelectTrigger class="w-full">
+                <SelectValue placeholder="Select unit" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem 
+                    v-for="unit in unitOptions" 
+                    :key="unit.value" 
                     :value="unit.value"
                   >
                     {{ unit.label }}
                   </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <!-- Description -->
-            <div class="md:col-span-7">
-              <Label :for="`description-${index}`">Description</Label>
-              <Input
-                :id="`description-${index}`"
-                v-model="item.item_description"
-                placeholder="Item description"
-                required
-              />
-            </div>
-
-            <!-- Remove Button -->
-            <div class="md:col-span-1 flex items-end">
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                @click="removeItem(index)"
-                :disabled="form.items.length <= 1"
-              >
-                Remove
-              </Button>
-            </div>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
+
+          <!-- Add Button -->
+          <div class="md:col-span-2">
+            <Button 
+              type="button" 
+              @click="addItem" 
+              class="w-full"
+            >
+              <CirclePlus class="mr-2 h-4 w-4" />
+              Add Item
+            </Button>
+          </div>
+        </div>
+
+        <!-- Items Table -->
+        <div class="max-h-64 overflow-y-auto border rounded-lg mt-4">
+          <!-- ONE table, table-fixed so the colgroup widths are respected -->
+          <table class="min-w-full table-fixed divide-y divide-gray-200">
+            <!-- Column widths (same for header & rows) -->
+            <colgroup>
+              <col class="w-1/2" />   <!-- Description -->
+              <col class="w-20"  />   <!-- Qty -->
+              <col class="w-24"  />   <!-- Unit -->
+              <col class="w-28"  />   <!-- Actions -->
+            </colgroup>
+
+            <!-- Sticky header lives in the SAME table -->
+            <thead class="bg-gray-50">
+              <tr class="sticky top-0 z-10">
+                <th class="bg-gray-50 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                  Description
+                </th>
+                <th class="bg-gray-50 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                  Qty
+                </th>
+                <th class="bg-gray-50 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                  Unit
+                </th>
+                <th class="bg-gray-50 px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr v-for="(item, index) in form.items" :key="index">
+                <td class="px-3 py-2 text-sm text-gray-700 whitespace-normal break-words">
+                  {{ item.item_description }}
+                </td>
+                <td class="px-3 py-2 text-sm text-gray-700 text-center">
+                  {{ item.quantity }}
+                </td>
+                <td class="px-3 py-2 text-sm text-gray-700 text-center">
+                  {{ item.unit }}
+                </td>
+                <td class="px-3 py-2 text-sm text-right">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    @click="removeItem(index)"
+                  >
+                    Remove
+                  </Button>
+                </td>
+              </tr>
+
+              <tr v-if="form.items.length === 0">
+                <td colspan="4" class="px-3 py-4 text-center text-sm text-gray-500">
+                  No items added yet
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
       <!-- Submit Button -->
       <div class="flex justify-end">
-        <Button size="sm" type="submit" :disabled="submitting">
+        <Button type="submit" :disabled="submitting">
           <Send class="mr-2 h-4 w-4" />
-          {{ submitting ? 'Submitting...' : 'Submit Request' }}
+          {{ submitting ? 'Submitting...' : 'Review Request' }}
         </Button>
       </div>
     </form>
+
+    <!-- Preview Dialog -->
+  <Dialog v-model:open="showPreview">
+    <DialogContent class="max-h-screen  overflow-y-auto sm:max-w-2xl">
+      <DialogHeader>
+        <DialogTitle>Review Your Request</DialogTitle>
+      </DialogHeader>
+      <div class="space-y-2">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+          <div>
+            <Label class="text-sm sm:text-base text-muted-foreground">Request Date</Label>
+            <p class="text-sm sm:text-base">{{ formatDate(form.request_date) }}</p>
+          </div>
+          <div>
+            <Label class="text-sm sm:text-base text-muted-foreground">Department</Label>
+            <p class="text-sm sm:text-base">{{ departments.find(d => d.id === form.department_id)?.department_name }}</p>
+          </div>
+        </div>
+
+        <div>
+          <Label class="text-sm sm:text-base text-muted-foreground">Purpose</Label>
+          <p class="text-sm sm:text-base whitespace-pre-line">{{ form.purpose }}</p>
+        </div>
+
+        <div class="space-y-2">
+          <Label class="text-sm sm:text-base text-muted-foreground">Items</Label>
+          <div class="border rounded-lg overflow-hidden">
+            <!-- Scrollable container with max height -->
+            <div class="max-h-[60vh] overflow-y-auto">
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50 sticky top-0 z-10">
+                    <tr>
+                      <th class="px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
+                        Description
+                      </th>
+                      <th class="px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
+                        Quantity
+                      </th>
+                      <th class="px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
+                        Unit
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                    <tr v-for="(item, index) in form.items" :key="index">
+                      <td class="px-4 py-3 whitespace-normal text-xs sm:text-sm text-gray-500">
+                        {{ item.item_description }}
+                      </td>
+                      <td class="px-4 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                        {{ item.quantity }}
+                      </td>
+                      <td class="px-4 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                        {{ unitOptions.find(u => u.value === item.unit)?.label || item.unit }}
+                      </td>
+                    </tr>
+                    <tr v-if="form.items.length === 0">
+                      <td colspan="3" class="px-4 py-4 text-center text-sm text-gray-500">
+                        No items added yet
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <DialogFooter class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between sm:gap-0">
+        <Button variant="outline" @click="showPreview = false" class="w-full sm:w-auto">
+          <ChevronLeft class="h-4 w-4 mr-2" />
+          Back to Edit
+        </Button>
+        <Button type="button" @click="submitRequest" :disabled="submitting" class="w-full sm:w-auto">
+          <Send class="h-4 w-4 mr-2" />
+          {{ submitting ? 'Submitting...' : 'Submit Request' }}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
   </div>
 </template>

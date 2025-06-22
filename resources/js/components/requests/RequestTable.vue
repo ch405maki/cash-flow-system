@@ -66,7 +66,9 @@ function formatDate(dateStr: string): string {
         <TableRow
           v-for="request in props.requests"
           :key="request.id"
-          class="hover:bg-muted/50"
+          class="hover:bg-muted/50 group cursor-pointer hover:underline"
+          title="show request"
+          @click="goToShowRequest(request.id)"
         >
           <TableCell>{{ request.request_no }}</TableCell>
           <TableCell>{{ formatDate(request.request_date) }}</TableCell>
@@ -87,25 +89,19 @@ function formatDate(dateStr: string): string {
               {{ request.status }}
             </span>
           </TableCell>
-          <TableCell class="text-right space-x-2">
-            <Button
-              size="sm"
-              variant="outline"
-              @click="goToEditRequest(request.id)"
-              v-if="user.role === 'staff' && request.status === 'pending'"
-            >
-              <FilePenLine class="h-4" />
-              Edit
-            </Button>
-
-            <Button
-              size="sm"
-              variant="default"
-              @click="goToShowRequest(request.id)"
-            >
-            <Eye class="h-4"/>
-              Show
-            </Button>
+          <TableCell class="text-right space-x-2 relative">
+            <div class="inline-block" style="pointer-events: auto">
+              <Button
+                size="sm"
+                variant="outline"
+                @click.stop="goToEditRequest(request.id)"
+                v-if="user.role === 'staff' && request.status === 'pending'"
+                class="relative z-10"
+              >
+                <FilePenLine class="h-4" />
+                Edit
+              </Button>
+            </div>
           </TableCell>
         </TableRow>
       </TableBody>
