@@ -16,40 +16,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
 
 use Illuminate\Database\QueryException;
 use Inertia\Inertia;
 
 class VoucherController extends Controller
 {
-    // Validation rules shared between store and update
-    protected array $voucherValidationRules = [
-        'issue_date' => 'required|date',
-        'payment_date' => 'required|date',
-        'check_date' => 'required|date',
-        'delivery_date' => 'required|date',
-        'voucher_date' => 'required|date',
-        'purpose' => 'required|string|max:500',
-        'payee' => 'required|string|max:255',
-        'check_no' => 'nullable|string|max:500',
-        'check_payable_to' => 'required|string|max:500',
-        'check_amount' => 'required|numeric|min:0',
-        'status' => 'required|in:forEOD,forCheck,rejected,draft',
-        'type' => 'required|in:cash,salary',
-        'user_id' => 'required|exists:users,id',
-        'check' => 'nullable|array',
-        'check.*.amount' => 'nullable|numeric|min:0',
-        'check.*.rate' => 'nullable|numeric|min:0',
-        'check.*.hours' => 'nullable|numeric|min:0|max:24',
-        'check.*.charging_tag' => 'nullable|in:C,D',
-        'check.*.account_id' => 'required_with:check.*|exists:accounts,id',
-    ];
-
     public function index()
     {
-
         $user = Auth::user();
-
         return Inertia::render('Vouchers/Index', [
             'vouchers' => Voucher::with(['user', 'details'])
                                 ->whereIn('status', ['draft', 'rejected'])
@@ -63,34 +39,153 @@ class VoucherController extends Controller
         ]);
     }
 
-
     public function create()
     {
+        $voucherNumber = $this->generateVoucherNumber();
+        
         return Inertia::render('Vouchers/Create', [
-            'accounts' => Account::orderBy('account_title')->get()
+            'accounts' => Account::orderBy('account_title')->get(),
+            'voucher_number' => $voucherNumber 
         ]);
     }
 
-
+    // voucher store start
     public function store(Request $request): JsonResponse
     {
-        return DB::transaction(function () use ($request) {
-            $validated = $this->validateRequest($request);
+        try {
+            $validationRules = [
+                'voucher_no' => 'required|string|unique:vouchers,voucher_no',
+                'issue_date' => 'nullable|date',
+                'payment_date' => 'nullable|date',
+                'check_date' => 'required|date',
+                'delivery_date' => 'nullable|date',
+                'voucher_date' => 'required|date',
+                'purpose' => 'required|string|max:500',
+                'payee' => 'required|string|max:255',
+                'check_no' => 'nullable|string|max:500',
+                'check_payable_to' => 'required|string|max:500',
+                'check_amount' => 'required|numeric|min:0',
+                'status' => 'required|in:forEOD,forCheck,rejected,draft',
+                'type' => 'required|in:cash,salary',
+                'user_id' => 'required|exists:users,id',
+                'check' => 'required_if:type,salary|array',
+                'check.*.amount' => 'required|numeric|min:0',
+                'check.*.rate' => 'nullable|numeric|min:0',
+                'check.*.hours' => 'nullable|numeric|min:0|max:24',
+                'check.*.charging_tag' => 'nullable|in:C,D',
+                'check.*.account_id' => 'required|exists:accounts,id',
+            ];
 
-            // Explicitly remove voucher_no if somehow provided
-            unset($validated['voucher_no']);
+            $validator = Validator::make($request->all(), $validationRules);
 
-            $this->handleCashVoucherDetails($validated);
-            $voucher = $this->createVoucher($validated);
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
 
-            return $this->successResponse(
-                'Voucher created successfully',
-                $voucher->load(['user', 'details']),
-                201,
-                ['items_count' => $validated['type'] === 'cash' ? count($validated['check'] ?? []) : 0]
-            );
-        });
+            return DB::transaction(function () use ($request, $validator) {
+                $validated = $validator->validated();
+
+                // Create voucher
+                $voucher = Voucher::create([
+                    'voucher_no' => $validated['voucher_no'],
+                    'issue_date' => $validated['issue_date'] ?? null,
+                    'payment_date' => $validated['payment_date'] ?? null,
+                    'check_date' => $validated['check_date'],
+                    'delivery_date' => $validated['delivery_date'] ?? null,
+                    'voucher_date' => $validated['voucher_date'],
+                    'purpose' => $validated['purpose'],
+                    'payee' => $validated['payee'],
+                    'check_no' => $validated['check_no'] ?? null,
+                    'check_payable_to' => $validated['check_payable_to'],
+                    'check_amount' => $validated['check_amount'],
+                    'status' => $validated['status'],
+                    'type' => $validated['type'],
+                    'user_id' => $validated['user_id'],
+                ]);
+
+                // Create details if salary voucher
+                if ($validated['type'] === 'salary' && isset($validated['check'])) {
+                    foreach ($validated['check'] as $item) {
+                        $voucher->details()->create([
+                            'account_id' => $item['account_id'],
+                            'amount' => $item['amount'],
+                            'charging_tag' => $item['charging_tag'] ?? null,
+                            'hours' => $item['hours'] ?? null,
+                            'rate' => $item['rate'] ?? null,
+                        ]);
+                    }
+                }
+
+                return response()->json([
+                    'message' => 'Voucher created successfully',
+                    'data' => $voucher->load(['user', 'details']),
+                    'voucher_no' => $validated['voucher_no'],
+                    'items_count' => $validated['type'] === 'salary' 
+                        ? count($validated['check']) 
+                        : 0
+                ], 201);
+            });
+
+        } catch (\Exception $e) {
+            \Log::error($e);
+            return response()->json([
+                'message' => 'Server Error',
+                'error' => env('APP_DEBUG') ? $e->getMessage() : 'An error occurred'
+            ], 500);
+        }
     }
+
+    protected function createVoucher(array $data)
+    {
+        return Voucher::create([
+            'issue_date' => $data['issue_date'],
+            'payment_date' => $data['payment_date'],
+            'check_date' => $data['check_date'],
+            'delivery_date' => $data['delivery_date'],
+            'voucher_date' => $data['voucher_date'],    
+            'purpose' => $data['purpose'],
+            'payee' => $data['payee'],
+            'check_no' => $data['check_no'],
+            'check_payable_to' => $data['check_payable_to'],    
+            'check_amount' => $data['check_amount'],
+            'status' => $data['status'],
+            'type' => $data['type'],
+            'user_id' => $data['user_id'],
+        ]);
+    }
+
+    protected function createVoucherDetails($voucher, array $items)
+    {
+        return $voucher->details()->createMany(
+            collect($items)->map(function ($item) {
+                return [
+                    'account_id' => $item['account_id'],
+                    'amount' => $item['amount'],
+                    'charging_tag' => $item['charging_tag'] ?? null,
+                    'hours' => $item['hours'] ?? null,
+                    'rate' => $item['rate'] ?? null,
+                ];
+            })->toArray()
+        );
+    }
+
+    protected function generateVoucherNumber(): string
+    {
+        $prefix = 'V-' . now()->format('Ym') . '-';  // Format: V-YYYYMM-
+        $lastVoucher = Voucher::where('voucher_no', 'like', $prefix . '%')
+            ->orderBy('voucher_no', 'desc')
+            ->first();
+
+        $sequence = $lastVoucher
+            ? (int) str_replace($prefix, '', $lastVoucher->voucher_no) + 1
+            : 1;
+
+        return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+    }
+    // voucher store end
 
     public function edit(Voucher $voucher)
     {
@@ -134,13 +229,13 @@ class VoucherController extends Controller
     {
         $voucher->load(['user', 'details.account']);
 
-        return Inertia::render('Vouchers/View', [ // Changed to Inertia::render()
+        return Inertia::render('Vouchers/View', [ 
             'voucher' => $voucher,
             'accounts' => Account::all(),
-            'authUser' => [ // Make sure to include authUser if needed
-                'id' => auth()->id(),
-                'access_id' => auth()->user()->access_id,
-                'role' => auth()->user()->role,
+            'authUser' => [ 
+                'id' => Auth::user()->id,
+                'access_id' => Auth::user()->access_id,
+                'role' => Auth::user()->role,
             ],
             'signatories' => Signatory::all(),
         ]);
@@ -150,10 +245,10 @@ class VoucherController extends Controller
     {
         $request->validate([
             'password' => 'required',
-            'action' => 'required|in:forEod,reject' // Validate the action parameter
+            'action' => 'required|in:forEod,reject'
         ]);
 
-        $user = auth()->user();
+        $user = Auth::user();
 
         // Password verification
         if (!Hash::check($request->password, $user->password)) {
@@ -191,10 +286,10 @@ class VoucherController extends Controller
     {
         $request->validate([
             'password' => 'required',
-            'action' => 'required|in:approve,reject' // Validate the action parameter
+            'action' => 'required|in:approve,reject'
         ]);
 
-        $user = auth()->user();
+        $user = Auth::user();
 
         // Password verification
         if (!Hash::check($request->password, $user->password)) {
@@ -228,23 +323,6 @@ class VoucherController extends Controller
         ]);
     }
 
-    protected function generateVoucherNumber(): string
-    {
-        $prefix = 'V-' . now()->format('Y') . '-';
-        $lastVoucher = Voucher::where('voucher_no', 'like', $prefix . '%')
-            ->orderBy('voucher_no', 'desc')
-            ->first();
-
-        $sequence = $lastVoucher
-            ? (int) str_replace($prefix, '', $lastVoucher->voucher_no) + 1
-            : 1;
-
-        return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
-    }
-
-    /**
-     * Validate the request data
-     */
     protected function validateRequest(Request $request): array
     {
         $rules = $this->voucherValidationRules;
@@ -260,9 +338,6 @@ class VoucherController extends Controller
         return $request->validate($rules);
     }
 
-    /**
-     * Handle cash voucher details (amount distribution)
-     */
     protected function handleCashVoucherDetails(array &$validated): void
     {
         if ($validated['type'] !== 'cash' || empty($validated['check'])) {
@@ -289,24 +364,6 @@ class VoucherController extends Controller
         }
     }
 
-    /**
-     * Create a new voucher with details
-     */
-    protected function createVoucher(array $validated): Voucher
-    {
-        $voucherData = collect($validated)->except('check')->toArray();
-        $voucherData['voucher_no'] = $this->generateVoucherNumber();
-
-        $voucher = Voucher::create($voucherData);
-
-        // Modified condition to handle both cash and salary vouchers
-        if (!empty($validated['check'])) {
-            $this->createVoucherDetails($voucher, $validated['check']);
-        }
-
-        return $voucher;
-    }
-
     protected function updateType(Voucher $voucher, array $validated): void
     {
         // For salary vouchers, calculate check_amount from details
@@ -317,9 +374,6 @@ class VoucherController extends Controller
         $voucher->update(collect($validated)->except('check')->toArray());
     }
 
-    /**
-     * Sync voucher details (create/update/delete as needed)
-     */
     protected function syncVoucherDetails(Voucher $voucher, array $validated): void
     {
         $existingDetailIds = $voucher->details->pluck('id')->toArray();
@@ -351,19 +405,6 @@ class VoucherController extends Controller
         }
     }
 
-    /**
-     * Create multiple voucher details
-     */
-    protected function createVoucherDetails(Voucher $voucher, array $details): void
-    {
-        $voucher->details()->createMany(
-            array_map(fn($detail) => $this->mapDetailAttributes($detail), $details)
-        );
-    }
-
-    /**
-     * Map detail attributes for consistent structure
-     */
     protected function mapDetailAttributes(array $detail): array
     {
         return [

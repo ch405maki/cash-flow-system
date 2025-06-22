@@ -28,4 +28,5 @@ class Voucher extends Model
     {
         return $this->belongsTo(PurchaseOrder::class, 'po_id');
     }
+    
 }
