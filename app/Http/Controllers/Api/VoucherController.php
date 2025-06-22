@@ -133,10 +133,9 @@ class VoucherController extends Controller
                 }
             }
 
-            // Optionally update PO status if needed
             if (!empty($validated['po_id'])) {
                 PurchaseOrder::where('id', $validated['po_id'])
-                    ->update(['status' => 'voucher_created']);
+                    ->update(['status' => 'voucherCreated']);
             }
 
             return response()->json([
