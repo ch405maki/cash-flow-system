@@ -30,6 +30,10 @@ interface Props {
     };
   };
   voucher_number: String
+  purchase_order?: {
+    id: number;
+    po_no: string;
+  };
 }
 
 const props = defineProps<Props>();
@@ -44,6 +48,7 @@ const filteredAccounts = computed(() => {
 });
 
 const form = reactive({
+    po_id: props.purchase_order?.id,
     voucher_no: props.voucher_number,
     issue_date: '',
     payment_date: '',
@@ -159,8 +164,9 @@ async function submitVoucher() {
           <h1 class="text-2xl font-bold">Create Voucher</h1>
           <p class="text-sm text-muted-foreground">Complete all required fields</p>
         </div>
-        <div>
-          <h1 class="text-xl font-bold" title="voucher number"># {{ voucher_number }}</h1>
+        <div class=" text-right">
+            <h1 class="text-xl font-bold" title="voucher number"># {{ voucher_number }}</h1>
+            <p v-if="purchase_order?.po_no" class="text-sm text-muted-foreground">Purchase Order #: {{ purchase_order?.po_no }}</p>
         </div>
       </div>
 
@@ -202,7 +208,7 @@ async function submitVoucher() {
               <Input 
                 id="check_amount" 
                 type="number" 
-                step="0.01" 
+                step="1" 
                 v-model="form.check_amount" 
                 :disabled="true"
               />
@@ -224,7 +230,7 @@ async function submitVoucher() {
         </div>
 
         <!-- Items Section -->
-        <div class="border rounded-lg p-4">
+        <div v-if="form.type" class="border rounded-lg p-4">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="font-medium capitalize"> {{ form.type }} Account Details</h3>
             </div>

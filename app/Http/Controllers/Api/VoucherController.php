@@ -39,14 +39,24 @@ class VoucherController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $voucherNumber = $this->generateVoucherNumber();
+        $poId = $request->query('po_id');
         
-        return Inertia::render('Vouchers/Create', [
+        $data = [
             'accounts' => Account::orderBy('account_title')->get(),
-            'voucher_number' => $voucherNumber 
-        ]);
+            'voucher_number' => $voucherNumber,
+        ];
+        
+        if ($poId) {
+            $purchaseOrder = PurchaseOrder::with(['department', 'account'])->find($poId);
+            if ($purchaseOrder) {
+                $data['purchase_order'] = $purchaseOrder;
+            }
+        }
+        
+        return Inertia::render('Vouchers/Create', $data);
     }
 
     // voucher store start
@@ -54,6 +64,7 @@ class VoucherController extends Controller
     {
         try {
             $validationRules = [
+                'po_id' => 'nullable|exists:purchase_orders,id',
                 'voucher_no' => 'required|string|unique:vouchers,voucher_no',
                 'issue_date' => 'nullable|date',
                 'payment_date' => 'nullable|date',
@@ -71,7 +82,7 @@ class VoucherController extends Controller
                 'check' => 'required_if:type,salary|array',
                 'check.*.amount' => 'required|numeric|min:0',
                 'check.*.rate' => 'nullable|numeric|min:0',
-                'check.*.hours' => 'nullable|numeric|min:0|max:24',
+                'check.*.hours' => 'nullable|numeric|min:0',
                 'check.*.charging_tag' => 'nullable|in:C,D',
                 'check.*.account_id' => 'required|exists:accounts,id',
             ];
@@ -86,50 +97,60 @@ class VoucherController extends Controller
             }
 
             return DB::transaction(function () use ($request, $validator) {
-                $validated = $validator->validated();
+            $validated = $validator->validated();
 
-                // Create voucher
-                $voucher = Voucher::create([
-                    'voucher_no' => $validated['voucher_no'],
-                    'issue_date' => $validated['issue_date'] ?? null,
-                    'payment_date' => $validated['payment_date'] ?? null,
-                    'check_date' => $validated['check_date'],
-                    'delivery_date' => $validated['delivery_date'] ?? null,
-                    'voucher_date' => $validated['voucher_date'],
-                    'purpose' => $validated['purpose'],
-                    'payee' => $validated['payee'],
-                    'check_no' => $validated['check_no'] ?? null,
-                    'check_payable_to' => $validated['check_payable_to'],
-                    'check_amount' => $validated['check_amount'],
-                    'status' => $validated['status'],
-                    'type' => $validated['type'],
-                    'user_id' => $validated['user_id'],
-                ]);
+            // Create voucher with optional PO reference
+            $voucherData = [
+                'po_id' => $validated['po_id'] ?? null,  
+                'voucher_no' => $validated['voucher_no'],
+                'issue_date' => $validated['issue_date'] ?? null,
+                'payment_date' => $validated['payment_date'] ?? null,
+                'check_date' => $validated['check_date'],
+                'delivery_date' => $validated['delivery_date'] ?? null,
+                'voucher_date' => $validated['voucher_date'],
+                'purpose' => $validated['purpose'],
+                'payee' => $validated['payee'],
+                'check_no' => $validated['check_no'] ?? null,
+                'check_payable_to' => $validated['check_payable_to'],
+                'check_amount' => $validated['check_amount'],
+                'status' => $validated['status'],
+                'type' => $validated['type'],
+                'user_id' => $validated['user_id'],
+            ];
 
-                // Create details if salary voucher
-                if ($validated['type'] === 'salary' && isset($validated['check'])) {
-                    foreach ($validated['check'] as $item) {
-                        $voucher->details()->create([
-                            'account_id' => $item['account_id'],
-                            'amount' => $item['amount'],
-                            'charging_tag' => $item['charging_tag'] ?? null,
-                            'hours' => $item['hours'] ?? null,
-                            'rate' => $item['rate'] ?? null,
-                        ]);
-                    }
+            $voucher = Voucher::create($voucherData);   
+
+            // Create details if salary voucher
+            if ($validated['type'] === 'salary' && isset($validated['check'])) {
+                foreach ($validated['check'] as $item) {
+                    $voucher->details()->create([
+                        'account_id' => $item['account_id'],
+                        'amount' => $item['amount'],
+                        'charging_tag' => $item['charging_tag'] ?? null,
+                        'hours' => $item['hours'] ?? null,
+                        'rate' => $item['rate'] ?? null,
+                    ]);
                 }
+            }
 
-                return response()->json([
-                    'message' => 'Voucher created successfully',
-                    'data' => $voucher->load(['user', 'details']),
-                    'voucher_no' => $validated['voucher_no'],
-                    'items_count' => $validated['type'] === 'salary' 
-                        ? count($validated['check']) 
-                        : 0
-                ], 201);
-            });
+            // Optionally update PO status if needed
+            if (!empty($validated['po_id'])) {
+                PurchaseOrder::where('id', $validated['po_id'])
+                    ->update(['status' => 'voucher_created']);
+            }
 
-        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Voucher created successfully',
+                'data' => $voucher->load(['user', 'details', 'purchaseOrder']), // Load PO relation
+                'voucher_no' => $validated['voucher_no'],
+                'items_count' => $validated['type'] === 'salary' 
+                    ? count($validated['check']) 
+                    : 0,
+                'po_id' => $validated['po_id'] ?? null
+            ], 201);
+        });
+
+    } catch (\Exception $e) {
             \Log::error($e);
             return response()->json([
                 'message' => 'Server Error',
