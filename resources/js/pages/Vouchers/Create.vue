@@ -61,7 +61,6 @@ const form = reactive({
     items: [] as VoucherItem[],
 });
 
-
 const newItem = ref<VoucherItem>({
   amount: 0,
   charging_tag: null,
@@ -114,6 +113,11 @@ const calculateTotalAmount = () => {
 };
 
 const calculateItemAmount = () => {
+  if (isCashVoucher.value) {
+    // For cash vouchers, amount is entered directly
+    return;
+  }
+  // For salary vouchers, calculate from hours and rate
   if (newItem.value.hours && newItem.value.rate) {
     newItem.value.amount = newItem.value.hours * newItem.value.rate;
   }
@@ -150,284 +154,285 @@ async function submitVoucher() {
   <Head title="Create Voucher" />
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-6 space-y-6 mx-auto w-full">
-    <div class="flex justify-between items-center   ">
+      <div class="flex justify-between items-center">
         <div>
-            <h1 class="text-2xl font-bold">Create Voucher</h1>
-            <p class="text-sm text-muted-foreground">Complete all required fields</p>
+          <h1 class="text-2xl font-bold">Create Voucher</h1>
+          <p class="text-sm text-muted-foreground">Complete all required fields</p>
         </div>
         <div>
-            <h1 class="text-xl font-bold" title="voucher number"># {{ voucher_number }}</h1>
+          <h1 class="text-xl font-bold" title="voucher number"># {{ voucher_number }}</h1>
         </div>
-    </div>
+      </div>
 
-    <form @submit.prevent="submitVoucher" class="space-y-6">
+      <form @submit.prevent="submitVoucher" class="space-y-6">
         <!-- Voucher Header Section -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Column 1 -->
-            <div class="space-y-4">
+          <!-- Column 1 -->
+          <div class="space-y-4">
             <div class="grid gap-2">
-                <Label for="voucher_type">Voucher Type *</Label>
-                <Select 
+              <Label for="voucher_type">Voucher Type *</Label>
+              <Select 
                 v-model="form.type" 
                 required
                 @update:modelValue="form.items = isCashVoucher ? [] : form.items"
-                >
+              >
                 <SelectTrigger>
-                    <SelectValue placeholder="Select Voucher Type" />
+                  <SelectValue placeholder="Select Voucher Type" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="salary">Salary</SelectItem>
-                    <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="salary">Salary</SelectItem>
+                  <SelectItem value="cash">Cash</SelectItem>
                 </SelectContent>
-                </Select>
+              </Select>
             </div>
             <div class="grid gap-2">
-                <Label for="payee">Payee *</Label>
-                <Input id="payee" v-model="form.payee" required />
+              <Label for="payee">Payee *</Label>
+              <Input id="payee" v-model="form.payee" required />
             </div>
             <div class="grid gap-2">
-                <Label for="check_payable_to">Check Pay To *</Label>
-                <Input id="check_payable_to" v-model="form.check_payable_to" required />
+              <Label for="check_payable_to">Check Pay To *</Label>
+              <Input id="check_payable_to" v-model="form.check_payable_to" required />
             </div>
-            </div>
+          </div>
 
-            <!-- Column 2 -->
-            <div class="space-y-4">
+          <!-- Column 2 -->
+          <div class="space-y-4">
             <div class="grid gap-2">
-                <Label for="check_amount">Check Amount</Label>
-                <Input 
+              <Label for="check_amount">Check Amount</Label>
+              <Input 
                 id="check_amount" 
                 type="number" 
                 step="0.01" 
                 v-model="form.check_amount" 
                 :disabled="true"
-                />
+              />
             </div>
             <div class="grid gap-2">
-                <Label for="voucher_date">Voucher Date *</Label>
-                <Input id="voucher_date" type="date" v-model="form.voucher_date" required />
+              <Label for="voucher_date">Voucher Date *</Label>
+              <Input id="voucher_date" type="date" v-model="form.voucher_date" required />
             </div>
             <div class="grid gap-2">
-                <Label for="check_date">Check Date</Label>
-                <Input id="check_date" type="date" v-model="form.check_date" required />
+              <Label for="check_date">Check Date</Label>
+              <Input id="check_date" type="date" v-model="form.check_date" required />
             </div>
-            </div>
+          </div>
         </div>
 
         <div class="grid gap-2">
-            <Label for="purpose">Purpose *</Label>
-            <Textarea id="purpose" v-model="form.purpose" required />
+          <Label for="purpose">Purpose *</Label>
+          <Textarea id="purpose" v-model="form.purpose" required />
         </div>
 
         <!-- Items Section -->
-        <div class="border rounded-lg p-4" :class="{ 'opacity-50': isCashVoucher }">
+        <div class="border rounded-lg p-4">
             <div class="flex justify-between items-center mb-4">
-            <h3 class="font-medium">Account Details</h3>
-            <Button 
-                type="button" 
-                variant="outline" 
-                size="sm" 
-                @click="addItem"
-                :disabled="isCashVoucher"
-            >
-                <Plus class="h-4 w-4 mr-2" />
-                Add Item
-            </Button>
+                <h3 class="font-medium capitalize"> {{ form.type }} Account Details</h3>
             </div>
 
             <!-- New Item Form -->
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6 pb-4 border-b">
-            <!-- Account Selection -->
-            <div class="grid gap-2">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-6 pb-4 border-b">
+                <!-- Account Selection (3 columns) -->
+                <div class="grid gap-2 md:col-span-3">
                 <Label>Account *</Label>
-                <Combobox v-model="newItem.account_id" :disabled="isCashVoucher" by="id">
-                <ComboboxAnchor as-child>
+                <Combobox v-model="newItem.account_id" by="id">
+                    <ComboboxAnchor as-child>
                     <ComboboxTrigger as-child>
-                    <Button variant="outline" class="w-full justify-between" :disabled="isCashVoucher">
-                        {{ props.accounts?.find(a => a.id === parseInt(newItem.account_id))?.account_title || 'Select account' }}
+                        <Button variant="outline" class="w-full justify-between h-10">
+                        <span class="truncate">
+                            {{ props.accounts?.find(a => a.id === parseInt(newItem.account_id))?.account_title || 'Select account' }}
+                        </span>
                         <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
+                        </Button>
                     </ComboboxTrigger>
-                </ComboboxAnchor>
-
-                <ComboboxList class="max-h-[180px] overflow-y-auto">
-                    <div class="relative w-full items-center">
-                    <ComboboxInput
-                        class="pl-9 focus-visible:ring-0 border-0 border-b rounded-none h-10"
+                    </ComboboxAnchor>
+                    
+                    <ComboboxList class="max-h-[300px] overflow-y-auto shadow-lg rounded-md border">
+                    <div class="relative w-full items-center sticky top-0 bg-white z-10">
+                        <ComboboxInput
+                        class="pl-9 focus-visible:ring-0 border-0 border-b rounded-none h-10 text-base"
                         placeholder="Search accounts..." 
                         v-model="accountSearchQuery"
-                    />
-                    <span class="absolute start-0 inset-y-0 flex items-center justify-center px-3">
+                        />
+                        <span class="absolute start-0 inset-y-0 flex items-center justify-center px-3">
                         <Search class="size-4 text-muted-foreground" />
-                    </span>
+                        </span>
                     </div>
 
-                    <ComboboxEmpty v-if="filteredAccounts.length === 0">
-                    No accounts found.
+                    <ComboboxEmpty v-if="filteredAccounts.length === 0" class="py-4 text-center text-sm text-gray-500">
+                        No accounts found.
                     </ComboboxEmpty>
 
                     <ComboboxGroup>
-                    <div class="max-h-[150px] overflow-y-auto">
+                        <div class="max-h-[250px] overflow-y-auto">
                         <ComboboxItem 
-                        v-for="account in filteredAccounts" 
-                        :key="account.id" 
-                        :value="account.id.toString()"
+                            v-for="account in filteredAccounts" 
+                            :key="account.id" 
+                            :value="account.id.toString()"
+                            class="h-2flex items-center px-4 text-xs text-sm hover:bg-gray-50 cursor-pointer"
                         >
-                        {{ account.account_title }}
-                        <ComboboxItemIndicator>
-                            <Check class="ml-auto h-4 w-4" />
-                        </ComboboxItemIndicator>
+                            {{ account.account_title }}
+                            <ComboboxItemIndicator class="ml-auto">
+                            <Check class="h-4 w-4 text-primary" />
+                            </ComboboxItemIndicator>
                         </ComboboxItem>
-                    </div>
+                        </div>
                     </ComboboxGroup>
-                </ComboboxList>
+                    </ComboboxList>
                 </Combobox>
-            </div>
+                </div>
 
-            <!-- Charging Tag -->
-            <div class="grid gap-2">
-                <Label>Charging Tag</Label>
-                <Select v-model="newItem.charging_tag" :disabled="isCashVoucher">
-                <SelectTrigger>
-                    <SelectValue placeholder="Select tag" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="C">C</SelectItem>
-                    <SelectItem value="D">D</SelectItem>
-                </SelectContent>
-                </Select>
-            </div>
+                <!-- Charging Tag (2 columns) -->
+                <div class="grid gap-2 md:col-span-2">
+                    <Label>Charging Tag</Label>
+                    <Select v-model="newItem.charging_tag">
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select tag" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="C">C</SelectItem>
+                        <SelectItem value="D">D</SelectItem>
+                    </SelectContent>
+                    </Select>
+                </div>
 
-            <!-- Hours -->
-            <div class="grid gap-2">
-                <Label>Hours</Label>
-                <Input 
-                type="number" 
-                step="0.01" 
-                v-model.number="newItem.hours"
-                @change="calculateItemAmount"
-                :disabled="isCashVoucher"
-                />
-            </div>
+                <!-- Hours (2 columns, hidden for cash) -->
+                <div class="grid gap-2 md:col-span-2" v-if="!isCashVoucher">
+                    <Label>Hours</Label>
+                    <Input 
+                    type="number" 
+                    step="0.01" 
+                    v-model.number="newItem.hours"
+                    @change="calculateItemAmount"
+                    />
+                </div>
 
-            <!-- Rate -->
-            <div class="grid gap-2">
-                <Label>Rate</Label>
-                <Input 
-                type="number" 
-                step="0.01" 
-                v-model.number="newItem.rate"
-                @change="calculateItemAmount"
-                :disabled="isCashVoucher"
-                />
-            </div>
+                <!-- Rate (2 columns, hidden for cash) -->
+                <div class="grid gap-2 md:col-span-2" v-if="!isCashVoucher">
+                    <Label>Rate</Label>
+                    <Input 
+                    type="number" 
+                    step="0.01" 
+                    v-model.number="newItem.rate"
+                    @change="calculateItemAmount"
+                    />
+                </div>
 
-            <!-- Amount -->
-            <div class="grid gap-2">
-                <Label>Amount *</Label>
-                <Input 
-                type="number" 
-                step="0.01" 
-                v-model.number="newItem.amount"
-                :disabled="isCashVoucher"
-                required
-                />
-            </div>
-            </div>
-
-            <!-- Items Table -->
-            <div class="border rounded-lg overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Account</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tag</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hours</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rate</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
-                </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="(item, index) in form.items" :key="index">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ props.accounts?.find(a => a.id === parseInt(item.account_id))?.account_title || 'N/A' }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ item.charging_tag || 'N/A' }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ item.hours?.toFixed(2) || 'N/A' }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ item.rate?.toFixed(2) || 'N/A' }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ item.amount.toFixed(2) }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                    <Button
-                        variant="destructive"
-                        size="sm"
-                        @click="removeItem(index)"
-                        :disabled="isCashVoucher"
+                <!-- Amount (3 columns) -->
+                <div class="grid gap-2 md:col-span-3">
+                    <Label>Amount *</Label>
+                    <div class="flex gap-2">
+                    <Input 
+                        type="number" 
+                        step="0.01" 
+                        v-model.number="newItem.amount"
+                        required
+                        class="flex-1"
+                    />
+                    <Button 
+                        type="button" 
+                        variant="default" 
+                        size="sm" 
+                        @click="addItem"
+                        class="h-10"
                     >
-                        <Trash2 class="h-4 w-4" />
+                        <Plus class="h-4 w-4" /> Accept
                     </Button>
-                    </td>
+                    </div>
+                </div>
+            </div>
+
+          <!-- Items Table -->
+          <div class="border rounded-lg overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Account</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tag</th>
+                  <th v-if="!isCashVoucher" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hours</th>
+                  <th v-if="!isCashVoucher" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rate</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="(item, index) in form.items" :key="index">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {{ props.accounts?.find(a => a.id === parseInt(item.account_id))?.account_title || 'N/A' }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {{ item.charging_tag || 'N/A' }}
+                  </td>
+                  <td v-if="!isCashVoucher" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {{ item.hours?.toFixed(2) || 'N/A' }}
+                  </td>
+                  <td v-if="!isCashVoucher" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {{ item.rate?.toFixed(2) || 'N/A' }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {{ item.amount.toFixed(2) }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      @click="removeItem(index)"
+                    >
+                      <Trash2 class="h-4 w-4" />
+                    </Button>
+                  </td>
                 </tr>
                 <tr v-if="form.items.length === 0">
-                    <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                  <td :colspan="isCashVoucher ? 4 : 6" class="px-6 py-4 text-center text-sm text-gray-500">
                     No items added yet
-                    </td>
+                  </td>
                 </tr>
-                </tbody>
+              </tbody>
             </table>
-            </div>
+          </div>
 
-            <!-- Total Amount -->
-            <div class="flex justify-start mt-4">
+          <!-- Total Amount -->
+          <div class="flex justify-start mt-4">
             <div class="text-lg font-semibold">
-                Total Amount: ₱{{ form.check_amount.toFixed(2) }}
+              Total Amount: ₱{{ form.check_amount.toFixed(2) }}
             </div>
-            </div>
+          </div>
         </div>
 
         <!-- Dates Section -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="grid gap-2">
+          <div class="grid gap-2">
             <Label for="issue_date">Issue Date *</Label>
             <Input id="issue_date" type="date" v-model="form.issue_date" />
-            </div>
+          </div>
 
-            <div class="grid gap-2">
+          <div class="grid gap-2">
             <Label for="payment_date">Payment Date *</Label>
             <Input id="payment_date" type="date" v-model="form.payment_date" />
-            </div>
+          </div>
 
-            <div class="grid gap-2">
+          <div class="grid gap-2">
             <Label for="delivery_date">Delivery Date *</Label>
             <Input id="delivery_date" type="date" v-model="form.delivery_date" />
-            </div>
+          </div>
         </div>
 
         <!-- Form Actions -->
         <CardFooter class="flex justify-end gap-4 px-0 pb-0">
-            <Button 
+          <Button 
             type="button" 
             variant="outline" 
             @click="router.visit('/vouchers')"
-            >
+          >
             Cancel
-            </Button>
-            <Button 
+          </Button>
+          <Button 
             type="submit" 
             :disabled="!isCashVoucher && form.items.length === 0"
-            >
+          >
             Create Voucher
-            </Button>
+          </Button>
         </CardFooter>
-    </form>
+      </form>
     </div>
   </AppLayout>
 </template>
