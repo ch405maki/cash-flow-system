@@ -34,7 +34,8 @@ const props = defineProps<{
         <span v-if="filters.status == 'forEOD'">For Approval</span>
         <span v-if="filters.status == 'approved'">Approved</span>
         <span v-if="filters.status == 'rejected'">Rejected</span>
-        Purchase Orders</h1>
+        Purchase Orders 
+      </h1>
 
       <PurchaseOrderTable :purchase-orders="purchaseOrders" />
 
