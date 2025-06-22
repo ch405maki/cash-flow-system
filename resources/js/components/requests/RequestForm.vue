@@ -150,6 +150,7 @@ const formatDate = (dateString: string) => {
     <form @submit.prevent="showConfirmation" class="space-y-6">
       <!-- Purpose -->
       <div>
+        <h2 class="text-xl font-semibold">New Request</h2>
         <Label for="purpose">Purpose</Label>
         <Textarea
           id="purpose"
@@ -161,9 +162,9 @@ const formatDate = (dateString: string) => {
       </div>
 
       <!-- Items Section -->
-      <div class="space-y-4">
+      <div class="space-y-2">
         <div class="flex items-center justify-between">
-          <h3 class="text-lg font-medium">Request Items</h3>
+          <h3 class="text-xl font-semibold">Request Items</h3>
         </div>
 
         <!-- New Item Form -->
@@ -226,7 +227,7 @@ const formatDate = (dateString: string) => {
         <!-- Items Table -->
         <div class="max-h-64 overflow-y-auto border rounded-lg mt-4">
           <!-- ONE table, table-fixed so the colgroup widths are respected -->
-          <table class="min-w-full table-fixed divide-y divide-gray-200">
+          <table class="min-w-full table-fixed divide-y divide-gray-100">
             <!-- Column widths (same for header & rows) -->
             <colgroup>
               <col class="w-1/2" />   <!-- Description -->
@@ -236,18 +237,18 @@ const formatDate = (dateString: string) => {
             </colgroup>
 
             <!-- Sticky header lives in the SAME table -->
-            <thead class="bg-gray-50">
-              <tr class="sticky top-0 z-10">
-                <th class="bg-gray-50 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+            <thead class="bg-gray-100 h-10 sticky top-0 z-50">
+              <tr class=" border-b">
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                   Description
                 </th>
-                <th class="bg-gray-50 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                   Qty
                 </th>
-                <th class="bg-gray-50 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                   Unit
                 </th>
-                <th class="bg-gray-50 px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
                   Actions
                 </th>
               </tr>
@@ -258,10 +259,10 @@ const formatDate = (dateString: string) => {
                 <td class="px-3 py-2 text-sm text-gray-700 whitespace-normal break-words">
                   {{ item.item_description }}
                 </td>
-                <td class="px-3 py-2 text-sm text-gray-700 text-center">
+                <td class="px-3 py-2 text-sm text-left text-gray-700">
                   {{ item.quantity }}
                 </td>
-                <td class="px-3 py-2 text-sm text-gray-700 text-center">
+                <td class="px-3 py-2 text-sm text-gray-700 text-left">
                   {{ item.unit }}
                 </td>
                 <td class="px-3 py-2 text-sm text-right">
