@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderDetail;
 use App\Models\Account;
+use App\Models\Canvas;
 use App\Models\Department;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,32 +19,39 @@ use Illuminate\Support\Facades\Auth;
 
 class PurchaseOrderController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
-
+        $status = $request->query('status');
+        
+        $query = PurchaseOrder::with(['user', 'department', 'account', 'details'])
+                    ->latest();
+        
         if ($user->role === 'purchasing') {
-            // Get all purchase orders regardless of status
-            $purchaseOrders = PurchaseOrder::with(['user', 'department', 'account', 'details'])
-                ->latest()
-                ->paginate(10);
+            // Purchasing can see all statuses, but filter if specific status requested
+            if ($status && in_array($status, ['draft', 'forEOD', 'approved', 'rejected'])) {
+                $query->where('status', $status);
+            }
         } else {
-            // Get only purchase orders with status 'forEOD'
-            $purchaseOrders = PurchaseOrder::with(['user', 'department', 'account', 'details'])
-                ->where('status', 'forEOD')
-                ->latest()
-                ->paginate(10);
+            // Non-purchasing users can only see 'forEOD' status
+            $query->where('status', 'forEOD');
+            
+            // But allow them to filter if they specifically request 'forEOD'
+            if ($status === 'forEOD') {
+                $query->where('status', 'forEOD');
+            }
         }
+
+        $purchaseOrders = $query->paginate(10);
 
         return Inertia::render('PurchaseOrders/Index', [
             'purchaseOrders' => $purchaseOrders,
+            'filters' => $request->only(['status']), // Pass the current filter back to frontend
         ]);
     }
 
-
     public function show(PurchaseOrder $purchaseOrder)
     {
-
         $user = Auth::user();
 
         return Inertia::render('PurchaseOrders/Show', [
@@ -51,22 +59,26 @@ class PurchaseOrderController extends Controller
                 'user',
                 'department', 
                 'account',
-                'details'
+                'details',
+                'canvas'
             ]),
             'authUser' => [
                 'id' => $user->id,
                 'role' => $user->role,
                 'access' => $user->access_id,
+                'name' => $user->first_name,
             ],
         ]);
     }
 
-    public function create(PurchaseRequest $request)
+    public function create(Request $request)
     {
+        $canvasId = $request->query('canvas_id');
         return Inertia::render('PurchaseOrders/Create', [
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'departments' => Department::orderBy('department_name')->get(['id', 'department_name']),
             'accounts' => Account::orderBy('account_title')->get(['id', 'account_title']),
+            'canvas_id' => $canvasId,
         ]);
     }
 
@@ -87,9 +99,18 @@ class PurchaseOrderController extends Controller
             'details.*.item_description' => 'required|string',
             'details.*.unit_price' => 'required|numeric|min:0',
             'details.*.amount' => 'required|numeric|min:0',
+            'tagging' => 'required|in:with_canvas,no_canvas',
+            'canvas_id' => 'nullable|exists:canvases,id',
         ]);
 
-        // Generate PO number directly in controller
+        // Validate canvas_id is required if tagging is 'with_canvas'
+        if ($validated['tagging'] === 'with_canvas' && empty($validated['canvas_id'])) {
+            return response()->json([
+                'message' => 'Canvas ID is required when tagging is "with_canvas"'
+            ], 422);
+        }
+
+        // Generate PO number
         $yearMonth = date('Ym');
         $lastPO = PurchaseOrder::where('po_no', 'like', "PO{$yearMonth}%")
             ->orderBy('po_no', 'desc')
@@ -113,6 +134,17 @@ class PurchaseOrderController extends Controller
 
             foreach ($validated['details'] as $detail) {
                 $purchaseOrder->details()->create($detail);
+            }
+
+            // Update Canvas status if this PO is linked to a canvas
+            if ($validated['tagging'] === 'with_canvas' && $validated['canvas_id']) {
+                $canvas = Canvas::find($validated['canvas_id']);
+                if ($canvas) {
+                    $canvas->update([
+                        'status' => 'poCreated',
+                        'purchase_order_id' => $purchaseOrder->id // Optionally store the PO ID
+                    ]);
+                }
             }
 
             DB::commit();

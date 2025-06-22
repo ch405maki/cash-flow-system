@@ -41,7 +41,6 @@ const props = defineProps({
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
-        <h2 class="text-xl font-semibold">New Request</h2>
         <RequestForm :departments="departments" :auth-user="authUser" />
     </div>
   </AppLayout>

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
-import ApprovedRequestTable from '@/components/requests/approved/ApprovedRequestTable.vue';
+import CanvasUploadDialog from '@/components/canvas/CanvasUploadDialog.vue'
+import { formatDate } from '@/lib/utils'
 import { type BreadcrumbItem } from '@/types';
 import { router } from '@inertiajs/vue3'
 import { Filter, PlusCircle } from 'lucide-vue-next'
@@ -17,15 +18,9 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 
-
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-    title: 'Dashboard',
-    href: '/dashboard',
-  },{
-    title: 'Approved Request',
-    href: '/request',
-  }
+    { title: 'Dashboard', href: '/dashboard', },
+    { title: 'Approved Request', href: '/request', }
 ];
 
 const props = defineProps({
@@ -59,15 +54,6 @@ function getStatusVariant(status: string) {
       return 'default'
   }
 }
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit'
-  })
-}
 </script>
 
 <template>
@@ -89,39 +75,40 @@ function formatDate(dateStr: string): string {
             Create P. O.
           </Button>  
         </div>    
-        </div>
+      </div>
 
       <div class="w-full text-sm border border-border rounded-md">
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Order No</TableHead>
-            <TableHead>Date Request</TableHead>
-            <TableHead>Notes</TableHead>
-            <TableHead class="w-[100px]">Status</TableHead>
-            <TableHead class="text-center">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow v-for="request in props.requests" :key="request.id">
-            <TableCell class="font-medium">{{ request.order_no }}</TableCell>
-            <TableCell>{{ formatDate(request.order_date) }}</TableCell>
-            <TableCell>{{ request.notes }}</TableCell>
-            <TableCell>
-              <Badge
-                :variant="getStatusVariant(request.status)"
-                class="capitalize"
-              >
-                {{ request.status }}
-              </Badge>
-            </TableCell>
-            <TableCell class="text-center">
-              <Button size="sm" @click="viewRequest(request.id)">
-                View
-              </Button>
-            </TableCell>
-          </TableRow>
-        </TableBody>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Order No</TableHead>
+          <TableHead>Date Request</TableHead>
+          <TableHead>Notes</TableHead>
+          <TableHead class="w-[100px]">Status</TableHead>
+          <TableHead class="text-right">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <TableRow v-for="request in props.requests" :key="request.id">
+          <TableCell class="font-medium">{{ request.order_no }}</TableCell>
+          <TableCell>{{ formatDate(request.order_date) }}</TableCell>
+          <TableCell>{{ request.notes }}</TableCell>
+          <TableCell>
+            <Badge
+              :variant="getStatusVariant(request.status)"
+              class="capitalize"
+            >
+              {{ request.status }}
+            </Badge>
+          </TableCell>
+          <TableCell class="space-x-2 text-right flex items-center justify-end">
+            <CanvasUploadDialog :request="request" />
+            <Button size="sm" @click="viewRequest(request.id)">
+              View
+            </Button>
+          </TableCell>
+        </TableRow>
+      </TableBody>
       </Table>
     </div>
     </div>

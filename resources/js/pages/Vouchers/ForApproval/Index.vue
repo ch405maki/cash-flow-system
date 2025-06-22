@@ -202,7 +202,7 @@ const props = defineProps({
         </Button>
       </div>
 
-      <VoucherTable :vouchers="filteredVouchers" :authUser="authUser" />
+      <VoucherTable :vouchers="filteredVouchers" :authUser="authUser" :state="false" />
 
       <div class="mt-4 flex items-center justify-between">
         <div class="flex-1 text-sm text-muted-foreground">

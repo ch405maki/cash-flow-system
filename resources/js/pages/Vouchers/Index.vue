@@ -160,9 +160,7 @@ const props = defineProps({
 </script>
 
 <template>
-
   <Head title="Vouchers" />
-
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-3.5 rounded-xl p-4">
       <div class="flex justify-between items-center">
@@ -207,7 +205,7 @@ const props = defineProps({
         </Button>
       </div>
 
-      <VoucherTable :vouchers="filteredVouchers" :authUser="authUser" />
+      <VoucherTable :vouchers="vouchers" :authUser="authUser" :state="true"/>
 
       <div class="mt-4 flex items-center justify-between">
         <div class="flex-1 text-sm text-muted-foreground">

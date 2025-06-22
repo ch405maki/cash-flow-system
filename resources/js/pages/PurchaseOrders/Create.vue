@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from 'vue-toastification';
 import axios from 'axios';
 import { ref } from 'vue';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
 interface PurchaseOrderDetail {
   quantity: number;
@@ -23,20 +24,17 @@ interface Props {
   user_id: number;
   departments?: Array<{ id: number; department_name: string }>;
   accounts?: Array<{ id: number; account_title: string }>;
+  canvas_id?: string;
 }
 
 const props = defineProps<Props>();
 const toast = useToast();
 
+type TaggingType = 'with_canvas' | 'no_canvas';
+
 const breadcrumbs: BreadcrumbItem[] = [
-  {
-    title: 'Dashboard',
-    href: '/dashboard',
-  },
-  {
-    title: 'Create Purchase Order',
-    href: '/',
-  },
+  { title: 'Dashboard', href: '/dashboard', },
+  { title: 'Create Purchase Order', href: '/',},
 ];
 
 const form = ref({
@@ -49,6 +47,8 @@ const form = ref({
   department_id: '',
   account_id: '',
   details: [] as PurchaseOrderDetail[],
+  canvas_id: props.canvas_id || null,
+  tagging: props.canvas_id ? 'with_canvas' : 'no_canvas' as TaggingType, // Add this line
 });
 
 const newItem = ref<PurchaseOrderDetail>({
@@ -92,13 +92,18 @@ const calculateTotal = () => {
 
 const submitForm = async () => {
   try {
+    // Validate tagging and canvas_id
+    if (form.value.tagging === 'with_canvas' && !form.value.canvas_id) {
+      toast.error('Canvas ID is required when tagging is "With Canvas"');
+      return;
+    }
+
     // Calculate total amount
     form.value.amount = calculateTotal();
 
     const response = await axios.post('/api/purchase-orders', form.value);
 
     toast.success('Purchase Order created successfully!');
-    // Redirect or reset form as needed
     window.location.href = `/purchase-orders/${response.data.id}`;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {
@@ -113,18 +118,30 @@ const submitForm = async () => {
 
 <template>
   <Head title="Create Purchase Order" />
-
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-6 space-y-6">
-      <h1 class="text-2xl font-bold">Create Purchase Order</h1>
-
       <form @submit.prevent="submitForm" class="space-y-2">
+        <h1 class="text-2xl font-bold">Create Purchase Order</h1>
         <!-- Basic Information Section -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex items-center">
           <!-- Payee Field -->
           <div class="space-y-2 md:col-span-2">
             <Label for="payee">Company Name</Label>
             <Input id="payee" v-model="form.payee" required />
+          </div>
+          <!-- add 2 check box with canvas, no canvas -->
+          <div class="space-y-2">
+            <Label for="tagging">Tagging</Label>
+            <RadioGroup v-model="form.tagging" class="flex">
+              <div class="flex items-center space-x-2">
+                <RadioGroupItem id="with_canvas" value="with_canvas" :disabled="true" />
+                <Label for="with_canvas">With Canvas</Label>
+              </div>
+              <div class="flex items-center space-x-2">
+                <RadioGroupItem id="no_canvas" value="no_canvas" :disabled="true" />
+                <Label for="no_canvas">No Canvas</Label>
+              </div>
+            </RadioGroup>
           </div>
         </div>
 

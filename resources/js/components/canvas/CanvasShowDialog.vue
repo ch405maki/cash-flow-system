@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Download, ArrowLeft, Clock, CheckCircle, UserRoundCheck, XCircle, Check, X, Pencil } from 'lucide-vue-next';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,20 +9,31 @@ import { useForm } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue'
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
+import { formatDate } from '@/lib/utils'
+import { router } from '@inertiajs/vue3'
 
 const toast = useToast();
 
 const props = defineProps({
-  canvas: Object,
+  canvas: {
+    type: Object,
+    required: true,
+    default: () => ({
+      request_to_order: null
+    })
+  },
   open: Boolean,
   userRole: String,
 });
 
+
 const emit = defineEmits(['update:open', 'updated']);
+
 const isApproved = computed(
   () => props.canvas.status === 'approved' || props.canvas.status === 'poCreated'
-)
+);
 
+const hasLinkedOrder = computed(() => props.canvas.request_to_order !== null);
 
 const statusIcons = {
   pending: Clock,
@@ -100,20 +111,25 @@ const updateStatus = (status) => {
   form.patch(route('canvas.update', props.canvas.id), {
     preserveScroll: true,
     onSuccess: () => {
-      emit('updated')               
-      emit('update:open', false) 
+      emit('updated')
+      emit('update:open', false)
       toast.success(`Canvas ${status} successfully.`)
     },
   })
 }
 
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit'
-  })
+function goToCreate() {
+  const canvasId = props.canvas?.id
+  
+  if (canvasId) {
+    router.visit(`/purchase-order/create?canvas_id=${canvasId}`);
+  } else {
+    router.visit('/purchase-order/create');
+  }
+}
+
+function viewRequest(id: number) {
+  router.visit(`/request-to-order/${id}`) 
 }
 </script>
 
@@ -124,9 +140,16 @@ function formatDate(dateStr: string): string {
         <DialogTitle class="flex items-center gap-2">
           <span class="truncate max-w-[400px] capitalize">{{ canvas.original_filename }}</span>
         </DialogTitle>
+        <DialogDescription v-if="hasLinkedOrder" class="hover:underline hover:cursor-pointer hover:text-violet-800" @click="viewRequest(canvas.request_to_order.id)">
+          Linked to Order # {{ canvas.request_to_order.order_no }} | {{ formatDate(canvas.request_to_order.order_date) }}
+        </DialogDescription>
+        <DialogDescription v-else>
+          Not linked to any order. 
+        </DialogDescription>
       </DialogHeader>
 
       <div class="grid gap-6 py-4">
+        <!-- Order Information Section -->
         <div class="grid grid-cols-2 gap-4">
           <div>
             <h3 class="text-sm font-medium text-muted-foreground">Status</h3>
@@ -148,7 +171,7 @@ function formatDate(dateStr: string): string {
         </div>
 
         <Alert variant="default" class="relative pr-10">
-          <Bell class="h-4 w-4 text-green-500" />
+          <component :is="statusIcons[canvas.status]" class="h-4 w-4" />
           <AlertTitle>Note</AlertTitle>
           <AlertDescription>
             {{ canvas.note || 'No Note' }}
@@ -164,9 +187,9 @@ function formatDate(dateStr: string): string {
             </p>
             
             <Textarea
-            v-model="form.remarks"
-            placeholder="Enter your remarks"
-            class="mb-2"
+              v-model="form.remarks"
+              placeholder="Enter your remarks"
+              class="mb-2"
             />
           </template>
 
@@ -183,24 +206,24 @@ function formatDate(dateStr: string): string {
         </div>
       </div>
       <div class="sticky bottom-0 bg-background pt-4 border-t">
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center">
           <div v-if="userRole === 'executive_director'" class="space-x-2">
               <Button 
-              variant="default" 
-              @click="updateStatus('approved')"
-              :disabled="form.processing || !form.remarks.trim()"
-            >
-              <Check class="h-4 w-4 mr-1" />
-              Approve
-            </Button>
-            <Button 
-                variant="destructive" 
-                @click="updateStatus('rejected')"
+                variant="default" 
+                @click="updateStatus('approved')"
                 :disabled="form.processing || !form.remarks.trim()"
-                >
-                <X class="h-4 w-4" />
-                Reject
-            </Button>
+              >
+                <Check class="h-4 w-4 mr-1" />
+                Approve
+              </Button>
+              <Button 
+                  variant="destructive" 
+                  @click="updateStatus('rejected')"
+                  :disabled="form.processing || !form.remarks.trim()"
+                  >
+                  <X class="h-4 w-4" />
+                  Reject
+              </Button>
           </div>
 
           <div v-if="canvas.status === 'pending'" class="flex gap-2">
@@ -221,25 +244,29 @@ function formatDate(dateStr: string): string {
                 Reject
             </Button>
           </div>
-          <div v-if="canvas.status === 'approved'" class="flex gap-2">
+        </div>
+        <!-- Work to Create P.O. -->
+          <div class="flex gap-2 justify-end items-right">
+            <div v-if="canvas.status === 'approved'">
+              <Button 
+                variant="default" 
+                @click="goToCreate()"
+                :disabled="form.processing"
+              >
+                <Check class="h-4 w-4" />
+                Create P. O.
+              </Button>
+            </div>
             <Button 
-              variant="default" 
-              @click="updateStatus('poCreated')"
-              :disabled="form.processing"
+              @click="downloadFile"
+              class="gap-2"
+              variant="outline"
+              :disabled="isDownloading"
             >
-              <Check class="h-4 w-4" />
-              Tag As Created
+              <Download class="h-4 w-4" />
+              <span>{{ isDownloading ? 'Downloading...' : 'Download File' }}</span>
             </Button>
           </div>
-          <Button 
-            @click="downloadFile"
-            class="gap-2"
-            :disabled="isDownloading"
-          >
-            <Download class="h-4 w-4" />
-            <span>{{ isDownloading ? 'Downloading...' : 'Download File' }}</span>
-          </Button>
-        </div>
       </div>
     </DialogContent>
   </Dialog>

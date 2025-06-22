@@ -7,12 +7,21 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { UploadCloud } from 'lucide-vue-next';
 
+const props = defineProps({
+  request: {
+    type: Object,
+    required: false,
+    default: null
+  }
+});
+
 const isOpen = ref(false);
 const fileInput = ref(null);
 
 const form = useForm({
   file: null,
   note: '',
+  request_to_order_id: props.request?.id || null // Make optional
 });
 
 const handleFileChange = (e) => {
@@ -32,18 +41,28 @@ const submit = () => {
 <template>
   <Dialog v-model:open="isOpen">
     <DialogTrigger as-child>
-      <Button class="gap-2">
+      <Button size="sm" class="gap-2">
         <UploadCloud class="h-4 w-4" />
-        <span>Upload New</span>
+        <span>Upload Canvas</span>
       </Button>
     </DialogTrigger>
     
     <DialogContent class="sm:max-w-[625px] max-h-[90vh] overflow-y-auto">
       <DialogHeader>
-        <DialogTitle>Upload New Canvas</DialogTitle>
+        <DialogTitle>
+          {{ request ? `Upload Canvas for Order #${request.order_no}` : 'Upload New Canvas' }}
+        </DialogTitle>
       </DialogHeader>
       
       <form @submit.prevent="submit" class="grid gap-4 py-4">
+        <div v-if="request" class="space-y-2">
+          <label class="block text-sm font-medium">Order Number</label>
+          <Input 
+            :model-value="request.order_no" 
+            disabled
+          />
+        </div>
+
         <div class="space-y-2">
           <label class="block text-sm font-medium">Canvas File</label>
           <div 
@@ -63,6 +82,7 @@ const submit = () => {
               type="file" 
               class="hidden" 
               @change="handleFileChange"
+              accept=".pdf,.doc,.docx,.xls,.xlsx"
             />
           </div>
           <p v-if="form.file" class="text-sm text-muted-foreground mt-2">
@@ -95,10 +115,10 @@ const submit = () => {
           </Button>
           <Button 
             type="submit" 
-            :disabled="form.processing"
+            :disabled="form.processing || !form.file"
           >
             <span v-if="form.processing">Uploading...</span>
-            <span v-else>Upload Canvas</span>
+            <span v-else>Upload Canvas</span> 
           </Button>
         </div>
       </form>

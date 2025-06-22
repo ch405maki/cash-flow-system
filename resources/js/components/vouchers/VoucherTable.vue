@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
-import { computed } from 'vue'; // Add computed import
+import { computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { SquarePen, FileText, Eye } from 'lucide-vue-next';
 import {
@@ -18,7 +18,10 @@ const props = defineProps<{
     role: string;
     [key: string]: any; // Allow for other fields
   };
+  state?: boolean;  
 }>();
+
+const isActiveState = computed(() => props.state !== false);
 
 // Sort vouchers by date (newest first) and filter based on user role
 const sortedVouchers = computed(() => {
@@ -79,13 +82,13 @@ function formatStatus(status: string): string {
     case 'forCheck':
       return 'For Check Releasing';
     default:
-      return status; // Keep as-is (e.g., "draft", "approved")
+      return status; 
   }
 }
 </script>
 
 <template>
-  <div v-if="vouchers.length > 0"class="rounded-lg border">
+  <div v-if="vouchers.length > 0" class="rounded-lg border">
     <Table class="w-full table-auto text-left text-sm">
       <TableHeader>
         <TableRow>
@@ -95,8 +98,8 @@ function formatStatus(status: string): string {
           <TableHead class="px-4 py-2">Payee</TableHead>
           <TableHead class="px-4 py-2">Check Pay to</TableHead>
           <TableHead class="px-4 py-2">Date</TableHead>
-          <TableHead class="px-4 py-2 text-center">Status</TableHead>
-          <TableHead class="px-4 py-2 "></TableHead>
+          <TableHead class="px-4 py-2">Status</TableHead>
+          <TableHead class="px-4 py-2 text-right" v-if="isActiveState">Action</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -112,22 +115,20 @@ function formatStatus(status: string): string {
             {{ formatDisplayDate(voucher.created_at || voucher.voucher_date) }}
           </TableCell>
           <TableCell class="px-4 py-2 capitalize">
-            <span class="inline-block rounded-full px-8 py-0.5 text-xs font-semibold" :class="{
+            <span class="inline-block rounded-full px-3 py-0.5 text-xs font-semibold" :class="{
               'bg-yellow-100 text-yellow-800': voucher.status === 'draft',
               'bg-green-100 text-green-800': voucher.status === 'forCheck',
               'bg-red-100 text-red-800': voucher.status === 'rejected',
               'bg-blue-100 text-blue-800': voucher.status === 'forEOD',
             }">
-              {{ formatStatus(voucher.status) }}
+              {{ voucher.status }}
             </span>
           </TableCell>
-          <TableCell class="px-4 py-2 space-x-2">
+          <TableCell v-if="authUser.role === 'accounting' && voucher.status !== 'forEOD'"  class="px-4 py-2 space-x-2 text-right">
             <Button 
-              v-if="authUser.role === 'accounting' && voucher.status !== 'forEOD'" 
               size="sm" 
               variant="outline"
               @click.stop="goToEditVoucher(voucher.id, $event)" 
-              class="hover:bg-green-50"
             >
               <SquarePen class="h-4 w-4 mr-1" />
               <span>Edit</span>
@@ -138,7 +139,7 @@ function formatStatus(status: string): string {
     </Table>
   </div>
 
-  <div v-else-if="vouchers" class="flex h-48 flex-col items-center justify-center rounded-xl border">
+  <div v-else class="flex h-48 flex-col items-center justify-center rounded-xl border">
     <FileText class="h-8 w-8 text-muted-foreground" />
     <p class="mt-2 text-sm text-muted-foreground">No pending vouchers for approval found</p>
     <p class="text-xs text-muted-foreground">Vouchers for approval from Director of Finance will appear here</p>

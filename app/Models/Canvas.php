@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Canvas extends Model
 {
@@ -16,7 +17,8 @@ class Canvas extends Model
         'remarks',
         'file_path',
         'original_filename',
-        'created_by'
+        'created_by',
+        'request_to_order_id'
     ];
 
     protected $casts = [
@@ -27,5 +29,16 @@ class Canvas extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function request_to_order() 
+    {
+        return $this->belongsTo(RequestToOrder::class, 'request_to_order_id');
+    }
+
+    // Add this new relationship
+    public function purchase_orders(): HasMany
+    {
+        return $this->hasMany(PurchaseOrder::class);
     }
 }
