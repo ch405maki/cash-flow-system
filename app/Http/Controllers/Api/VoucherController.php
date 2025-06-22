@@ -79,7 +79,7 @@ class VoucherController extends Controller
                 'status' => 'required|in:forEOD,forCheck,rejected,draft',
                 'type' => 'required|in:cash,salary',
                 'user_id' => 'required|exists:users,id',
-                'check' => 'required_if:type,salary|array',
+                'check' => 'required|array|min:1',
                 'check.*.amount' => 'required|numeric|min:0',
                 'check.*.rate' => 'nullable|numeric|min:0',
                 'check.*.hours' => 'nullable|numeric|min:0',
@@ -121,7 +121,7 @@ class VoucherController extends Controller
             $voucher = Voucher::create($voucherData);   
 
             // Create details if salary voucher
-            if ($validated['type'] === 'salary' && isset($validated['check'])) {
+            if (!empty($validated['check'])) {
                 foreach ($validated['check'] as $item) {
                     $voucher->details()->create([
                         'account_id' => $item['account_id'],

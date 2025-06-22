@@ -21,8 +21,7 @@ const emit = defineEmits(['print']);
 <template>
     <div class="flex justify-between items-center">
         <div>
-            <h2 class="text-2xl font-bold">Voucher {{ voucher.voucher_no }}</h2>
-            <p class="text-sm text-muted-foreground">Voucher Details</p>
+            <h2 class="text-2xl font-bold">Voucher # {{ voucher.voucher_no }}</h2>
         </div>
         <div class="flex gap-2">
             <Button variant="default" @click="emit('print')" class="flex items-center gap-2">

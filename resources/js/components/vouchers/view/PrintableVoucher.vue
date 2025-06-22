@@ -42,7 +42,7 @@ defineProps({
         <div class="text-center font-bold mb-5">
             <FormHeader
                 :text="voucher.type.charAt(0).toUpperCase() + voucher.type.slice(1).toLowerCase() + ' Voucher'"
-                :bordered="false" /> <br>
+                :bordered="false" /><br>
         </div>
 
         <div class="my-4"></div>

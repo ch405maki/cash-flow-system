@@ -25,32 +25,31 @@ defineProps({
 </script>
 
 <template>
-    <div class="space-y-2 ">
-        <h3 class="font-medium">Account Details</h3>
+    <div class="space-y-2">
+        <h3 class="font-medium capitalize">{{ voucher.type }} Details</h3>
         <Table class="w-full text-sm border border-border rounded-md">
             <TableHeader>
                 <TableRow>
-                    <TableHead>Account</TableHead>
-                    <TableHead>Charging Tag</TableHead>
-                    <TableHead>Hours</TableHead>
-                    <TableHead>Rate</TableHead>
-                    <TableHead class="text-right">Amount</TableHead>
+                    <TableHead class="border-r">Charged</TableHead>
+                    <TableHead class="border-r">Account</TableHead>
+                    <TableHead class="border-r" v-if="voucher.type === 'salary'">Hours</TableHead>
+                    <TableHead class="border-r" v-if="voucher.type === 'salary'">Rate</TableHead>
+                    <TableHead class="text-right border-r">Amount</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 <TableRow v-for="(detail, index) in voucher.details" :key="index">
-                    <TableCell>
+                    <TableCell class="border-r">{{ detail.charging_tag }}</TableCell>
+                    <TableCell class="border-r">
                         {{accounts.find(a => a.id === detail.account_id)?.account_title || 'N/A'}}
                     </TableCell>
-                    <TableCell>{{ detail.charging_tag }}</TableCell>
-                    <TableCell>{{ detail.hours || 'N/A' }}</TableCell>
-                    <TableCell>{{ detail.rate || 'N/A' }}</TableCell>
-                    <TableCell class="text-right">₱{{ formatCurrency(detail.amount) }}</TableCell>
+                    <TableCell class="border-r" v-if="voucher.type === 'salary'">{{ detail.hours || 'N/A' }}</TableCell>
+                    <TableCell class="border-r" v-if="voucher.type === 'salary'">{{ detail.rate || 'N/A' }}</TableCell>
+                    <TableCell class="text-right border-r">₱{{ formatCurrency(detail.amount) }}</TableCell>
                 </TableRow>
                 <TableRow>
-                    <TableCell colspan="4" class="text-right font-medium">Total</TableCell>
-                    <TableCell class="text-right font-bold">
-                        ₱{{ formatCurrency(voucher.check_amount) }}
+                    <TableCell colspan="5" class="text-right font-bold">
+                        NET AMMOUNT: ₱{{ formatCurrency(voucher.check_amount) }}
                     </TableCell>
                 </TableRow>
             </TableBody>

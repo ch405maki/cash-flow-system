@@ -182,10 +182,10 @@ const printArea = () => {
                 :format-status="formatStatus"
             />
             
-            <VoucherDatesTable 
+            <!-- <VoucherDatesTable 
                 :voucher="voucher"
                 :format-date="formatDate"
-            />
+            /> -->
             
             <VoucherAccountDetails 
                 :voucher="voucher"

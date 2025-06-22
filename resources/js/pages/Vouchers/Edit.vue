@@ -56,7 +56,7 @@ const filteredAccounts = computed(() => {
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Vouchers', href: '/vouchers' },
-    { title: `Voucher Details: ${voucher.voucher_no}`, href: `/vouchers/${voucher.id}/edit` },
+    { title: `${voucher.voucher_no}`, href: `/vouchers/${voucher.id}/edit` },
 ];
 
 // Initialize form with existing voucher data
