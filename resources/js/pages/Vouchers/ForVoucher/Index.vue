@@ -32,7 +32,6 @@ defineProps({
         </div>
       </div>
       
-
       <ApprovedPurchaseOrderTable :purchase-orders="purchaseOrders" />
 
       <!-- Pagination -->
