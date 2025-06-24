@@ -202,7 +202,7 @@ class RequestController extends Controller
 
     protected function generateRequestNumber(): string
     {
-        $prefix = 'REQ-' . now()->format('Ymd') . '-';
+        $prefix = 'REQ-' . now()->format('Ym') . '-';
         $lastRequest = Request::where('request_no', 'like', $prefix . '%')->latest()->first();
         
         $sequence = $lastRequest 
@@ -296,25 +296,33 @@ class RequestController extends Controller
     {
         $validated = $httpRequest->validate([
             'status' => 'required|in:approved,rejected,propertyCustodian,to_order,released',
-            'password' => 'required_if:status,approved,propertyCustodian,to_order,released'
+            'password' => 'required_if:status,approved,propertyCustodian,to_order,released',
         ]);
 
-        // Verify password f    or all statuses that require it
+        // Password verification for sensitive status changes
         $passwordRequiredStatuses = ['approved', 'propertyCustodian', 'to_order', 'released'];
-        
+
         if (in_array($validated['status'], $passwordRequiredStatuses)) {
             if (!Hash::check($validated['password'], auth()->user()->password)) {
                 return back()->withErrors([
-                    'password' => 'Invalid password'
+                    'password' => 'Invalid password',
                 ]);
             }
         }
 
-        // Update status
-        $request->update(['status' => $validated['status']]);
+        // Determine update data
+        $updateData = ['status' => $validated['status']];
+
+        // Update user_id only if user is NOT a property custodian
+        if (auth()->user()->role !== 'property_custodian') {
+            $updateData['user_id'] = auth()->id();
+        }
+
+        $request->update($updateData);
 
         return back()->with('success', 'Request status updated successfully');
     }
+
 
     public function releaseItems(HttpRequest $httpRequest, Request $request)
     {

@@ -152,7 +152,7 @@
                         variant="outline" 
                         size="sm" 
                         @click="submitStatusUpdate('rejected', '')"
-                        :disabled="request.status === 'rejected' || form.processing"
+                        :disabled="request.status === 'rejected' || request.status === 'approved' || form.processing"
                     >
                         Reject
                     </Button>
@@ -292,7 +292,7 @@
                             variant="outline" 
                             size="sm" 
                             @click="submitStatusUpdate('rejected', '')"
-                            :disabled="request.status === 'to_property' || form.processing"
+                            :disabled="request.status === 'propertyCustodian' || request.status === 'propertyCustodian' || form.processing"
                         >
                             Reject
                     </Button>
@@ -360,7 +360,7 @@
         </div>
         </div>
         <!-- Printed Item -->
-          <PrintableSection ref="printableComponent" :request="request" />
+          <PrintableSection ref="printableComponent" :request="request" :user="user" />
         <!-- End Print Item -->
     </AppLayout>
     </template>
