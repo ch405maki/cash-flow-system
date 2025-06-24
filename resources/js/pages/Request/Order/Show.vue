@@ -197,7 +197,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                   <Button
                   variant="destructive"
                   size="sm"
-                  :disabled="requestOrder.status == 'rejected' || form.processing"
+                  :disabled="requestOrder.status == 'rejected' || requestOrder.status == 'forPO' || form.processing"
                   >
                   Reject
                   </Button>

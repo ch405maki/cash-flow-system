@@ -176,7 +176,7 @@ async function submitVoucher() {
           <!-- Column 1 -->
           <div class="space-y-4">
             <div class="grid gap-2">
-              <Label for="voucher_type">Voucher Type *</Label>
+              <Label for="voucher_type">Voucher Type <span class="text-rose-600">*</span> </Label>
               <Select 
                 v-model="form.type" 
                 required

@@ -50,6 +50,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/request-to-order/create', [RequestToOrderController::class, 'create'])->name('request-to-order.create');
     Route::get('/request-to-order/list', [RequestToOrderController::class, 'list'])->name('request-to-order.list');
     Route::post('/request-to-orders', [RequestToOrderController::class, 'store'])->name('request-to-orders.store');
+    Route::post('/request-to-orders', [RequestToOrderController::class, 'storeManual'])->name('request-to-orders.storeManual');
     Route::get('/request-to-order/{id}', [RequestToOrderController::class, 'show'])->name('request-to-order.show');
     
     Route::patch('/request-to-order/{id}/approve', [RequestToOrderController::class, 'approve'])->name('request-to-order.approve');

@@ -100,7 +100,7 @@ const custodianNavItems: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
-    title: 'Requests',
+    title: 'Department Requests',
     href: '/request',
     icon: FileText,
   },

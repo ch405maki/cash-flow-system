@@ -11,6 +11,7 @@ import { FileText } from 'lucide-vue-next';
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { router } from '@inertiajs/vue3'
+import { Ticket } from 'lucide-vue-next';
 
 defineProps({
   purchaseOrders: {
@@ -18,6 +19,18 @@ defineProps({
     required: true
   }
 })
+
+const handleRowClick = (event: MouseEvent, poId: number) => {
+  const target = event.target as HTMLElement;
+  if (target.closest('button')) {
+    return; 
+  }
+  goToPO(poId);
+};
+
+function goToPO(id: number) {
+  router.visit(`/purchase-orders/${id}`)
+}
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr)
@@ -46,20 +59,16 @@ function goToCreate(poId?: number) {
           <TableHead>Amount</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Account</TableHead>
-          <TableHead class="text-right">
-            <Button 
-              variant="outline" 
-              size="sm"
-              @click="goToCreate()"
-              class="float-right"
-            >
-              Create Voucher (No PO)
-            </Button>
-          </TableHead>
+          <TableHead class="text-right">Action</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        <TableRow v-for="po in purchaseOrders.data" :key="po.id">
+        <TableRow 
+          class="cursor-pointer hover:bg-gray-50 hover:underline" 
+          v-for="po in purchaseOrders.data" 
+          :key="po.id"
+          @click="handleRowClick($event, po.id)"
+        >
           <TableCell class="font-medium">{{ po.po_no }}</TableCell>
           <TableCell>{{ formatDate(po.date) }}</TableCell>
           <TableCell>{{ po.payee }}</TableCell>
@@ -71,13 +80,13 @@ function goToCreate(poId?: number) {
             </Badge>
           </TableCell>
           <TableCell>{{ po.account.account_title }}</TableCell>
-          <TableCell>
+          <TableCell class="text-right">
             <Button 
               variant="outline" 
               size="sm"
-              @click="goToCreate(po.id)"
+              @click.stop="goToCreate(po.id)"
             >
-              Create Voucher
+              <Ticket />Create Voucher
             </Button>
           </TableCell>
         </TableRow>
