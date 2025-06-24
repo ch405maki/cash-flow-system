@@ -7,6 +7,7 @@ interface RequestDetail {
   id: number
   item_description: string
   quantity: number
+  released_quantity: number
   unit: string
 }
 
@@ -88,7 +89,12 @@ defineExpose({
           <!-- Item Rows -->
           <template v-for="(detail, index) in request.details">
             <div v-if="index < 10" :key="detail.id" class="col-span-1 p-0.5 border-b border-r border-zinc-500 text-center hover:bg-zinc-50 h-5 leading-tight">
-              {{ detail.quantity }}
+                <span v-if="detail.quantity == 0" class="text-green-600">
+                ({{ detail.released_quantity }})
+                </span>
+                <span v-else>
+                {{ detail.quantity }}
+                </span>
             </div>
             <div v-if="index < 10" class="col-span-1 p-0.5 border-b border-r border-zinc-500 text-center hover:bg-zinc-50 h-5 leading-tight">
               {{ detail.unit }}

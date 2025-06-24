@@ -46,7 +46,80 @@ const form = ref({
 const submit = async () => { /* ... */ }
 const addDetail = () => { /* ... */ }
 const removeDetail = (index: number) => { /* ... */ }
-const releaseItems = async () => { /* ... */ }
+const releaseItems = async () => {
+  if (selectedItems.value.length === 0) {
+    toast({
+      title: 'No items selected',
+      description: 'Please select at least one item to release',
+      variant: 'destructive'
+    });
+    return;
+  }
+
+  // Prepare items to release
+  const itemsToRelease = form.value.details
+    .filter(detail => selectedItems.value.includes(detail.id))
+    .map(item => ({
+      request_detail_id: item.id,
+      quantity: Number(item.released_quantity)
+    }));
+
+  if (itemsToRelease.some(item => item.quantity <= 0)) {
+    toast({
+      title: 'Invalid quantity',
+      description: 'Release quantity must be greater than 0',
+      variant: 'destructive'
+    });
+    return;
+  }
+
+  isReleasing.value = true;
+  
+  try {
+    const response = await axios.post(`/api/requests/${props.request.id}/release`, {
+      items: itemsToRelease,
+      notes: 'Items released from request'
+    });
+
+    // Update local state with the response data
+    form.value.details = form.value.details.map(detail => {
+      const updatedDetail = response.data.data.request.details.find(
+        (d: any) => d.id === detail.id
+      );
+      return updatedDetail ? {
+        ...detail,
+        quantity: updatedDetail.quantity,
+        released_quantity: updatedDetail.released_quantity
+      } : detail;
+    });
+
+    toast({
+      title: 'Success',
+      description: 'Items released successfully',
+    });
+
+    // Clear selection after successful release
+    selectedItems.value = [];
+    
+  } catch (error: any) {
+    console.error('Release error:', error);
+    
+    let errorMessage = 'Failed to release items';
+    if (error.response?.data?.errors?.quantity) {
+      errorMessage = error.response.data.errors.quantity.join(', ');
+    } else if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    }
+
+    toast({
+      title: 'Error',
+      description: errorMessage,
+      variant: 'destructive',
+    });
+  } finally {
+    isReleasing.value = false;
+  }
+};
 const toggleSelectAll = (checked: boolean) => { /* ... */ }
 
 const updateReleasedQuantity = ({ index, value }: { index: number, value: number }) => {

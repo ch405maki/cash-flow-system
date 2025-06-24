@@ -42,7 +42,6 @@ class RequestToOrderController extends Controller
         ]);
     }
 
-
     public function create()
     {
         $requests = Request::with(['details', 'department', 'user'])
@@ -56,7 +55,13 @@ class RequestToOrderController extends Controller
 
     public function list()
     {
-        $requests = Request::with(['details', 'department', 'user'])
+        $requests = Request::with([
+                'details' => function ($query) {
+                    $query->where('quantity', '!=', 0);
+                },
+                'department', 
+                'user'
+            ])
             ->where('status', 'to_order')
             ->get();
 
@@ -96,6 +101,7 @@ class RequestToOrderController extends Controller
         return redirect()->route('request-to-order.index')
             ->with('success', 'Order created successfully');
     }
+
     private function generateOrderNumber()
     {
         $prefix = 'ORD-';
