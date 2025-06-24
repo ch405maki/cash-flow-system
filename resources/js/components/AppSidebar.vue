@@ -124,9 +124,9 @@ const custodianReportItems = ref<DropdownNavItem[]>([
         icon: BarChart3,
         isOpen: false,
         children: [
-        { title: 'Completed Request', href: '/reports/request-summary'},
-        { title: 'Approved Request', href: '/reports/request-summary'},
-        { title: 'Rejected Request', href: '/reports/request-summary'},
+          { title: 'Approved Request', href: '/reports/request?status=forPO'},
+          { title: 'Completed Request', href: '/reports/request?status=released'},
+          { title: 'Rejected Request', href: '/reports/request?status=rejected'},
         ],
     },
   ]);

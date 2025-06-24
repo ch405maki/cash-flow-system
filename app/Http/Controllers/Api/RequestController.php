@@ -222,7 +222,7 @@ class RequestController extends Controller
 
     public function release(Request $request)
     {
-        return Inertia::render('Request/Release', [
+        return Inertia::render('Request/Release/Index', [
             'request' => $request->load(['details','user', 'department']),
             'departments' => Department::all(),
         ]);
@@ -322,7 +322,6 @@ class RequestController extends Controller
 
         return back()->with('success', 'Request status updated successfully');
     }
-
 
     public function releaseItems(HttpRequest $httpRequest, Request $request)
     {

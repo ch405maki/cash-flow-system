@@ -89,16 +89,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/reports/po-summary', [ReportController::class, 'poSummary'])->name('reports.po-summary');
     Route::get('/reports/request-summary', [ReportController::class, 'requestSummary'])->name('reports.request-summary');
     Route::get('/reports/voucher-summary', [ReportController::class, 'voucherSummary'])->name('reports.voucher-summary');
+
+    // custodian
+    Route::get('/reports/request', [ReportController::class, 'requestReport'])->name('reports.request');
 });
 
 // Purchase Order Route
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])
-        ->name('purchase-orders.index');
-
-    Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])
-        ->name('purchase-orders.show');
-
+    Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
+    Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
     Route::get('/purchase-order/create', [PurchaseOrderController::class, 'create'])->name('purchase-order.create');
     
     Route::patch('/purchase-orders/{purchaseOrder}/status', [PurchaseOrderController::class, 'updateStatus'])->name('purchase-orders.status.update');

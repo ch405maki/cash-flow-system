@@ -54,8 +54,8 @@ function formatDate(dateStr: string): string {
           </tr>
         </thead>
         <tbody class="[&_tr:last-child]:border-0">
-          <tr v-for="request in recentRequests" :key="request.id" class="border-b transition-colors hover:bg-muted/50">
-            <td class="p-4 align-middle font-medium cursor-pointer text-purple-800 hover:underline hover:text-purple-700"  @click="goToShowRequest(request.id)">
+          <tr v-for="request in recentRequests" :key="request.id" class="border-b transition-colors hover:bg-muted/50 hover:underline cursor-pointer" @click="goToShowRequest(request.id)">
+            <td class="p-4 align-middle font-medium text-purple-800 hover:text-purple-700" >
               {{ request.request_no }}
             </td>
             <td class="p-4 align-middle">
