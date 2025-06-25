@@ -65,7 +65,6 @@ const form = useForm({
         account_id: detail.account_id.toString() // Ensure account_id is string for Select component
     }))
 });
-
 const addDetailItem = () => {
     // Check if the last item is empty (newly added but not filled yet)
     if (form.check.length > 0) {
@@ -113,12 +112,13 @@ const calculateTotalAmount = () => {
 };
 
 const calculateAmountFromRate = (index) => {
-    const detail = form.check[index];
-    if (detail.hours && detail.rate) {
-        detail.amount = parseFloat(detail.hours) * parseFloat(detail.rate);
-        calculateTotalAmount();
-    }
-};
+  const detail = form.check[index]
+  if (detail.hours && detail.rate) {
+    detail.amount = parseFloat(detail.hours) * parseFloat(detail.rate)
+    calculateTotalAmount()
+  }
+}
+
 
 const isCashVoucher = computed(() => form.type === 'cash');
 

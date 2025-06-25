@@ -56,7 +56,7 @@ const filteredAccounts = computed(() => {
       <Combobox :model-value="detail.account_id" @update:model-value="val => emit('update:account', val)" by="id">
         <ComboboxAnchor as-child>
           <ComboboxTrigger as-child>
-            <Button variant="outline" class="w-full justify-between" :disabled="isCashVoucher">
+            <Button variant="outline" class="w-full justify-between">
               {{ accounts.find(a => a.id == detail.account_id)?.account_title || 'Select account' }}
               <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
@@ -67,7 +67,7 @@ const filteredAccounts = computed(() => {
           <div class="relative w-full items-center">
             <ComboboxInput
               class="pl-9 focus-visible:ring-0 border-0 border-b rounded-none h-10"
-              placeholder="Search accounts..." v-model="accountSearchQuery" />
+              placeholder="Search accounts..."/>
             <span class="absolute start-0 inset-y-0 flex items-center justify-center px-3">
               <Search class="size-4 text-muted-foreground" />
             </span>
@@ -95,7 +95,7 @@ const filteredAccounts = computed(() => {
     <!-- Charging Tag -->
     <div class="grid gap-2">
       <Label :for="`tag-${index}`">Charging Tag *</Label>
-      <Select v-model="detail.charging_tag" @update:model-value="val => emit('update:tag', val)" :disabled="isCashVoucher">
+      <Select v-model="detail.charging_tag" @update:model-value="val => emit('update:tag', val)">
         <SelectTrigger>
           <SelectValue placeholder="Choose Charging Tag" />
         </SelectTrigger>
@@ -127,8 +127,7 @@ const filteredAccounts = computed(() => {
       <Label :for="`amount-${index}`">Amount *</Label>
       <div class="flex gap-2">
         <Input :id="`amount-${index}`" type="number" step="0.01" :model-value="detail.amount"
-          @update:model-value="val => emit('update:amount', val)" required class="flex-1"
-          :disabled="isCashVoucher" />
+          @update:model-value="val => emit('update:amount', val)" required class="flex-1"/>
         <Button type="button" variant="destructive" size="icon"
           @click="emit('remove', index)"
           :disabled="isCashVoucher">
