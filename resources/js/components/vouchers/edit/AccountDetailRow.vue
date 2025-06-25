@@ -46,7 +46,10 @@ const filteredAccounts = computed(() => {
 </script>
 
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 pb-4 border-b last:border-0">
+  <div
+      class="grid gap-4 mb-4 pb-4 border-b last:border-0"
+      :class="isCashVoucher ? 'grid-cols-3 md:grid-cols-3' : 'grid-cols-5 md:grid-cols-5'"
+    >
     <!-- Account Selection with Combobox -->
     <div class="grid gap-2">
       <Label :for="`account-${index}`">Account *</Label>
@@ -104,7 +107,7 @@ const filteredAccounts = computed(() => {
     </div>
 
     <!-- Hours -->
-    <div class="grid gap-2">
+    <div class="grid gap-2" v-if="!isCashVoucher" >
       <Label :for="`hours-${index}`">Hours</Label>
       <Input :id="`hours-${index}`" type="number" step="0.01" :model-value="detail.hours"
         @update:model-value="val => emit('update:hours', val)" placeholder="Optional"
@@ -112,7 +115,7 @@ const filteredAccounts = computed(() => {
     </div>
 
     <!-- Rate -->
-    <div class="grid gap-2">
+    <div class="grid gap-2" v-if="!isCashVoucher" >
       <Label :for="`rate-${index}`">Rate</Label>
       <Input :id="`rate-${index}`" type="number" step="0.01" :model-value="detail.rate"
         @update:model-value="val => emit('update:rate', val)" placeholder="Optional"

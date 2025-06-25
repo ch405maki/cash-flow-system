@@ -17,35 +17,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Validation\Rule;
 use Illuminate\Database\QueryException;
 use Inertia\Inertia;
 
 class VoucherController extends Controller
 {
 
-    // Validation rules shared between store and update
-    protected array $voucherValidationRules = [
-        'issue_date' => 'required|date',
-        'payment_date' => 'required|date',
-        'check_date' => 'required|date',
-        'delivery_date' => 'required|date',
-        'voucher_date' => 'required|date',
-        'purpose' => 'required|string|max:500',
-        'payee' => 'required|string|max:255',
-        'check_no' => 'nullable|string|max:500',
-        'check_payable_to' => 'required|string|max:500',
-        'check_amount' => 'required|numeric|min:0',
-        'status' => 'required|in:forEOD,forCheck,rejected,draft',
-        'type' => 'required|in:cash,salary',
-        'user_id' => 'required|exists:users,id',
-        'check' => 'nullable|array',
-        'check.*.amount' => 'nullable|numeric|min:0',
-        'check.*.rate' => 'nullable|numeric|min:0',
-        'check.*.hours' => 'nullable|numeric|min:0|max:24',
-        'check.*.charging_tag' => 'nullable|in:C,D',
-        'check.*.account_id' => 'required_with:check.*|exists:accounts,id',
-    ];
+    
     
     public function index()
     {
@@ -239,10 +218,35 @@ class VoucherController extends Controller
         ]);
     }
 
-    public function update(Request $request, Voucher $voucher): JsonResponse
+   public function update(Request $request, Voucher $voucher): JsonResponse
     {
         return DB::transaction(function () use ($request, $voucher) {
-            $validated = $this->validateRequest($request);
+            $validated = $request->validate([
+                'voucher_no' => [
+                    'required',
+                    'string',
+                    Rule::unique('vouchers', 'voucher_no')->ignore($voucher->id),
+                ],
+                'issue_date' => 'required|date',
+                'payment_date' => 'required|date',
+                'check_date' => 'required|date',
+                'delivery_date' => 'required|date',
+                'voucher_date' => 'required|date',
+                'purpose' => 'required|string|max:500',
+                'payee' => 'required|string|max:255',
+                'check_no' => 'nullable|string|max:500',
+                'check_payable_to' => 'required|string|max:500',
+                'check_amount' => 'required|numeric|min:0',
+                'status' => 'required|in:forEOD,forCheck,rejected,draft',
+                'type' => 'required|in:cash,salary',
+                'user_id' => 'required|exists:users,id',
+                'check' => 'nullable|array',
+                'check.*.amount' => 'nullable|numeric|min:0',
+                'check.*.rate' => 'nullable|numeric|min:0',
+                'check.*.hours' => 'nullable|numeric|min:0|max:24',
+                'check.*.charging_tag' => 'nullable|in:C,D',
+                'check.*.account_id' => 'required_with:check.*|exists:accounts,id',
+            ]);
 
             // Lock the voucher number to the existing value
             $validated['voucher_no'] = $voucher->voucher_no;

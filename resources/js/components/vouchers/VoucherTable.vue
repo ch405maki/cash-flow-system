@@ -16,7 +16,7 @@ const props = defineProps<{
   vouchers: Array<any>;
   authUser: {
     role: string;
-    [key: string]: any; // Allow for other fields
+    [key: string]: any;
   };
   state?: boolean;  
 }>();

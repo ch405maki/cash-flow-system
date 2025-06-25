@@ -15,7 +15,7 @@ defineProps<{
 </script>
 
 <template>
-  <div v-if="!isCashVoucher" class="border rounded-lg p-4 mb-6">
+  <div class="border rounded-lg p-4 mb-6">
     <div class="flex justify-between items-center mb-4">
       <h3 class="font-medium">Update Accounts</h3>
       <Button type="button" variant="outline" size="sm" @click="addDetailItem">

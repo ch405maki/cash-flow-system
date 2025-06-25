@@ -163,7 +163,6 @@ async function updateVoucher() {
           <VoucherFormFields :form="form" :is-cash-voucher="isCashVoucher" />
 
           <AccountDetailsSection
-            v-if="!isCashVoucher"
             :form="form"
             :accounts="accounts"
             :is-cash-voucher="isCashVoucher"
