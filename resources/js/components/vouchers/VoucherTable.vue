@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { SquarePen, FileText, Eye } from 'lucide-vue-next';
+import { formatDate, formatCurrency } from '@/lib/utils';
 import {
   Table,
   TableHeader,
@@ -45,23 +46,6 @@ function viewVoucher(id: number) {
 function goToEditVoucher(id: number, e: Event) {
   e.stopPropagation(); // Prevent the row click event from firing
   router.get(`/vouchers/${id}/edit`);
-}
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-PH', {
-    style: 'currency',
-    currency: 'PHP'
-  }).format(amount);
-}
-
-function formatDate(dateString: string): string {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
 }
 
 // Add this helper function to format dates for display

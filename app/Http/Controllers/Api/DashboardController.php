@@ -34,6 +34,9 @@ class DashboardController extends Controller
         elseif ($user->role === 'purchasing') {
             return $this->purchasingDashboard();
         }
+        elseif ($user->role === 'accounting') {
+            return $this->accountingDashboard();
+        }
         
         // Default dashboard for other roles
         return Inertia::render('Dashboard/Index', [
@@ -41,6 +44,60 @@ class DashboardController extends Controller
         ]);
     }
     
+    protected function accountingDashboard()
+    {
+        $user = Auth::user();
+        
+        $purchaseOrders = PurchaseOrder::with(['user', 'department', 'details'])
+        ->where('department_id', $user->department_id)
+        ->orderBy('date', 'desc')
+        ->limit(10)
+        ->get()
+        ->map(function ($po) {
+            return [
+                'id' => $po->id,
+                'po_no' => $po->po_no,
+                'date' => $po->date,
+                'payee' => $po->payee,
+                'amount' => $po->amount,
+                'purpose' => $po->purpose,
+                'status' => $po->status,
+                'department' => $po->department ? $po->department->name : null,
+                'user' => $po->user ? $po->user->only(['first_name', 'last_name']) : null,
+                'details' => $po->details->map(function ($detail) {
+                    return [
+                        'id' => $detail->id,
+                        'quantity' => $detail->quantity,
+                        'unit' => $detail->unit,
+                        'item_description' => $detail->item_description,
+                        'unit_price' => $detail->unit_price,
+                        'amount' => $detail->amount
+                    ];
+                }),
+            ];
+        });
+            
+        $statusCounts = [
+            'pending' => Request::where('department_id', $user->department_id)
+                ->where('status', 'pending')->count(),
+            'approved' => Request::where('department_id', $user->department_id)
+                ->where('status', 'approved')->count(),
+            'to_order' => Request::where('department_id', $user->department_id)
+                ->where('status', 'to_order')->count(),
+            'rejected' => Request::where('department_id', $user->department_id)
+                ->where('status', 'rejected')->count(),
+            'total' => Request::where('department_id', $user->department_id)->count(),
+        ];
+        
+        return Inertia::render('Dashboard/Accounting/Index', [
+            'isDepartmentUser' => true,
+            'purchaseOrders' => $purchaseOrders,
+            'statusCounts' => $statusCounts,
+            'userRole' => $user->role,
+            'username' => $user->username,
+        ]);
+    }
+
     protected function departmentDashboard()
     {
         $user = Auth::user();
