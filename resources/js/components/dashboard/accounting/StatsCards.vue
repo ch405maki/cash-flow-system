@@ -26,7 +26,9 @@ defineProps<{
         <CardTitle class="text-sm font-medium">
           Pending
         </CardTitle>
-        <Clock class="h-4 w-4 text-muted-foreground" />
+        <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
+          <Clock class="h-4 w-4 text-muted-foreground" />
+        </div>
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ statusCounts.pending }}</div>
@@ -42,7 +44,9 @@ defineProps<{
         <CardTitle class="text-sm font-medium">
           For EOD Approval
         </CardTitle>
-        <ShoppingCart class="h-4 w-4 text-muted-foreground" />
+        <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
+          <ShoppingCart class="h-4 w-4 text-muted-foreground" />
+        </div>
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ statusCounts.forApproval }}</div>
@@ -58,7 +62,9 @@ defineProps<{
         <CardTitle class="text-sm font-medium">
           Approved
         </CardTitle>
-        <CheckCircle class="h-4 w-4 text-muted-foreground" />
+        <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
+          <CheckCircle class="h-4 w-4 text-muted-foreground" />
+        </div>
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ statusCounts.approved }}</div>
@@ -74,7 +80,9 @@ defineProps<{
         <CardTitle class="text-sm font-medium">
           Rejected
         </CardTitle>
-        <XCircle class="h-4 w-4 text-muted-foreground" />
+        <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
+          <XCircle class="h-4 w-4 text-muted-foreground"/>
+        </div>
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ statusCounts.rejected }}</div>

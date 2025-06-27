@@ -26,13 +26,13 @@ defineProps<{
         <CardTitle class="text-sm font-medium">
           Pending Request
         </CardTitle>
-        <Clock class="h-4 w-4 text-muted-foreground" />
+        <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
+          <Clock class="h-4 w-4 text-muted-foreground" />
+        </div>
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ statusCounts.pending }}</div>
-        <p class="text-xs text-muted-foreground">
-          Waiting to release
-        </p>
+        <p class="text-xs text-muted-foreground">Waiting to release</p>
       </CardContent>
     </Card>
 
@@ -42,13 +42,13 @@ defineProps<{
         <CardTitle class="text-sm font-medium">
           To Order
         </CardTitle>
-        <ShoppingCart class="h-4 w-4 text-muted-foreground" />
+        <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
+          <ShoppingCart class="h-4 w-4 text-muted-foreground" />
+        </div>
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ statusCounts.to_order }}</div>
-        <p class="text-xs text-muted-foreground">
-          Tagged to order
-        </p>
+        <p class="text-xs text-muted-foreground">Tagged to order</p>
       </CardContent>
     </Card>
 
@@ -58,13 +58,13 @@ defineProps<{
         <CardTitle class="text-sm font-medium">
           Pending Approval
         </CardTitle>
-        <CheckCircle class="h-4 w-4 text-muted-foreground" />
+        <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
+          <CheckCircle class="h-4 w-4 text-muted-foreground" />
+        </div>
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ statusCounts.approval }}</div>
-        <p class="text-xs text-muted-foreground">
-          Waiting for approval
-        </p>
+        <p class="text-xs text-muted-foreground">Waiting for approval</p>
       </CardContent>
     </Card>
 
@@ -74,13 +74,13 @@ defineProps<{
         <CardTitle class="text-sm font-medium">
           Rejected
         </CardTitle>
-        <XCircle class="h-4 w-4 text-muted-foreground" />
+        <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
+          <XCircle class="h-4 w-4 text-muted-foreground" />
+        </div>
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ statusCounts.rejected }}</div>
-        <p class="text-xs text-muted-foreground">
-          Not approved
-        </p>
+        <p class="text-xs text-muted-foreground">Not approved</p>
       </CardContent>
     </Card>
   </div>
