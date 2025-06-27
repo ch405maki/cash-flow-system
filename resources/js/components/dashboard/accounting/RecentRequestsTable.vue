@@ -44,7 +44,7 @@ function goToPO(id: number) {
 
 <template>
   <div v-if="isDepartmentUser">
-    <div v-if="recentRequests.length > 0" class="rounded-xl border">
+    <div v-if="recentRequests.length > 0" class="rounded-lg border">
       <div class="relative w-full overflow-auto">
         <table class="w-full caption-bottom text-sm">
           <thead class="[&_tr]:border-b">

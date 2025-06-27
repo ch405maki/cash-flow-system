@@ -74,9 +74,32 @@ class DashboardController extends Controller
                         'unit_price' => $detail->unit_price,
                         'amount' => $detail->amount
                     ];
-                }),
+                }), 
             ];
         });
+
+        $voucherStats = [
+            'totalVouchers' => Voucher::count(),
+            'totalAmount' => Voucher::sum('check_amount'),
+            'overdueVouchers' => Voucher::where('status', 'pending')
+                ->whereDate('issue_date', '<=', now()->subDays(7))
+                ->count(),
+            'currentMonthVouchers' => Voucher::whereMonth('issue_date', now()->month)
+                ->whereYear('issue_date', now()->year)
+                ->count(),
+            'statusCounts' => [
+                'pending' => Voucher::where('status', 'pending')->count(),
+                'forApproval' => Voucher::where('status', 'forEOD')->count(),
+                'approved' => Voucher::where('status', 'forCheck')->count(),
+                'paid' => Voucher::where('status', 'paid')->count(),
+                'rejected' => Voucher::where('status', 'rejected')->count(),
+            ],
+            'monthlyData' => Voucher::selectRaw('YEAR(issue_date) as year, MONTH(issue_date) as month, COUNT(*) as count, SUM(check_amount) as amount')
+                ->groupBy('year', 'month')
+                ->orderBy('year')
+                ->orderBy('month')
+                ->get()
+        ];
             
         $statusCounts = [
             'pending' => Voucher::where('status', 'pending')->count(),
@@ -89,6 +112,7 @@ class DashboardController extends Controller
             'isDepartmentUser' => true,
             'purchaseOrders' => $purchaseOrders,
             'statusCounts' => $statusCounts,
+            'voucherStats' => $voucherStats,
             'userRole' => $user->role,
             'username' => $user->username,
         ]);
