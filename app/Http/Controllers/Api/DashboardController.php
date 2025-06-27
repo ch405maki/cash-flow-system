@@ -8,6 +8,7 @@ use App\Models\RequestToOrder;
 use App\Models\RequestToOrderDetail;
 use App\Models\PurchaseOrder;
 use App\Models\User;
+use App\Models\Voucher;
 use App\Models\Canvas;
 use Illuminate\Http\Request as HttpRequest;
 use Inertia\Inertia;
@@ -78,15 +79,10 @@ class DashboardController extends Controller
         });
             
         $statusCounts = [
-            'pending' => Request::where('department_id', $user->department_id)
-                ->where('status', 'pending')->count(),
-            'approved' => Request::where('department_id', $user->department_id)
-                ->where('status', 'approved')->count(),
-            'to_order' => Request::where('department_id', $user->department_id)
-                ->where('status', 'to_order')->count(),
-            'rejected' => Request::where('department_id', $user->department_id)
-                ->where('status', 'rejected')->count(),
-            'total' => Request::where('department_id', $user->department_id)->count(),
+            'pending' => Voucher::where('status', 'pending')->count(),
+            'forApproval' => Voucher::where('status', 'forEOD')->count(),
+            'approved' => Voucher::where('status', 'forCheck')->count(),
+            'rejected' => Voucher::where('status', 'rejected')->count(),
         ];
         
         return Inertia::render('Dashboard/Accounting/Index', [

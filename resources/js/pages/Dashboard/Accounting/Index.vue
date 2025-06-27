@@ -2,7 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
-import StatsCards from '@/components/dashboard/department/StatsCards.vue';
+import StatsCards from '@/components/dashboard/accounting/StatsCards.vue';
 import RecentRequestsTable from '@/components/dashboard/accounting/RecentRequestsTable.vue';
 
 const props = defineProps<{
@@ -11,9 +11,8 @@ const props = defineProps<{
     statusCounts: {
         pending: number;
         approved: number;
-        to_order: number;
+        forApproval: number;
         rejected: number;
-        total: number;
     };
     userRole: string;
     username: string;
