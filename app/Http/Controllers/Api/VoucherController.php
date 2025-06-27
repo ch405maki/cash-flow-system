@@ -24,14 +24,12 @@ use Inertia\Inertia;
 class VoucherController extends Controller
 {
 
-    
-    
     public function index()
     {
         $user = Auth::user();
         return Inertia::render('Vouchers/Index', [
             'vouchers' => Voucher::with(['user', 'details'])
-                                ->whereIn('status', ['draft', 'rejected'])
+                                ->whereIn('status', ['draft', 'rejected', 'voucherWithCheck'])
                                 ->get(),
             'accounts' => Account::all(),
             'authUser' => [
@@ -218,7 +216,7 @@ class VoucherController extends Controller
         ]);
     }
 
-   public function update(Request $request, Voucher $voucher): JsonResponse
+    public function update(Request $request, Voucher $voucher): JsonResponse
     {
         return DB::transaction(function () use ($request, $voucher) {
             $validated = $request->validate([
@@ -250,6 +248,14 @@ class VoucherController extends Controller
 
             // Lock the voucher number to the existing value
             $validated['voucher_no'] = $voucher->voucher_no;
+
+            // ✅ Automatically update status if check number is present
+            if (!empty($validated['check_no'])) {
+                $validated['status'] = 'voucherWithCheck';
+            }
+
+            // Apply updates
+            $voucher->update($validated);
 
             $this->validateCashVoucherAmount($validated);
             $this->updateType($voucher, $validated);
@@ -308,10 +314,6 @@ class VoucherController extends Controller
         // Check current status
         if ($voucher->status === 'forEOD') {
             return back()->withErrors(['status' => 'Voucher is already sent']);
-        }
-
-        if ($voucher->status === 'rejected') {
-            return back()->withErrors(['status' => 'Voucher is already rejected']);
         }
 
         // Determine the action

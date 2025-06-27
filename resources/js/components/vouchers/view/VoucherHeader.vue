@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ArrowLeft, Printer, Check, X } from 'lucide-vue-next';
+import { ArrowLeft,SquarePen, Printer, Check, X } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
 import EodVerificationDialog from '@/components/vouchers/EodVerificationDialog.vue';
 import DirectorVerificationDialog from '@/components/vouchers/DirectorVerificationDialog.vue';
+import { router } from '@inertiajs/vue3';
 
 defineProps({
     voucher: {
@@ -14,6 +15,11 @@ defineProps({
         required: true
     }
 });
+
+function goToEditVoucher(id: number, e: Event) {
+  e.stopPropagation();
+  router.get(`/vouchers/${id}/edit`);
+}
 
 const emit = defineEmits(['print']);
 </script>
@@ -59,7 +65,28 @@ const emit = defineEmits(['print']);
             </template>
 
             <!-- Accounting Actions -->
-            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status !== 'forCheck'">
+            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'forCheck'">
+                <Button
+                    v-if="authUser.role === 'accounting' && voucher.status !== 'forEOD'"
+                    variant="default"
+                    @click.stop="goToEditVoucher(voucher.id, $event)" 
+                    >
+                    <SquarePen />
+                    <span>Add Check Number</span>
+                </Button>
+            </template>
+            <template v-if="authUser.role == 'accounting' && authUser.access_id == '5' && voucher.status !== 'forCheck' && voucher.status !== 'voucherWithCheck'">
+                <Button
+                    v-if="authUser.role === 'accounting' && voucher.status !== 'forEOD'"
+                    variant="default"
+                    @click.stop="goToEditVoucher(voucher.id, $event)" 
+                    >
+                    <SquarePen />
+                    <span>Edit</span>
+                </Button>
+            </template>
+            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status !== 'forCheck' && voucher.status !== 'voucherWithCheck'">
+
                 <DirectorVerificationDialog :voucher-id="voucher.id" action="forEod">
                     <template #trigger>
                         <Button 

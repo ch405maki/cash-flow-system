@@ -73,8 +73,8 @@ const toggleVoucherStats = () => {
             </div>
             
             <h1 class="text-lg font-medium">Recent Requests P. O. For Voucher</h1>
-            <RecentRequestsTable 
-                :is-department-user="isDepartmentUser" 
+            <RecentRequestsTable
+                :is-department-user="isDepartmentUser"
                 :recent-requests="purchaseOrders"
             />
         </div>
