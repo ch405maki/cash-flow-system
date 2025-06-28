@@ -58,7 +58,7 @@ function formatDate(dateStr: string): string {
           <TableHead>Department</TableHead>
           <TableHead>Requested By</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead class="text-right">Actions</TableHead>
+          <TableHead class="text-right" v-if="user.role === 'staff'">Actions</TableHead>
         </TableRow>
       </TableHeader>
 
@@ -89,7 +89,7 @@ function formatDate(dateStr: string): string {
               {{ request.status }}
             </span>
           </TableCell>
-          <TableCell class="text-right space-x-2 relative">
+          <TableCell class="text-right space-x-2 relative" v-if="user.role === 'staff'">
             <div class="inline-block" style="pointer-events: auto">
               <Button
                 size="sm"

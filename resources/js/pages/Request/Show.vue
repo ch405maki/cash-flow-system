@@ -152,7 +152,7 @@
                         variant="outline" 
                         size="sm" 
                         @click="submitStatusUpdate('rejected', '')"
-                        :disabled="request.status === 'rejected' || form.processing"
+                        :disabled="request.status === 'rejected' || request.status === 'approved' || form.processing"
                     >
                         Reject
                     </Button>
@@ -292,7 +292,7 @@
                             variant="outline" 
                             size="sm" 
                             @click="submitStatusUpdate('rejected', '')"
-                            :disabled="request.status === 'to_property' || form.processing"
+                            :disabled="request.status === 'propertyCustodian' || request.status === 'propertyCustodian' || form.processing"
                         >
                             Reject
                     </Button>
@@ -348,19 +348,29 @@
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                <TableRow v-for="(detail, index) in request.details" :key="detail.id">
+                    <TableRow 
+                    v-for="(detail, index) in request.details" 
+                    :key="detail.id"
+                    >
                     <TableCell class="border p-2">{{ index + 1 }}</TableCell>
-                    <TableCell class="border p-2">{{ detail.quantity }}</TableCell>
+                    <TableCell class="border p-2">
+                        <span v-if="detail.quantity == 0" class="text-green-600">
+                        (Released: {{ detail.released_quantity }})
+                        </span>
+                        <span v-else>
+                        {{ detail.quantity }}
+                        </span>
+                    </TableCell>
                     <TableCell class="border p-2">{{ detail.unit }}</TableCell>
                     <TableCell class="border p-2">{{ detail.item_description }}</TableCell>
-                </TableRow>
+                    </TableRow>
                 </TableBody>
             </Table>
             </div>
         </div>
         </div>
         <!-- Printed Item -->
-          <PrintableSection ref="printableComponent" :request="request" />
+          <PrintableSection ref="printableComponent" :request="request" :user="user" />
         <!-- End Print Item -->
     </AppLayout>
     </template>

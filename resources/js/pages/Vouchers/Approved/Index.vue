@@ -84,7 +84,7 @@ const filteredVouchers = computed(() => {
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
     result = result.filter((voucher: any) => {
-      // Get dates (fall back to each other if not available)
+      // Get dates (fall back to each other if not available) 
       const date = new Date(voucher.created_at || voucher.voucher_date);
 
       // Format dates for searching
@@ -135,10 +135,6 @@ const filteredVouchers = computed(() => {
 
   return result;
 });
-
-function goToCreate() {
-  router.visit(`/vouchers/create`)
-}
 
 function goToPage(url: string) {
   if (url) {

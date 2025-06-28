@@ -42,7 +42,6 @@ class RequestToOrderController extends Controller
         ]);
     }
 
-
     public function create()
     {
         $requests = Request::with(['details', 'department', 'user'])
@@ -56,7 +55,17 @@ class RequestToOrderController extends Controller
 
     public function list()
     {
-        $requests = Request::with(['details', 'department', 'user'])
+        $requests = Request::with([
+                'details' => function ($query) {
+                    $query->where('quantity', '!=', 0)
+                        ->where(function($q) {
+                            $q->whereNull('tagging')
+                                ->orWhere('tagging', '!=', 'forPurchase');
+                        });
+                },
+                'department', 
+                'user'
+            ])
             ->where('status', 'to_order')
             ->get();
 
@@ -66,6 +75,44 @@ class RequestToOrderController extends Controller
     }
 
     public function store(HttpRequest $request)
+    {
+        $validated = $request->validate([
+            'notes' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unit' => 'nullable|string|max:20',
+            'items.*.item_description' => 'nullable|string|max:255',
+            'items.*.detail_id' => 'required|exists:request_details,id', // Add this
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            $order = RequestToOrder::create([
+                'user_id' => auth()->id(),
+                'order_no' => $this->generateOrderNumber(),
+                'order_date' => now(),
+                'notes' => $validated['notes'],
+                'status' => 'pending'
+            ]);
+
+            foreach ($validated['items'] as $item) {
+                // Create order detail
+                $order->details()->create([
+                    'quantity' => $item['quantity'],
+                    'unit' => $item['unit'] ?? null,
+                    'item_description' => $item['item_description'] ?? null,
+                ]);
+
+                // Update the original request detail with tagging
+                RequestDetail::where('id', $item['detail_id'])
+                    ->update(['tagging' => 'forPurchase']);
+            }
+        });
+
+        return redirect()->route('request-to-order.index')
+            ->with('success', 'Order created successfully');
+    }
+
+    public function storeManual(HttpRequest $request)
     {
         $validated = $request->validate([
             'notes' => 'nullable|string',
@@ -96,6 +143,8 @@ class RequestToOrderController extends Controller
         return redirect()->route('request-to-order.index')
             ->with('success', 'Order created successfully');
     }
+
+
     private function generateOrderNumber()
     {
         $prefix = 'ORD-';
@@ -163,7 +212,6 @@ class RequestToOrderController extends Controller
         return back()->with('success', 'Request sent for EOD approval');
     }
 
-
     public function reject($id, HttpRequest $request)
     {
         $request->validate(['password' => 'required']);
@@ -181,6 +229,5 @@ class RequestToOrderController extends Controller
         $order->update(['status' => 'rejected']);
         return back()->with('success', 'Request approved');
     }
-
 }
 

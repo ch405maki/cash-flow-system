@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { SquarePen, FileText, Eye } from 'lucide-vue-next';
+import { formatDate, formatCurrency } from '@/lib/utils';
 import {
   Table,
   TableHeader,
@@ -16,12 +17,10 @@ const props = defineProps<{
   vouchers: Array<any>;
   authUser: {
     role: string;
-    [key: string]: any; // Allow for other fields
+    [key: string]: any;
   };
   state?: boolean;  
 }>();
-
-const isActiveState = computed(() => props.state !== false);
 
 // Sort vouchers by date (newest first) and filter based on user role
 const sortedVouchers = computed(() => {
@@ -40,28 +39,6 @@ const getRole = (user: any) => `${user.role} `;
 
 function viewVoucher(id: number) {
   router.get(`/vouchers/${id}/view`);
-}
-
-function goToEditVoucher(id: number, e: Event) {
-  e.stopPropagation(); // Prevent the row click event from firing
-  router.get(`/vouchers/${id}/edit`);
-}
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-PH', {
-    style: 'currency',
-    currency: 'PHP'
-  }).format(amount);
-}
-
-function formatDate(dateString: string): string {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
 }
 
 // Add this helper function to format dates for display
@@ -98,8 +75,7 @@ function formatStatus(status: string): string {
           <TableHead class="px-4 py-2">Payee</TableHead>
           <TableHead class="px-4 py-2">Check Pay to</TableHead>
           <TableHead class="px-4 py-2">Date</TableHead>
-          <TableHead class="px-4 py-2">Status</TableHead>
-          <TableHead class="px-4 py-2 text-right" v-if="isActiveState">Action</TableHead>
+          <TableHead class="px-4 py-2 text-right">Status</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -114,7 +90,7 @@ function formatStatus(status: string): string {
           <TableCell class="px-4 py-2">
             {{ formatDisplayDate(voucher.created_at || voucher.voucher_date) }}
           </TableCell>
-          <TableCell class="px-4 py-2 capitalize">
+          <TableCell class="px-4 py-2 capitalize text-right">
             <span class="inline-block rounded-full px-3 py-0.5 text-xs font-semibold" :class="{
               'bg-yellow-100 text-yellow-800': voucher.status === 'draft',
               'bg-green-100 text-green-800': voucher.status === 'forCheck',
@@ -123,16 +99,6 @@ function formatStatus(status: string): string {
             }">
               {{ voucher.status }}
             </span>
-          </TableCell>
-          <TableCell v-if="authUser.role === 'accounting' && voucher.status !== 'forEOD'"  class="px-4 py-2 space-x-2 text-right">
-            <Button 
-              size="sm" 
-              variant="outline"
-              @click.stop="goToEditVoucher(voucher.id, $event)" 
-            >
-              <SquarePen class="h-4 w-4 mr-1" />
-              <span>Edit</span>
-            </Button>
           </TableCell>
         </TableRow>
       </TableBody>

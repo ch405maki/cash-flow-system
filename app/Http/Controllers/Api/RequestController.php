@@ -26,7 +26,6 @@ use Inertia\Inertia;
 
 class RequestController extends Controller
 {
-
     public function index()
     {
         $user = Auth::user();
@@ -73,7 +72,6 @@ class RequestController extends Controller
             ],
         ]);
     }
-
 
     public function rejected()
     {
@@ -202,7 +200,7 @@ class RequestController extends Controller
 
     protected function generateRequestNumber(): string
     {
-        $prefix = 'REQ-' . now()->format('Ymd') . '-';
+        $prefix = 'REQ-' . now()->format('Ym') . '-';
         $lastRequest = Request::where('request_no', 'like', $prefix . '%')->latest()->first();
         
         $sequence = $lastRequest 
@@ -215,14 +213,6 @@ class RequestController extends Controller
     public function edit(Request $request)
     {
         return Inertia::render('Request/Edit', [
-            'request' => $request->load(['details','user', 'department']),
-            'departments' => Department::all(),
-        ]);
-    }
-
-    public function release(Request $request)
-    {
-        return Inertia::render('Request/Release', [
             'request' => $request->load(['details','user', 'department']),
             'departments' => Department::all(),
         ]);
@@ -296,24 +286,45 @@ class RequestController extends Controller
     {
         $validated = $httpRequest->validate([
             'status' => 'required|in:approved,rejected,propertyCustodian,to_order,released',
-            'password' => 'required_if:status,approved,propertyCustodian,to_order,released'
+            'password' => 'required_if:status,approved,propertyCustodian,to_order,released',
         ]);
 
-        // Verify password f    or all statuses that require it
+        // Password verification for sensitive status changes
         $passwordRequiredStatuses = ['approved', 'propertyCustodian', 'to_order', 'released'];
-        
+
         if (in_array($validated['status'], $passwordRequiredStatuses)) {
             if (!Hash::check($validated['password'], auth()->user()->password)) {
                 return back()->withErrors([
-                    'password' => 'Invalid password'
+                    'password' => 'Invalid password',
                 ]);
             }
         }
 
-        // Update status
-        $request->update(['status' => $validated['status']]);
+        // Determine update data
+        $updateData = ['status' => $validated['status']];
+
+        // Update user_id only if user is NOT a property custodian
+        if (auth()->user()->role !== 'property_custodian') {
+            $updateData['user_id'] = auth()->id();
+        }
+
+        $request->update($updateData);
 
         return back()->with('success', 'Request status updated successfully');
+    }
+
+    public function release(Request $request)
+    {
+        return Inertia::render('Request/Release/Index', [
+            'request' => $request->load([
+                'details' => function ($query) {
+                    $query->where('quantity', '!=', 0);
+                },
+                'user', 
+                'department'
+            ]),
+            'departments' => Department::all(),
+        ]);
     }
 
     public function releaseItems(HttpRequest $httpRequest, Request $request)
@@ -343,11 +354,13 @@ class RequestController extends Controller
                     ->lockForUpdate()
                     ->firstOrFail();
 
-                // Check if requested quantity is available
-                if ($item['quantity'] > $requestDetail->quantity) {
+                // Calculate available quantity (original quantity minus already released)
+                $availableQuantity = $requestDetail->quantity;
+
+                if ($item['quantity'] > $availableQuantity) {
                     throw ValidationException::withMessages([
                         'quantity' => [
-                            "Cannot release {$item['quantity']} items. Only {$requestDetail->quantity} available."
+                            "Cannot release {$item['quantity']} items. Only {$availableQuantity} available."
                         ]
                     ]);
                 }
@@ -359,17 +372,13 @@ class RequestController extends Controller
                     'quantity' => $item['quantity']
                 ]);
 
-                // Subtract the released quantity directly from the main quantity
+                // Update quantities
                 $requestDetail->decrement('quantity', $item['quantity']);
                 $requestDetail->increment('released_quantity', $item['quantity']);
             }
 
-            // Update request status based on remaining quantities
-            $fullyReleased = !RequestDetail::where('request_id', $request->id)
-                ->where('quantity', '>', 0)
-                ->exists();
-
-            $request->update(['status' => $fullyReleased ? 'fully_released' : 'partially_released']);
+            // Update request status
+            $this->updateRequestStatus($request);
 
             DB::commit();
 
@@ -398,5 +407,26 @@ class RequestController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    protected function updateRequestStatus($request)
+    {
+        $hasRemaining = RequestDetail::where('request_id', $request->id)
+            ->where('quantity', '>', 0)
+            ->exists();
+
+        $hasReleased = RequestDetail::where('request_id', $request->id)
+            ->where('released_quantity', '>', 0)
+            ->exists();
+
+        if (!$hasRemaining && $hasReleased) {
+            $status = 'fully_released';
+        } elseif ($hasRemaining && $hasReleased) {
+            $status = 'partially_released';
+        } else {
+            $status = $request->status;
+        }
+
+        $request->update(['status' => $status]);
     }
 }

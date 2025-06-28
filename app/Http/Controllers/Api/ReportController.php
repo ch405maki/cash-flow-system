@@ -10,9 +10,12 @@ use App\Models\Voucher;
 use App\Models\Account;
 use App\Models\Signatory;
 use App\Models\VoucherDetail;
-use Illuminate\Http\Request;
+use App\Models\Department;
 use App\Models\PurchaseOrder;
 use Spatie\Browsershot\Browsershot;
+use App\Models\Request;
+use Illuminate\Http\Request as HttpRequest;
+use Illuminate\Support\Facades\Auth;
 
 class ReportController extends Controller
 {
@@ -23,6 +26,34 @@ class ReportController extends Controller
     public function requestSummary()
     {
         return Inertia::render('Reports/Requests/Index');
+    }
+
+    public function requestReport(HttpRequest $request)
+    {
+        $user = Auth::user();
+
+        // Get the `status` query string (can be a string or array)
+        $status = $request->query('status');
+
+        $requests = Request::with(['department', 'user', 'details'])
+            ->when($status, function ($query, $status) {
+                if (is_array($status)) {
+                    $query->whereIn('status', $status);
+                } else {
+                    $query->where('status', $status);
+                }
+            })
+            ->get();
+
+        return Inertia::render('Request/Index', [
+            'requests' => $requests,
+            'departments' => Department::all(),
+            'authUser' => [
+                'id' => $user->id,
+                'role' => $user->role,
+                'department_id' => $user->department_id,
+            ],
+        ]);
     }
 
     public function poSummary()

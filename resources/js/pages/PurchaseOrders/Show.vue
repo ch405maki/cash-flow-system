@@ -30,7 +30,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from 'vue-toastification'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useForm } from '@inertiajs/vue3'
-import { BellRing, X , AlertCircle  } from 'lucide-vue-next';
+import { BellRing, X , AlertCircle,Ticket ,Printer   } from 'lucide-vue-next';
+import { router } from '@inertiajs/vue3';
 
 const toast = useToast()
 
@@ -141,6 +142,11 @@ const printArea = () =>{
     console.error('Print section not found');
   }
 }
+
+function goToCreate(poId?: number) {
+  const url = poId ? `/vouchers/create?po_id=${poId}` : '/vouchers/create'
+  router.visit(url)
+}
 </script>
 
 <template>
@@ -151,6 +157,14 @@ const printArea = () =>{
       <div class="flex items-center justify-between">
         <h1 class="text-2xl font-bold">Purchase Order: {{ purchaseOrder.po_no }}</h1>
         <div class="space-x-2 flex space-x-2">
+          <Button 
+              v-if="authUser.role === 'accounting'"
+              variant="outline" 
+              size="sm"
+              @click.stop="goToCreate(purchaseOrder.id)"
+            >
+              <Ticket />Create Voucher
+          </Button>
           <!-- Approve Dialog -->
           <div v-if="authUser.role === 'executive_director'" class="space-x-2 flex space-x-2">
             <Dialog v-model:open="showApproveModal">
@@ -309,7 +323,7 @@ const printArea = () =>{
           </div>
 
           <div class="flex items-center space-x-2">
-            <Button size="sm" @click="printArea">Print</Button>
+            <Button size="sm" @click="printArea"><Printer />Print</Button>
             <Button variant="outline" size="sm"  as-child>
               <Link href="/purchase-orders">Back to List</Link>
             </Button>

@@ -11,8 +11,8 @@ import {
 defineProps<{
   statusCounts: {
     pending: number;
-    approval: number;
-    to_order: number;
+    forApproval: number;
+    approved: number;
     rejected: number;
   };
 }>()
@@ -24,7 +24,7 @@ defineProps<{
     <Card class="h-full">
       <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle class="text-sm font-medium">
-          Pending Request
+          Pending
         </CardTitle>
         <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
           <Clock class="h-4 w-4 text-muted-foreground" />
@@ -32,7 +32,9 @@ defineProps<{
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ statusCounts.pending }}</div>
-        <p class="text-xs text-muted-foreground">Waiting to release</p>
+        <p class="text-xs text-muted-foreground">
+          Waiting for department head approval
+        </p>
       </CardContent>
     </Card>
 
@@ -40,15 +42,17 @@ defineProps<{
     <Card class="h-full">
       <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle class="text-sm font-medium">
-          To Order
+          For EOD Approval
         </CardTitle>
         <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
           <ShoppingCart class="h-4 w-4 text-muted-foreground" />
         </div>
       </CardHeader>
       <CardContent>
-        <div class="text-2xl font-bold">{{ statusCounts.to_order }}</div>
-        <p class="text-xs text-muted-foreground">Tagged to order</p>
+        <div class="text-2xl font-bold">{{ statusCounts.forApproval }}</div>
+        <p class="text-xs text-muted-foreground">
+          Pending For EOD Approval
+        </p>
       </CardContent>
     </Card>
 
@@ -56,15 +60,17 @@ defineProps<{
     <Card class="h-full">
       <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle class="text-sm font-medium">
-          Pending Approval
+          Approved
         </CardTitle>
         <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
           <CheckCircle class="h-4 w-4 text-muted-foreground" />
         </div>
       </CardHeader>
       <CardContent>
-        <div class="text-2xl font-bold">{{ statusCounts.approval }}</div>
-        <p class="text-xs text-muted-foreground">Waiting for approval</p>
+        <div class="text-2xl font-bold">{{ statusCounts.approved }}</div>
+        <p class="text-xs text-muted-foreground">
+          Ready for check processing
+        </p>
       </CardContent>
     </Card>
 
@@ -75,12 +81,14 @@ defineProps<{
           Rejected
         </CardTitle>
         <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
-          <XCircle class="h-4 w-4 text-muted-foreground" />
+          <XCircle class="h-4 w-4 text-muted-foreground"/>
         </div>
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ statusCounts.rejected }}</div>
-        <p class="text-xs text-muted-foreground">Not approved</p>
+        <p class="text-xs text-muted-foreground">
+          Not approved for review
+        </p>
       </CardContent>
     </Card>
   </div>

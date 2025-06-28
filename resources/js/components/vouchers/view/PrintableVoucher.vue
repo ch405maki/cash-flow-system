@@ -131,7 +131,7 @@ defineProps({
                     <div class="text-right w-1/6">
                         <div class="my-4"></div>
                         <div v-if="directorAccounting" class="relative inline-block text-sm uppercase">
-                            <img v-if="voucher.status === 'forCheck'" src="" alt="Signature"
+                            <img v-if="voucher.status === 'forCheck'" src="/images/signatures/sample_signature.png" alt="Signature"
                                 class="w-[100px] absolute -top-6 left-1/2 -translate-x-1/2 pointer-events-none" />
                             <div class="border-b border-black px-2 whitespace-nowrap">{{
                                 directorAccounting.full_name.toUpperCase() }}</div>
@@ -157,7 +157,7 @@ defineProps({
                     <div class="text-right w-1/2">
                         <div class="my-4"></div>
                         <div v-if="executiveDirector" class="relative inline-block text-sm uppercase">
-                            <img v-if="voucher.status === 'forCheck'" src="" alt="Signature"
+                            <img v-if="voucher.status === 'forCheck'" src="/images/signatures/oed_signature.png" alt="Signature"
                                 class="w-[100px] absolute -top-6 left-1/2 -translate-x-1/2 pointer-events-none" />
                             <div class="border-b border-black px-2 whitespace-nowrap">{{
                                 executiveDirector.full_name.toUpperCase() }}</div>

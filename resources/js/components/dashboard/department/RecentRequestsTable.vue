@@ -54,9 +54,9 @@ function formatDate(dateStr: string): string {
           </tr>
         </thead>
         <tbody class="[&_tr:last-child]:border-0">
-          <tr v-for="request in recentRequests" :key="request.id" class="border-b transition-colors hover:bg-muted/50">
-            <td class="p-4 align-middle font-medium cursor-pointer hover:underline hover:text-purple-700"  @click="goToShowRequest(request.id)">
-              {{ request.request_no }}
+          <tr v-for="request in recentRequests" :key="request.id" class="hover:underline border-b transition-colors hover:bg-muted/50 cursor-pointer" @click="goToShowRequest(request.id)">
+            <td class="p-4 align-middle font-medium"  >
+              {{ request.request_no }}  
             </td>
             <td class="p-4 align-middle">
               {{ formatDate(request.request_date) }}
@@ -67,7 +67,7 @@ function formatDate(dateStr: string): string {
             <td class="p-4 align-middle">
               {{ request.purpose }}
             </td>
-            <td class="p-4 align-middle">
+            <td class="p-4 align-middle capitalize">
               <span :class="{
                 'text-yellow-500': request.status === 'pending',
                 'text-green-500': request.status === 'approved',

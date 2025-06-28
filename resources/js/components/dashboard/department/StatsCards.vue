@@ -24,80 +24,70 @@ defineProps<{
     <!-- Total Requests Card -->
     <Card class="h-full">
       <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle class="text-sm font-medium">
-          Total Requests
-        </CardTitle>
-        <Users class="h-4 w-4 text-muted-foreground" />
+        <CardTitle class="text-sm font-medium">Total Requests</CardTitle>
+        <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
+          <Users class="h-4 w-4 text-muted-foreground" />
+        </div>
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ statusCounts.total }}</div>
-        <p class="text-xs text-muted-foreground">
-          All department requests
-        </p>
+        <p class="text-xs text-muted-foreground">Department requests</p>
       </CardContent>
     </Card>
 
     <!-- Pending Requests Card -->
     <Card class="h-full">
       <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle class="text-sm font-medium">
-          Pending
-        </CardTitle>
-        <Clock class="h-4 w-4 text-muted-foreground" />
+        <CardTitle class="text-sm font-medium">Pending</CardTitle>
+        <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
+          <Clock class="h-4 w-4 text-muted-foreground" />
+        </div>
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ statusCounts.pending }}</div>
-        <p class="text-xs text-muted-foreground">
-          Waiting approval
-        </p>
+        <p class="text-xs text-muted-foreground">Waiting approval</p>
       </CardContent>
     </Card>
 
     <!-- Approved Requests Card -->
     <Card class="h-full">
       <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle class="text-sm font-medium">
-          Approved
-        </CardTitle>
-        <CheckCircle class="h-4 w-4 text-muted-foreground" />
+        <CardTitle class="text-sm font-medium">Approved</CardTitle>
+        <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
+          <CheckCircle class="h-4 w-4 text-muted-foreground" />
+        </div>
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ statusCounts.approved }}</div>
-        <p class="text-xs text-muted-foreground">
-          Ready for processing
-        </p>
+        <p class="text-xs text-muted-foreground">Ready for processing</p>
       </CardContent>
     </Card>
 
     <!-- To Order Card -->
     <Card class="h-full">
       <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle class="text-sm font-medium">
-          To Order
-        </CardTitle>
-        <ShoppingCart class="h-4 w-4 text-muted-foreground" />
+        <CardTitle class="text-sm font-medium">To Order</CardTitle>
+        <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
+          <ShoppingCart class="h-4 w-4 text-muted-foreground" />
+        </div>
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ statusCounts.to_order }}</div>
-        <p class="text-xs text-muted-foreground">
-          Ready for purchase
-        </p>
+        <p class="text-xs text-muted-foreground">Ready for purchase</p>
       </CardContent>
     </Card>
 
     <!-- Rejected Card -->
     <Card class="h-full">
       <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle class="text-sm font-medium">
-          Rejected
-        </CardTitle>
-        <XCircle class="h-4 w-4 text-muted-foreground" />
+        <CardTitle class="text-sm font-medium">Rejected</CardTitle>
+        <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
+          <XCircle class="h-4 w-4 text-muted-foreground" />
+        </div>
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ statusCounts.rejected }}</div>
-        <p class="text-xs text-muted-foreground">
-          Not approved
-        </p>
+        <p class="text-xs text-muted-foreground">Not approved</p>
       </CardContent>
     </Card>
   </div>
