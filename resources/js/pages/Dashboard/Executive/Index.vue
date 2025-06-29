@@ -6,6 +6,7 @@ import StatsCards from '@/components/dashboard/executive/StatsCards.vue';
 import RecentRequestsTable from '@/components/dashboard/executive/RecentRequestsTable.vue';
 import RecentRequestToOrdersTable from '@/components/dashboard/executive/RecentRequestToOrdersTable.vue';
 import RecentPurchaseOrdersTable from '@/components/dashboard/executive/RecentPurchaseOrdersTable.vue';
+import RecentVoucherTable from '@/components/dashboard/executive/RecentVoucherTable.vue';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const props = defineProps<{
@@ -13,6 +14,7 @@ const props = defineProps<{
   recentRequests: Array<any>;
   recentRequestToOrders: Array<any>;
   recentPurchaseOrders: Array<any>;
+  vouchers: Array<any>;
   statusCounts: {
     totalRequest: number;
     totalPO: number;
@@ -53,14 +55,14 @@ const breadcrumbs: BreadcrumbItem[] = [
 
       <StatsCards :status-counts="statusCounts" />
 
-      <Tabs default-value="requests" class="mt-4 w-full">
+      <Tabs default-value="requestToOrders" class="mt-4 w-full">
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-medium">Recent Data</h2>
           <TabsList class="grid w-full max-w-xl grid-cols-4">
             <TabsTrigger value="requests">Requests</TabsTrigger>
             <TabsTrigger value="requestToOrders">Request to Orders</TabsTrigger>
             <TabsTrigger value="purchaseOrders">Purchase Orders</TabsTrigger>
-            <TabsTrigger >Vouchers</TabsTrigger>
+            <TabsTrigger value="vouchers">Vouchers</TabsTrigger>
           </TabsList>
         </div>
 
@@ -81,6 +83,10 @@ const breadcrumbs: BreadcrumbItem[] = [
           <RecentPurchaseOrdersTable
             :recent-purchase-orders="recentPurchaseOrders"
           />
+        </TabsContent>
+
+        <TabsContent value="vouchers">
+          <RecentVoucherTable :vouchers="vouchers" />
         </TabsContent>
       </Tabs>
     </div>

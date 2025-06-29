@@ -360,6 +360,11 @@ class DashboardController extends Controller
                     }),
                 ];
             });
+
+        // Recent PurchaseOrders
+        $vouchers = Voucher::with(['user', 'details'])
+                        ->whereIn('status', ['forEOD'])
+                        ->get();
         
         // Status Counts
         $statusCounts = [
@@ -397,6 +402,7 @@ class DashboardController extends Controller
             'recentRequests' => $requests,
             'recentRequestToOrders' => $requestToOrders,
             'recentPurchaseOrders' => $purchaseOrders,
+            'vouchers' => $vouchers,
             'statusCounts' => $statusCounts,
             'monthlyMetrics' => $monthlyMetrics,
             'userRole' => $user->role,
