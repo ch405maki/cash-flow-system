@@ -45,7 +45,7 @@ defineProps({
                     </TableCell>
                     <TableCell class="border-r" v-if="voucher.type === 'salary'">{{ detail.hours || 'N/A' }}</TableCell>
                     <TableCell class="border-r" v-if="voucher.type === 'salary'">{{ detail.rate || 'N/A' }}</TableCell>
-                    <TableCell class="text-right border-r">₱{{ formatCurrency(detail.amount) }}</TableCell>
+                    <TableCell class="text-right border-r">{{ formatCurrency(detail.amount) }}</TableCell>
                 </TableRow>
                 <TableRow>
                     <TableCell colspan="5" class="text-right font-bold">

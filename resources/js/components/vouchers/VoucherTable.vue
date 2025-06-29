@@ -80,17 +80,17 @@ function formatStatus(status: string): string {
       </TableHeader>
       <TableBody>
         <TableRow @click="viewVoucher(voucher.id)" v-for="voucher in sortedVouchers" :key="voucher.id" class="border-t hover:bg-muted/50 hover:cursor-pointer" title="View Voucher">
-          <TableCell class="px-4 py-2 font-medium">{{ voucher.voucher_no }}</TableCell>
-          <TableCell class="px-4 py-2 capitalize">{{ voucher.type }}</TableCell>
-          <TableCell class="px-4 py-2 font-mono tabular-nums">
+          <TableCell class="px-4 py-4 font-medium">{{ voucher.voucher_no }}</TableCell>
+          <TableCell class="px-4 py-4 capitalize">{{ voucher.type }}</TableCell>
+          <TableCell class="px-4 py-4 font-mono tabular-nums">
             {{ formatCurrency(voucher.check_amount) }}
           </TableCell>
-          <TableCell class="px-4 py-2">{{ voucher.payee }}</TableCell>
-          <TableCell class="px-4 py-2">{{ voucher.check_payable_to }}</TableCell>
-          <TableCell class="px-4 py-2">
+          <TableCell class="px-4 py-4">{{ voucher.payee }}</TableCell>
+          <TableCell class="px-4 py-4">{{ voucher.check_payable_to }}</TableCell>
+          <TableCell class="px-4 py-4">
             {{ formatDisplayDate(voucher.created_at || voucher.voucher_date) }}
           </TableCell>
-          <TableCell class="px-4 py-2 capitalize text-right">
+          <TableCell class="px-4 py-4 capitalize text-right">
             <span class="inline-block rounded-full px-3 py-0.5 text-xs font-semibold" :class="{
               'bg-yellow-100 text-yellow-800': voucher.status === 'draft',
               'bg-green-100 text-green-800': voucher.status === 'forCheck',
