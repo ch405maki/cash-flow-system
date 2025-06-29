@@ -3,13 +3,15 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { type BreadcrumbItem } from '@/types'
 import { Head, Link } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
-import { toast } from '@/components/ui/toast'
+import { useToast } from 'vue-toastification'
 import axios from 'axios'
 import { ref } from 'vue'
 import RequestInfoTable from '@/components/requests/releasing/RequestInfoTable.vue'
 import RequestStatusBadge from '@/components/requests/releasing/RequestStatusBadge.vue'
 import ItemsTable from '@/components/requests/releasing/ItemsTable.vue'
 import ReleaseControls from '@/components/requests/releasing/ReleaseControls.vue'
+
+const toast = useToast()
 
 const props = defineProps({
   request: {
@@ -48,12 +50,10 @@ const addDetail = () => { /* ... */ }
 const removeDetail = (index: number) => { /* ... */ }
 const releaseItems = async () => {
   if (selectedItems.value.length === 0) {
-    toast({
-      title: 'No items selected',
-      description: 'Please select at least one item to release',
-      variant: 'destructive'
-    });
-    return;
+    toast.warning('Please select at least one item to release', {
+      timeout: 3000
+    })
+    return
   }
 
   // Prepare items to release
@@ -65,11 +65,7 @@ const releaseItems = async () => {
     }));
 
   if (itemsToRelease.some(item => item.quantity <= 0)) {
-    toast({
-      title: 'Invalid quantity',
-      description: 'Release quantity must be greater than 0',
-      variant: 'destructive'
-    });
+    toast.error('Release quantity must be greater than 0');
     return;
   }
 
@@ -93,10 +89,7 @@ const releaseItems = async () => {
       } : detail;
     });
 
-    toast({
-      title: 'Success',
-      description: 'Items released successfully',
-    });
+    toast.success('Items released successfully');
 
     // Clear selection after successful release
     selectedItems.value = [];
@@ -111,11 +104,7 @@ const releaseItems = async () => {
       errorMessage = error.response.data.message;
     }
 
-    toast({
-      title: 'Error',
-      description: errorMessage,
-      variant: 'destructive',
-    });
+    toast.error(errorMessage);
   } finally {
     isReleasing.value = false;
   }

@@ -368,12 +368,11 @@
                     >
                     <TableCell class="border p-2">{{ index + 1 }}</TableCell>
                     <TableCell class="border p-2">
-                        <span v-if="detail.quantity == 0" class="text-green-600">
-                        (Released: {{ detail.released_quantity }})
+                        <span class="text-green-600">
+                        <span class="text-zinc-600">{{ +detail.quantity + +detail.released_quantity }} Request</span>
+                        (Released: {{ detail.released_quantity }})  
                         </span>
-                        <span v-else>
-                        {{ detail.quantity }}
-                        </span>
+
                     </TableCell>
                     <TableCell class="border p-2">{{ detail.unit }}</TableCell>
                     <TableCell class="border p-2">{{ detail.item_description }}</TableCell>
