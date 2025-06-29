@@ -46,7 +46,7 @@ class PurchaseOrderController extends Controller
 
         return Inertia::render('PurchaseOrders/Index', [
             'purchaseOrders' => $purchaseOrders,
-            'filters' => $request->only(['status']), // Pass the current filter back to frontend
+            'filters' => $request->only(['status']),
         ]);
     }
 

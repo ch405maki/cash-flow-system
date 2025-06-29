@@ -81,7 +81,6 @@ function formatStatus(status: string): string {
 const printArea = () => {
     const printContents = document.getElementById('print-section')?.innerHTML;
     const originalContents = document.body.innerHTML;
-
     if (printContents) {
         document.body.innerHTML = printContents;
         window.print();
@@ -111,10 +110,10 @@ const printArea = () => {
                 :format-status="formatStatus"
             />
             
-                <!-- <VoucherDatesTable 
-                    :voucher="voucher"
-                    :format-date="formatDate"
-                /> -->
+            <!-- <VoucherDatesTable 
+                :voucher="voucher"
+                :format-date="formatDate"
+            /> -->
             
             <VoucherAccountDetails 
                 :voucher="voucher"

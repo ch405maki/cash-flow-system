@@ -41,6 +41,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/requests/{request}/status', [RequestController::class, 'updateStatus'])->name('request.updateStatus');
 
     Route::get('/request/rejected', [RequestController::class, 'rejected'])->name('request.rejected');
+    Route::get('/request/released', [RequestController::class, 'released'])->name('request.released');
     Route::get('/request/to-receive', [RequestController::class, 'toReceive'])->name('request.to-receive');
 });
 
