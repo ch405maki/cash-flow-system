@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useToast } from 'vue-toastification';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { formatDate } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -91,7 +92,7 @@ const showConfirmation = () => {
 
 const submitRequest = async () => {
   if (submitting.value) return;
-  
+
   submitting.value = true;
   try {
     const response = await axios.post('/api/requests', form.value);
@@ -111,6 +112,9 @@ const submitRequest = async () => {
     };
     resetNewItem();
     showPreview.value = false;
+    setTimeout(() => {
+      window.location.href = '/request';
+    }, 2000);
   } catch (error) {
     if (axios.isAxiosError(error)) {
       if (error.response?.status === 422) {
@@ -135,13 +139,10 @@ const submitRequest = async () => {
   }
 };
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
+const capitalizeWords = (str: string): string => {
+  return str
+    .toLowerCase()
+    .replace(/\b\w/g, char => char.toUpperCase());
 };
 </script>
 
@@ -176,6 +177,7 @@ const formatDate = (dateString: string) => {
               id="item_description" 
               v-model="newItem.item_description" 
               placeholder="Item description"
+              @input="newItem.item_description = capitalizeWords(newItem.item_description)"
             />
           </div>
 

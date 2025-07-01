@@ -6,13 +6,11 @@ import {
   TableHead,
   TableBody,
   TableCell,
-} from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
-import { defineProps } from 'vue'
-import { router } from '@inertiajs/vue3'
-import { FilePenLine, Eye  } from 'lucide-vue-next';
+} from '@/components/ui/table';
+import { defineProps } from 'vue';
+import { router } from '@inertiajs/vue3';
 import { usePage } from '@inertiajs/vue3';
-import { FileText } from 'lucide-vue-next'
+import { formatDate } from '@/lib/utils';
 
 
 const props = defineProps<{
@@ -27,24 +25,6 @@ const getFullName = (user: any) =>
 function goToShowRequest(requestId: number) {
   router.get(`/request/show/${requestId}`)
 }
-
-function goToCreatePO(requestId: number) {
-  router.get(`/purchase-orders/create/${requestId}`)
-}
-
-function goToEditRequest(requestId: number) {
-  router.get(`/requests/${requestId}/edit`)
-}
-
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit'
-  })
-}
 </script>
 
 <template>
@@ -54,11 +34,9 @@ function formatDate(dateStr: string): string {
         <TableRow>
           <TableHead>Request No</TableHead>
           <TableHead>Date</TableHead>
-          <!-- <TableHead>Purpose</TableHead> -->
           <TableHead>Department</TableHead>
           <TableHead>Requested By</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead class="text-right" v-if="user.role === 'staff'">Actions</TableHead>
+          <TableHead class="text-right">Status</TableHead>
         </TableRow>
       </TableHeader>
 
@@ -75,12 +53,13 @@ function formatDate(dateStr: string): string {
           <!-- <TableCell>{{ request.purpose }}</TableCell> -->
           <TableCell>{{ request.department?.department_name }}</TableCell>
           <TableCell>{{ getFullName(request.user) }}</TableCell>
-          <TableCell>
+          <TableCell class="text-right">
             <span
               class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize"
               :class="{
                 'bg-indigo-100 text-indigo-800': request.status === 'partially_released',
                 'bg-orange-100 text-yellow-600': request.status === 'to_property',
+                'bg-orange-100 text-orange-500': request.status === 'to_order',
                 'bg-yellow-100 text-yellow-800': request.status === 'pending',
                 'bg-green-100 text-green-800': request.status === 'approved',
                 'bg-red-100 text-red-800': request.status === 'rejected',
@@ -88,20 +67,6 @@ function formatDate(dateStr: string): string {
             >
               {{ request.status }}
             </span>
-          </TableCell>
-          <TableCell class="text-right space-x-2 relative" v-if="user.role === 'staff'">
-            <div class="inline-block" style="pointer-events: auto">
-              <Button
-                size="sm"
-                variant="outline"
-                @click.stop="goToEditRequest(request.id)"
-                v-if="user.role === 'staff' && request.status === 'pending'"
-                class="relative z-10"
-              >
-                <FilePenLine class="h-4" />
-                Edit
-              </Button>
-            </div>
           </TableCell>
         </TableRow>
       </TableBody>

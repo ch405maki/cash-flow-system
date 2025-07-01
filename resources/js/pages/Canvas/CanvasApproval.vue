@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
+import { formatDate } from '@/lib/utils'
 import AppLayout from '@/layouts/AppLayout.vue';
 import { UserRoundCheck, Clock, CheckCircle, XCircle } from 'lucide-vue-next';
 import axios from 'axios';
@@ -12,24 +13,50 @@ import {
 } from '@/components/ui/tabs'
 import CanvasShowDialog from '@/components/canvas/CanvasShowDialog.vue'
 import CanvasTable from '@/components/canvas/CanvasTable.vue'
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 
 const props = defineProps<{
   canvases: Array<any>;
   authUserRole: string;
 }>();
 
+// Get initial status from URL
+const getStatusFromUrl = () => {
+  const url = new URL(window.location.href);
+  return url.searchParams.get('status') || 'forEOD';
+};
+
+const currentStatus = ref(getStatusFromUrl());
+const activeTab = ref(currentStatus.value);
+
+// Handle tab changes
+const handleTabChange = (tabValue) => {
+  activeTab.value = tabValue;
+  router.get(route('canvas.approval', { status: tabValue }), {
+    preserveState: true,
+    replace: true
+  });
+};
+
+// Watch for URL changes
+router.on('navigate', () => {
+  const newStatus = getStatusFromUrl();
+  if (newStatus !== currentStatus.value) {
+    currentStatus.value = newStatus;
+    activeTab.value = newStatus;
+  }
+});
 
 /* split once, reuse everywhere */
-const pendingCanvases  = computed(() =>
+const pendingCanvases = computed(() =>
   props.canvases.filter(c => c.status === 'forEOD')
-)
-const approvedCanvases  = computed(() =>
+);
+const approvedCanvases = computed(() =>
   props.canvases.filter(c => c.status === 'approved')
-)
+);
 const poCreatedCanvases = computed(() =>
   props.canvases.filter(c => c.status === 'poCreated')
-)
+);
 
 const statusIcons = {
   pending: Clock,
@@ -91,19 +118,10 @@ const refreshCanvases = () => {
   router.reload({ only: ['canvases'] });
 };
 
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit'
-  })
-}
-
 const breadcrumbs = [
   { title: 'Dashboard', href: '/dashboard' },
   { title: 'Canvas', href: '/' },
-] 
+];
 </script>
 
 <template>
@@ -111,79 +129,65 @@ const breadcrumbs = [
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-4 space-y-4">
-    <Tabs default-value="forEOD" class="w-full">
+      <Tabs :model-value="activeTab" @update:model-value="handleTabChange" class="w-full">
         <div class="flex items-center justify-between pb-2">
-            <h1 class="text-xl font-bold">Canvas</h1>
+          <h1 class="text-xl font-bold">Canvas</h1>
 
-            <!-- Tabs list: only as wide as its content -->
-            <TabsList class="flex gap-2">
-                <TabsTrigger
-                  value="forEOD"
-                  class="px-3 py-1.5 text-sm leading-none"
-                  >
-                  For Approval
-                </TabsTrigger>
-                <TabsTrigger
-                value="approved"
-                class="px-3 py-1.5 text-sm leading-none"
-                >
-                Approved
-                </TabsTrigger>
-                <TabsTrigger
-                value="poCreated"
-                class="px-3 py-1.5 text-sm leading-none"
-                >
-                PO Created
-                </TabsTrigger>
-            </TabsList>
+          <TabsList class="flex gap-2">
+            <TabsTrigger value="forEOD" class="px-3 py-1.5 text-sm leading-none">
+              For Approval
+            </TabsTrigger>
+            <TabsTrigger value="approved" class="px-3 py-1.5 text-sm leading-none">
+              Approved
+            </TabsTrigger>
+            <TabsTrigger value="poCreated" class="px-3 py-1.5 text-sm leading-none">
+              PO Created
+            </TabsTrigger>
+          </TabsList>
         </div>
 
-
-        <!-- Approved Tab -->
         <TabsContent value="forEOD">
-            <TableOrEmpty :items="pendingCanvases" empty-text="No for approval canvases" />
-            <CanvasTable
+          <TableOrEmpty :items="pendingCanvases" empty-text="No for approval canvases" />
+          <CanvasTable
             :canvases="pendingCanvases"
             :status-icons="statusIcons"
             :status-variants="statusVariants"
             @show="showCanvas"
             @download="downloadFile"
-            />
+          />
         </TabsContent>
         
         <TabsContent value="approved">
-            <TableOrEmpty :items="approvedCanvases" empty-text="No approved canvases" />
-            <CanvasTable
+          <TableOrEmpty :items="approvedCanvases" empty-text="No approved canvases" />
+          <CanvasTable
             :canvases="approvedCanvases"
             :status-icons="statusIcons"
             :status-variants="statusVariants"
             @show="showCanvas"
             @download="downloadFile"
-            />
+          />
         </TabsContent>
 
-        <!-- PO Created Tab -->
         <TabsContent value="poCreated">
-            <TableOrEmpty :items="poCreatedCanvases" empty-text="No PO-created canvases" />
-            <CanvasTable
+          <TableOrEmpty :items="poCreatedCanvases" empty-text="No PO-created canvases" />
+          <CanvasTable
             :canvases="poCreatedCanvases"
             :status-icons="statusIcons"
             :status-variants="statusVariants"
             @show="showCanvas"
             @download="downloadFile"
-            />
+          />
         </TabsContent>
-    </Tabs>
+      </Tabs>
     </div>
 
-      <!-- Canvas Show Dialog -->
-      <CanvasShowDialog
-        v-if="selectedCanvas"
-        :canvas="selectedCanvas"
-        :open="showDialog"
-        :user-role="authUserRole"
-        @update:open="val => showDialog = val"
-        @updated="refreshCanvases"
-      />
+    <CanvasShowDialog
+      v-if="selectedCanvas"
+      :canvas="selectedCanvas"
+      :open="showDialog"
+      :user-role="authUserRole"
+      @update:open="val => showDialog = val"
+      @updated="refreshCanvases"
+    />
   </AppLayout>
 </template>

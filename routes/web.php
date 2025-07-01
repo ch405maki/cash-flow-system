@@ -41,6 +41,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/requests/{request}/status', [RequestController::class, 'updateStatus'])->name('request.updateStatus');
 
     Route::get('/request/rejected', [RequestController::class, 'rejected'])->name('request.rejected');
+    Route::get('/request/released', [RequestController::class, 'released'])->name('request.released');
     Route::get('/request/to-receive', [RequestController::class, 'toReceive'])->name('request.to-receive');
 });
 
@@ -50,9 +51,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/request-to-order/create', [RequestToOrderController::class, 'create'])->name('request-to-order.create');
     Route::get('/request-to-order/list', [RequestToOrderController::class, 'list'])->name('request-to-order.list');
     Route::post('/request-to-orders', [RequestToOrderController::class, 'store'])->name('request-to-orders.store');
-    Route::post('/request-to-orders', [RequestToOrderController::class, 'storeManual'])->name('request-to-orders.storeManual');
+    Route::post('/request-to-orders/manual', [RequestToOrderController::class, 'storeManual'])->name('request-to-orders.storeManual');
     Route::get('/request-to-order/{id}', [RequestToOrderController::class, 'show'])->name('request-to-order.show');
-    
     Route::patch('/request-to-order/{id}/approve', [RequestToOrderController::class, 'approve'])->name('request-to-order.approve');
     Route::patch('/request-to-order/{id}/for-eod', [RequestToOrderController::class, 'forEod'])->name('request-to-order.for-eod');
     Route::patch('/request-to-order/{id}/reject', [RequestToOrderController::class, 'reject'])->name('request-to-order.reject');

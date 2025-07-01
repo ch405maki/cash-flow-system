@@ -58,14 +58,14 @@ defineProps({
                 <td>Check No./ Date: {{ formatDate(voucher.check_date) }} </td>
             </tr>
             <tr>
-                <td>Amount: ₱{{ formatCurrency(voucher.check_amount) }}</td>
+                <td>Amount: {{ formatCurrency(voucher.check_amount) }}</td>
             </tr>
         </table>
         <div class="border-b border-black pb-1 mb-1"></div>
         <div class="border-b border-black pb-1 mb-1"></div>
         <div class="flex justify-between">
             <div>Payment for {{ formatDate(voucher.payment_date) }}</div>
-            <div>₱{{ formatCurrency(voucher.check_amount) }}</div>
+            <div>{{ formatCurrency(voucher.check_amount) }}</div>
         </div>
 
         <div class="border-b border-black pb-1 mb-1"></div>
@@ -86,14 +86,14 @@ defineProps({
                         <td class="text-left">
                             {{accounts.find(a => a.id === detail.account_id)?.account_title || 'N/A'}}
                         </td>
-                        <td class="text-right">₱{{ formatCurrency(detail.amount) }}</td>
+                        <td class="text-right">{{ formatCurrency(detail.amount) }}</td>
                     </tr>
                 </tbody>
                 <tfoot>
                     <tr>
                         <td class="text-right"><strong>TOTAL AMOUNT:</strong></td>
                         <td class="text-right border border-black p-1 font-bold">
-                            ₱{{formatCurrency(voucher.details.reduce((sum, detail) => sum +
+                            {{formatCurrency(voucher.details.reduce((sum, detail) => sum +
                                 Number(detail.amount), 0))}}
                         </td>
                     </tr>
@@ -103,7 +103,7 @@ defineProps({
                 <!-- Non-Salary Voucher - General Charges Only -->
                 <tr>
                     <td class="text-left w-[70%]">GENERAL CHARGES</td>
-                    <td class="text-right w-[30%]">₱{{ formatCurrency(voucher.check_amount) }}</td>
+                    <td class="text-right w-[30%]">{{ formatCurrency(voucher.check_amount) }}</td>
                 </tr>
                 <tr v-for="i in 5" :key="i">
                     <td><br></td>
@@ -112,7 +112,7 @@ defineProps({
                 <tr>
                     <td class="text-right"><strong>TOTAL:</strong></td>
                     <td class="text-right border border-black p-1 font-bold">
-                        ₱{{ formatCurrency(voucher.check_amount) }}
+                        {{ formatCurrency(voucher.check_amount) }}
                     </td>
                 </tr>
             </template>
@@ -147,7 +147,7 @@ defineProps({
                 <td class="w-1/2 align-top">
                     I hereby certify to have received from the ARELLANO LAW FOUNDATION the sum of
                     <strong>{{ amountToWords(Number(voucher.check_amount)) }} </strong>
-                    (₱{{ formatCurrency(voucher.check_amount) }}) as payment for the account specified
+                    ({{ formatCurrency(voucher.check_amount) }}) as payment for the account specified
                     above.
                 </td>
             </tr>

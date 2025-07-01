@@ -73,6 +73,26 @@ class RequestController extends Controller
         ]);
     }
 
+    public function released()
+    {
+        $user = Auth::user();
+
+        $requests = Request::with(['department', 'user', 'details'])
+            ->where('status', 'released')
+            ->where('department_id', $user->department_id)
+            ->get();
+
+        return Inertia::render('Request/Released', [
+            'requests' => $requests,
+            'departments' => Department::all(),
+            'authUser' => [
+                'id' => $user->id,
+                'role' => $user->role,
+                'department_id' => $user->department_id,
+            ],
+        ]);
+    }
+
     public function rejected()
     {
         $user = Auth::user();

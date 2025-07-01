@@ -8,6 +8,7 @@ import { SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
 import {
+  SquarePen,
   ListCollapse,
   LayoutDashboard,
   FileText,
@@ -59,6 +60,7 @@ const executiveApprovalItems: NavItem[] = [
     icon: ReceiptText,
   },
 ];
+
 // Purchasing Nav
 const purchasingNavItems: NavItem[] = [
   {
@@ -71,12 +73,34 @@ const purchasingNavItems: NavItem[] = [
     href: '/approved-request',
     icon: FileCheck2,
   },
+];
+const purchasingCanvasNavItems = ref<DropdownNavItem[]>([
   {
     title: 'Canvas',
-    href: '/canvas/approval',
+    href: '#',
     icon: ShoppingCart,
+    isOpen: false,
+    children: [
+      { title: 'Pending', href: '/canvas' },
+      { 
+        title: 'For Approval', 
+        href: '/canvas/approval?status=forEOD',
+      },
+      { 
+        title: 'Approved', 
+        href: '/canvas/approval?status=approved',
+      },
+      { 
+        title: 'P. O. Created', 
+        href: '/canvas/approval?status=poCreated',
+      },
+      { 
+        title: 'Rejected', 
+        href: '/canvas/approval?status=rejected',
+      },
+    ],
   },
-];
+]);
 const purchasingPONavItems = ref<DropdownNavItem[]>([
   {
     title: 'Purchase Order',
@@ -138,6 +162,11 @@ const staffNavItems: NavItem[] = [
     href: '/dashboard',
     icon: LayoutDashboard,
   },
+  {
+    title: 'Create Request',
+    href: '/request/create',
+    icon: SquarePen,
+  },
 ];
 const staffRequestItems = ref<DropdownNavItem[]>([
     {
@@ -148,7 +177,7 @@ const staffRequestItems = ref<DropdownNavItem[]>([
         children: [
         { title: 'Request', href: '/request'},
         { title: 'To Receive', href: '/request/to-receive'},
-        { title: 'Completed', href: '#'},
+        { title: 'Completed', href: '/request/released'},
         { title: 'Rejected', href: '/request/rejected'},
         ],
     },
@@ -244,13 +273,14 @@ const footerNavItems: NavItem[] = [
 
           <div v-if="user?.role === 'purchasing'">
             <NavMain :items="purchasingNavItems" group-label="Navigation"/>
+            <NavMain :items="purchasingCanvasNavItems"/>
             <NavMain :items="purchasingPONavItems"/>
             <NavMain :items="reportItems" group-label="Reports" />
           </div>
 
           <div v-if="user?.role === 'staff' || user?.role === 'department_head'">
             <NavMain :items="staffNavItems" group-label="Navigation"/>
-            <NavMain :items="staffRequestItems" group-label="Requests"/>
+            <NavMain :items="staffRequestItems" group-label="Request"/>
           </div>
 
         </SidebarContent>

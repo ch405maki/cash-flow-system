@@ -3,7 +3,7 @@
     import { Head } from '@inertiajs/vue3'
     import { type BreadcrumbItem } from '@/types'
     import PrintableSection from '@/components/printables/RequestPrint.vue'
-    import { Printer, ListChecks } from 'lucide-vue-next';
+    import { Printer, FilePenLine, FileText } from 'lucide-vue-next';
     import {
     Table,
     TableHeader,
@@ -63,6 +63,10 @@
     function navigateToEdit() {
         router.get(`/requests/${props.request.id}/release`);
     }
+
+    function goToEditRequest(requestId: number) {
+        router.get(`/requests/${requestId}/edit`)
+    } 
 
     // Status update function
     async function submitStatusUpdate(newStatus: string, userPassword: string) {
@@ -297,6 +301,16 @@
                             Reject
                     </Button>
                 </div>
+                <Button
+                    size="sm"
+                    variant="outline"
+                    @click.stop="goToEditRequest(request.id)"
+                    v-if="user.role === 'staff' && request.status === 'pending'"
+                    class="relative z-10"
+                >
+                    <FilePenLine class="h-4" />
+                    Edit
+                </Button>
                 <Button size="sm" @click="printArea"> <Printer />Print List</Button>
             </div>
         </div>
@@ -354,12 +368,11 @@
                     >
                     <TableCell class="border p-2">{{ index + 1 }}</TableCell>
                     <TableCell class="border p-2">
-                        <span v-if="detail.quantity == 0" class="text-green-600">
-                        (Released: {{ detail.released_quantity }})
+                        <span class="text-green-600">
+                        <span class="text-zinc-600">{{ +detail.quantity + +detail.released_quantity }} Request</span>
+                        (Released: {{ detail.released_quantity }})  
                         </span>
-                        <span v-else>
-                        {{ detail.quantity }}
-                        </span>
+
                     </TableCell>
                     <TableCell class="border p-2">{{ detail.unit }}</TableCell>
                     <TableCell class="border p-2">{{ detail.item_description }}</TableCell>
