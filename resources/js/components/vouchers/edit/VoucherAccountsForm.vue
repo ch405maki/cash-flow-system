@@ -20,6 +20,7 @@ import {
 const props = defineProps({
     form: Object,
     accounts: Array,
+    voucher: Array,
     isCashVoucher: Boolean
 });
 
@@ -39,7 +40,7 @@ const filteredAccounts = computed(() => {
     <div class="border rounded-lg p-4 mb-6">
         <div class="flex justify-between items-center mb-4">
             <h3 class="font-medium">Update Accounts</h3>
-            <Button type="button" variant="outline" size="sm" @click="emit('add-detail')">
+            <Button v-if="voucher.status !== 'forCheck'" type="button" variant="outline" size="sm" @click="emit('add-detail')">
                 <Plus class="h-4 w-4 mr-2" />
                 Add Account
             </Button>
@@ -129,7 +130,7 @@ const filteredAccounts = computed(() => {
                 <div class="flex gap-2">
                     <Input :id="`amount-${index}`" type="number" step="0.01" v-model="detail.amount"
                         @change="emit('calculate-total')" required class="flex-1"/>
-                    <Button type="button" variant="destructive" size="icon"
+                    <Button v-if="voucher.status !== 'forCheck'" type="button" variant="destructive" size="icon"
                         @click="emit('remove-detail', index)"
                         :disabled="form.check.length <= 1">
                         <Trash2 class="h-4 w-4" />

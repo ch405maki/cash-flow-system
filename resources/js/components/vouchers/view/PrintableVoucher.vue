@@ -114,7 +114,7 @@ defineProps({
                 <div class="flex">
                     <div class="w-2/3">
                         <div v-if="executiveDirector" class="signature-block">
-                            <img v-if="voucher.status === 'forCheck'"
+                            <img v-if="voucher.status !== 'forEOD' && voucher.status !== 'rejected' && voucher.status !== 'draft'"
                                 src="/images/signatures/oed_signature.png" 
                                 alt="Signature"
                                 class="signature-image" />

@@ -26,25 +26,7 @@ defineProps<{
   </div>
 
   <!-- Right side - Check number input -->
-  <div class="w-full sm:w-80">
-    <div class="grid gap-2" v-if="form.status === 'forCheck'">
-      <Label for="check_no" class="flex items-center gap-1.5">
-        <CreditCard class="h-4 w-4" />
-        <span>Check Number *</span>
-      </Label>
-      <div class="relative">
-        <Input
-          id="check_no"
-          v-model="form.check_no"
-          class="w-full pl-9"
-          placeholder="Enter check number"
-        />
-        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-          <Hash class="h-4 w-4 text-muted-foreground" />
-        </div>
-      </div>
-    </div>
-  </div>
+  
 </div>
 
 
@@ -75,15 +57,30 @@ defineProps<{
         <!-- Column 2 -->
         <div class="space-y-4">
             <div class="grid gap-2">
-                <Label for="check_amount">Check Amount *</Label>
-                <Input id="check_amount" type="number" step="0.01" v-model="form.check_amount" readonly/>
-            </div>
-
-            <div class="grid gap-2">
                 <Label for="voucher_date">Voucher Date *</Label>
                 <Input id="voucher_date" type="date" v-model="form.voucher_date" required />
             </div>
-
+            <div class="grid gap-2">
+                <Label for="check_amount">Check Amount *</Label>
+                <Input id="check_amount" type="number" step="0.01" v-model="form.check_amount" readonly/>
+            </div>
+            <div class="grid gap-2" v-if="form.status === 'forCheck'">
+                <Label for="check_no" class="flex items-center gap-1.5 text-red-600">
+                    <CreditCard class="h-4 w-4" />
+                    <span class="text-red-600">Check Number *</span>
+                </Label>
+                <div class="relative">
+                    <Input
+                        id="check_no"
+                        v-model="form.check_no"
+                        class="w-full pl-9 border-red-300 focus:ring-purple-500 focus:border-purple-300"
+                        placeholder="Enter check number"
+                    />
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <Hash class="h-4 w-4 text-red-400" />
+                    </div>
+                </div>
+            </div>
             <div class="grid gap-2">
                 <Label for="check_date">Check Date *</Label>
                 <Input id="check_date" type="date" v-model="form.check_date" required />
