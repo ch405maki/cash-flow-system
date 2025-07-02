@@ -67,7 +67,6 @@ const emit = defineEmits(['print']);
                     </template>
                 </EodVerificationDialog>
             </template>
-
             <!-- Accounting Actions -->
             <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'forCheck'">
                 <Button
@@ -120,7 +119,7 @@ const emit = defineEmits(['print']);
         </div>
     </div>
     <!-- Allert Remarks -->
-      <Alert 
+    <Alert 
         v-if="showAlert && voucher.remarks" 
         variant="success" 
         class="relative pr-10"

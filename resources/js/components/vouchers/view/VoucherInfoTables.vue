@@ -31,7 +31,10 @@ defineProps({
                 VOUCHER TYPE:
                 <span class="uppercase font-normal">{{ voucher.type }}</span> &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
                 STATUS:
-                <span class="uppercase font-normal">{{ formatStatus(voucher.status) }}</span> &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+                <span class="uppercase font-normal" :class="{ 'text-red-600': voucher.status === 'unreleased' }">
+                {{ formatStatus(voucher.status) }}
+                </span>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+
                 CHECK AMOUNT:
                 <span class="uppercase font-normal">{{ formatCurrency(voucher.check_amount) }}</span>
             </th>

@@ -29,7 +29,7 @@ class VoucherController extends Controller
         $user = Auth::user();
         return Inertia::render('Vouchers/Index', [
             'vouchers' => Voucher::with(['user', 'details'])
-                                ->whereIn('status', ['draft', 'rejected', 'voucherWithCheck'])
+                                ->whereIn('status', ['draft', 'rejected', 'unreleased'])
                                 ->get(),
             'accounts' => Account::all(),
             'authUser' => [
@@ -252,7 +252,7 @@ class VoucherController extends Controller
 
             // ✅ Automatically update status if check number is present
             if (!empty($validated['check_no'])) {
-                $validated['status'] = 'voucherWithCheck';
+                $validated['status'] = 'unreleased';
             }
 
             // Apply updates
