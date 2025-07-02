@@ -33,7 +33,7 @@ defineProps({
                 STATUS:
                 <span class="uppercase font-normal">{{ formatStatus(voucher.status) }}</span> &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
                 CHECK AMOUNT:
-                <span class="uppercase font-normal">₱ {{ formatCurrency(voucher.check_amount) }}</span>
+                <span class="uppercase font-normal">{{ formatCurrency(voucher.check_amount) }}</span>
             </th>
             </tr>
         </thead>

@@ -69,7 +69,7 @@ class VoucherController extends Controller
                 'voucher_no' => 'required|string|unique:vouchers,voucher_no',
                 'issue_date' => 'nullable|date',
                 'payment_date' => 'nullable|date',
-                'check_date' => 'required|date',
+                'check_date' => 'nullable|date',
                 'delivery_date' => 'nullable|date',
                 'voucher_date' => 'required|date',
                 'purpose' => 'required|string|max:500',
@@ -288,6 +288,7 @@ class VoucherController extends Controller
             'accounts' => Account::all(),
             'authUser' => [ 
                 'id' => Auth::user()->id,
+                'name' => Auth::user()->first_name . ' ' . Auth::user()->last_name,
                 'access_id' => Auth::user()->access_id,
                 'role' => Auth::user()->role,
             ],

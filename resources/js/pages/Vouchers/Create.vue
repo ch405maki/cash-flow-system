@@ -204,6 +204,10 @@ async function submitVoucher() {
           <!-- Column 2 -->
           <div class="space-y-4">
             <div class="grid gap-2">
+              <Label for="voucher_date">Voucher Date *</Label>
+              <Input id="voucher_date" type="date" v-model="form.voucher_date" required />
+            </div>
+            <div class="grid gap-2">
               <Label for="check_amount">Check Amount</Label>
               <Input 
                 id="check_amount" 
@@ -214,12 +218,8 @@ async function submitVoucher() {
               />
             </div>
             <div class="grid gap-2">
-              <Label for="voucher_date">Voucher Date *</Label>
-              <Input id="voucher_date" type="date" v-model="form.voucher_date" required />
-            </div>
-            <div class="grid gap-2">
               <Label for="check_date">Check Date</Label>
-              <Input id="check_date" type="date" v-model="form.check_date" required />
+              <Input id="check_date" type="date" v-model="form.check_date" />
             </div>
           </div>
         </div>
@@ -238,7 +238,7 @@ async function submitVoucher() {
             <!-- New Item Form -->
             <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-6 pb-4 border-b">
                 <!-- Account Selection (3 columns) -->
-                <div class="grid gap-2 md:col-span-3">
+                <div class="grid gap-2" :class="isCashVoucher ? 'md:col-span-4' : 'md:col-span-3'">
                 <Label>Account *</Label>
                 <Combobox v-model="newItem.account_id" by="id">
                     <ComboboxAnchor as-child>
@@ -288,7 +288,7 @@ async function submitVoucher() {
                 </div>
 
                 <!-- Charging Tag (2 columns) -->
-                <div class="grid gap-2 md:col-span-2">
+                <div class="grid gap-2" :class="isCashVoucher ? 'md:col-span-3' : 'md:col-span-2'">
                     <Label>Charging Tag</Label>
                     <Select v-model="newItem.charging_tag">
                     <SelectTrigger>
@@ -324,7 +324,7 @@ async function submitVoucher() {
                 </div>
 
                 <!-- Amount (3 columns) -->
-                <div class="grid gap-2 md:col-span-3">
+                <div class="grid gap-2" :class="isCashVoucher ? 'md:col-span-5' : 'md:col-span-3'">
                     <Label>Amount *</Label>
                     <div class="flex gap-2">
                     <Input 
@@ -405,7 +405,7 @@ async function submitVoucher() {
         </div>
 
         <!-- Dates Section -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 hidden">
           <div class="grid gap-2">
             <Label for="issue_date">Issue Date *</Label>
             <Input id="issue_date" type="date" v-model="form.issue_date" />

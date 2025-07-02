@@ -124,6 +124,7 @@ const printArea = () => {
             <PrintableVoucher 
                 id="print-section"
                 :voucher="voucher"
+                :auth-user="authUser"
                 :accounts="accounts"
                 :director-accounting="directorAccounting"
                 :executive-director="executiveDirector"
