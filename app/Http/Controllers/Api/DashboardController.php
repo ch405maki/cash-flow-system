@@ -50,7 +50,6 @@ class DashboardController extends Controller
         $user = Auth::user();
         
         $purchaseOrders = PurchaseOrder::with(['user', 'department', 'details'])
-        ->where('department_id', $user->department_id)
         ->orderBy('date', 'desc')
         ->limit(10)
         ->get()
@@ -104,7 +103,7 @@ class DashboardController extends Controller
         $statusCounts = [
             'pending' => Voucher::where('status', 'pending')->count(),
             'forApproval' => Voucher::where('status', 'forEOD')->count(),
-            'approved' => Voucher::where('status', 'forCheck')->count(),
+            'approved' => Voucher::whereIn('status', ['forCheck', 'unreleased', 'released'])->count(),
             'rejected' => Voucher::where('status', 'rejected')->count(),
         ];
         

@@ -297,6 +297,23 @@ class VoucherController extends Controller
         ]);
     }
 
+    public function viewWithPO($po_id)
+    {
+        $voucher = Voucher::with(['user', 'details.account'])->where('po_id', $po_id)->firstOrFail();
+
+        return Inertia::render('Vouchers/View', [ 
+            'voucher' => $voucher,
+            'accounts' => Account::all(),
+            'authUser' => [ 
+                'id' => Auth::id(),
+                'name' => Auth::user()->first_name . ' ' . Auth::user()->last_name,
+                'access_id' => Auth::user()->access_id,
+                'role' => Auth::user()->role,
+            ],
+            'signatories' => Signatory::all(),
+        ]);
+    }
+
    public function forDirector($id, Request $request)
     {
         $request->validate([
