@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ArrowLeft,SquarePen, Printer, Check, X } from 'lucide-vue-next';
+import { ArrowLeft,SquarePen, Printer, Check, X , BadgeCheck } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
 import EodVerificationDialog from '@/components/vouchers/EodVerificationDialog.vue';
 import DirectorVerificationDialog from '@/components/vouchers/DirectorVerificationDialog.vue';
 import { router } from '@inertiajs/vue3';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { ref } from 'vue'
 
 defineProps({
     voucher: {
@@ -15,6 +17,8 @@ defineProps({
         required: true
     }
 });
+
+const showAlert = ref(true)
 
 function goToEditVoucher(id: number, e: Event) {
   e.stopPropagation();
@@ -63,21 +67,21 @@ const emit = defineEmits(['print']);
                     </template>
                 </EodVerificationDialog>
             </template>
-
             <!-- Accounting Actions -->
             <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'forCheck'">
                 <Button
                     v-if="authUser.role === 'accounting' && voucher.status !== 'forEOD'"
                     variant="default"
-                    @click.stop="goToEditVoucher(voucher.id, $event)" 
+                    @click.stop="goToEditVoucher(voucher.id, $event)"
                     >
                     <SquarePen />
                     <span>Add Check Number</span>
                 </Button>
             </template>
-            <template v-if="authUser.role == 'accounting' && authUser.access_id == '5' && voucher.status !== 'forCheck' && voucher.status !== 'voucherWithCheck'">
+
+            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3'">
                 <Button
-                    v-if="authUser.role === 'accounting' && voucher.status !== 'forEOD'"
+                    v-if="authUser.role === 'accounting' && voucher.status == 'forEOD'"
                     variant="default"
                     @click.stop="goToEditVoucher(voucher.id, $event)" 
                     >
@@ -85,7 +89,8 @@ const emit = defineEmits(['print']);
                     <span>Edit</span>
                 </Button>
             </template>
-            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status !== 'forCheck' && voucher.status !== 'voucherWithCheck'">
+
+            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status !== 'forCheck' && voucher.status !== 'unreleased' && voucher.status !== 'released'">
 
                 <DirectorVerificationDialog :voucher-id="voucher.id" action="forEod">
                     <template #trigger>
@@ -113,6 +118,42 @@ const emit = defineEmits(['print']);
                     </template>
                 </DirectorVerificationDialog>
             </template>
+
+            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'unreleased'">
+
+                <DirectorVerificationDialog :voucher-id="voucher.id" action="released">
+                    <template #trigger>
+                        <Button 
+                            variant="default"
+                            :class="voucher.status === 'released' ? 'opacity-50 cursor-not-allowed' : ''"
+                            :disabled="voucher.status === 'released'"
+                        >
+                            <BadgeCheck class="h-4 w-4 mr-2" />
+                            Tag as released
+                        </Button>
+                    </template>
+                </DirectorVerificationDialog>
+            </template>
         </div>
     </div>
+    <!-- Allert Remarks -->
+    <Alert 
+        v-if="showAlert && voucher.remarks" 
+        variant="success" 
+        class="relative pr-10"
+      >
+        <BellRing class="h-4 w-4" />
+        <AlertTitle>Remarks</AlertTitle>
+        <AlertDescription>
+          {{ voucher.remarks }}
+        </AlertDescription>
+        <!-- Dismiss Button -->
+        <button
+          class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground"
+          @click="showAlert = false"
+          aria-label="Dismiss"
+        >
+          <X class="h-4 w-4 text-purple-700" />
+        </button>
+      </Alert>
 </template>

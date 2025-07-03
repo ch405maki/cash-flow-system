@@ -29,7 +29,7 @@ class VoucherController extends Controller
         $user = Auth::user();
         return Inertia::render('Vouchers/Index', [
             'vouchers' => Voucher::with(['user', 'details'])
-                                ->whereIn('status', ['draft', 'rejected', 'voucherWithCheck'])
+                                ->whereIn('status', ['draft', 'rejected', 'unreleased', 'released'])
                                 ->get(),
             'accounts' => Account::all(),
             'authUser' => [
@@ -69,7 +69,7 @@ class VoucherController extends Controller
                 'voucher_no' => 'required|string|unique:vouchers,voucher_no',
                 'issue_date' => 'nullable|date',
                 'payment_date' => 'nullable|date',
-                'check_date' => 'required|date',
+                'check_date' => 'nullable|date',
                 'delivery_date' => 'nullable|date',
                 'voucher_date' => 'required|date',
                 'purpose' => 'required|string|max:500',
@@ -226,13 +226,14 @@ class VoucherController extends Controller
                     Rule::unique('vouchers', 'voucher_no')->ignore($voucher->id),
                 ],
                 'issue_date' => 'required|date',
-                'payment_date' => 'required|date',
+                'payment_date' => 'nullable|date',
                 'check_date' => 'required|date',
                 'delivery_date' => 'required|date',
                 'voucher_date' => 'required|date',
                 'purpose' => 'required|string|max:500',
                 'payee' => 'required|string|max:255',
                 'check_no' => 'nullable|string|max:500',
+                'remarks' => 'nullable|string|max:500',
                 'check_payable_to' => 'required|string|max:500',
                 'check_amount' => 'required|numeric|min:0',
                 'status' => 'required|in:forEOD,forCheck,rejected,draft',
@@ -251,7 +252,7 @@ class VoucherController extends Controller
 
             // ✅ Automatically update status if check number is present
             if (!empty($validated['check_no'])) {
-                $validated['status'] = 'voucherWithCheck';
+                $validated['status'] = 'unreleased';
             }
 
             // Apply updates
@@ -288,6 +289,7 @@ class VoucherController extends Controller
             'accounts' => Account::all(),
             'authUser' => [ 
                 'id' => Auth::user()->id,
+                'name' => Auth::user()->first_name . ' ' . Auth::user()->last_name,
                 'access_id' => Auth::user()->access_id,
                 'role' => Auth::user()->role,
             ],
@@ -295,11 +297,11 @@ class VoucherController extends Controller
         ]);
     }
 
-    public function forDirector($id, Request $request)
+   public function forDirector($id, Request $request)
     {
         $request->validate([
             'password' => 'required',
-            'action' => 'required|in:forEod,reject'
+            'action' => 'required|in:forEod,reject,released'
         ]);
 
         $user = Auth::user();
@@ -318,10 +320,17 @@ class VoucherController extends Controller
 
         // Determine the action
         $action = $request->input('action');
-        $newStatus = $action === 'forEod' ? 'forEOD' : 'rejected';
-        $message = $action === 'ForEod'
-            ? 'Voucher sent to Executive Director'
-            : 'Voucher rejected successfully';
+        $newStatus = match ($action) {
+            'forEod' => 'forEOD',
+            'released' => 'released',
+            default => 'rejected',
+        };
+
+        $message = match ($action) {
+            'forEod' => 'Voucher sent to Executive Director',
+            'released' => 'Voucher marked as released',
+            default => 'Voucher rejected successfully',
+        };
 
         // Update the voucher
         $voucher->update(['status' => $newStatus]);
@@ -331,6 +340,7 @@ class VoucherController extends Controller
             'voucher' => $voucher->fresh()
         ]);
     }
+
 
     public function forEod($id, Request $request)
     {

@@ -16,18 +16,19 @@ return new class extends Migration
             $table->foreignId('po_id')->nullable()->constrained('purchase_orders');
             $table->string('voucher_no');
             $table->date('voucher_date');
-            $table->date('issue_date');
-            $table->date('payment_date');
+            $table->date('issue_date')->nullable();
+            $table->date('payment_date')->nullable();
             $table->string('type');
             $table->string('payee');
             $table->string('check_no')->nullable();
-            $table->date('check_date');
+            $table->date('check_date')->nullable();
             $table->decimal('check_amount', 12, 2);
             $table->string('check_payable_to');
-            $table->date('delivery_date');
+            $table->date('delivery_date')->nullable();
             $table->text('purpose');
             $table->string('status');
             $table->foreignId('user_id')->constrained('users');
+            $table->text('remarks')->nullable();
             $table->timestamps();
         });
     }
