@@ -239,6 +239,17 @@ class DatabaseSeeder extends Seeder
             'access_id' => Access::where('access_level', 'Approver')->first()->id,
         ],
         [
+            'username' => 'custodianstaff',
+            'first_name' => 'Custodian',
+            'last_name' => 'Staff',
+            'email' => 'custodianstaff@itc.com',
+            'password' => Hash::make('password'),
+            'role' => 'property_custodian',
+            'status' => 'active',
+            'department_id' => Department::where('department_name', 'Supply')->first()->id,
+            'access_id' => Access::where('access_level', 'Write')->first()->id,
+        ],
+        [
             'username' => 'purchasing',
             'first_name' => 'Purchasing',
             'last_name' => 'Officer',
@@ -250,6 +261,17 @@ class DatabaseSeeder extends Seeder
             'access_id' => Access::where('access_level', 'Approver')->first()->id,
         ],
         [
+            'username' => 'purchasingstaff',
+            'first_name' => 'Purchasing',
+            'last_name' => 'Staff',
+            'email' => 'purchasingstaff@itc.com',
+            'password' => Hash::make('password'),
+            'role' => 'purchasing',
+            'status' => 'active',
+            'department_id' => Department::where('department_name', 'Supply')->first()->id,
+            'access_id' => Access::where('access_level', 'Write')->first()->id,
+        ],
+        [
             'username' => 'accounting',
             'first_name' => 'Accounting',
             'last_name' => 'Officer',
@@ -259,6 +281,17 @@ class DatabaseSeeder extends Seeder
             'status' => 'active',
             'department_id' => Department::where('department_name', 'Finance')->first()->id,
             'access_id' => Access::where('access_level', 'Approver')->first()->id,
+        ],
+        [
+            'username' => 'accountingstaff',
+            'first_name' => 'Accounting',
+            'last_name' => 'Staff',
+            'email' => 'accountingstaff@itc.com',
+            'password' => Hash::make('password'),
+            'role' => 'accounting',
+            'status' => 'active',
+            'department_id' => Department::where('department_name', 'Finance')->first()->id,
+            'access_id' => Access::where('access_level', 'Write')->first()->id,
         ],
     ];
 
