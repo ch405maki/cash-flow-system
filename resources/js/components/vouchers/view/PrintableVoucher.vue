@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import FormHeader from '@/components/reports/header/formHeder.vue';
-
+import {formatMonth} from '@/lib/utils';
 defineProps({
     voucher: {
         type: Object,
@@ -43,13 +43,14 @@ defineProps({
 
 <template>
     <!-- hidden print:block -->
-    <div id="printable-voucher" class="hidden print:block mx-auto p-8 print:p-0 max-w-4xl print:max-w-full print:text-[10pt] font-sans">
+    <div id="printable-voucher" class="hidden print:block mx-auto px-8 max-w-4xl print:max-w-full font-sans">
         <!-- Header Section -->
         <div class="text-center mb-8">
             <FormHeader
                 :text="voucher.type.charAt(0).toUpperCase() + voucher.type.slice(1).toLowerCase() + ' Voucher'"
                 :bordered="false"
-                class="text-xl font-bold tracking-wide" />
+                subtextSize="xl"
+                class="text-2xl font-bold tracking-wide" />
         </div>
         
         <!-- Voucher Details -->
@@ -69,7 +70,7 @@ defineProps({
         <!-- Payment Information -->
         <div class="border-t-4 border-b-4 border-double border-black py-2 my-4">
             <div class="flex">
-                <div class="font-medium w-1/2">Payment for {{ formatDate(voucher.payment_date) }}</div>
+                <div class="font-medium w-1/2">Payment for {{ formatMonth(voucher.delivery_date) }}</div>
                 <div class="font-bold text-left ml-[200px]">
                     {{ formatCurrency(voucher.check_amount) }}
                 </div>
@@ -78,12 +79,12 @@ defineProps({
 
         <!-- Approval Section -->
         <div class="my-6">
-            <h3 class="font-bold uppercase text-sm tracking-wider mb-4">Recommending Approval:</h3>
+            <h3 class="font-bold uppercase text-sm tracking-wider py-6">Recommending Approval:</h3>
             
             <div class="grid grid-cols-2 gap-8">
                 <!-- Left Column - Signatures -->
                 <div>
-                    <div class="flex items-start mb-8">
+                    <div class="flex items-start py-6">
                         <div class="w-2/3">
                             <div v-if="directorAccounting" class="signature-block">
                                 <img v-if="voucher.status !== 'draft' || voucher.status !== 'rejected'" 
@@ -98,20 +99,20 @@ defineProps({
                             </div>
                         </div>
                     </div>
-                    <span class="font-bold uppercase">{{ formatStatus(voucher.status) }}:</span>
+                    <span class="font-bold uppercase">{{ ['released', 'unreleased'].includes(voucher.status) ? 'Approved' : formatStatus(voucher.status) }}:</span>
                 </div>
                 
                 <!-- Right Column - Certification -->
-                <div class="pt-8">
-                    <p class="text-justify leading-relaxed">
-                        I hereby certify to have received from the ARELLANO LAW FOUNDATION the sum of
-                        <strong>{{ amountToWords(Number(voucher.check_amount)) }} </strong>
-                        ({{ formatCurrency(voucher.check_amount) }}) as payment for the account specified
-                        above.
+                <div class="py-9">
+                    <p class="text-justify leading-relaxed text-sm indent-8">
+                    I hereby certify to have received from the ARELLANO LAW FOUNDATION the sum of
+                    <strong>{{ amountToWords(Number(voucher.check_amount)) }}</strong>
+                    ({{ formatCurrency(voucher.check_amount) }}) as payment for the account specified
+                    above.
                     </p>
                 </div>
             </div>
-            <div class="flex justify-between items-center">
+            <div class="flex justify-between items-center pt-4">
                 <div class="flex">
                     <div class="w-2/3">
                         <div v-if="executiveDirector" class="signature-block">
@@ -127,7 +128,6 @@ defineProps({
                         </div>
                     </div>
                 </div>
-                
                 <div class="">
                     <div class="signature-line inline-block min-w-[200px]"></div>
                     <div class="text-xs font-bold">Payee Signature</div>
@@ -139,49 +139,30 @@ defineProps({
         <h3 class="border-t-4 border-double border-black py-2 mt-4 font-bold uppercase text-sm tracking-wider text-center my-2 tracking-widest">Account Charged</h3>
         
         <table class="w-full border-collapse mb-6">
-            <template v-if="voucher.type === 'salary'">
-                <!-- Salary Voucher - Detailed Breakdown -->
-                <tbody>
-                    <tr v-for="detail in voucher.details" :key="detail.id" class="border-b border-gray-200">
-                        <td class="text-left py-2 capitalize">
-                            {{accounts.find(a => a.id === detail.account_id)?.account_title || 'N/A'}}
-                        </td>
-                        <td class="text-right py-2">{{ formatCurrency(detail.amount) }}</td>
-                    </tr>
-                </tbody>
-                <br>
-                <tfoot>
-                    <tr>
-                        <td class="text-right py-2 font-bold">TOTAL AMOUNT:</td>
-                        <td class="text-right py-2 font-bold border border-black">
-                            {{ formatCurrency(voucher.check_amount) }}
-                        </td>
-                    </tr>
-                </tfoot>
-            </template>
-            <template v-else>
-                <!-- Non-Salary Voucher - General Charges Only -->
-                <tr v-for="detail in voucher.details" :key="detail.id" class="border-b border-t border-black">
-                    <td class="text-left py-2 w-[70%]">{{accounts.find(a => a.id === detail.account_id)?.account_title || 'N/A'}}</td>
-                    <td class="text-right py-2 w-[30%]">{{ formatCurrency(detail.amount) }}</td>
-                </tr>
-                <tr>
-                    <td class="text-right py-2 font-bold">TOTAL:</td>
-                    <td class="text-right py-2 font-bold border border-black">
-                        {{ formatCurrency(voucher.check_amount) }}
-                    </td>
-                </tr>
-            </template>
+            <!-- Non-Salary Voucher - General Charges Only -->
+            <tr v-for="detail in voucher.details" :key="detail.id" class="border-b border-t border-black">
+                <td class="text-left text-sm py- w-[70%]">{{accounts.find(a => a.id === detail.account_id)?.account_title || 'N/A'}}</td>
+                <td class="text-left text-sm w-[30%]">{{ formatCurrency(detail.amount) }}</td>
+            </tr>
+            <tr>
+                <td class="text-left py- w-[70%]"></td>
+                <td class="text-left text-sm w-[30%]">TOTAL: {{ formatCurrency(voucher.check_amount) }}</td>
+            </tr>
         </table>
+
+        <div class="flex justify-between items-center py-16">
+        <p class="text-left text-sm w-[70%]"></p>
+        <p class="text-left text-sm w-[30%]">{{ formatCurrency(voucher.check_amount) }}</p>
+        </div>
 
         <!-- Prepared/Approved By Section -->
         <table class="w-full border-collapse border border-black mt-16">
             <tr>
                 <td class="border border-black p-2 align-top w-1/2">
-                    <div class="font-bold">PREPARED BY:</div>
+                    <div class="font-medium text-sm">PREPARED BY:</div>
                 </td>
                 <td class="border border-black p-2 align-top w-1/2">
-                    <div class="font-bold">AUDITED BY:</div>
+                    <div class="font-medium text-sm">AUDITED BY:</div>
                 </td>
             </tr>
         </table>
@@ -192,36 +173,32 @@ defineProps({
 </template>
 
 <style scoped>
-.signature-block {
-    @apply relative inline-block text-sm;
-}
-
-.signature-image {
-    @apply w-[100px] absolute -top-6 left-1/2 -translate-x-1/2 pointer-events-none;
-}
-
-.signature-line {
-    @apply border-b border-black px-2 whitespace-nowrap min-w-[150px];
-}
-
-.signature-title {
-    @apply text-xs text-left px-2 mt-1 italic;
-}
-
-@media print {
-    @page {
-        size: A4;
-        margin: 1cm;
+    .signature-block {
+        @apply relative inline-block text-sm;
     }
-    
-    body {
-        background: white;
-        color: black;
+
+    .signature-image {
+        @apply w-[100px] absolute -top-6 left-1/2 -translate-x-1/2 pointer-events-none;
     }
-    
-    #printable-voucher {
-        margin: 0;
-        padding: 0;
+
+    .signature-line {
+        @apply border-t border-black px-2 whitespace-nowrap min-w-[150px];
     }
-}
+
+    .signature-title {
+        @apply text-xs text-left px-2;
+    }
+
+    @media print {
+        
+        body {
+            background: white;
+            color: black;
+        }
+        
+        #printable-voucher {
+            margin: 0;
+            padding: 0;
+        }
+    }
 </style>

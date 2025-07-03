@@ -14,6 +14,14 @@ export function formatDate(dateStr: string): string {
   })
 }
 
+export function formatMonth(dateStr: string): string {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+  })
+}
+
 export const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-PH', {
     style: 'currency',

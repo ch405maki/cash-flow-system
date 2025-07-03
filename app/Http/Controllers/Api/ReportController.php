@@ -25,7 +25,17 @@ class ReportController extends Controller
 
     public function requestSummary()
     {
-        return Inertia::render('Reports/Requests/Index');
+        $requests = Request::with(['department', 'user', 'details'])
+            ->orderBy('request_date', 'desc')
+            ->get();
+
+        $departments = Department::orderBy('department_name')->get(['id', 'department_name as name']);
+
+        return Inertia::render('Reports/Requests/Index', [
+            'requests' => $requests,
+            'departments' => $departments,
+            'statuses' => ['pending', 'approved', 'rejected', 'completed']
+        ]);
     }
 
     public function requestReport(HttpRequest $request)
@@ -59,7 +69,6 @@ class ReportController extends Controller
     public function poSummary()
     {
         $purchaseOrders = PurchaseOrder::with('department')
-            ->where('status', 'approved')
             ->orderBy('date', 'desc')
             ->get(['id', 'po_no', 'date', 'payee', 'amount', 'department_id']);
 
@@ -70,8 +79,7 @@ class ReportController extends Controller
 
     public function voucherSummary()
     {
-        $vouchers = Voucher::where('status', 'forCheck')
-            ->orderBy('voucher_date', 'desc')
+        $vouchers = Voucher::orderBy('voucher_date', 'desc')
             ->get(['id', 'voucher_no', 'voucher_date', 'payee', 'check_amount', 'type']);
 
         return Inertia::render('Reports/Vouchers/Index', [

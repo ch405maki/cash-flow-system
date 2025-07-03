@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Eraser, Printer, Rocket, X   } from 'lucide-vue-next';
 import { router } from '@inertiajs/vue3'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { formatCurrency } from '@/lib/utils';
 import {
   Table,
   TableBody,
@@ -120,7 +121,7 @@ function goToVoucher(id: number) {
         <Rocket class="h-4 w-4 text-green-500" />
         <AlertTitle>Notice</AlertTitle>
         <AlertDescription>
-          This is a collection of approved vouchers ready for check releasing.
+          This is a collection of all Vouchers.
         </AlertDescription>
 
         <!-- Dismiss Button -->
@@ -213,7 +214,7 @@ function goToVoucher(id: number) {
               <TableCell>{{ formatDate(v.voucher_date) }}</TableCell>
               <TableCell>{{ v.type }}</TableCell>
               <TableCell>{{ v.payee }}</TableCell>
-              <TableCell class="text-right">₱{{ Number(v.check_amount || 0).toFixed(2) }}</TableCell>
+              <TableCell class="text-right">{{ formatCurrency(v.check_amount) }}</TableCell>
             </TableRow>
 
             <!-- Total Row -->
@@ -221,7 +222,7 @@ function goToVoucher(id: number) {
               <TableCell colspan="4" class="text-right font-semibold">Total:</TableCell>
               <TableCell class="text-right font-bold text-foreground">
                 <div v-if="totalAmount === 0" class="text-warning">Warning: Total is zero</div>
-                ₱{{ totalAmount.toFixed(2) }}
+                {{ formatCurrency(totalAmount) }}
               </TableCell>
             </TableRow>
           </TableBody>

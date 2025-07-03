@@ -11,7 +11,12 @@ defineProps({
   textSize: {
     type: String,
     default: 'sm', // sm, xs, or custom Tailwind class
-    validator: (value) => ['xs', 'sm', 'base', 'lg', 'xl'].includes(value),
+    validator: (value) => ['xs', 'sm', 'base', 'lg', 'xl', '2xl'].includes(value),
+  },
+  subtextSize: {
+    type: String,
+    default: 'sm', // sm, xs, or custom Tailwind class
+    validator: (value) => ['xs', 'sm', 'base', 'lg', 'xl', '2xl'].includes(value),
   },
   marginBottom: {
     type: String,
@@ -51,7 +56,7 @@ defineProps({
   >
     <p 
       v-if="text" 
-      :class="`font-semibold text-${textSize} underline uppercase text-center tracking-widest`"
+      :class="`font-semibold text-${subtextSize} underline uppercase text-center tracking-widest`"
     >
       {{ text }}
     </p>

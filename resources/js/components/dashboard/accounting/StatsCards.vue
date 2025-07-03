@@ -69,7 +69,7 @@ defineProps<{
       <CardContent>
         <div class="text-2xl font-bold">{{ statusCounts.approved }}</div>
         <p class="text-xs text-muted-foreground">
-          Ready for check processing
+          Ready for check processing or for release
         </p>
       </CardContent>
     </Card>
