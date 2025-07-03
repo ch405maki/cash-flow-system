@@ -25,7 +25,17 @@ class ReportController extends Controller
 
     public function requestSummary()
     {
-        return Inertia::render('Reports/Requests/Index');
+        $requests = Request::with(['department', 'user', 'details'])
+            ->orderBy('request_date', 'desc')
+            ->get();
+
+        $departments = Department::orderBy('department_name')->get(['id', 'department_name as name']);
+
+        return Inertia::render('Reports/Requests/Index', [
+            'requests' => $requests,
+            'departments' => $departments,
+            'statuses' => ['pending', 'approved', 'rejected', 'completed']
+        ]);
     }
 
     public function requestReport(HttpRequest $request)

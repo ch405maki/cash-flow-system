@@ -50,7 +50,6 @@ class DashboardController extends Controller
         $user = Auth::user();
         
         $purchaseOrders = PurchaseOrder::with(['user', 'department', 'details'])
-        ->where('department_id', $user->department_id)
         ->orderBy('date', 'desc')
         ->limit(10)
         ->get()
