@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft,SquarePen, Printer, Check, X } from 'lucide-vue-next';
+import { ArrowLeft,SquarePen, Printer, Check, X , BadgeCheck } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
 import EodVerificationDialog from '@/components/vouchers/EodVerificationDialog.vue';
 import DirectorVerificationDialog from '@/components/vouchers/DirectorVerificationDialog.vue';
@@ -78,6 +78,7 @@ const emit = defineEmits(['print']);
                     <span>Add Check Number</span>
                 </Button>
             </template>
+
             <template v-if="authUser.role == 'accounting' && authUser.access_id == '3'">
                 <Button
                     v-if="authUser.role === 'accounting' && voucher.status == 'forEOD'"
@@ -88,7 +89,8 @@ const emit = defineEmits(['print']);
                     <span>Edit</span>
                 </Button>
             </template>
-            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status !== 'forCheck' && voucher.status !== 'voucherWithCheck'">
+
+            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status !== 'forCheck' && voucher.status !== 'unreleased' && voucher.status !== 'released'">
 
                 <DirectorVerificationDialog :voucher-id="voucher.id" action="forEod">
                     <template #trigger>
@@ -112,6 +114,22 @@ const emit = defineEmits(['print']);
                         >
                             <X class="h-4 w-4 mr-2" />
                             Reject
+                        </Button>
+                    </template>
+                </DirectorVerificationDialog>
+            </template>
+
+            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'unreleased'">
+
+                <DirectorVerificationDialog :voucher-id="voucher.id" action="released">
+                    <template #trigger>
+                        <Button 
+                            variant="default"
+                            :class="voucher.status === 'released' ? 'opacity-50 cursor-not-allowed' : ''"
+                            :disabled="voucher.status === 'released'"
+                        >
+                            <BadgeCheck class="h-4 w-4 mr-2" />
+                            Tag as released
                         </Button>
                     </template>
                 </DirectorVerificationDialog>

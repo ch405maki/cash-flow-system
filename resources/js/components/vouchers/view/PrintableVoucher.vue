@@ -42,6 +42,7 @@ defineProps({
 </script>
 
 <template>
+    <!-- hidden print:block -->
     <div id="printable-voucher" class="hidden print:block mx-auto p-8 print:p-0 max-w-4xl print:max-w-full print:text-[10pt] font-sans">
         <!-- Header Section -->
         <div class="text-center mb-8">
@@ -135,25 +136,20 @@ defineProps({
         </div>
 
         <!-- Account Charged Section -->
-        <h3 class="border-t-4 border-double border-black py-2 my-4 font-bold uppercase text-sm tracking-wider text-center my-2 tracking-widest">Account Charged</h3>
+        <h3 class="border-t-4 border-double border-black py-2 mt-4 font-bold uppercase text-sm tracking-wider text-center my-2 tracking-widest">Account Charged</h3>
         
         <table class="w-full border-collapse mb-6">
             <template v-if="voucher.type === 'salary'">
                 <!-- Salary Voucher - Detailed Breakdown -->
-                <thead>
-                    <tr class="border-b border-black">
-                        <th class="text-left py-2 font-semibold w-[70%]">List of Accounts</th>
-                        <th class="text-right py-2 font-semibold w-[30%]">Amount</th>
-                    </tr>
-                </thead>
                 <tbody>
                     <tr v-for="detail in voucher.details" :key="detail.id" class="border-b border-gray-200">
-                        <td class="text-left py-2">
+                        <td class="text-left py-2 capitalize">
                             {{accounts.find(a => a.id === detail.account_id)?.account_title || 'N/A'}}
                         </td>
                         <td class="text-right py-2">{{ formatCurrency(detail.amount) }}</td>
                     </tr>
                 </tbody>
+                <br>
                 <tfoot>
                     <tr>
                         <td class="text-right py-2 font-bold">TOTAL AMOUNT:</td>

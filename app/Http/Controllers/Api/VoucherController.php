@@ -29,7 +29,7 @@ class VoucherController extends Controller
         $user = Auth::user();
         return Inertia::render('Vouchers/Index', [
             'vouchers' => Voucher::with(['user', 'details'])
-                                ->whereIn('status', ['draft', 'rejected', 'unreleased'])
+                                ->whereIn('status', ['draft', 'rejected', 'unreleased', 'released'])
                                 ->get(),
             'accounts' => Account::all(),
             'authUser' => [
@@ -297,11 +297,11 @@ class VoucherController extends Controller
         ]);
     }
 
-    public function forDirector($id, Request $request)
+   public function forDirector($id, Request $request)
     {
         $request->validate([
             'password' => 'required',
-            'action' => 'required|in:forEod,reject'
+            'action' => 'required|in:forEod,reject,released'
         ]);
 
         $user = Auth::user();
@@ -320,10 +320,17 @@ class VoucherController extends Controller
 
         // Determine the action
         $action = $request->input('action');
-        $newStatus = $action === 'forEod' ? 'forEOD' : 'rejected';
-        $message = $action === 'ForEod'
-            ? 'Voucher sent to Executive Director'
-            : 'Voucher rejected successfully';
+        $newStatus = match ($action) {
+            'forEod' => 'forEOD',
+            'released' => 'released',
+            default => 'rejected',
+        };
+
+        $message = match ($action) {
+            'forEod' => 'Voucher sent to Executive Director',
+            'released' => 'Voucher marked as released',
+            default => 'Voucher rejected successfully',
+        };
 
         // Update the voucher
         $voucher->update(['status' => $newStatus]);
@@ -333,6 +340,7 @@ class VoucherController extends Controller
             'voucher' => $voucher->fresh()
         ]);
     }
+
 
     public function forEod($id, Request $request)
     {
