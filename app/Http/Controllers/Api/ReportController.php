@@ -69,7 +69,6 @@ class ReportController extends Controller
     public function poSummary()
     {
         $purchaseOrders = PurchaseOrder::with('department')
-            ->where('status', 'approved')
             ->orderBy('date', 'desc')
             ->get(['id', 'po_no', 'date', 'payee', 'amount', 'department_id']);
 
@@ -80,8 +79,7 @@ class ReportController extends Controller
 
     public function voucherSummary()
     {
-        $vouchers = Voucher::where('status', 'forCheck')
-            ->orderBy('voucher_date', 'desc')
+        $vouchers = Voucher::orderBy('voucher_date', 'desc')
             ->get(['id', 'voucher_no', 'voucher_date', 'payee', 'check_amount', 'type']);
 
         return Inertia::render('Reports/Vouchers/Index', [

@@ -39,7 +39,8 @@ const props = defineProps<{
     };
     user: {
       id: number;
-      name: string;
+      first_name: string;
+      last_name: string;
     };
     details: Array<{
       id: number;
@@ -52,7 +53,7 @@ const props = defineProps<{
   }>;
   departments: Array<{
     id: number;
-    name: string;
+    department_name: string;    
   }>;
   statuses: string[];
 }>();
@@ -66,41 +67,52 @@ const selectedDepartment = ref<string>('all');
 const searchQuery = ref<string>('');
 
 // Filtered requests
+// Filtered requests
 const filteredRequests = computed(() => {
+  const searchTerm = searchQuery.value?.toLowerCase() || '';
+  
   return props.requests.filter(request => {
-    // Filter by date range
+    // Date range filter (unchanged)
     const reqDate = new Date(request.request_date);
     const start = startDate.value ? new Date(startDate.value) : null;
     const end = endDate.value ? new Date(endDate.value) : null;
+    const dateInRange = (!start || reqDate >= start) && (!end || reqDate <= end);
     
-    const dateInRange = 
-      (!start || reqDate >= start) && 
-      (!end || reqDate <= end);
+    // Status filter (unchanged)
+    const statusMatch = selectedStatus.value === 'all' || request.status === selectedStatus.value;
     
-    // Filter by status
-    const statusMatch = 
-      selectedStatus.value === 'all' || 
-      request.status === selectedStatus.value;
+    // Department filter (with null check)
+    const departmentMatch = selectedDepartment.value === 'all' || 
+                         (request.department && request.department.id.toString() === selectedDepartment.value);
     
-    // Filter by department
-    const departmentMatch = 
-      selectedDepartment.value === 'all' || 
-      request.department.id.toString() === selectedDepartment.value;
-    
-    // Filter by search query
-    const searchMatch = 
-      !searchQuery.value ||
-      request.request_no.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      request.purpose.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      request.user.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      request.details.some(detail => 
-        detail.item_description.toLowerCase().includes(searchQuery.value.toLowerCase())
-      );
+    // Search filter - more explicit version
+    let searchMatch = false;
+    if (!searchTerm) {
+      searchMatch = true;
+    } else {
+      // Check request number
+      if (request.request_no && request.request_no.toLowerCase().includes(searchTerm)) {
+        searchMatch = true;
+      }
+      // Check purpose
+      else if (request.purpose && request.purpose.toLowerCase().includes(searchTerm)) {
+        searchMatch = true;
+      }
+      // Check user name
+      else if (request.user && request.user.name && request.user.name.toLowerCase().includes(searchTerm)) {
+        searchMatch = true;
+      }
+      // Check item descriptions
+      else if (request.details) {
+        searchMatch = request.details.some(detail => 
+          detail.item_description && detail.item_description.toLowerCase().includes(searchTerm)
+        );
+      }
+    }
     
     return dateInRange && statusMatch && departmentMatch && searchMatch;
   });
 });
-
 // Total items calculation based on filtered data
 const totalItems = computed(() =>
   filteredRequests.value.reduce((sum, req) => sum + req.details.length, 0)
@@ -275,8 +287,8 @@ function goToRequest(id: number) {
                   </button>
                 </TableCell>
                 <TableCell>{{ formatDate(request.request_date) }}</TableCell>
-                <TableCell>{{ request.department.name }}</TableCell>
-                <TableCell>{{ request.user.name }}</TableCell>
+                <TableCell>{{ request.department.department_name }}</TableCell>
+                <TableCell>{{ request.user.first_name }} {{ request.user.last_name }}</TableCell>
                 <TableCell>{{ request.purpose }}</TableCell>
                 <TableCell>
                   <span 
