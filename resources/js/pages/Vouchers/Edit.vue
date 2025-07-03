@@ -34,6 +34,7 @@ const form = useForm({
     purpose: voucher.purpose,
     payee: voucher.payee,
     check_no: voucher.check_no,
+    remarks: voucher.remarks,
     check_payable_to: voucher.check_payable_to,
     check_amount: voucher.check_amount,
     status: voucher.status,
@@ -130,7 +131,7 @@ async function updateVoucher() {
 <template>
     <Head :title="`Voucher Details - ${voucher.voucher_no}`" />
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="mx-auto w-full px-4">
+        <div class="mx-auto w-full px-4 pb-10">
             <div>
                 <form @submit.prevent="updateVoucher">
                     <VoucherHeaderForm 
@@ -141,6 +142,7 @@ async function updateVoucher() {
                     
                     <VoucherAccountsForm 
                         :form="form" 
+                        :voucher="voucher" 
                         :accounts="accounts" 
                         :is-cash-voucher="isCashVoucher"
                         @add-detail="addDetailItem"

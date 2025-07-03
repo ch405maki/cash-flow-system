@@ -68,7 +68,7 @@ const props = defineProps({
   action: {
     type: String,
     required: true,
-    validator: (value: string) => ['forEod', 'reject'].includes(value),
+    validator: (value: string) => ['forEod', 'reject', 'released'].includes(value),
   },
 });
 
@@ -81,7 +81,7 @@ const verify = async () => {
     
     await router.patch(`/vouchers/${props.voucherId}/forDirector`, {
       password: password.value,
-      action: props.action, // Send the action to backend
+      action: props.action, 
     }, {
       onSuccess: () => {
         toast.success(`Voucher sent to EOD`);
