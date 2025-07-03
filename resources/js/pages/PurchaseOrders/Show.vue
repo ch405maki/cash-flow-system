@@ -30,7 +30,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from 'vue-toastification'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useForm } from '@inertiajs/vue3'
-import { BellRing, X , AlertCircle,Ticket ,Printer   } from 'lucide-vue-next';
+import { BellRing, X,  Send , AlertCircle,Ticket ,Printer   } from 'lucide-vue-next';
 import { router } from '@inertiajs/vue3';
 
 const toast = useToast()
@@ -217,7 +217,8 @@ function goToCreate(poId?: number) {
             </DialogContent>
           </Dialog>
           </div>
-          <div v-if="authUser.role === 'purchasing' && authUser.access === 3" class="space-x-2 flex space-x-2">
+
+          <div v-if="authUser.role === 'purchasing' && authUser.access === 3 && purchaseOrder.status === 'draft'" class="space-x-2 flex space-x-2">
             <Dialog v-model:open="showForApproveModal">
             <DialogTrigger as-child>
               <Button 
@@ -225,7 +226,7 @@ function goToCreate(poId?: number) {
                 size="sm" 
                 :disabled="purchaseOrder.status === 'forEOD' || purchaseOrder.status === 'approved' || form.processing"
               >
-                Submit
+                <Send /> Submit for EOD
               </Button>
             </DialogTrigger>
             <DialogContent>
