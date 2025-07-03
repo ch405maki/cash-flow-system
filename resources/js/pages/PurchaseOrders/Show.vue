@@ -30,7 +30,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from 'vue-toastification'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useForm } from '@inertiajs/vue3'
-import { BellRing, X,  Send , AlertCircle,Ticket ,Printer   } from 'lucide-vue-next';
+import { BellRing, X, ReceiptText,  Send , AlertCircle,Ticket ,Printer   } from 'lucide-vue-next';
 import { router } from '@inertiajs/vue3';
 
 const toast = useToast()
@@ -146,6 +146,10 @@ const printArea = () =>{
 function goToCreate(poId?: number) {
   const url = poId ? `/vouchers/create?po_id=${poId}` : '/vouchers/create'
   router.visit(url)
+}
+
+function viewVoucher(poId: number) {
+  router.visit(`/vouchers/by-po/${poId}`);
 }
 </script>
 
@@ -327,6 +331,11 @@ function goToCreate(poId?: number) {
             <Button size="sm" @click="printArea"><Printer />Print</Button>
             <Button variant="outline" size="sm"  as-child>
               <Link href="/purchase-orders">Back to List</Link>
+            </Button>
+          </div>
+          <div class="flex items-center space-x-2" v-if="purchaseOrder.status === 'voucherCreated'">
+            <Button size="sm" class="bg-green-600 hover:bg-green-700" @click="viewVoucher(purchaseOrder.id)">
+              <ReceiptText />View Voucher
             </Button>
           </div>
         </div>
