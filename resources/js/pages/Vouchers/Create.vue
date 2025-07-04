@@ -13,6 +13,7 @@ import { useToast } from 'vue-toastification';
 import { Plus, Trash2, Check, ChevronsUpDown, Search } from 'lucide-vue-next';
 import { Combobox, ComboboxAnchor, ComboboxEmpty, ComboboxGroup, ComboboxInput, ComboboxItem, ComboboxItemIndicator, ComboboxList, ComboboxTrigger } from '@/components/ui/combobox';
 import axios from 'axios'
+import { formatCurrency } from '@/lib/utils';
 
 interface VoucherItem {
   amount: number;
@@ -166,7 +167,10 @@ async function submitVoucher() {
         </div>
         <div class=" text-right">
             <h1 class="text-xl font-bold" title="voucher number"># {{ voucher_number }}</h1>
-            <p v-if="purchase_order?.po_no" class="text-sm text-muted-foreground">Purchase Order #: {{ purchase_order?.po_no }}</p>
+            <p v-if="purchase_order?.po_no" class="text-sm text-muted-foreground">
+              Purchase Order #: <span class="font-medium mr-2">{{ purchase_order?.po_no }}</span> 
+              Amount: <span class="font-medium">{{ formatCurrency(purchase_order?.amount) }}</span>
+            </p>
         </div>
       </div>
 

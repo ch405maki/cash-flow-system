@@ -54,24 +54,24 @@ defineProps({
         </div>
         
         <!-- Voucher Details -->
-        <div class="flex justify-between mb-6">
+        <div class="flex justify-between mb-4 text-xs">
             <div class="space-y-1">
-                <p><span class="font-semibold">Payee:</span> {{ voucher.payee }}</p>
-                <p><span class="font-semibold">Check Payable to:</span> {{ voucher.check_payable_to }}</p>
-                <p><span class="font-semibold">Check No./Date:</span> {{ formatDate(voucher.check_date) }}</p>
+                <p><span class="text-xs">Payee:</span> <span class="font-medium uppercase">{{ voucher.payee }}</span></p>
+                <p><span class="text-xs">Check Payable to:</span> {{ voucher.check_payable_to }}</p>
+                <p><span class="text-xs">Check No./Date:</span> {{ formatDate(voucher.check_date) }}</p>
             </div>
-            <div class="space-y-1 text-left">
-                <p><span class="font-semibold">Voucher No:</span> {{ voucher.voucher_no }}</p>
-                <p><span class="font-semibold">Voucher Date:</span> {{ formatDate(voucher.voucher_date) }}</p>
-                <p><span class="font-semibold">Amount:</span> {{ formatCurrency(voucher.check_amount) }}</p>
+            <div class="space-y-1 text-left mr-[60px]">
+                <p><span class="text-xs">Voucher No:</span> {{ voucher.voucher_no }}</p>
+                <p><span class="text-xs">Voucher Date:</span> {{ formatDate(voucher.voucher_date) }}</p>
+                <p><span class="text-xs">Amount:</span> {{ formatCurrency(voucher.check_amount) }}</p>
             </div>
         </div>
 
         <!-- Payment Information -->
-        <div class="border-t-4 border-b-4 border-double border-black py-2 my-4">
-            <div class="flex">
-                <div class="font-medium w-1/2">Payment for {{ formatMonth(voucher.delivery_date) }}</div>
-                <div class="font-bold text-left ml-[200px]">
+        <div class="border-t-4 border-b-4 border-double border-zinc-400 py-2 my-4">
+            <div class="flex text-xs">
+                <div class="font-medium  w-1/2">Payment for {{ formatMonth(voucher.delivery_date) }}</div>
+                <div class="font-medium text-left ml-[200px]">
                     {{ formatCurrency(voucher.check_amount) }}
                 </div>
             </div>
@@ -79,15 +79,14 @@ defineProps({
 
         <!-- Approval Section -->
         <div class="my-6">
-            <h3 class="font-bold uppercase text-sm tracking-wider py-6">Recommending Approval:</h3>
-            
+            <h3 class="font-medium uppercase text-xs tracking-wider py-6">Recommending Approval:</h3>
             <div class="grid grid-cols-2 gap-8">
                 <!-- Left Column - Signatures -->
                 <div>
                     <div class="flex items-start py-6">
                         <div class="w-2/3">
                             <div v-if="directorAccounting" class="signature-block">
-                                <img v-if="voucher.status !== 'draft' || voucher.status !== 'rejected'" 
+                                <img v-if="voucher.status !== 'draft' && voucher.status !== 'rejected'" 
                                     src="/images/signatures/sample_signature.png" 
                                     alt="Signature"
                                     class="signature-image" />
@@ -99,12 +98,12 @@ defineProps({
                             </div>
                         </div>
                     </div>
-                    <span class="font-bold uppercase">{{ ['released', 'unreleased'].includes(voucher.status) ? 'Approved' : formatStatus(voucher.status) }}:</span>
+                    <span class="font-medium uppercase">{{ ['released', 'unreleased'].includes(voucher.status) ? 'Approved' : formatStatus(voucher.status) }}:</span>
                 </div>
                 
                 <!-- Right Column - Certification -->
                 <div class="py-9">
-                    <p class="text-justify leading-relaxed text-sm indent-8">
+                    <p class="text-justify leading-relaxed text-xs indent-8">
                     I hereby certify to have received from the ARELLANO LAW FOUNDATION the sum of
                     <strong>{{ amountToWords(Number(voucher.check_amount)) }}</strong>
                     ({{ formatCurrency(voucher.check_amount) }}) as payment for the account specified
@@ -130,17 +129,17 @@ defineProps({
                 </div>
                 <div class="">
                     <div class="signature-line inline-block min-w-[200px]"></div>
-                    <div class="text-xs font-bold">Payee Signature</div>
+                    <div class="text-xs font-medium">Payee Signature</div>
                 </div>
             </div>
         </div>
 
         <!-- Account Charged Section -->
-        <h3 class="border-t-4 border-double border-black py-2 mt-4 font-bold uppercase text-sm tracking-wider text-center my-2 tracking-widest">Account Charged</h3>
+        <h3 class="border-t-4 border-double border-zinc-400 py-2 mt-4 font-medium uppercase text-sm tracking-wider text-center tracking-widest">Account Charged</h3>
         
         <table class="w-full border-collapse mb-6">
             <!-- Non-Salary Voucher - General Charges Only -->
-            <tr v-for="detail in voucher.details" :key="detail.id" class="border-b border-t border-black">
+            <tr v-for="detail in voucher.details" :key="detail.id" class="border-b border-t border-zinc-400 uppercase">
                 <td class="text-left text-sm py- w-[70%]">{{accounts.find(a => a.id === detail.account_id)?.account_title || 'N/A'}}</td>
                 <td class="text-left text-sm w-[30%]">{{ formatCurrency(detail.amount) }}</td>
             </tr>
@@ -150,23 +149,23 @@ defineProps({
             </tr>
         </table>
 
-        <div class="flex justify-between items-center py-16">
+        <div class="flex justify-between items-center py-16 mb-4">
         <p class="text-left text-sm w-[70%]"></p>
         <p class="text-left text-sm w-[30%]">{{ formatCurrency(voucher.check_amount) }}</p>
         </div>
 
         <!-- Prepared/Approved By Section -->
-        <table class="w-full border-collapse border border-black mt-16">
+        <table class="w-full border-collapse border border-zinc-400 mt-16">
             <tr>
-                <td class="border border-black p-2 align-top w-1/2">
+                <td class="border border-zinc-400 p-2 align-top w-1/2">
                     <div class="font-medium text-sm">PREPARED BY:</div>
                 </td>
-                <td class="border border-black p-2 align-top w-1/2">
+                <td class="border border-zinc-400 p-2 align-top w-1/2">
                     <div class="font-medium text-sm">AUDITED BY:</div>
                 </td>
             </tr>
         </table>
-        <p class="text-sm mt-4">
+        <p class="text-xs mt-4">
             {{ authUser.name }} - {{ new Date().toLocaleDateString() }}
         </p>
     </div>
@@ -182,7 +181,7 @@ defineProps({
     }
 
     .signature-line {
-        @apply border-t border-black px-2 whitespace-nowrap min-w-[150px];
+        @apply border-t text-xs border-black px-2 whitespace-nowrap min-w-[150px];
     }
 
     .signature-title {
