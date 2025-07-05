@@ -84,8 +84,7 @@ const submit = () => {
             </div>
 
             <div class="text-center text-sm text-muted-foreground">
-                Don't have an account?
-                <TextLink :href="route('register')" :tabindex="5">Sign up</TextLink>
+                Don't have an account? please contact <span class="font-medium text-purple-900 items-center"><img src="/images/logo/itc-logo.png" class="inline-block h-4 w-4" alt=""> IT Center </span>.
             </div>
         </form>
     </AuthBase>
