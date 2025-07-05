@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   Building2,
   PencilLine,
+  Logs 
 } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
@@ -269,6 +270,11 @@ const adminNavItems: NavItem[] = [
     title: 'Accounts',
     href: '/configuration/account',
     icon: FileText,
+  },
+  {
+    title: 'Logs',
+    href: '#',
+    icon: Logs ,
   },
 ];
 </script>
