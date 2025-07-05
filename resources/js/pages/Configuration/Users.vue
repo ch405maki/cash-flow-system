@@ -116,9 +116,7 @@
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
       <Head title="Users Management" />
-
-        <ConfigurationLayout>
-            <div class="flex h-full flex-1 flex-col gap-4 rounded-xl">
+            <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
                 <!-- Search and Buttons -->
                 <div class="flex items-center justify-between gap-4">
                 <!-- Search Input -->
@@ -158,10 +156,9 @@
                 </div>
         
                 <!-- Users Table -->
-                <div class="relative min-h-[100vh] flex-1 rounded-lg border">
+                <div class="relative flex-1 rounded-lg border">
                 <UsersTable :users="filteredUsers" />
                 </div>
             </div>
-        </ConfigurationLayout>
     </AppLayout>
 </template>

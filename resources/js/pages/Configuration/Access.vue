@@ -88,8 +88,7 @@ const openEditDialog = (access: Access) => {
 <template>
     <AppLayout>
         <Head title="User Access" />
-        <ConfigurationLayout>
-            <div class="flex h-full flex-1 flex-col gap-4 rounded-xl">
+            <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div class="flex items-center justify-between">
                     <h2 class="text-xl font-semibold">Access Management</h2>
                     <Dialog v-model:open="isDialogOpen">
@@ -196,6 +195,5 @@ const openEditDialog = (access: Access) => {
                     </Table>
                 </div>
             </div>
-        </ConfigurationLayout>
     </AppLayout>
 </template>

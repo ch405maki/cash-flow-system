@@ -109,15 +109,13 @@ const openEditDialog = (signatory: Signatory) => {
 <template>
     <AppLayout>
         <Head title="Signatories" />
-        <ConfigurationLayout>
-            <div class="flex h-full flex-1 flex-col gap-4 rounded-xl">
+            <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div class="flex items-center justify-between">
                     <h2 class="text-xl font-semibold">Signatory Management</h2>
                     <Dialog v-model:open="isDialogOpen">
                         <DialogTrigger as-child>
                             <Button variant="default">
-                                <PlusIcon class="mr-2 h-4 w-4" />
-                                Add New Signatory
+                                <PlusIcon class="mr-2 h-4 w-4" />Add New Signatory
                             </Button>
                         </DialogTrigger>
                         <DialogContent>
@@ -255,6 +253,5 @@ const openEditDialog = (signatory: Signatory) => {
                     </Table>
                 </div>
             </div>
-        </ConfigurationLayout>
     </AppLayout>
 </template>

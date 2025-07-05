@@ -20,6 +20,10 @@ import {
   Settings,
   Package,
   ListTodo,
+  Users, 
+  ShieldCheck,
+  Building2,
+  PencilLine,
 } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
@@ -213,7 +217,6 @@ const accountingCheckNavItems: NavItem[] = [
     icon: ReceiptText,
   },
 ];
-
 const reportItems = ref<DropdownNavItem[]>([
     {
         title: 'Reports',
@@ -235,6 +238,39 @@ const footerNavItems: NavItem[] = [
     icon: Settings,
   },
 ];
+
+const adminNavItems: NavItem[] = [
+  {
+    title: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    title: 'Users',
+    href: '/configuration/users',
+    icon: Users,
+  },
+  {
+    title: 'User Access',
+    href: '/configuration/users-access',
+    icon: ShieldCheck,
+  },
+  {
+    title: 'Departments',
+    href: '/configuration/departments',
+    icon: Building2,
+  },
+  {
+    title: 'Signatory',
+    href: '/configuration/signatory',
+    icon: PencilLine,
+  },
+  {
+    title: 'Accounts',
+    href: '/configuration/account',
+    icon: FileText,
+  },
+];
 </script>
 
 
@@ -253,6 +289,10 @@ const footerNavItems: NavItem[] = [
         </SidebarHeader>
 
         <SidebarContent>
+          <div v-if="user?.role === 'admin'">
+            <NavMain :items="adminNavItems" group-label="Configuration"/>
+          </div>
+
           <div v-if="user?.role === 'executive_director'">
             <NavMain :items="executiveMainItems" group-label="Navigation"/>
             <NavMain :items="executiveApprovalItems" group-label="For Approval"/>
