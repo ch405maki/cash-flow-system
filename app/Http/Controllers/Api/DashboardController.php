@@ -8,6 +8,8 @@ use App\Models\RequestToOrder;
 use App\Models\RequestToOrderDetail;
 use App\Models\PurchaseOrder;
 use App\Models\User;
+use App\Models\Department;
+use App\Models\Access;
 use App\Models\Voucher;
 use App\Models\Canvas;
 use Illuminate\Http\Request as HttpRequest;
@@ -38,6 +40,9 @@ class DashboardController extends Controller
         elseif ($user->role === 'accounting') {
             return $this->accountingDashboard();
         }
+        elseif ($user->role === 'admin') {
+            return $this->adminDashboard();
+        }
         
         // Default dashboard for other roles
         return Inertia::render('Dashboard/Index', [
@@ -45,6 +50,26 @@ class DashboardController extends Controller
         ]);
     }
     
+    protected function adminDashboard()
+    {
+        $user = Auth::user();
+        
+        $userStats = [
+            'totalUsers' => User::count(),
+            'activeUsers' => User::where('status', 'active')->count(),
+            'inactiveUsers' => User::where('status', 'inactive')->count(),
+            'departments' => Department::withCount('users')->get(),
+            'accessLevels' => Access::withCount('users')->get(),
+            'users' => User::with(['department', 'access'])->get(), // Add this line
+        ];
+
+        return Inertia::render('Dashboard/Admin/Index', [
+            'userRole' => $user->role,
+            'username' => $user->username,
+            'userStats' => $userStats,
+        ]);
+    }
+
     protected function accountingDashboard()
     {
         $user = Auth::user();

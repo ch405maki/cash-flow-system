@@ -99,8 +99,7 @@ const openEditDialog = (department: Department) => {
 <template>
     <AppLayout>
         <Head title="Departments" />
-        <ConfigurationLayout>
-            <div class="flex h-full flex-1 flex-col gap-4 rounded-xl">
+            <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div class="flex items-center justify-between">
                     <h2 class="text-xl font-semibold">Department Management</h2>
                     <Dialog v-model:open="isDialogOpen">
@@ -211,6 +210,5 @@ const openEditDialog = (department: Department) => {
                     </Table>
                 </div>
             </div>
-        </ConfigurationLayout>
     </AppLayout>
 </template>
