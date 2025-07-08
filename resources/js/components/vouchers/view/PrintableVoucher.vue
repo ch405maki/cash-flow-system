@@ -87,7 +87,7 @@ defineProps({
                         <div class="w-2/3">
                             <div v-if="directorAccounting" class="signature-block">
                                 <img v-if="voucher.status !== 'draft' && voucher.status !== 'rejected'" 
-                                    src="/images/signatures/sample_signature.png" 
+                                    src="/images/signatures/accounting.png" 
                                     alt="Signature"
                                     class="signature-image" />
                                 <div class="signature-line">{{ directorAccounting.full_name.toUpperCase() }}</div>
