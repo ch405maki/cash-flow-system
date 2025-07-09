@@ -70,7 +70,7 @@ defineProps({
         <!-- Payment Information -->
         <div class="border-t-4 border-b-4 border-double border-zinc-400 py-2 my-4">
             <div class="flex text-xs">
-                <div class="font-medium  w-1/2">Payment for {{ formatMonth(voucher.delivery_date) }}</div>
+                <div class="font-medium  w-1/2">Payment for: {{ voucher?.delivery_date ? formatMonth(voucher.delivery_date) : '' }}</div>
                 <div class="font-medium text-left ml-[200px]">
                     {{ formatCurrency(voucher.check_amount) }}
                 </div>
