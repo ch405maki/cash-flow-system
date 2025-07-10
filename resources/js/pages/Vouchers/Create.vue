@@ -21,6 +21,8 @@ interface VoucherItem {
   hours: number | null;
   rate: number | null;
   account_id: string;
+  editing?: boolean;
+  original?: VoucherItem;
 }
 
 interface Props {
@@ -131,6 +133,13 @@ const calculateItemAmount = () => {
 
 async function submitVoucher() {
   try {
+    // Cancel any active edits before submitting
+    form.items.forEach((item, index) => {
+      if (item.editing) {
+        cancelEdit(index);
+      }
+    });
+
     if (form.items.length === 0 && !isCashVoucher.value) {
       toast.error('Please add at least one item for non-cash vouchers');
       return;
@@ -154,6 +163,54 @@ async function submitVoucher() {
     }
   }
 }
+
+const editItem = (index: number) => {
+  // Exit any other editing modes first
+  form.items.forEach((item, i) => {
+    if (i !== index && item.editing) {
+      cancelEdit(i);
+    }
+  });
+  
+  // Create a deep copy for the original state
+  const originalItem = JSON.parse(JSON.stringify(form.items[index]));
+  
+  // Set editing mode for this item
+  form.items[index] = {
+    ...form.items[index],
+    editing: true,
+    original: originalItem
+  };
+};
+
+const saveEdit = (index: number) => {
+  if (form.items[index].editing) {
+    form.items[index] = {
+      ...form.items[index],
+      editing: false
+    };
+    delete form.items[index].original;
+    calculateTotalAmount();
+    toast.success('Item updated');
+  }
+};
+
+const cancelEdit = (index: number) => {
+  if (form.items[index].original) {
+    form.items[index] = {
+      ...form.items[index].original,
+      editing: false
+    };
+    delete form.items[index].original;
+  }
+};
+const handleKeyDown = (event: KeyboardEvent, index: number) => {
+  if (event.key === 'Enter') {
+    saveEdit(index);
+  } else if (event.key === 'Escape') {
+    cancelEdit(index);
+  }
+};
 </script>
 
 <template>
@@ -361,44 +418,168 @@ async function submitVoucher() {
                   <th v-if="!isCashVoucher" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hours</th>
                   <th v-if="!isCashVoucher" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rate</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  <th v-if="form.items.some(item => item.editing)" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="(item, index) in form.items" :key="index">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ props.accounts?.find(a => a.id === parseInt(item.account_id))?.account_title || 'N/A' }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ item.charging_tag || 'N/A' }}
-                  </td>
-                  <td v-if="!isCashVoucher" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ item.hours?.toFixed(2) || 'N/A' }}
-                  </td>
-                  <td v-if="!isCashVoucher" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ item.rate?.toFixed(2) || 'N/A' }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ item.amount.toFixed(2) }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      @click="removeItem(index)"
-                    >
-                      <Trash2 class="h-4 w-4" />
-                    </Button>
-                  </td>
-                </tr>
-                <tr v-if="form.items.length === 0">
-                  <td :colspan="isCashVoucher ? 4 : 6" class="px-6 py-4 text-center text-sm text-gray-500">
-                    No items added yet
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                <tr 
+                  v-for="(item, index) in form.items" 
+                  :key="index"
+                  @click="!item.editing && editItem(index)"
+                  :class="{
+                    'hover:bg-gray-50 cursor-pointer': true,
+                    'bg-blue-50': item.editing
+                  }"
+                >
+        <!-- Account -->
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          <div v-if="!item.editing">
+            {{ props.accounts?.find(a => a.id === parseInt(item.account_id))?.account_title || 'N/A' }}
           </div>
+          <Combobox v-else v-model="item.account_id" by="id" @click.stop>
+            <ComboboxAnchor as-child>
+              <ComboboxTrigger as-child>
+                <Button variant="outline" class="w-full justify-between h-10">
+                  <span class="truncate">
+                    {{ props.accounts?.find(a => a.id === parseInt(item.account_id))?.account_title || 'Select account' }}
+                  </span>
+                  <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </ComboboxTrigger>
+            </ComboboxAnchor>
+            <ComboboxList class="max-h-[300px] overflow-y-auto shadow-lg rounded-md border">
+              <div class="relative w-full items-center sticky top-0 bg-white z-10">
+                <ComboboxInput
+                  class="pl-9 focus-visible:ring-0 border-0 border-b rounded-none h-10 text-base"
+                  placeholder="Search accounts..." 
+                  v-model="accountSearchQuery"
+                />
+                <span class="absolute start-0 inset-y-0 flex items-center justify-center px-3">
+                  <Search class="size-4 text-muted-foreground" />
+                </span>
+              </div>
+              <ComboboxEmpty v-if="filteredAccounts.length === 0" class="py-4 text-center text-sm text-gray-500">
+                No accounts found.
+              </ComboboxEmpty>
+              <ComboboxGroup>
+                <div class="max-h-[250px] overflow-y-auto">
+                  <ComboboxItem 
+                    v-for="account in filteredAccounts" 
+                    :key="account.id" 
+                    :value="account.id.toString()"
+                    class="h-2flex items-center px-4 text-xs text-sm hover:bg-gray-50 cursor-pointer"
+                  >
+                    {{ account.account_title }}
+                    <ComboboxItemIndicator class="ml-auto">
+                      <Check class="h-4 w-4 text-primary" />
+                    </ComboboxItemIndicator>
+                  </ComboboxItem>
+                </div>
+              </ComboboxGroup>
+            </ComboboxList>
+          </Combobox>
+        </td>
+        
+        <!-- Tag -->
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          <div v-if="!item.editing">{{ item.charging_tag || 'N/A' }}</div>
+          <Select v-else v-model="item.charging_tag" @click.stop>
+            <SelectTrigger>
+              <SelectValue placeholder="Select tag" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="C">C</SelectItem>
+              <SelectItem value="D">D</SelectItem>
+            </SelectContent>
+          </Select>
+        </td>
+        
+        <!-- Hours (hidden for cash) -->
+        <td v-if="!isCashVoucher" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          <div v-if="!item.editing">{{ item.hours?.toFixed(2) || 'N/A' }}</div>
+          <Input 
+            v-else
+            type="number" 
+            step="0.01" 
+            v-model.number="item.hours"
+            @click.stop
+            @change="item.amount = item.hours * item.rate"
+            class="w-full"
+          />
+        </td>
+        
+        <!-- Rate (hidden for cash) -->
+        <td v-if="!isCashVoucher" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          <div v-if="!item.editing">{{ item.rate?.toFixed(2) || 'N/A' }}</div>
+          <Input 
+            v-else
+            type="number" 
+            step="0.01" 
+            v-model.number="item.rate"
+            @click.stop
+            @change="item.amount = item.hours * item.rate"
+            class="w-full"
+          />
+        </td>
+        
+        <!-- Amount -->
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          <div v-if="!item.editing">{{ item.amount.toFixed(2) }}</div>
+          <Input 
+            v-else
+            type="number" 
+            step="0.01" 
+            v-model.number="item.amount"
+            @click.stop
+            class="w-full"
+          />
+        </td>
+        
+        <!-- Actions -->
+        <td v-if="form.items.some(i => i.editing)" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+          <div class="flex justify-end space-x-2">
+            <template v-if="item.editing">
+              <Button
+                variant="outline"
+                size="sm"
+                @click.stop="saveEdit(index)"
+              >
+                Save
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                @click.stop="cancelEdit(index)"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                @click.stop="removeItem(index)"
+              >
+                <Trash2 class="h-4 w-4" />
+              </Button>
+            </template>
+            <Button
+              v-else
+              variant="destructive"
+              size="sm"
+              @click.stop="removeItem(index)"
+            >
+              <Trash2 class="h-4 w-4" />
+            </Button>
+          </div>
+        </td>
+      </tr>
+      <tr v-if="form.items.length === 0">
+        <td :colspan="isCashVoucher ? (form.items.some(i => i.editing) ? 5 : 4) : (form.items.some(i => i.editing) ? 6 : 5)" class="px-6 py-4 text-center text-sm text-gray-500">
+          No items added yet
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
           <!-- Total Amount -->
           <div class="flex justify-start mt-4">

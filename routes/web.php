@@ -21,6 +21,10 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\CanvasController;
 use App\Http\Controllers\Api\DashboardController;
 
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Notifications\AnonymousNotifiable;
+use App\Notifications\WelcomeEmail;
+
 
 Route::get('/', function () {
     return Inertia::render('auth/Login');
@@ -115,6 +119,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/canvas/{canvas}', [CanvasController::class, 'show'])->name('canvas.show');
     Route::get('/canvas/{canvas}/download', [CanvasController::class, 'download'])->name('canvas.download');
     Route::patch('/canvas/{canvas}', [CanvasController::class, 'update'])->name('canvas.update');
+});
+
+Route::get('/send-test-email', function () {
+    // Create an anonymous notifiable user
+    (new AnonymousNotifiable)
+        ->route('mail', 'markmanuel0317@gmail.com')
+        ->notify(new WelcomeEmail());
+
+    return 'Test email sent to markmanuel0317@gmail.com';
 });
 
 require __DIR__.'/settings.php';

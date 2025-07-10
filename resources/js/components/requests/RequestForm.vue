@@ -8,7 +8,7 @@ import { formatDate } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { CirclePlus, Send, ChevronLeft } from 'lucide-vue-next';
+import { CirclePlus, Trash, Send, ChevronLeft } from 'lucide-vue-next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 const toast = useToast();
@@ -25,7 +25,43 @@ interface RequestItem {
   quantity: number;
   unit: string;
   item_description: string;
+  editing?: boolean; // Add this line
+  original?: RequestItem; // To store original values when editing
 }
+
+const editItem = (index: number) => {
+  // Exit any other editing modes first
+  form.value.items.forEach((item, i) => {
+    if (i !== index && item.editing) {
+      cancelEdit(i);
+    }
+  });
+  
+  // Set editing mode for this item
+  form.value.items[index].editing = true;
+  form.value.items[index].original = { ...form.value.items[index] };
+};
+
+const handleKeyDown = (event: KeyboardEvent, index: number) => {
+  if (event.key === 'Enter') {
+    saveEdit(index);
+  } else if (event.key === 'Escape') {
+    cancelEdit(index);
+  }
+};
+
+const saveEdit = (index: number) => {
+  form.value.items[index].editing = false;
+  delete form.value.items[index].original;
+};
+
+const cancelEdit = (index: number) => {
+  if (form.value.items[index].original) {
+    form.value.items[index] = { ...form.value.items[index].original };
+  }
+  form.value.items[index].editing = false;
+  delete form.value.items[index].original;
+};
 
 // Form data
 const form = ref({
@@ -144,6 +180,7 @@ const capitalizeWords = (str: string): string => {
     .toLowerCase()
     .replace(/\b\w/g, char => char.toUpperCase());
 };
+
 </script>
 
 <template>
@@ -250,40 +287,114 @@ const capitalizeWords = (str: string): string => {
                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                   Unit
                 </th>
-                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                <th
+                  v-if="form.items.some(item => item.editing)"
+                  class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase"
+                >
                   Actions
                 </th>
               </tr>
             </thead>
 
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="(item, index) in form.items" :key="index">
-                <td class="px-3 py-2 text-sm text-gray-700 whitespace-normal break-words">
-                  {{ item.item_description }}
-                </td>
-                <td class="px-3 py-2 text-sm text-left text-gray-700">
-                  {{ item.quantity }}
-                </td>
-                <td class="px-3 py-2 text-sm text-gray-700 text-left">
-                  {{ item.unit }}
-                </td>
-                <td class="px-3 py-2 text-sm text-right">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    @click="removeItem(index)"
-                  >
-                    Remove
-                  </Button>
-                </td>
-              </tr>
+            <tr 
+              v-for="(item, index) in form.items" 
+              :key="index"
+              @click="editItem(index)"
+              :class="{
+                'hover:bg-gray-50 cursor-pointer': true,
+                'bg-blue-50': item.editing
+              }"
+            >
+              <!-- Description Column -->
+              <td class="px-3 py-2 text-sm text-gray-700 whitespace-normal break-words">
+                <div v-if="!item.editing">{{ item.item_description }}</div>
+                <Input 
+                  v-else
+                  v-model="item.item_description"
+                  @click.stop
+                  @keydown="handleKeyDown($event, index)"
+                  @input="item.item_description = capitalizeWords(item.item_description)"
+                  class="w-full"
+                />
+              </td>
+              
+              <!-- Quantity Column -->
+              <td class="px-3 py-2 text-sm text-left text-gray-700">
+                <div v-if="!item.editing">{{ item.quantity }}</div>
+                <Input 
+                  v-else
+                  type="number" 
+                  v-model.number="item.quantity" 
+                  min="1"
+                  @click.stop
+                  @keydown="handleKeyDown($event, index)"
+                  class="w-full"
+                />
+              </td>
+              
+              <!-- Unit Column -->
+              <td class="px-3 py-2 text-sm text-gray-700 text-left">
+                <div v-if="!item.editing">
+                  {{ unitOptions.find(u => u.value === item.unit)?.label || item.unit }}
+                </div>
+                <Select 
+                  v-else 
+                  v-model="item.unit" 
+                  @click.stop
+                >
+                  <SelectTrigger class="w-full">
+                    <SelectValue placeholder="Select unit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem 
+                        v-for="unit in unitOptions" 
+                        :key="unit.value" 
+                        :value="unit.value"
+                      >
+                        {{ unit.label }}
+                      </SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </td>
+              
+              <!-- Actions Column -->
+              <td
+                v-if="item.editing"
+                class="px-3 py-2 flex justify-end text-sm text-right space-x-2"
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  @click.stop="saveEdit(index)"
+                >
+                  Save
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  @click.stop="cancelEdit(index)"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  @click.stop="removeItem(index)"
+                >
+                  <Trash class="w-4 h-4" />
+                </Button>
+              </td>
+            </tr>
 
-              <tr v-if="form.items.length === 0">
-                <td colspan="4" class="px-3 py-4 text-center text-sm text-gray-500">
-                  No items added yet
-                </td>
-              </tr>
-            </tbody>
+            <tr v-if="form.items.length === 0">
+              <td colspan="4" class="px-3 py-4 text-center text-sm text-gray-500">
+                No items added yet
+              </td>
+            </tr>
+          </tbody>
           </table>
         </div>
       </div>
@@ -298,84 +409,84 @@ const capitalizeWords = (str: string): string => {
     </form>
 
     <!-- Preview Dialog -->
-  <Dialog v-model:open="showPreview">
-    <DialogContent class="max-h-screen  overflow-y-auto sm:max-w-2xl">
-      <DialogHeader>
-        <DialogTitle>Review Your Request</DialogTitle>
-      </DialogHeader>
-      <div class="space-y-2">
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-          <div>
-            <Label class="text-sm sm:text-base text-muted-foreground">Request Date</Label>
-            <p class="text-sm sm:text-base">{{ formatDate(form.request_date) }}</p>
-          </div>
-          <div>
-            <Label class="text-sm sm:text-base text-muted-foreground">Department</Label>
-            <p class="text-sm sm:text-base">{{ departments.find(d => d.id === form.department_id)?.department_name }}</p>
-          </div>
-        </div>
-
-        <div>
-          <Label class="text-sm sm:text-base text-muted-foreground">Purpose</Label>
-          <p class="text-sm sm:text-base whitespace-pre-line">{{ form.purpose }}</p>
-        </div>
-
+    <Dialog v-model:open="showPreview">
+      <DialogContent class="max-h-screen  overflow-y-auto sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Review Your Request</DialogTitle>
+        </DialogHeader>
         <div class="space-y-2">
-          <Label class="text-sm sm:text-base text-muted-foreground">Items</Label>
-          <div class="border rounded-lg overflow-hidden">
-            <!-- Scrollable container with max height -->
-            <div class="max-h-[60vh] overflow-y-auto">
-              <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                  <thead class="bg-gray-50 sticky top-0 z-10">
-                    <tr>
-                      <th class="px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
-                        Description
-                      </th>
-                      <th class="px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
-                        Quantity
-                      </th>
-                      <th class="px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
-                        Unit
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody class="bg-white divide-y divide-gray-200">
-                    <tr v-for="(item, index) in form.items" :key="index">
-                      <td class="px-4 py-3 whitespace-normal text-xs sm:text-sm text-gray-500">
-                        {{ item.item_description }}
-                      </td>
-                      <td class="px-4 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                        {{ item.quantity }}
-                      </td>
-                      <td class="px-4 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                        {{ unitOptions.find(u => u.value === item.unit)?.label || item.unit }}
-                      </td>
-                    </tr>
-                    <tr v-if="form.items.length === 0">
-                      <td colspan="3" class="px-4 py-4 text-center text-sm text-gray-500">
-                        No items added yet
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+            <div>
+              <Label class="text-sm sm:text-base text-muted-foreground">Request Date</Label>
+              <p class="text-sm sm:text-base">{{ formatDate(form.request_date) }}</p>
+            </div>
+            <div>
+              <Label class="text-sm sm:text-base text-muted-foreground">Department</Label>
+              <p class="text-sm sm:text-base">{{ departments.find(d => d.id === form.department_id)?.department_name }}</p>
+            </div>
+          </div>
+
+          <div>
+            <Label class="text-sm sm:text-base text-muted-foreground">Purpose</Label>
+            <p class="text-sm sm:text-base whitespace-pre-line">{{ form.purpose }}</p>
+          </div>
+
+          <div class="space-y-2">
+            <Label class="text-sm sm:text-base text-muted-foreground">Items</Label>
+            <div class="border rounded-lg overflow-hidden">
+              <!-- Scrollable container with max height -->
+              <div class="max-h-[60vh] overflow-y-auto">
+                <div class="overflow-x-auto">
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0 z-10">
+                      <tr>
+                        <th class="px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
+                          Description
+                        </th>
+                        <th class="px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
+                          Quantity
+                        </th>
+                        <th class="px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
+                          Unit
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                      <tr v-for="(item, index) in form.items" :key="index">
+                        <td class="px-4 py-3 whitespace-normal text-xs sm:text-sm text-gray-500">
+                          {{ item.item_description }}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                          {{ item.quantity }}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                          {{ unitOptions.find(u => u.value === item.unit)?.label || item.unit }}
+                        </td>
+                      </tr>
+                      <tr v-if="form.items.length === 0">
+                        <td colspan="3" class="px-4 py-4 text-center text-sm text-gray-500">
+                          No items added yet
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <DialogFooter class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between sm:gap-0">
-        <Button variant="outline" @click="showPreview = false" class="w-full sm:w-auto">
-          <ChevronLeft class="h-4 w-4 mr-2" />
-          Back to Edit
-        </Button>
-        <Button type="button" @click="submitRequest" :disabled="submitting" class="w-full sm:w-auto">
-          <Send class="h-4 w-4 mr-2" />
-          {{ submitting ? 'Submitting...' : 'Submit Request' }}
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
+        <DialogFooter class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between sm:gap-0">
+          <Button variant="outline" @click="showPreview = false" class="w-full sm:w-auto">
+            <ChevronLeft class="h-4 w-4 mr-2" />
+            Back to Edit
+          </Button>
+          <Button type="button" @click="submitRequest" :disabled="submitting" class="w-full sm:w-auto">
+            <Send class="h-4 w-4 mr-2" />
+            {{ submitting ? 'Submitting...' : 'Submit Request' }}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

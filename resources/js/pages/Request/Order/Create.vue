@@ -14,6 +14,8 @@ interface OrderItem {
   quantity: number
   unit: string
   item_description: string
+  editing?: boolean
+  original?: OrderItem
 }
 
 const breadcrumbs = [
@@ -31,6 +33,44 @@ const form = useForm({
   },
   items: [] as OrderItem[]
 })
+
+const unitOptions = ['pc', 'box', 'kg', 'liter', 'pack'];
+
+// Editing functions
+const editItem = (index: number) => {
+  // Exit any other editing modes first
+  form.items.forEach((item, i) => {
+    if (i !== index && item.editing) {
+      cancelEdit(i)
+    }
+  })
+  
+  // Set editing mode for this item
+  form.items[index].editing = true
+  form.items[index].original = { ...form.items[index] }
+}
+
+const saveEdit = (index: number) => {
+  form.items[index].editing = false
+  delete form.items[index].original
+  toast.success('Item updated')
+}
+
+const cancelEdit = (index: number) => {
+  if (form.items[index].original) {
+    form.items[index] = { ...form.items[index].original }
+  }
+  form.items[index].editing = false
+  delete form.items[index].original
+}
+
+const handleKeyDown = (event: KeyboardEvent, index: number) => {
+  if (event.key === 'Enter') {
+    saveEdit(index)
+  } else if (event.key === 'Escape') {
+    cancelEdit(index)
+  }
+}
 
 const addItem = () => {
   if (!form.newItem.quantity) {
@@ -53,8 +93,6 @@ const addItem = () => {
   toast.success('Item added to order')
 }
 
-const unitOptions = ['pc', 'box', 'kg', 'liter', 'pack'];
-
 const removeItem = (index: number) => {
   form.items.splice(index, 1)
   toast.info('Item removed from order')
@@ -65,6 +103,13 @@ const submitForm = () => {
     toast.error('Please add at least one item')
     return
   }
+
+  // Make sure no items are in edit mode when submitting
+  form.items.forEach((item, index) => {
+    if (item.editing) {
+      cancelEdit(index)
+    }
+  })
 
   form.post(route('request-to-orders.storeManual'), {
     preserveScroll: true,
@@ -114,7 +159,6 @@ const submitForm = () => {
           
           <!-- Input Row -->
           <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-6">
-
             <div class="md:col-span-1">
               <Input
                 v-model.number="form.newItem.quantity"
@@ -167,28 +211,99 @@ const submitForm = () => {
                   <TableHead>Qty</TableHead>
                   <TableHead>Unit</TableHead>
                   <TableHead>Description</TableHead>
-                  <TableHead class="w-[100px]">Actions</TableHead>
+                  <TableHead v-if="form.items.some(item => item.editing)" class="w-[180px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 <TableRow v-if="form.items.length === 0">
-                  <TableCell colspan="6" class="text-center py-8 text-muted-foreground">
+                  <TableCell :colspan="form.items.some(item => item.editing) ? 4 : 3" class="text-center py-8 text-muted-foreground">
                     No items added yet. Add items using the form above.
                   </TableCell>
                 </TableRow>
-                <TableRow v-for="(item, index) in form.items" :key="index">
-                  <TableCell>{{ item.quantity }}</TableCell>
-                  <TableCell>{{ item.unit || '-' }}</TableCell>
-                  <TableCell class="max-w-[200px] truncate">{{ item.item_description }}</TableCell>
+                <TableRow 
+                  v-for="(item, index) in form.items" 
+                  :key="index"
+                  @click="editItem(index)"
+                  :class="{
+                    'hover:bg-gray-50 cursor-pointer': true,
+                    'bg-blue-50': item.editing
+                  }"
+                >
+                  <!-- Quantity -->
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      @click="removeItem(index)"
-                      class="text-red-600 hover:text-red-700"
+                    <div v-if="!item.editing">{{ item.quantity }}</div>
+                    <Input 
+                      v-else
+                      type="number"
+                      v-model.number="item.quantity"
+                      min="1"
+                      @click.stop
+                      @keydown="handleKeyDown($event, index)"
+                      class="w-full"
+                    />
+                  </TableCell>
+                  
+                  <!-- Unit -->
+                  <TableCell>
+                    <div v-if="!item.editing">{{ item.unit || '-' }}</div>
+                    <Select 
+                      v-else
+                      v-model="item.unit"
+                      @click.stop
                     >
-                      Remove
-                    </Button>
+                      <SelectTrigger class="w-full">
+                        <SelectValue placeholder="Select unit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="pc">pc/s</SelectItem>
+                          <SelectItem value="box">box/es</SelectItem>
+                          <SelectItem value="kg">kg/s</SelectItem>
+                          <SelectItem value="pack">pack/s</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  
+                  <!-- Description -->
+                  <TableCell class="max-w-[200px]">
+                    <div v-if="!item.editing" class="truncate">{{ item.item_description }}</div>
+                    <Input 
+                      v-else
+                      v-model="item.item_description"
+                      @click.stop
+                      @keydown="handleKeyDown($event, index)"
+                      class="w-full"
+                    />
+                  </TableCell>
+                  
+                  <!-- Actions - Only shows when any item is being edited -->
+                  <TableCell v-if="form.items.some(i => i.editing)">
+                    <div class="flex space-x-2">
+                      <template v-if="item.editing">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          @click.stop="saveEdit(index)"
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          @click.stop="cancelEdit(index)"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          @click.stop="removeItem(index)"
+                        >
+                          Remove
+                        </Button>
+                      </template>
+                    </div>
                   </TableCell>
                 </TableRow>
               </TableBody>
