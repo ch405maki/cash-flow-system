@@ -381,10 +381,10 @@ const capitalizeWords = (str: string): string => {
                 </Button>
                 <Button
                   variant="destructive"
-                  size="icon"
+                  size="sm"
                   @click.stop="removeItem(index)"
                 >
-                  <Trash class="w-4 h-4" />
+                  <Trash />
                 </Button>
               </td>
             </tr>

@@ -307,7 +307,7 @@ const submitForm = () => {
                   </TableCell>
                 </TableRow>
               </TableBody>
-            </Table>
+            </Table> 
           </div>
         </div>
 
