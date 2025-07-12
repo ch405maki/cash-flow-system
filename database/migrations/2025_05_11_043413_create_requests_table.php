@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('department_id')->constrained('departments');
             $table->foreignId('user_id')->constrained('users');
             $table->string('request_no');
-            $table->date('request_date');
+            $table->dateTime('request_date');
             $table->text('purpose');
             $table->string('status');
             $table->timestamps();

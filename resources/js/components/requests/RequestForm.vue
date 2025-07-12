@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useToast } from 'vue-toastification';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatDateTime } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -65,7 +65,7 @@ const cancelEdit = (index: number) => {
 
 // Form data
 const form = ref({
-  request_date: new Date().toISOString().split('T')[0],
+  request_date: new Date().toISOString(), 
   purpose: '',
   status: 'pending',
   department_id: props.authUser.department_id,
@@ -139,7 +139,7 @@ const submitRequest = async () => {
 
     // Reset form
     form.value = {
-      request_date: new Date().toISOString().split('T')[0],
+      request_date: new Date().toISOString(),
       purpose: '',
       status: 'pending',
       department_id: props.authUser.department_id,
@@ -418,7 +418,7 @@ const capitalizeWords = (str: string): string => {
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
             <div>
               <Label class="text-sm sm:text-base text-muted-foreground">Request Date</Label>
-              <p class="text-sm sm:text-base">{{ formatDate(form.request_date) }}</p>
+              <p class="text-sm sm:text-base">{{ formatDateTime(form.request_date) }}</p>
             </div>
             <div>
               <Label class="text-sm sm:text-base text-muted-foreground">Department</Label>

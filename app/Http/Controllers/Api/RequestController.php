@@ -146,7 +146,6 @@ class RequestController extends Controller
     {
         try {
             $validated = $request->validate([
-                'request_date' => 'required|date',
                 'purpose' => 'required|string|max:500',
                 'status' => 'required|in:pending,approved,rejected',
                 'department_id' => 'required|exists:departments,id',
@@ -159,6 +158,7 @@ class RequestController extends Controller
 
             // Auto-generate request number
             $validated['request_no'] = $this->generateRequestNumber();
+            $validated['request_date'] = now();
 
             // Create the request
             $requestModel = Request::create(collect($validated)->except('items')->toArray());
