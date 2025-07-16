@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('unit');
             $table->text('item_description');
             $table->string('tagging')->nullable();
+            $table->dateTime('released_at')->nullable();
             $table->timestamps();
         });
     }

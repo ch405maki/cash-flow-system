@@ -322,14 +322,14 @@ class RequestController extends Controller
 
         // Determine update data
         $updateData = ['status' => $validated['status']];
+        $validated['director_approved_at'] = now();
 
         // Update user_id only if user is NOT a property custodian
-        if (auth()->user()->role !== 'property_custodian') {
-            $updateData['user_id'] = auth()->id();
-        }
+        // if (auth()->user()->role !== 'property_custodian') {
+        //     $updateData['user_id'] = auth()->id();
+        // }
 
         $request->update($updateData);
-
         return back()->with('success', 'Request status updated successfully');
     }
 
