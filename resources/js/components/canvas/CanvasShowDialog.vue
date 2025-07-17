@@ -26,7 +26,6 @@ const props = defineProps({
   userRole: String,
 });
 
-
 const emit = defineEmits(['update:open', 'updated']);
 
 const isApproved = computed(
