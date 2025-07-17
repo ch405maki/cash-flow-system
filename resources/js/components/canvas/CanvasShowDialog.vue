@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Download, ArrowLeft, Clock, CheckCircle, UserRoundCheck, XCircle, Check, X, Pencil, ChevronRight, FileText } from 'lucide-vue-next';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,7 +9,7 @@ import { useForm } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
-import { formatDate } from '@/lib/utils';
+import { formatDateTime } from '@/lib/utils';
 import { router } from '@inertiajs/vue3';
 
 const toast = useToast();
@@ -175,7 +175,7 @@ function viewRequest(id: number) {
           <span class="truncate max-w-[400px] capitalize">{{ canvas.title || 'Untitled Canvas' }}</span>
         </DialogTitle>
         <DialogDescription v-if="hasLinkedOrder" class="hover:underline hover:cursor-pointer hover:text-violet-800" @click="viewRequest(canvas.request_to_order.id)">
-          Linked to Order # {{ canvas.request_to_order.order_no }} | {{ formatDate(canvas.request_to_order.order_date) }}
+          Linked to Order # {{ canvas.request_to_order.order_no }} | {{ formatDateTime(canvas.request_to_order.order_date) }}
         </DialogDescription>
         <DialogDescription v-else>
           Not linked to any order. 
@@ -198,7 +198,7 @@ function viewRequest(id: number) {
           <div>
             <h3 class="text-sm font-medium text-muted-foreground">Uploaded</h3>
             <p class="mt-1 text-sm">
-              {{ formatDate(canvas.created_at)}}
+              {{ formatDateTime(canvas.created_at)}}
             </p>
           </div>
         </div>
@@ -256,12 +256,9 @@ function viewRequest(id: number) {
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2">
                     <span class="font-medium">{{ approval.user.username }}</span>
-                    <Badge variant="outline" class="text-xs">
-                      {{ approval.role }}
-                    </Badge>
                   </div>
                   <span class="text-xs text-muted-foreground">
-                    {{ formatDate(approval.created_at) }}
+                    {{ formatDateTime(approval.created_at) }}
                   </span>
                 </div>
 
@@ -358,9 +355,9 @@ function viewRequest(id: number) {
       </div>
 
       <!-- Action Buttons -->
-      <div class="sticky bottom-0 bg-background pt-4 border-t">
-        <div class="flex justify-between items-center">
-           <!-- Purchasing Officer Actions -->
+      <DialogFooter class="border-t">
+        <div class="flex justify-between items-center mt-2">
+          <!-- Purchasing Officer Actions -->
           <div v-if="userRole === 'purchasing'">
             <div v-if="canvas.status === 'draft'" class="space-x-2">
               <Button 
@@ -391,15 +388,7 @@ function viewRequest(id: number) {
               :disabled="form.processing || !form.comments.trim()"
             >
               <Check class="h-4 w-4 mr-1" />
-              Approve
-            </Button>
-            <Button 
-              variant="destructive" 
-              @click="handleAction('reject')"
-              :disabled="form.processing || !form.comments.trim() || !form.remarks.trim()"
-            >
-              <X class="h-4 w-4 mr-1" />
-              Reject
+              Submit
             </Button>
           </div>
 
@@ -407,19 +396,12 @@ function viewRequest(id: number) {
           <div v-if="userRole === 'executive_director' && canvas.status === 'pending_approval'" class="space-x-2">
             <Button 
               variant="success" 
+              size="sm"
               @click="handleAction('final_approve')"
               :disabled="form.processing || !form.comments.trim() || !form.selected_file"
             >
               <Check class="h-4 w-4 mr-1" />
-              Final Approve
-            </Button>
-            <Button 
-              variant="destructive" 
-              @click="handleAction('reject')"
-              :disabled="form.processing || !form.comments.trim() || !form.remarks.trim()"
-            >
-              <X class="h-4 w-4 mr-1" />
-              Reject
+              Approve
             </Button>
           </div>
         </div>
@@ -436,17 +418,7 @@ function viewRequest(id: number) {
               Create P.O.
             </Button>
           </div>
-          <!-- Only show download all button for non-approved canvases -->
-          <Button 
-            v-if="!isApproved"
-            @click="downloadFile()"
-            class="gap-2"
-            variant="outline"
-            :disabled="isDownloading"
-          >
-            <Download class="h-4 w-4" />
-            <span>{{ isDownloading ? 'Downloading...' : 'Download All' }}</span>
-          </Button>
+
           <!-- Show download approved file button for approved canvases -->
           <Button 
             v-else-if="approvedFile"
@@ -459,7 +431,7 @@ function viewRequest(id: number) {
             <span>{{ isDownloading ? 'Downloading...' : 'Download Approved File' }}</span>
           </Button>
         </div>
-      </div>
+      </DialogFooter>
     </DialogContent>
   </Dialog>
 </template>
