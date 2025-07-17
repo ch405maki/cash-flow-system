@@ -117,7 +117,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/canvas/approval', [CanvasController::class, 'approval'])->name('canvas.approval');
     Route::get('/canvas/{canvas}', [CanvasController::class, 'show'])->name('canvas.show');
-    Route::get('/canvas/{canvas}/download', [CanvasController::class, 'download'])->name('canvas.download');
+    Route::get('/canvases/{canvas}/download', [CanvasController::class, 'downloadAll'])->name('canvas.download.all');
+    Route::get('/canvases/{canvas}/download/{file}', [CanvasController::class, 'downloadFile'])->name('canvas.download.file');
     Route::patch('/canvas/{canvas}', [CanvasController::class, 'update'])->name('canvas.update');
 });
 

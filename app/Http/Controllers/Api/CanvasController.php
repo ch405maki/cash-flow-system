@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -47,21 +46,45 @@ class CanvasController extends Controller
         ]);
     }
 
-    public function approval()
-    {
-        $user = Auth::user();
+public function approval()
+{
+    $user = Auth::user();
+    $status = request()->query('status', 'pending_approval');
 
-        $canvases = Canvas::with(['creator', 'request_to_order', 'files', 'approvals']) 
-            ->whereIn('status', ['approved', 'pending_approval'])
-            ->where('created_by', $user->id)
-            ->latest()
-            ->get();
+    $query = Canvas::with([
+        'creator', 
+        'request_to_order', 
+        'files',
+        'approvals.user',
+        'selected_files.file'
+    ])->where('created_by', $user->id);
 
-        return Inertia::render('Canvas/CanvasApproval', [
-            'canvases' => $canvases,
-            'authUserRole' => $user->role,
-        ]);
+    // Filter based on status
+    switch ($status) {
+        case 'pending_approval':
+            $query->where('status', 'pending_approval');
+            break;
+        case 'approved':
+            $query->where('status', 'approved');
+            break;
+        case 'poCreated':
+            $query->where('status', 'poCreated');
+            break;
+        case 'rejected':
+            $query->where('status', 'rejected');
+            break;
+        default:
+            $query->whereIn('status', ['pending_approval', 'approved']);
     }
+
+    $canvases = $query->latest()->get();
+
+    return Inertia::render('Canvas/CanvasApproval', [
+        'canvases' => $canvases,
+        'authUserRole' => $user->role,
+        'status' => $status
+    ]);
+}
     
     public function create()
     {
@@ -112,99 +135,87 @@ class CanvasController extends Controller
             ->with('success', 'Canvas submitted with files!');
     }
 
-public function update(Request $request, Canvas $canvas)
-{
-    $user = Auth::user();
-    
-    $validated = $request->validate([
-        'remarks' => 'nullable|string|max:500',
-        'status' => 'required|in:submitted,pending_approval,approved,rejected',
-        'comments' => 'nullable|string|max:1000',
-        'selected_file' => 'nullable|integer|exists:canvas_files,id',
-        'file_remarks' => 'nullable|string|max:500'
-    ]);
-
-    if ($user->role === 'accounting') {
-        // Handle accounting approval/comment
-        $approval = CanvasApproval::updateOrCreate(
-            [
-                'canvas_id' => $canvas->id,
-                'user_id' => $user->id,
-                'role' => 'accounting'
-            ],
-            [
-                'comments' => $validated['comments'] ?? null,
-                'approved' => $validated['status'] === 'pending_approval',
-                'approved_at' => now()
-            ]
-        );
-
-        $canvas->update([
-            'status' => 'pending_approval',
-            'remarks' => $validated['remarks'] ?? null
+    public function update(Request $request, Canvas $canvas)
+    {
+        $user = Auth::user();
+        
+        $validated = $request->validate([
+            'remarks' => 'nullable|string|max:500',
+            'status' => 'required|in:submitted,pending_approval,approved,rejected',
+            'comments' => 'nullable|string|max:1000',
+            'selected_file' => 'nullable|integer|exists:canvas_files,id',
+            'file_remarks' => 'nullable|string|max:500'
         ]);
-    } 
-    elseif ($user->role === 'executive_director') {
-        DB::transaction(function () use ($canvas, $validated, $user) {
-            $approval = CanvasApproval::create([
-                'canvas_id' => $canvas->id,
-                'user_id' => $user->id,
-                'role' => 'executive_director',
-                'comments' => $validated['comments'] ?? null,
-                'approved' => $validated['status'] === 'approved',
-                'approved_at' => now()
-            ]);
 
-            // Save the selected file if provided
-            if (isset($validated['selected_file'])) {
-                CanvasSelectedFile::create([
+        if ($user->role === 'accounting') {
+            // Handle accounting approval/comment
+            $approval = CanvasApproval::updateOrCreate(
+                [
                     'canvas_id' => $canvas->id,
-                    'canvas_file_id' => $validated['selected_file'],
-                    'approval_id' => $approval->id,
-                    'remarks' => $validated['file_remarks'] ?? null
-                ]);
-            }
+                    'user_id' => $user->id,
+                    'role' => 'accounting'
+                ],
+                [
+                    'comments' => $validated['comments'] ?? null,
+                    'approved' => $validated['status'] === 'pending_approval',
+                    'approved_at' => now()
+                ]
+            );
 
             $canvas->update([
-                'status' => 'approved',
+                'status' => 'pending_approval',
                 'remarks' => $validated['remarks'] ?? null
             ]);
-        });
-    } 
-    else {
-        // Regular updates
-        $canvas->update($validated);
-    }
+        } 
+        elseif ($user->role === 'executive_director') {
+            DB::transaction(function () use ($canvas, $validated, $user) {
+                $approval = CanvasApproval::create([
+                    'canvas_id' => $canvas->id,
+                    'user_id' => $user->id,
+                    'role' => 'executive_director',
+                    'comments' => $validated['comments'] ?? null,
+                    'approved' => $validated['status'] === 'approved',
+                    'approved_at' => now()
+                ]);
 
-    return back()->with('success', 'Canvas updated successfully');
-}
+                // Save the selected file if provided
+                if (isset($validated['selected_file'])) {
+                    CanvasSelectedFile::create([
+                        'canvas_id' => $canvas->id,
+                        'canvas_file_id' => $validated['selected_file'],
+                        'approval_id' => $approval->id,
+                        'remarks' => $validated['file_remarks'] ?? null
+                    ]);
+                }
 
-    public function download(Canvas $canvas, $fileId = null)
-    {
-        if ($fileId) {
-            // Download specific file
-            $file = CanvasFile::where('canvas_id', $canvas->id)
-                ->findOrFail($fileId);
-
-            if (!Storage::disk('public')->exists('canvases/'.$file->file_path)) {
-                abort(404, 'File not found');
-            }
-
-            return response()->download(
-                Storage::disk('public')->path('canvases/'.$file->file_path),
-                $file->original_filename
-            );
+                $canvas->update([
+                    'status' => 'approved',
+                    'remarks' => $validated['remarks'] ?? null
+                ]);
+            });
+        } 
+        else {
+            // Regular updates
+            $canvas->update($validated);
         }
 
-        // Fallback to old single-file behavior (for backward compatibility)
-        if (!Storage::disk('public')->exists('canvases/'.$canvas->file_path)) {
+        return back()->with('success', 'Canvas updated successfully');
+    }
+
+    public function downloadFile(Canvas $canvas, CanvasFile $file)
+    {
+        // Verify the file belongs to this canvas
+        if ($file->canvas_id !== $canvas->id) {
+            abort(403, 'This file does not belong to the specified canvas');
+        }
+
+        $filePath = "canvases/{$file->file_path}";
+        
+        if (!Storage::disk('public')->exists($filePath)) {
             abort(404, 'File not found');
         }
 
-        return response()->download(
-            Storage::disk('public')->path('canvases/'.$canvas->file_path),
-            $canvas->original_filename
-        );
+        return Storage::disk('public')->download($filePath, $file->original_filename);
     }
 
     protected function generateUniqueFilename($name, $extension)
@@ -220,7 +231,6 @@ public function update(Request $request, Canvas $canvas)
         
         return $filename;
     }
-
 
     public function show(Canvas $canvas)
     {

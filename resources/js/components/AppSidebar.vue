@@ -234,8 +234,8 @@ const reportItems = ref<DropdownNavItem[]>([
 
 const footerNavItems: NavItem[] = [
   {
-    title: 'Configurations',
-    href: '/configuration/users',
+    title: 'Settings',
+    href: '/settings/profile',
     icon: Settings,
   },
 ];
@@ -329,7 +329,6 @@ const adminNavItems: NavItem[] = [
             <NavMain :items="staffNavItems" group-label="Navigation"/>
             <NavMain :items="staffRequestItems" group-label="Request"/>
           </div>
-
         </SidebarContent>
 
         <SidebarFooter>

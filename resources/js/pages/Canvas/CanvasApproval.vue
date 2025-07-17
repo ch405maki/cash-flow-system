@@ -2,7 +2,7 @@
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { formatDate } from '@/lib/utils'
 import AppLayout from '@/layouts/AppLayout.vue';
-import { UserRoundCheck, Clock, CheckCircle, XCircle } from 'lucide-vue-next';
+import { UserRoundCheck, Clock, CheckCircle, XCircle, Download } from 'lucide-vue-next';
 import axios from 'axios';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
@@ -18,15 +18,11 @@ import { ref, computed, watch } from 'vue';
 const props = defineProps<{
   canvases: Array<any>;
   authUserRole: string;
+  status?: string;
 }>();
 
-// Get initial status from URL
-const getStatusFromUrl = () => {
-  const url = new URL(window.location.href);
-  return url.searchParams.get('status') || 'forEOD';
-};
-
-const currentStatus = ref(getStatusFromUrl());
+// Use status from props if available, otherwise from URL
+const currentStatus = ref(props.status || 'pending_approval');
 const activeTab = ref(currentStatus.value);
 
 // Handle tab changes
@@ -38,38 +34,26 @@ const handleTabChange = (tabValue) => {
   });
 };
 
-// Watch for URL changes
-router.on('navigate', () => {
-  const newStatus = getStatusFromUrl();
-  if (newStatus !== currentStatus.value) {
-    currentStatus.value = newStatus;
-    activeTab.value = newStatus;
-  }
+// Filter canvases based on status
+const filteredCanvases = computed(() => {
+  return props.canvases.filter(canvas => {
+    if (!activeTab.value) return true;
+    return canvas.status === activeTab.value;
+  });
 });
 
-/* split once, reuse everywhere */
-const pendingCanvases = computed(() =>
-  props.canvases.filter(c => c.status === 'forEOD')
-);
-const approvedCanvases = computed(() =>
-  props.canvases.filter(c => c.status === 'approved')
-);
-const poCreatedCanvases = computed(() =>
-  props.canvases.filter(c => c.status === 'poCreated')
-);
-
 const statusIcons = {
-  pending: Clock,
+  pending_approval: UserRoundCheck,
   approved: CheckCircle,
   rejected: XCircle,
-  forEOD: UserRoundCheck,
+  poCreated: CheckCircle,
 };
 
 const statusVariants = {
-  pending: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
+  pending_approval: 'bg-purple-100 text-purple-800 hover:bg-purple-200',
   approved: 'bg-green-100 text-green-800 hover:bg-green-200',
   rejected: 'bg-red-100 text-red-800 hover:bg-red-200',
-  forEOD: 'bg-purple-100 text-purple-800 hover:bg-purple-200',
+  poCreated: 'bg-blue-100 text-blue-800 hover:bg-blue-200',
 };
 
 // Dialog state management
@@ -78,38 +62,38 @@ const selectedCanvas = ref(null);
 
 const downloadFile = async (canvas) => {
   try {
-    canvas.isDownloading = true;
-    
-    const response = await axios.get(route('canvas.download', canvas.id), {
-      responseType: 'blob',
-      onDownloadProgress: (progressEvent) => {
-        const percentCompleted = Math.round(
-          (progressEvent.loaded * 100) / progressEvent.total
-        );
-        console.log(`Download progress: ${percentCompleted}%`);
+    // For approved canvases, download the selected file
+    if (canvas.status === 'approved' && canvas.selected_files?.length > 0) {
+      const selectedFile = canvas.selected_files[0].file;
+      if (!selectedFile) {
+        throw new Error('No approved file selected');
       }
-    });
-    
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', canvas.original_filename);
-    document.body.appendChild(link);
-    link.click();
-    
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(link);
-    
+      
+      const link = document.createElement('a');
+      link.href = route('canvas.download.file', { 
+        canvas: canvas.id, 
+        file: selectedFile.id 
+      });
+      link.setAttribute('download', selectedFile.original_filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      // For other statuses, download all files as zip
+      const link = document.createElement('a');
+      link.href = route('canvas.download.all', canvas.id);
+      link.setAttribute('download', `${canvas.title || 'canvas'}_files.zip`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   } catch (error) {
     console.error('Download failed:', error);
     alert('Download failed. Please try again.');
-  } finally {
-    canvas.isDownloading = false;
   }
 };
 
 const showCanvas = (canvas) => {
-  selectedCanvas.value = null; 
   selectedCanvas.value = canvas;
   showDialog.value = true;
 };
@@ -134,7 +118,7 @@ const breadcrumbs = [
           <h1 class="text-xl font-bold">Canvas</h1>
 
           <TabsList class="flex gap-2">
-            <TabsTrigger value="forEOD" class="px-3 py-1.5 text-sm leading-none">
+            <TabsTrigger value="pending_approval" class="px-3 py-1.5 text-sm leading-none">
               For Approval
             </TabsTrigger>
             <TabsTrigger value="approved" class="px-3 py-1.5 text-sm leading-none">
@@ -143,35 +127,17 @@ const breadcrumbs = [
             <TabsTrigger value="poCreated" class="px-3 py-1.5 text-sm leading-none">
               PO Created
             </TabsTrigger>
+            <TabsTrigger value="rejected" class="px-3 py-1.5 text-sm leading-none">
+              Rejected
+            </TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent value="forEOD">
-          <TableOrEmpty :items="pendingCanvases" empty-text="No for approval canvases" />
+        <TabsContent v-for="tab in ['pending_approval', 'approved', 'poCreated', 'rejected']" 
+                    :key="tab" 
+                    :value="tab">
           <CanvasTable
-            :canvases="pendingCanvases"
-            :status-icons="statusIcons"
-            :status-variants="statusVariants"
-            @show="showCanvas"
-            @download="downloadFile"
-          />
-        </TabsContent>
-        
-        <TabsContent value="approved">
-          <TableOrEmpty :items="approvedCanvases" empty-text="No approved canvases" />
-          <CanvasTable
-            :canvases="approvedCanvases"
-            :status-icons="statusIcons"
-            :status-variants="statusVariants"
-            @show="showCanvas"
-            @download="downloadFile"
-          />
-        </TabsContent>
-
-        <TabsContent value="poCreated">
-          <TableOrEmpty :items="poCreatedCanvases" empty-text="No PO-created canvases" />
-          <CanvasTable
-            :canvases="poCreatedCanvases"
+            :canvases="filteredCanvases.filter(c => c.status === tab)"
             :status-icons="statusIcons"
             :status-variants="statusVariants"
             @show="showCanvas"
