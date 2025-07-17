@@ -333,7 +333,6 @@ const adminNavItems: NavItem[] = [
 
         <SidebarFooter>
             <NavFooter :items="footerNavItems"/>
-            <NavUser />
         </SidebarFooter>
     </Sidebar>
     <slot />
