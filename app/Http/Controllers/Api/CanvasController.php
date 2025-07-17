@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class CanvasController extends Controller
 {
@@ -111,17 +112,16 @@ class CanvasController extends Controller
             ->with('success', 'Canvas submitted with files!');
     }
 
-    public function update(Request $request, Canvas $canvas)
+public function update(Request $request, Canvas $canvas)
 {
     $user = Auth::user();
     
     $validated = $request->validate([
         'remarks' => 'nullable|string|max:500',
-        'status' => 'sometimes|in:submitted,pending_approval,approved,rejected',
+        'status' => 'required|in:submitted,pending_approval,approved,rejected',
         'comments' => 'nullable|string|max:1000',
-        'selected_files' => 'sometimes|array',
-        'selected_files.*.remarks' => 'nullable|string|max:500',
-        'selected_files.*.selected' => 'sometimes|boolean',
+        'selected_file' => 'nullable|integer|exists:canvas_files,id',
+        'file_remarks' => 'nullable|string|max:500'
     ]);
 
     if ($user->role === 'accounting') {
@@ -134,7 +134,7 @@ class CanvasController extends Controller
             ],
             [
                 'comments' => $validated['comments'] ?? null,
-                'approved' => $request->status === 'pending_approval',
+                'approved' => $validated['status'] === 'pending_approval',
                 'approved_at' => now()
             ]
         );
@@ -145,38 +145,31 @@ class CanvasController extends Controller
         ]);
     } 
     elseif ($user->role === 'executive_director') {
-        // Handle executive director approval
-        $approval = CanvasApproval::create([
-            'canvas_id' => $canvas->id,
-            'user_id' => $user->id,
-            'role' => 'executive_director',
-            'comments' => $validated['comments'] ?? null,
-            'approved' => $request->status === 'approved',
-            'approved_at' => now()
-        ]);
+        DB::transaction(function () use ($canvas, $validated, $user) {
+            $approval = CanvasApproval::create([
+                'canvas_id' => $canvas->id,
+                'user_id' => $user->id,
+                'role' => 'executive_director',
+                'comments' => $validated['comments'] ?? null,
+                'approved' => $validated['status'] === 'approved',
+                'approved_at' => now()
+            ]);
 
-        // Process selected files
-        if (isset($validated['selected_files'])) {
-            foreach ($validated['selected_files'] as $fileId => $data) {
-                if ($data['selected'] ?? false) {
-                    CanvasSelectedFile::updateOrCreate(
-                        [
-                            'canvas_id' => $canvas->id,
-                            'canvas_file_id' => $fileId,
-                            'approval_id' => $approval->id
-                        ],
-                        [
-                            'remarks' => $data['remarks'] ?? null
-                        ]
-                    );
-                }
+            // Save the selected file if provided
+            if (isset($validated['selected_file'])) {
+                CanvasSelectedFile::create([
+                    'canvas_id' => $canvas->id,
+                    'canvas_file_id' => $validated['selected_file'],
+                    'approval_id' => $approval->id,
+                    'remarks' => $validated['file_remarks'] ?? null
+                ]);
             }
-        }
 
-        $canvas->update([
-            'status' => 'approved',
-            'remarks' => $validated['remarks'] ?? null
-        ]);
+            $canvas->update([
+                'status' => 'approved',
+                'remarks' => $validated['remarks'] ?? null
+            ]);
+        });
     } 
     else {
         // Regular updates

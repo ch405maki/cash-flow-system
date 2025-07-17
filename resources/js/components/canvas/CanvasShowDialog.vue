@@ -6,12 +6,11 @@ import { Download, ArrowLeft, Clock, CheckCircle, UserRoundCheck, XCircle, Check
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from '@inertiajs/vue3';
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch } from 'vue';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
-import { formatDate } from '@/lib/utils'
-import { router } from '@inertiajs/vue3'
-import { Checkbox } from '@/components/ui/checkbox'
+import { formatDate } from '@/lib/utils';
+import { router } from '@inertiajs/vue3';
 
 const toast = useToast();
 
@@ -62,13 +61,8 @@ const form = useForm({
   remarks: props.canvas.remarks || '',
   status: props.canvas.status,
   comments: props.canvas.latest_approval?.comments || '',
-  selected_files: props.canvas.files?.reduce((acc, file) => {
-    acc[file.id] = {
-      selected: props.canvas.selected_files?.some(sf => sf.canvas_file_id === file.id) || false,
-      remarks: props.canvas.selected_files?.find(sf => sf.canvas_file_id === file.id)?.remarks || ''
-    };
-    return acc;
-  }, {}) || {}
+  selected_file: props.canvas.selected_files?.[0]?.canvas_file_id || null,
+  file_remarks: props.canvas.selected_files?.[0]?.remarks || ''
 });
 
 watch(
@@ -77,17 +71,8 @@ watch(
     form.remarks = newCanvas?.remarks || '';
     form.status = newCanvas?.status;
     form.comments = newCanvas.latest_approval?.comments || '';
-    
-    // Initialize selected files
-    if (newCanvas.files) {
-      form.selected_files = newCanvas.files.reduce((acc, file) => {
-        acc[file.id] = {
-          selected: newCanvas.selected_files?.some(sf => sf.canvas_file_id === file.id) || false,
-          remarks: newCanvas.selected_files?.find(sf => sf.canvas_file_id === file.id)?.remarks || ''
-        };
-        return acc;
-      }, {});
-    }
+    form.selected_file = newCanvas.selected_files?.[0]?.canvas_file_id || null;
+    form.file_remarks = newCanvas.selected_files?.[0]?.remarks || '';
   },
   { immediate: true, deep: true }
 );
@@ -136,31 +121,27 @@ const downloadFile = async (fileId = null) => {
 
 const handleAction = async (action) => {
   try {
-    // Prepare the payload
     const payload = {
-      status: action === 'approve' ? 'pending_approval' : 
-              action === 'final_approve' ? 'approved' : 
-              action === 'reject' ? 'rejected' : 
-              action === 'submit' ? 'submitted' : 
-              action === 'forEOD' ? 'forEOD' : props.canvas.status,
-      remarks: form.remarks,
-      comments: form.comments
+      status: "approved", // or "pending_approval"
+      comments: "This file Approved",
+      remarks: "", // general remarks
+      selected_file: 1, // ID of the selected file
+      file_remarks: "I want this supplier" // remarks for the selected file
     };
 
-    // For executive director approval with selected files
     if (action === 'final_approve') {
-      payload.selected_files = Object.entries(form.selected_files)
-        .filter(([_, file]) => file.selected)
-        .reduce((acc, [fileId, file]) => {
-          acc[fileId] = { remarks: file.remarks };
-          return acc;
-        }, {});
+      if (!form.selected_file) {
+        toast.error('Please select a file for approval');
+        return;
+      }
+      
+      payload.selected_files = {
+        [form.selected_file]: { remarks: form.file_remarks }
+      };
     }
 
-    // Use form.patch instead of axios.patch
-    form.patch(route('canvas.update', props.canvas.id), {
+    await form.patch(route('canvas.update', props.canvas.id), {
       ...payload,
-      // Add any additional options
       preserveScroll: true,
       onSuccess: () => {
         emit('updated');
@@ -290,27 +271,33 @@ function viewRequest(id: number) {
 
         <!-- File Selection for Executive -->
         <div v-if="userRole === 'executive_director' && canvas.files?.length">
-          <h3 class="text-sm font-medium text-muted-foreground mt-4">Select Files for Approval</h3>
+          <h3 class="text-sm font-medium text-muted-foreground mt-4">Select File for Approval</h3>
+          <p class="text-xs text-muted-foreground mb-2">Please select one file to approve</p>
+          
           <div class="space-y-2 mt-2">
             <div v-for="file in canvas.files" :key="file.id" class="flex items-start gap-3 p-2 border rounded">
-              <Checkbox 
-                v-model="form.selected_files[file.id].selected"
-                :id="`file-${file.id}`"
-                class="mt-1"
-              />
+              <div class="flex items-center h-5">
+                <input
+                  type="radio"
+                  :id="`file-${file.id}`"
+                  v-model="form.selected_file"
+                  :value="file.id"
+                  class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                >
+              </div>
               <div class="flex-1">
-                <div class="flex items-center gap-2">
+                <label :for="`file-${file.id}`" class="flex items-center gap-2 cursor-pointer">
                   <FileText class="h-4 w-4 text-muted-foreground" />
-                  <label :for="`file-${file.id}`" class="text-sm cursor-pointer">
-                    {{ file.original_filename }}
-                  </label>
+                  <span class="text-sm">{{ file.original_filename }}</span>
+                </label>
+                
+                <div v-if="form.selected_file === file.id" class="mt-2">
+                  <Textarea
+                    v-model="form.file_remarks"
+                    placeholder="File remarks (optional)"
+                    class="w-full text-xs h-8"
+                  />
                 </div>
-                <Textarea
-                  v-if="form.selected_files[file.id]?.selected"
-                  v-model="form.selected_files[file.id].remarks"
-                  placeholder="File remarks (optional)"
-                  class="w-full text-xs h-8 mt-2"
-                />
               </div>
             </div>
           </div>
@@ -353,7 +340,7 @@ function viewRequest(id: number) {
             </div>
           </div>
 
-          <!-- accounting Actions -->
+          <!-- Accounting Actions -->
           <div v-if="userRole === 'accounting' && canvas.status === 'submitted'" class="space-x-2">
             <Button 
               variant="success" 
@@ -378,7 +365,7 @@ function viewRequest(id: number) {
             <Button 
               variant="success" 
               @click="handleAction('final_approve')"
-              :disabled="form.processing || !form.comments.trim() || !Object.values(form.selected_files).some(f => f.selected)"
+              :disabled="form.processing || !form.comments.trim() || !form.selected_file"
             >
               <Check class="h-4 w-4 mr-1" />
               Final Approve
