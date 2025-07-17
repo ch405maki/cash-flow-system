@@ -26,8 +26,8 @@ class CanvasController extends Controller
                 ->where('status', 'pending_approval')
                 ->latest()
                 ->get();
-        } elseif ($user->role === 'auditor') {
-            // Auditor sees canvases waiting for audit
+        } elseif ($user->role === 'accounting') {
+            // accounting sees canvases waiting for audit
             $canvases = Canvas::with(['creator', 'request_to_order', 'files'])
                 ->where('status', 'submitted')
                 ->latest()
@@ -112,64 +112,79 @@ class CanvasController extends Controller
     }
 
     public function update(Request $request, Canvas $canvas)
-    {
-        $user = Auth::user();
-        $validated = $request->validate([
-            'remarks' => 'nullable|string',
-            'status' => 'sometimes|in:submitted,pending_approval,approved,rejected',
-            'selected_files' => 'sometimes|array',
-            'selected_files.*.remarks' => 'nullable|string',
-            'comments' => 'nullable|string',
-        ]);
+{
+    $user = Auth::user();
+    
+    $validated = $request->validate([
+        'remarks' => 'nullable|string|max:500',
+        'status' => 'sometimes|in:submitted,pending_approval,approved,rejected',
+        'comments' => 'nullable|string|max:1000',
+        'selected_files' => 'sometimes|array',
+        'selected_files.*.remarks' => 'nullable|string|max:500',
+        'selected_files.*.selected' => 'sometimes|boolean',
+    ]);
 
-        if ($user->role === 'auditor') {
-            // Handle auditor approval/comment
-            $approval = CanvasApproval::updateOrCreate(
-                [
-                    'canvas_id' => $canvas->id,
-                    'user_id' => $user->id,
-                    'role' => 'auditor'
-                ],
-                [
-                    'comments' => $validated['comments'] ?? null,
-                    'approved' => true
-                ]
-            );
-
-            $canvas->update(['status' => 'pending_approval']);
-        } 
-        elseif ($user->role === 'executive_director') {
-            // Handle executive director approval
-            $approval = CanvasApproval::create([
+    if ($user->role === 'accounting') {
+        // Handle accounting approval/comment
+        $approval = CanvasApproval::updateOrCreate(
+            [
                 'canvas_id' => $canvas->id,
                 'user_id' => $user->id,
-                'role' => 'executive_director',
+                'role' => 'accounting'
+            ],
+            [
                 'comments' => $validated['comments'] ?? null,
-                'approved' => true,
+                'approved' => $request->status === 'pending_approval',
                 'approved_at' => now()
-            ]);
+            ]
+        );
 
-            // Save selected files with remarks
-            if (isset($validated['selected_files'])) {
-                foreach ($validated['selected_files'] as $fileId => $data) {
-                    CanvasSelectedFile::create([
-                        'canvas_id' => $canvas->id,
-                        'canvas_file_id' => $fileId,
-                        'approval_id' => $approval->id,
-                        'remarks' => $data['remarks'] ?? null
-                    ]);
+        $canvas->update([
+            'status' => 'pending_approval',
+            'remarks' => $validated['remarks'] ?? null
+        ]);
+    } 
+    elseif ($user->role === 'executive_director') {
+        // Handle executive director approval
+        $approval = CanvasApproval::create([
+            'canvas_id' => $canvas->id,
+            'user_id' => $user->id,
+            'role' => 'executive_director',
+            'comments' => $validated['comments'] ?? null,
+            'approved' => $request->status === 'approved',
+            'approved_at' => now()
+        ]);
+
+        // Process selected files
+        if (isset($validated['selected_files'])) {
+            foreach ($validated['selected_files'] as $fileId => $data) {
+                if ($data['selected'] ?? false) {
+                    CanvasSelectedFile::updateOrCreate(
+                        [
+                            'canvas_id' => $canvas->id,
+                            'canvas_file_id' => $fileId,
+                            'approval_id' => $approval->id
+                        ],
+                        [
+                            'remarks' => $data['remarks'] ?? null
+                        ]
+                    );
                 }
             }
-
-            $canvas->update(['status' => 'approved']);
-        } 
-        else {
-            // Regular updates (status changes, remarks)
-            $canvas->update($validated);
         }
 
-        return back()->with('success', 'Canvas updated successfully');
+        $canvas->update([
+            'status' => 'approved',
+            'remarks' => $validated['remarks'] ?? null
+        ]);
+    } 
+    else {
+        // Regular updates
+        $canvas->update($validated);
     }
+
+    return back()->with('success', 'Canvas updated successfully');
+}
 
     public function download(Canvas $canvas, $fileId = null)
     {

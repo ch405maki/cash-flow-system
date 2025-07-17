@@ -307,6 +307,7 @@ const adminNavItems: NavItem[] = [
           
           <div v-if="user?.role === 'accounting'">
             <NavMain :items="accountingNavItems" group-label="Navigation"/>
+            <NavMain :items="purchasingCanvasNavItems"/>
             <NavMain :items="accountingCheckNavItems" group-label="Check"/>
             <NavMain :items="reportItems" group-label="Reports" />
           </div>
