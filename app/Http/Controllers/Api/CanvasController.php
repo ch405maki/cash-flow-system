@@ -46,45 +46,45 @@ class CanvasController extends Controller
         ]);
     }
 
-public function approval()
-{
-    $user = Auth::user();
-    $status = request()->query('status', 'pending_approval');
+    public function approval()
+    {
+        $user = Auth::user();
+        $status = request()->query('status', 'pending_approval');
 
-    $query = Canvas::with([
-        'creator', 
-        'request_to_order', 
-        'files',
-        'approvals.user',
-        'selected_files.file'
-    ])->where('created_by', $user->id);
+        $query = Canvas::with([
+            'creator', 
+            'request_to_order', 
+            'files',
+            'approvals.user',
+            'selected_files.file'
+        ])->where('created_by', $user->id);
 
-    // Filter based on status
-    switch ($status) {
-        case 'pending_approval':
-            $query->where('status', 'pending_approval');
-            break;
-        case 'approved':
-            $query->where('status', 'approved');
-            break;
-        case 'poCreated':
-            $query->where('status', 'poCreated');
-            break;
-        case 'rejected':
-            $query->where('status', 'rejected');
-            break;
-        default:
-            $query->whereIn('status', ['pending_approval', 'approved']);
+        // Filter based on status
+        switch ($status) {
+            case 'pending_approval':
+                $query->where('status', 'pending_approval');
+                break;
+            case 'approved':
+                $query->where('status', 'approved');
+                break;
+            case 'poCreated':
+                $query->where('status', 'poCreated');
+                break;
+            case 'rejected':
+                $query->where('status', 'rejected');
+                break;
+            default:
+                $query->whereIn('status', ['pending_approval', 'approved']);
+        }
+
+        $canvases = $query->latest()->get();
+
+        return Inertia::render('Canvas/CanvasApproval', [
+            'canvases' => $canvases,
+            'authUserRole' => $user->role,
+            'status' => $status
+        ]);
     }
-
-    $canvases = $query->latest()->get();
-
-    return Inertia::render('Canvas/CanvasApproval', [
-        'canvases' => $canvases,
-        'authUserRole' => $user->role,
-        'status' => $status
-    ]);
-}
     
     public function create()
     {
@@ -111,7 +111,7 @@ public function approval()
 
         $canvas = Canvas::create([
             'title' => $validated['title'],
-            'status' => 'submitted',
+            'status' => 'draft',
             'note' => $validated['note'] ?? null,
             'created_by' => Auth::id(),
             'request_to_order_id' => $validated['request_to_order_id'] ?? null,
@@ -141,13 +141,33 @@ public function approval()
         
         $validated = $request->validate([
             'remarks' => 'nullable|string|max:500',
-            'status' => 'required|in:submitted,pending_approval,approved,rejected',
+            'status' => 'required|in:draft,submitted,pending_approval,approved,rejected',
             'comments' => 'nullable|string|max:1000',
             'selected_file' => 'nullable|integer|exists:canvas_files,id',
             'file_remarks' => 'nullable|string|max:500'
         ]);
 
-        if ($user->role === 'accounting') {
+        if ($user->role === 'purchasing') {
+            // Handle purchasing approval/comment
+            $approval = CanvasApproval::updateOrCreate(
+                [
+                    'canvas_id' => $canvas->id,
+                    'user_id' => $user->id,
+                    'role' => 'purchasing'
+                ],
+                [
+                    'comments' => $validated['comments'] ?? null,
+                    'approved' => $validated['status'] === 'submitted',
+                    'approved_at' => now()
+                ]
+            );
+
+            $canvas->update([
+                'status' => 'submitted',
+                'remarks' => $validated['remarks'] ?? null
+            ]);
+        } 
+        elseif ($user->role === 'accounting') {
             // Handle accounting approval/comment
             $approval = CanvasApproval::updateOrCreate(
                 [

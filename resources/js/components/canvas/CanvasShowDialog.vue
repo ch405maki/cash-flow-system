@@ -210,15 +210,14 @@ function viewRequest(id: number) {
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-3">
                 <FileText class="h-5 w-5 text-muted-foreground" />
-                <span class=" text-muted-foreground capitalize">{{ approvedFile.original_filename }}</span>
+                <span class=" text-muted-foreground capitalize text-sm">{{ approvedFile.original_filename }}</span>
               </div>
               <Button 
                 variant="outline" 
                 size="sm"
                 @click="downloadFile(approvedFile.id)"
               >
-                <Download class="h-4 w-4 mr-1" />
-                Download
+                <Download class="h-4 w-4" />
               </Button>
             </div>
             <p v-if="canvas.selected_files[0]?.remarks" class="mt-2 text-sm text-muted-foreground">
@@ -239,10 +238,10 @@ function viewRequest(id: number) {
                 class="relative mb-6 last:mb-0">
               
               <!-- Timeline dot -->
-              <div class="bg-green-50 border-2 border-green-500 absolute -left-6 top-0 h-8 w-8 rounded-full flex items-center justify-center z-10">
+              <div class="bg-green-500 border-2 border-green-500 absolute -left-6 top-0 h-8 w-8 rounded-full flex items-center justify-center z-10">
                 <component 
-                  :is="approval.approved ? CheckCircle : CheckCircle" 
-                  class="h-4 w-4 text-green-500"
+                  :is="approval.approved ? CheckCircle : CheckCircle"
+                  class="h-5 w-5 text-white"
                 />
               </div>
 
@@ -329,14 +328,6 @@ function viewRequest(id: number) {
                     <FileText class="h-4 w-4 text-muted-foreground" />
                     <span class="text-sm">{{ file.original_filename }}</span>
                   </label>
-                  
-                  <div v-if="form.selected_file === file.id" class="mt-2">
-                    <Textarea
-                      v-model="form.file_remarks"
-                      placeholder="File remarks (optional)"
-                      class="w-full text-xs h-8"
-                    />
-                  </div>
                 </div>
               </div>
             </div>
