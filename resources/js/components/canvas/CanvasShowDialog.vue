@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Download, ArrowLeft, Clock, CheckCircle, UserRoundCheck, XCircle, Check, X, Pencil, ChevronRight } from 'lucide-vue-next';
+import { Download, ArrowLeft, Clock, CheckCircle, UserRoundCheck, XCircle, Check, X, Pencil, ChevronRight, FileText } from 'lucide-vue-next';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from '@inertiajs/vue3';
@@ -206,11 +206,11 @@ function viewRequest(id: number) {
         <!-- Approved File Section (only shown for approved canvases) -->
         <div v-if="approvedFile">
           <h3 class="text-sm font-medium text-muted-foreground">Approved File</h3>
-          <div class="p-3 border rounded-lg bg-green-50 mt-2">
+          <div class="p-3 border rounded-lg mt-2">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-3">
-                <FileText class="h-5 w-5 text-green-600" />
-                <span class="font-medium">{{ approvedFile.original_filename }}</span>
+                <FileText class="h-5 w-5 text-muted-foreground" />
+                <span class=" text-muted-foreground capitalize">{{ approvedFile.original_filename }}</span>
               </div>
               <Button 
                 variant="outline" 
@@ -227,31 +227,50 @@ function viewRequest(id: number) {
           </div>
         </div>
 
-        <!-- Approval History (always shown if exists) -->
-        <div v-if="canvas.approvals?.length">
-          <h3 class="text-sm font-medium text-muted-foreground">Approval History</h3>
-          <div class="space-y-2 mt-2">
-            <div 
-              v-for="approval in canvas.approvals" 
-              :key="approval.id" 
-              class="p-3 border rounded"
-              :class="{
-                'bg-green-50': approval.approved,
-                'bg-red-50': !approval.approved
-              }"
-            >
-              <div class="flex justify-between items-start">
-                <div>
-                  <p class="font-medium">{{ approval.user.name }} ({{ approval.role }})</p>
-                  <p class="text-xs text-muted-foreground">{{ formatDate(approval.created_at) }}</p>
-                </div>
-                <Badge :variant="approval.approved ? 'success' : 'destructive'">
-                  {{ approval.approved ? 'Approved' : 'Rejected' }}
-                </Badge>
+        <!-- Approval History with Stepper -->
+        <div v-if="canvas.approvals?.length" class="mt-4">
+          <h3 class="text-sm font-medium text-muted-foreground mb-3">Approval History</h3>
+          <div class="relative pl-6">
+            <!-- Vertical timeline line -->
+            <div class="absolute left-0 top-0 h-full w-0.5 bg-gray-200 ml-4"></div>
+
+            <div v-for="(approval, index) in canvas.approvals" 
+                :key="approval.id"
+                class="relative mb-6 last:mb-0">
+              
+              <!-- Timeline dot -->
+              <div class="bg-green-50 border-2 border-green-500 absolute -left-6 top-0 h-8 w-8 rounded-full flex items-center justify-center z-10">
+                <component 
+                  :is="approval.approved ? CheckCircle : CheckCircle" 
+                  class="h-4 w-4 text-green-500"
+                />
               </div>
-              <p v-if="approval.comments" class="mt-2 text-sm">
-                "{{ approval.comments }}"
-              </p>
+
+              <!-- Connector line to next dot -->
+              <div v-if="index < canvas.approvals.length - 1"
+                  class="absolute -left-6 top-8 h-full w-0.5 ml-4 bg-green-500 z-0"
+              ></div>
+              
+              <!-- Approval content -->
+              <div class="pl-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="font-medium">{{ approval.user.username }}</span>
+                    <Badge variant="outline" class="text-xs">
+                      {{ approval.role }}
+                    </Badge>
+                  </div>
+                  <span class="text-xs text-muted-foreground">
+                    {{ formatDate(approval.created_at) }}
+                  </span>
+                </div>
+
+                <div class="mt-1 flex items-start gap-2">
+                  <p v-if="approval.comments" class="text-sm text-gray-700">
+                    "{{ approval.comments }}"
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -276,6 +295,20 @@ function viewRequest(id: number) {
                 </Button>
               </div>
             </div>
+          </div>
+
+          <!-- Comments Section -->
+          <div v-if="['accounting', 'executive_director'].includes(userRole)">
+            <h3 class="text-sm font-medium text-muted-foreground">
+              {{ userRole === 'accounting' ? 'Audit Comments' : 'Approval Comments' }}
+            </h3>
+            <Textarea
+              v-model="form.comments"
+              :placeholder="userRole === 'accounting' 
+                ? 'Enter your audit comments...' 
+                : 'Enter approval comments...'"
+              class="mt-2"
+            />
           </div>
 
           <!-- File Selection for Executive -->
@@ -327,7 +360,68 @@ function viewRequest(id: number) {
       <!-- Action Buttons -->
       <div class="sticky bottom-0 bg-background pt-4 border-t">
         <div class="flex justify-between items-center">
-          <!-- ... (keep existing action buttons code) ... -->
+           <!-- Purchasing Officer Actions -->
+          <div v-if="userRole === 'purchasing'">
+            <div v-if="canvas.status === 'draft'" class="space-x-2">
+              <Button 
+                variant="default" 
+                @click="handleAction('submit')"
+                :disabled="form.processing"
+              >
+                <ChevronRight class="h-4 w-4 mr-1" />
+                Submit
+              </Button>
+            </div>
+            <div v-if="canvas.status === 'rejected'" class="space-x-2">
+              <Button 
+                variant="outline" 
+                @click="emit('reupload')"
+              >
+                <Upload class="h-4 w-4 mr-1" />
+                Re-upload
+              </Button>
+            </div>
+          </div>
+
+          <!-- Accounting Actions -->
+          <div v-if="userRole === 'accounting' && canvas.status === 'submitted'" class="space-x-2">
+            <Button 
+              variant="success" 
+              @click="handleAction('approve')"
+              :disabled="form.processing || !form.comments.trim()"
+            >
+              <Check class="h-4 w-4 mr-1" />
+              Approve
+            </Button>
+            <Button 
+              variant="destructive" 
+              @click="handleAction('reject')"
+              :disabled="form.processing || !form.comments.trim() || !form.remarks.trim()"
+            >
+              <X class="h-4 w-4 mr-1" />
+              Reject
+            </Button>
+          </div>
+
+          <!-- Executive Director Actions -->
+          <div v-if="userRole === 'executive_director' && canvas.status === 'pending_approval'" class="space-x-2">
+            <Button 
+              variant="success" 
+              @click="handleAction('final_approve')"
+              :disabled="form.processing || !form.comments.trim() || !form.selected_file"
+            >
+              <Check class="h-4 w-4 mr-1" />
+              Final Approve
+            </Button>
+            <Button 
+              variant="destructive" 
+              @click="handleAction('reject')"
+              :disabled="form.processing || !form.comments.trim() || !form.remarks.trim()"
+            >
+              <X class="h-4 w-4 mr-1" />
+              Reject
+            </Button>
+          </div>
         </div>
 
         <!-- Common Actions -->
