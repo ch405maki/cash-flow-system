@@ -31,6 +31,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import CanvasUploadDialog from '@/components/canvas/CanvasUploadDialog.vue'
 import CanvasShowDialog from '@/components/canvas/CanvasShowDialog.vue'
 import { ref } from 'vue';
+import { formatDateTime } from '@/lib/utils';
 
 defineProps<{
   canvases: Array<any>;
@@ -91,98 +92,14 @@ const showUploadDialog = ref(false);
 const selectedCanvas = ref(null);
 const canvasToReupload = ref(null);
 
-const downloadFile = async (canvas, fileId = null) => {
-  try {
-    canvas.isDownloading = true;
-    
-    const url = fileId 
-      ? route('canvas.download', { canvas: canvas.id, fileId })
-      : route('canvas.download', canvas.id);
-
-    const response = await axios.get(url, {
-      responseType: 'blob',
-      onDownloadProgress: (progressEvent) => {
-        const percentCompleted = Math.round(
-          (progressEvent.loaded * 100) / progressEvent.total
-        );
-        console.log(`Download progress: ${percentCompleted}%`);
-      }
-    });
-    
-    const blobUrl = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = blobUrl;
-    link.setAttribute('download', fileId 
-      ? canvas.files.find(f => f.id === fileId)?.original_filename 
-      : canvas.original_filename);
-    document.body.appendChild(link);
-    link.click();
-    
-    window.URL.revokeObjectURL(blobUrl);
-    document.body.removeChild(link);
-    
-  } catch (error) {
-    console.error('Download failed:', error);
-    alert('Download failed. Please try again.');
-  } finally {
-    canvas.isDownloading = false;
-  }
-};
-
 const showCanvas = (canvas) => {
   selectedCanvas.value = canvas;
   showDialog.value = true;
 };
 
-const handleAction = async (canvas, action) => {
-  try {
-    switch (action) {
-      case 'submit':
-        await axios.put(route('canvas.update', canvas.id), { status: 'submitted' });
-        break;
-      case 'approve':
-        await axios.put(route('canvas.update', canvas.id), { 
-          status: 'pending_approval',
-          comments: 'Auditor approved' 
-        });
-        break;
-      case 'reject':
-        await axios.put(route('canvas.update', canvas.id), { 
-          status: 'rejected',
-          comments: 'Auditor rejected' 
-        });
-        break;
-      case 'final_approve':
-        await axios.put(route('canvas.update', canvas.id), { 
-          status: 'approved',
-          comments: 'Executive Director approved' 
-        });
-        break;
-      case 'reupload':
-        canvasToReupload.value = canvas;
-        showUploadDialog.value = true;
-        return;
-    }
-    
-    router.reload({ only: ['canvases'] });
-  } catch (error) {
-    console.error('Action failed:', error);
-    alert('Action failed. Please try again.');
-  }
-};
-
 const refreshCanvases = () => {
   router.reload({ only: ['canvases'] });
 };
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit'
-  })
-}
 
 const breadcrumbs = [
   { title: 'Dashboard', href: '/dashboard' },
@@ -210,12 +127,11 @@ const breadcrumbs = [
             <TableHead>Status</TableHead>
             <TableHead>Notes</TableHead>
             <TableHead>Uploaded</TableHead>
-            <TableHead class="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow v-for="canvas in canvases" :key="canvas.id">
-            <TableCell @click="showCanvas(canvas)" class="hover:cursor-pointer">
+          <TableRow v-for="canvas in canvases" :key="canvas.id"  @click="showCanvas(canvas)" class="hover:cursor-pointer">
+            <TableCell>
               <div class="flex items-center gap-4">
                 <FileText class="h-5 w-5 text-muted-foreground" />
                 <div class="grid gap-1">
@@ -247,35 +163,7 @@ const breadcrumbs = [
             
             <TableCell>
               <div class="text-sm">
-                {{ formatDate(canvas.created_at) }}
-              </div>
-            </TableCell>
-            
-            <TableCell class="text-right">
-              <div class="flex gap-2 justify-end">
-                <template v-if="actionButtons[authUserRole]?.[canvas.status]">
-                  <Button 
-                    v-for="btn in actionButtons[authUserRole][canvas.status]"
-                    :key="btn.action"
-                    :variant="btn.variant"
-                    size="sm"
-                    class="gap-1"
-                    @click.stop="handleAction(canvas, btn.action)"
-                  >
-                    <component :is="btn.icon" class="h-3.5 w-3.5" />
-                    <span>{{ btn.label }}</span>
-                  </Button>
-                </template>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  class="gap-1"
-                  @click.stop="showCanvas(canvas)"
-                >
-                  <Eye class="h-3.5 w-3.5" />
-                  <span>View</span>
-                </Button>
+                {{ formatDateTime(canvas.created_at) }}
               </div>
             </TableCell>
           </TableRow>

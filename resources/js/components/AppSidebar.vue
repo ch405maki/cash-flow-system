@@ -88,6 +88,10 @@ const purchasingCanvasNavItems = ref<DropdownNavItem[]>([
     children: [
       { title: 'Pending', href: '/canvas' },
       { 
+        title: 'Submitted', 
+        href: '/canvas/approval?status=submitted',
+      },
+      { 
         title: 'For Approval', 
         href: '/canvas/approval?status=forEOD',
       },
@@ -98,10 +102,6 @@ const purchasingCanvasNavItems = ref<DropdownNavItem[]>([
       { 
         title: 'P. O. Created', 
         href: '/canvas/approval?status=poCreated',
-      },
-      { 
-        title: 'Rejected', 
-        href: '/canvas/approval?status=rejected',
       },
     ],
   },

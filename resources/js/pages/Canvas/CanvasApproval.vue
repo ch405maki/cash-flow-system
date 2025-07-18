@@ -52,7 +52,7 @@ const statusIcons = {
 const statusVariants = {
   pending_approval: 'bg-purple-100 text-purple-800 hover:bg-purple-200',
   approved: 'bg-green-100 text-green-800 hover:bg-green-200',
-  rejected: 'bg-red-100 text-red-800 hover:bg-red-200',
+  submitted: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
   poCreated: 'bg-blue-100 text-blue-800 hover:bg-blue-200',
 };
 
@@ -118,6 +118,9 @@ const breadcrumbs = [
           <h1 class="text-xl font-bold">Canvas</h1>
 
           <TabsList class="flex gap-2">
+            <TabsTrigger value="submitted" class="px-3 py-1.5 text-sm leading-none">
+              For Review
+            </TabsTrigger>
             <TabsTrigger value="pending_approval" class="px-3 py-1.5 text-sm leading-none">
               For Approval
             </TabsTrigger>
@@ -127,13 +130,10 @@ const breadcrumbs = [
             <TabsTrigger value="poCreated" class="px-3 py-1.5 text-sm leading-none">
               PO Created
             </TabsTrigger>
-            <TabsTrigger value="rejected" class="px-3 py-1.5 text-sm leading-none">
-              Rejected
-            </TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent v-for="tab in ['pending_approval', 'approved', 'poCreated', 'rejected']" 
+        <TabsContent v-for="tab in ['pending_approval', 'approved', 'poCreated', 'submitted']" 
                     :key="tab" 
                     :value="tab">
           <CanvasTable

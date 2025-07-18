@@ -35,7 +35,7 @@ class CanvasController extends Controller
         } else {
             // Purchasing officers see their own canvases
             $canvases = Canvas::with(['creator', 'request_to_order', 'files'])
-                ->where('created_by', $user->id)
+                ->where('created_by', $user->id)->where('status', 'draft')
                 ->latest()
                 ->get();
         }
@@ -70,8 +70,8 @@ class CanvasController extends Controller
             case 'poCreated':
                 $query->where('status', 'poCreated');
                 break;
-            case 'rejected':
-                $query->where('status', 'rejected');
+            case 'submitted':
+                $query->where('status', 'submitted');
                 break;
             default:
                 $query->whereIn('status', ['pending_approval', 'approved']);
@@ -215,7 +215,6 @@ class CanvasController extends Controller
             });
         } 
         else {
-            // Regular updates
             $canvas->update($validated);
         }
 

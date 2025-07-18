@@ -81,7 +81,7 @@ function getDisplayFileName(canvas) {
           </TableCell>
 
           <TableCell class="text-muted-foreground truncate max-w-[200px]">
-            {{ canvas.remarks || canvas.selected_files[0]?.remarks || 'No remarks' }}
+            {{ canvas.note || canvas.selected_files[0]?.remarks || 'No remarks' }}
           </TableCell>
 
           <TableCell>{{ formatDate(canvas.created_at) }}</TableCell>

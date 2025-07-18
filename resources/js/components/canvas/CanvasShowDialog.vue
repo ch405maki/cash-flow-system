@@ -202,6 +202,7 @@ function viewRequest(id: number) {
             </p>
           </div>
         </div>
+        {{ canvas?.note || 'No Note' }}
 
         <!-- Approved File Section (only shown for approved canvases) -->
         <div v-if="approvedFile">
@@ -213,7 +214,7 @@ function viewRequest(id: number) {
                 <span class=" text-muted-foreground capitalize text-sm">{{ approvedFile.original_filename }}</span>
               </div>
               <Button 
-                variant="outline" 
+                variant="ghost" 
                 size="sm"
                 @click="downloadFile(approvedFile.id)"
               >
@@ -254,7 +255,7 @@ function viewRequest(id: number) {
               <div class="pl-4">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2">
-                    <span class="font-medium">{{ approval.user.username }}</span>
+                    <span class="capitalize">{{ approval.user.username }}</span>
                   </div>
                   <span class="text-xs text-muted-foreground">
                     {{ formatDateTime(approval.created_at) }}
@@ -262,8 +263,8 @@ function viewRequest(id: number) {
                 </div>
 
                 <div class="mt-1 flex items-start gap-2">
-                  <p v-if="approval.comments" class="text-sm text-gray-700">
-                    "{{ approval.comments }}"
+                  <p class="text-sm text-gray-700">
+                    "{{ approval.comments || 'No comments' }}"
                   </p>
                 </div>
               </div>
@@ -294,7 +295,7 @@ function viewRequest(id: number) {
           </div>
 
           <!-- Comments Section -->
-          <div v-if="['accounting', 'executive_director'].includes(userRole)">
+          <div v-if="['accounting', 'executive_director', 'purchasing'].includes(userRole)">
             <h3 class="text-sm font-medium text-muted-foreground">
               {{ userRole === 'accounting' ? 'Audit Comments' : 'Approval Comments' }}
             </h3>
@@ -333,16 +334,6 @@ function viewRequest(id: number) {
             </div>
           </div>
         </template>
-
-        <!-- General Remarks -->
-        <div>
-          <h3 class="text-sm font-medium text-muted-foreground">Remarks</h3>
-          <Textarea
-            v-model="form.remarks"
-            placeholder="Enter general remarks"
-            class="mt-2"
-          />
-        </div>
       </div>
 
       <!-- Action Buttons -->
