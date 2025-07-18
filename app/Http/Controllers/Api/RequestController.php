@@ -19,6 +19,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use App\Notifications\NewRequestNotification;
 
 
 use Inertia\Inertia;
@@ -162,7 +163,7 @@ class RequestController extends Controller
 
             // Create the request
             $requestModel = Request::create(collect($validated)->except('items')->toArray());
-
+            $requestModel->user->notify(new NewRequestNotification($requestModel));
             // Create request details
             foreach ($validated['items'] as $item) {
                 RequestDetail::create([
