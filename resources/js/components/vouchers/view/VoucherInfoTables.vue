@@ -59,7 +59,7 @@ defineProps({
                 <td class="p-2 font-medium text-muted-foreground border-r">PURPOSE:</td>
                 <td class="p-2 uppercase border-r">{{ voucher.purpose }}</td>
                 <td class="p-2 font-medium text-muted-foreground border-r">CHECK DATE:</td>
-                <td class="p-2">{{ formatDate(voucher.check_date) }}</td>
+                <td class="p-2">{{ voucher.check_date ? formatDate(voucher.check_date) : '' }}</td>
             </tr>
         </tbody>
         </table>

@@ -32,8 +32,6 @@ defineProps({
                 <TableRow>
                     <TableHead class="border-r">Charged</TableHead>
                     <TableHead class="border-r">Account</TableHead>
-                    <TableHead class="border-r" v-if="voucher.type === 'salary'">Hours</TableHead>
-                    <TableHead class="border-r" v-if="voucher.type === 'salary'">Rate</TableHead>
                     <TableHead class="text-right border-r">Amount</TableHead>
                 </TableRow>
             </TableHeader>

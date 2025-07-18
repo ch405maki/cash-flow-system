@@ -64,7 +64,7 @@ const form = reactive({
     check_payable_to: '',
     check_amount: 0,
     status: 'draft',
-    type: '',
+    type: 'cash',
     user_id: props.auth.user.id,
     items: [] as VoucherItem[],
 });
@@ -117,7 +117,14 @@ const resetNewItem = () => {
 };
 
 const calculateTotalAmount = () => {
-  form.check_amount = form.items.reduce((sum, item) => sum + item.amount, 0);
+  form.check_amount = form.items.reduce((sum, item) => {
+    if (item.charging_tag === 'C') {
+      return sum + item.amount;
+    } else if (item.charging_tag === 'D') {
+      return sum - item.amount;
+    }
+    return sum; // if no tag is selected
+  }, 0);
 };
 
 const calculateItemAmount = () => {
@@ -129,6 +136,15 @@ const calculateItemAmount = () => {
   if (newItem.value.hours && newItem.value.rate) {
     newItem.value.amount = newItem.value.hours * newItem.value.rate;
   }
+};
+
+const calculateTotal = (tag: string) => {
+  return form.items.reduce((sum, item) => {
+    if (item.charging_tag === tag) {
+      return sum + item.amount;
+    }
+    return sum;
+  }, 0);
 };
 
 async function submitVoucher() {
@@ -204,6 +220,7 @@ const cancelEdit = (index: number) => {
     delete form.items[index].original;
   }
 };
+
 const handleKeyDown = (event: KeyboardEvent, index: number) => {
   if (event.key === 'Enter') {
     saveEdit(index);
@@ -236,22 +253,6 @@ const handleKeyDown = (event: KeyboardEvent, index: number) => {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Column 1 -->
           <div class="space-y-4">
-            <div class="grid gap-2">
-              <Label for="voucher_type">Voucher Type <span class="text-rose-600">*</span> </Label>
-              <Select 
-                v-model="form.type" 
-                required
-                @update:modelValue="form.items = isCashVoucher ? [] : form.items"
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Voucher Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="salary">Salary</SelectItem>
-                  <SelectItem value="cash">Cash</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
             <div class="grid gap-2">
               <Label for="payee">Payee *</Label>
               <Input id="payee" v-model="form.payee" required />
@@ -431,162 +432,137 @@ const handleKeyDown = (event: KeyboardEvent, index: number) => {
                     'bg-blue-50': item.editing
                   }"
                 >
-        <!-- Account -->
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          <div v-if="!item.editing">
-            {{ props.accounts?.find(a => a.id === parseInt(item.account_id))?.account_title || 'N/A' }}
+                  <!-- Account -->
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div v-if="!item.editing">
+                      {{ props.accounts?.find(a => a.id === parseInt(item.account_id))?.account_title || 'N/A' }}
+                    </div>
+                    <Combobox v-else v-model="item.account_id" by="id" @click.stop>
+                      <ComboboxAnchor as-child>
+                        <ComboboxTrigger as-child>
+                          <Button variant="outline" class="w-full justify-between h-10">
+                            <span class="truncate">
+                              {{ props.accounts?.find(a => a.id === parseInt(item.account_id))?.account_title || 'Select account' }}
+                            </span>
+                            <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </ComboboxTrigger>
+                      </ComboboxAnchor>
+                      <ComboboxList class="max-h-[300px] overflow-y-auto shadow-lg rounded-md border">
+                        <div class="relative w-full items-center sticky top-0 bg-white z-10">
+                          <ComboboxInput
+                            class="pl-9 focus-visible:ring-0 border-0 border-b rounded-none h-10 text-base"
+                            placeholder="Search accounts..." 
+                            v-model="accountSearchQuery"
+                          />
+                          <span class="absolute start-0 inset-y-0 flex items-center justify-center px-3">
+                            <Search class="size-4 text-muted-foreground" />
+                          </span>
+                        </div>
+                        <ComboboxEmpty v-if="filteredAccounts.length === 0" class="py-4 text-center text-sm text-gray-500">
+                          No accounts found.
+                        </ComboboxEmpty>
+                        <ComboboxGroup>
+                          <div class="max-h-[250px] overflow-y-auto">
+                            <ComboboxItem 
+                              v-for="account in filteredAccounts" 
+                              :key="account.id" 
+                              :value="account.id.toString()"
+                              class="h-2flex items-center px-4 text-xs text-sm hover:bg-gray-50 cursor-pointer"
+                            >
+                              {{ account.account_title }}
+                              <ComboboxItemIndicator class="ml-auto">
+                                <Check class="h-4 w-4 text-primary" />
+                              </ComboboxItemIndicator>
+                            </ComboboxItem>
+                          </div>
+                        </ComboboxGroup>
+                      </ComboboxList>
+                    </Combobox>
+                  </td>
+                  
+                  <!-- Tag -->
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div v-if="!item.editing">{{ item.charging_tag || 'N/A' }}</div>
+                    <Select v-else v-model="item.charging_tag" @click.stop>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select tag" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="C">C</SelectItem>
+                        <SelectItem value="D">D</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </td>
+                  
+                  <!-- Amount -->
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div v-if="!item.editing">{{ item.amount.toFixed(2) }}</div>
+                    <Input 
+                      v-else
+                      type="number" 
+                      step="0.01" 
+                      v-model.number="item.amount"
+                      @click.stop
+                      class="w-full"
+                    />
+                  </td>
+                  
+                  <!-- Actions -->
+                  <td v-if="form.items.some(i => i.editing)" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                    <div class="flex justify-end space-x-2">
+                      <template v-if="item.editing">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          @click.stop="saveEdit(index)"
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          @click.stop="cancelEdit(index)"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          @click.stop="removeItem(index)"
+                        >
+                          <Trash2 class="h-4 w-4" />
+                        </Button>
+                      </template>
+                      <Button
+                        v-else
+                        variant="destructive"
+                        size="sm"
+                        @click.stop="removeItem(index)"
+                      >
+                        <Trash2 class="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-if="form.items.length === 0">
+                  <td :colspan="isCashVoucher ? (form.items.some(i => i.editing) ? 5 : 4) : (form.items.some(i => i.editing) ? 6 : 5)" class="px-6 py-4 text-center text-sm text-gray-500">
+                    No items added yet
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <Combobox v-else v-model="item.account_id" by="id" @click.stop>
-            <ComboboxAnchor as-child>
-              <ComboboxTrigger as-child>
-                <Button variant="outline" class="w-full justify-between h-10">
-                  <span class="truncate">
-                    {{ props.accounts?.find(a => a.id === parseInt(item.account_id))?.account_title || 'Select account' }}
-                  </span>
-                  <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </ComboboxTrigger>
-            </ComboboxAnchor>
-            <ComboboxList class="max-h-[300px] overflow-y-auto shadow-lg rounded-md border">
-              <div class="relative w-full items-center sticky top-0 bg-white z-10">
-                <ComboboxInput
-                  class="pl-9 focus-visible:ring-0 border-0 border-b rounded-none h-10 text-base"
-                  placeholder="Search accounts..." 
-                  v-model="accountSearchQuery"
-                />
-                <span class="absolute start-0 inset-y-0 flex items-center justify-center px-3">
-                  <Search class="size-4 text-muted-foreground" />
-                </span>
-              </div>
-              <ComboboxEmpty v-if="filteredAccounts.length === 0" class="py-4 text-center text-sm text-gray-500">
-                No accounts found.
-              </ComboboxEmpty>
-              <ComboboxGroup>
-                <div class="max-h-[250px] overflow-y-auto">
-                  <ComboboxItem 
-                    v-for="account in filteredAccounts" 
-                    :key="account.id" 
-                    :value="account.id.toString()"
-                    class="h-2flex items-center px-4 text-xs text-sm hover:bg-gray-50 cursor-pointer"
-                  >
-                    {{ account.account_title }}
-                    <ComboboxItemIndicator class="ml-auto">
-                      <Check class="h-4 w-4 text-primary" />
-                    </ComboboxItemIndicator>
-                  </ComboboxItem>
-                </div>
-              </ComboboxGroup>
-            </ComboboxList>
-          </Combobox>
-        </td>
-        
-        <!-- Tag -->
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          <div v-if="!item.editing">{{ item.charging_tag || 'N/A' }}</div>
-          <Select v-else v-model="item.charging_tag" @click.stop>
-            <SelectTrigger>
-              <SelectValue placeholder="Select tag" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="C">C</SelectItem>
-              <SelectItem value="D">D</SelectItem>
-            </SelectContent>
-          </Select>
-        </td>
-        
-        <!-- Hours (hidden for cash) -->
-        <td v-if="!isCashVoucher" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          <div v-if="!item.editing">{{ item.hours?.toFixed(2) || 'N/A' }}</div>
-          <Input 
-            v-else
-            type="number" 
-            step="0.01" 
-            v-model.number="item.hours"
-            @click.stop
-            @change="item.amount = item.hours * item.rate"
-            class="w-full"
-          />
-        </td>
-        
-        <!-- Rate (hidden for cash) -->
-        <td v-if="!isCashVoucher" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          <div v-if="!item.editing">{{ item.rate?.toFixed(2) || 'N/A' }}</div>
-          <Input 
-            v-else
-            type="number" 
-            step="0.01" 
-            v-model.number="item.rate"
-            @click.stop
-            @change="item.amount = item.hours * item.rate"
-            class="w-full"
-          />
-        </td>
-        
-        <!-- Amount -->
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          <div v-if="!item.editing">{{ item.amount.toFixed(2) }}</div>
-          <Input 
-            v-else
-            type="number" 
-            step="0.01" 
-            v-model.number="item.amount"
-            @click.stop
-            class="w-full"
-          />
-        </td>
-        
-        <!-- Actions -->
-        <td v-if="form.items.some(i => i.editing)" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-          <div class="flex justify-end space-x-2">
-            <template v-if="item.editing">
-              <Button
-                variant="outline"
-                size="sm"
-                @click.stop="saveEdit(index)"
-              >
-                Save
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                @click.stop="cancelEdit(index)"
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                @click.stop="removeItem(index)"
-              >
-                <Trash2 class="h-4 w-4" />
-              </Button>
-            </template>
-            <Button
-              v-else
-              variant="destructive"
-              size="sm"
-              @click.stop="removeItem(index)"
-            >
-              <Trash2 class="h-4 w-4" />
-            </Button>
-          </div>
-        </td>
-      </tr>
-      <tr v-if="form.items.length === 0">
-        <td :colspan="isCashVoucher ? (form.items.some(i => i.editing) ? 5 : 4) : (form.items.some(i => i.editing) ? 6 : 5)" class="px-6 py-4 text-center text-sm text-gray-500">
-          No items added yet
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
 
           <!-- Total Amount -->
-          <div class="flex justify-start mt-4">
-            <div class="text-lg font-semibold">
-              Total Amount: ₱{{ form.check_amount.toFixed(2) }}
-            </div>
+        <div class="flex justify-between mt-4">
+          <p v-if="form.items.some(i => i.charging_tag === 'D')" class="text-sm text-muted-foreground ml-2">
+            (C: ₱{{ calculateTotal('C').toFixed(2) }} - D: ₱{{ calculateTotal('D').toFixed(2) }})
+          </p>
+          <div class="text-lg font-semibold">
+            Total Amount: ₱{{ form.check_amount.toFixed(2) }}
           </div>
+        </div>
         </div>
 
         <!-- Dates Section -->

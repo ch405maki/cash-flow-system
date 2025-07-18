@@ -225,10 +225,10 @@ class VoucherController extends Controller
                     'string',
                     Rule::unique('vouchers', 'voucher_no')->ignore($voucher->id),
                 ],
-                'issue_date' => 'required|date',
+                'issue_date' => 'nullable|date',
                 'payment_date' => 'nullable|date',
                 'check_date' => 'required|date',
-                'delivery_date' => 'required|date',
+                'delivery_date' => 'nullable|date',
                 'voucher_date' => 'required|date',
                 'purpose' => 'required|string|max:500',
                 'payee' => 'required|string|max:255',
@@ -496,21 +496,30 @@ class VoucherController extends Controller
     /**
      * Validate cash voucher amount matches sum of details
      */
+    
     protected function validateCashVoucherAmount(array $validated): void
     {
         if (!empty($validated['check'])) {
-            $sumAmount = collect($validated['check'])->sum('amount');
+            // Calculate net amount (C - D)
+            $netAmount = collect($validated['check'])->reduce(function ($sum, $item) {
+                $amount = (float) $item['amount'];
+                return $item['charging_tag'] === 'D' ? $sum - $amount : $sum + $amount;
+            }, 0);
 
-            // For cash vouchers, amount must match exactly
-            if ($validated['type'] === 'cash' && abs($sumAmount - $validated['check_amount']) > 0.01) {
+            // For cash vouchers, amount must match exactly (C - D)
+            if ($validated['type'] === 'cash' && abs($netAmount - $validated['check_amount']) > 0.01) {
                 throw ValidationException::withMessages([
-                    'check_amount' => 'For cash vouchers, check amount must equal the sum of all item amounts'
+                    'check_amount' => [
+                        'For cash vouchers, check amount must equal (C items - D items)',
+                        'Calculated net amount: ' . number_format($netAmount, 2),
+                        'Provided check amount: ' . number_format($validated['check_amount'], 2)
+                    ]
                 ]);
             }
 
-            // For salary vouchers, update the check amount to match details
+            // For salary vouchers, update the check amount to match net details (C - D)
             if ($validated['type'] === 'salary') {
-                $validated['check_amount'] = $sumAmount;
+                $validated['check_amount'] = $netAmount;
             }
         }
     }

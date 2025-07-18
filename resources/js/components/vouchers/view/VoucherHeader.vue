@@ -40,7 +40,7 @@ const emit = defineEmits(['print']);
             </Button>
 
             <!-- Executive Director Actions -->
-            <template v-if="authUser.role == 'executive_director' && authUser.access_id == '1' && voucher.status !== 'rejected'">
+            <template v-if="authUser.role == 'executive_director' && authUser.access_id == '1'">
                 <EodVerificationDialog :voucher-id="voucher.id" action="approve">
                     <template #trigger>
                         <Button 
@@ -50,19 +50,6 @@ const emit = defineEmits(['print']);
                         >
                             <Check class="h-4 w-4 mr-2" />
                             <span>{{ voucher.status === 'forCheck' ? 'For Check Releasing' : 'Approve' }}</span>
-                        </Button>
-                    </template>
-                </EodVerificationDialog>
-
-                <EodVerificationDialog :voucher-id="voucher.id" action="reject">
-                    <template #trigger>
-                        <Button 
-                            variant="destructive"
-                            :class="voucher.status === 'forCheck' ? 'opacity-50 cursor-not-allowed' : ''"
-                            :disabled="voucher.status === 'forCheck'"
-                        >
-                            <X class="h-4 w-4 mr-2" />
-                            Reject
                         </Button>
                     </template>
                 </EodVerificationDialog>
@@ -101,19 +88,6 @@ const emit = defineEmits(['print']);
                         >
                             <Check class="h-4 w-4 mr-2" />
                             <span>{{ voucher.status == 'forEOD' ? 'Sent to EOD' : 'For EOD Approval' }}</span>
-                        </Button>
-                    </template>
-                </DirectorVerificationDialog>
-
-                <DirectorVerificationDialog :voucher-id="voucher.id" action="reject">
-                    <template #trigger>
-                        <Button 
-                            variant="destructive"
-                            :class="voucher.status === 'forEOD' ? 'opacity-50 cursor-not-allowed' : ''"
-                            :disabled="voucher.status === 'forEOD'"
-                        >
-                            <X class="h-4 w-4 mr-2" />
-                            Reject
                         </Button>
                     </template>
                 </DirectorVerificationDialog>

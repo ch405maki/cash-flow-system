@@ -21,7 +21,7 @@ const voucher = props.voucher;
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Vouchers', href: '/vouchers' },
-    { title: `Voucher Details: ${voucher.voucher_no}`, href: `/vouchers/${voucher.id}/edit` },
+    { title: `${voucher.voucher_no}`, href: `/vouchers/${voucher.id}/edit` },
 ];
 
 const form = useForm({
