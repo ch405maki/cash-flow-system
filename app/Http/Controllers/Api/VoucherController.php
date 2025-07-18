@@ -270,6 +270,44 @@ class VoucherController extends Controller
         });
     }
 
+    public function uploadReceipt(Request $request, Voucher $voucher): JsonResponse
+    {
+        $validated = $request->validate([
+            'receipt' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'issue_date' => 'nullable|date',
+            'delivery_date' => 'nullable|date',
+            'remarks' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            // Handle file upload
+            $file = $request->file('receipt');
+            $filename = 'receipt' . '_' . $voucher->voucher_no . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('receipts', $filename, 'public');
+            
+            // Update voucher with new data
+            $voucher->update([
+                'receipt' => 'receipts/' . $filename,
+                'issue_date' => $validated['issue_date'],
+                'delivery_date' => $validated['delivery_date'],
+                'remarks' => $validated['remarks'],
+            ]);
+
+            return $this->successResponse(
+                'Receipt and details uploaded successfully',
+                [
+                    'receipt_path' => 'receipts/' . $filename,
+                    'issue_date' => $validated['issue_date'],
+                    'delivery_date' => $validated['delivery_date'],
+                    'remarks' => $validated['remarks'],
+                ],
+                200
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to upload receipt: ' . $e->getMessage(), 500);
+        }
+    }
+
     public function show(Voucher $voucher): JsonResponse
     {
         return $this->successResponse(

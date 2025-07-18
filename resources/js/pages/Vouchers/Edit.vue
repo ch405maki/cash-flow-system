@@ -48,7 +48,8 @@ const form = useForm({
         hours: detail.hours,
         rate: detail.rate,
         account_id: detail.account_id.toString()
-    }))
+    })),
+    receipt: null,
 });
 
 const isCashVoucher = computed(() => form.type === 'cash');
@@ -104,6 +105,36 @@ const calculateAmountFromRate = (index) => {
     }
 };
 
+const handleFileSelected = async (file) => {
+    try {
+        const formData = new FormData();
+        formData.append('receipt', file);
+        
+        const response = await axios.post(
+            `/api/vouchers/${voucher.id}/receipt`,
+            formData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            }
+        );
+        
+        toast.success(response.data.message);
+        // Optionally update local state if needed
+        form.receipt = response.data.data.receipt_path;
+    } catch (error) {
+        if (error.response?.data?.errors) {
+            Object.values(error.response.data.errors).forEach((msg) => {
+                toast.error(msg[0]);
+            });
+        } else {
+            toast.error(error.response?.data?.message || 'Failed to upload receipt');
+        }
+    }
+};
+
+// Keep your existing updateVoucher function as is
 async function updateVoucher() {
     try {
         const accountIds = form.check.map(item => item.account_id);
@@ -151,7 +182,10 @@ async function updateVoucher() {
                         @calculate-total="calculateTotalAmount"
                     />
                     
-                    <VoucherDatesForm :form="form" />
+                    <VoucherDatesForm 
+                        :form="form" 
+                        @file-selected="handleFileSelected"
+                    />
                     
                     <CardFooter class="flex justify-end gap-4 px-0 pb-0">
                         <Button variant="outline" type="button" @click="router.visit('/vouchers')">

@@ -32,6 +32,8 @@ Route::put('/vouchers/{voucher}/details', [VoucherController::class, 'updateDeta
 Route::put('/vouchers/{voucher}', [VoucherController::class, 'update']);
 Route::get('/vouchers/{voucher}', [VoucherController::class, 'show']);
 
+Route::post('/vouchers/{voucher}/receipt', [VoucherController::class, 'uploadReceipt']);
+
 // Request Routes
 Route::post('/requests', [RequestController::class, 'store']);
 Route::put('/requests/{request}/items', [RequestController::class, 'updateItems']);

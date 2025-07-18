@@ -6,6 +6,8 @@ import DirectorVerificationDialog from '@/components/vouchers/DirectorVerificati
 import { router } from '@inertiajs/vue3';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ref } from 'vue'
+import ReceiptUploadDialog from '@/components/vouchers/upload/ReceiptUploadDialog.vue';
+import { Upload } from 'lucide-vue-next'
 
 defineProps({
     voucher: {
@@ -38,6 +40,14 @@ const emit = defineEmits(['print']);
                 <Printer class="h-4 w-4 mr-2" />
                 Print
             </Button>
+
+            <ReceiptUploadDialog 
+                :voucher-id="voucher.id"
+                :current-issue-date="voucher.issue_date"
+                :current-delivery-date="voucher.delivery_date"
+                :current-remarks="voucher.remarks"
+                @upload-success="handleUploadSuccess"
+            />
 
             <!-- Executive Director Actions -->
             <template v-if="authUser.role == 'executive_director' && authUser.access_id == '1'">

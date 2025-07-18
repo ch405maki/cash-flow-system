@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { Download } from 'lucide-vue-next';
+import { Button } from '@/components/ui/button';
+
 defineProps({
     voucher: {
         type: Object,
@@ -23,7 +26,15 @@ defineProps({
 
     <!-- First Table -->
     <div class="space-y-2">
-        <p class="font-medium text-muted-foreground">Voucher Details</p>
+        <div class="flex items-center justify-between">
+            <p class="font-medium text-muted-foreground">Voucher Details</p>
+            <div v-if="voucher.receipt">
+                <!-- {{ voucher.receipt }} -->
+                <Button variant="outline">
+                        <Download /> Download Receipt
+                </Button>
+            </div>
+        </div>
         <table class="w-full text-sm border border-border rounded-md">
             <thead>
             <tr class="bg-gray-50 border-b">
