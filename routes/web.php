@@ -87,6 +87,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/for-voucher', [ApprovedPurchaseOrderController::class, 'forVoucher'])->name('for-voucher.index');
     Route::get('/voucher-approval', [VoucherApprovalController::class, 'index'])->name('voucher-approval.index');
     Route::get('/approved-voucher', [ApprovedVoucherController::class, 'index'])->name('approved-voucher.index');
+
+    Route::get('/vouchers/{voucher}/download-receipt', [VoucherController::class, 'downloadReceipt'])->name('vouchers.download.receipt');
 });
 
 // Report Route 

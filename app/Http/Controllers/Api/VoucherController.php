@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Database\QueryException;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Storage;
 
 class VoucherController extends Controller
 {
@@ -332,6 +333,23 @@ class VoucherController extends Controller
         }
     }
     
+
+public function downloadReceipt(Voucher $voucher)
+{
+    if (!$voucher->receipt) {
+        abort(404, 'No receipt found.');
+    }
+
+    $filePath = $voucher->receipt; // e.g., 'receipts/receipt_V-202507-0003.pdf'
+
+    if (!Storage::disk('public')->exists($filePath)) {
+        abort(404, 'File not found on disk.');
+    }
+
+    $filename = 'receipt_' . $voucher->voucher_no . '.' . pathinfo($filePath, PATHINFO_EXTENSION);
+
+    return Storage::disk('public')->download($filePath, $filename);
+}
 
     public function show(Voucher $voucher): JsonResponse
     {

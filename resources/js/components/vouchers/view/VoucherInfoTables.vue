@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { Download } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
+import { useToast } from 'vue-toastification';
+import { ref } from 'vue';
 
-defineProps({
+const toast = useToast();
+const props = defineProps({
     voucher: {
         type: Object,
         required: true
@@ -20,6 +23,14 @@ defineProps({
         required: true
     }
 });
+
+const isDownloading = ref(false);
+
+const downloadReceipt = () => {
+  const link = document.createElement('a');
+  link.href = route('vouchers.download.receipt', { voucher: props.voucher.id });
+  link.click();
+};
 </script>
 
 <template>
@@ -29,8 +40,14 @@ defineProps({
         <div class="flex items-center justify-between">
             <p class="font-medium text-muted-foreground">Voucher Details</p>
             <div v-if="voucher.receipt">
-                <Button variant="success">
-                    <Download /> Download Receipt
+                <Button 
+                    v-if="voucher.receipt" 
+                    variant="success" 
+                    @click="downloadReceipt"
+                    :disabled="isDownloading"
+                >
+                    <Download class="h-4 w-4 mr-2" />
+                    {{ isDownloading ? 'Downloading...' : 'Download Receipt' }}
                 </Button>
             </div>
         </div>
