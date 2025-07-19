@@ -69,7 +69,6 @@ class VoucherController extends Controller
                 'voucher_no' => 'required|string|unique:vouchers,voucher_no',
                 'issue_date' => 'nullable|date',
                 'payment_date' => 'nullable|date',
-                'check_date' => 'nullable|date',
                 'delivery_date' => 'nullable|date',
                 'voucher_date' => 'required|date',
                 'purpose' => 'required|string|max:500',
@@ -106,7 +105,6 @@ class VoucherController extends Controller
                 'voucher_no' => $validated['voucher_no'],
                 'issue_date' => $validated['issue_date'] ?? null,
                 'payment_date' => $validated['payment_date'] ?? null,
-                'check_date' => $validated['check_date'],
                 'delivery_date' => $validated['delivery_date'] ?? null,
                 'voucher_date' => $validated['voucher_date'],
                 'purpose' => $validated['purpose'],
@@ -395,7 +393,6 @@ class VoucherController extends Controller
             'voucher' => $voucher->fresh()
         ]);
     }
-
 
     public function forEod($id, Request $request)
     {

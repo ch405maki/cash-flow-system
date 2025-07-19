@@ -30,7 +30,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from 'vue-toastification'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useForm } from '@inertiajs/vue3'
-import { BellRing, X, ReceiptText,  Send , AlertCircle,Ticket ,Printer   } from 'lucide-vue-next';
+import { BellRing, X, ReceiptText,  Send , AlertCircle,Ticket ,Printer, ArrowLeft, Check } from 'lucide-vue-next';
 import { router } from '@inertiajs/vue3';
 
 const toast = useToast()
@@ -89,7 +89,6 @@ function formatCurrency(amount: number): string {
 // Modal state
 const showApproveModal = ref(false)
 const showForApproveModal = ref(false)
-const showRejectModal = ref(false)
 const showReleaseModal = ref(false)
 const showOrderModal = ref(false)
 const showAlert = ref(true)
@@ -109,7 +108,6 @@ async function submitStatusUpdate(newStatus: string) {
     onSuccess: () => {
       toast.success('Status updated successfully')
       showApproveModal.value = false
-      showRejectModal.value = false
       showForApproveModal.value = false
       showReleaseModal.value = false
       showOrderModal.value = false
@@ -163,7 +161,7 @@ function viewVoucher(poId: number) {
         <div class="space-x-2 flex space-x-2">
           <Button 
               v-if="authUser.role === 'accounting'"
-              variant="outline" 
+              variant="default" 
               size="sm"
               @click.stop="goToCreate(purchaseOrder.id)"
             >
@@ -176,9 +174,9 @@ function viewVoucher(poId: number) {
               <Button 
                 variant="default" 
                 size="sm" 
-                :disabled="purchaseOrder.status === 'approved' || form.processing"
+                :disabled="purchaseOrder.status !== 'forEOD' || form.processing"
               >
-                Approve
+                <Check />Approve
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -272,98 +270,55 @@ function viewVoucher(poId: number) {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-
-          <!-- Reject Dialog -->
-          <Dialog v-model:open="showRejectModal">
-            <DialogTrigger>
-              <Button 
-                variant="outline"
-                size="sm" 
-                :disabled="purchaseOrder.status === 'forEOD' || purchaseOrder.status === 'approved' || form.processing"
-              >
-                Reject
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Reject Purchase Order</DialogTitle>
-                <DialogDescription>
-                  Please verify your identity and provide a reason
-                </DialogDescription>
-              </DialogHeader>
-              <div class="space-y-4">
-                <div class="space-y-2">
-                  <Label for="reject-password">Password</Label>
-                  <Input 
-                    id="reject-password" 
-                    v-model="form.password" 
-                    type="password" 
-                    placeholder="Enter your password"
-                    class="w-full"
-                  />
-                </div>
-                <div class="space-y-2">
-                  <Label for="reject-remarks">Reason for Rejection (Required)</Label>
-                  <Textarea
-                    id="reject-remarks"
-                    v-model="form.remarks"
-                    placeholder="Explain why this PO is being rejected"
-                    class="w-full"
-                    required
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button 
-                  @click="submitStatusUpdate('rejected')"
-                  :disabled="!form.password || !form.remarks || form.processing"
-                  variant="destructive"
-                >
-                  <span v-if="form.processing">Processing...</span>
-                  <span v-else>Confirm Rejection</span>
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
           </div>
 
-          <div class="flex items-center space-x-2">
-            <Button size="sm" @click="printArea"><Printer />Print</Button>
-            <Button variant="outline" size="sm"  as-child>
-              <Link href="/purchase-orders">Back to List</Link>
-            </Button>
-          </div>
           <div class="flex items-center space-x-2" v-if="purchaseOrder.status === 'voucherCreated'">
             <Button size="sm" class="bg-green-600 hover:bg-green-700" @click="viewVoucher(purchaseOrder.id)">
               <ReceiptText />View Voucher
             </Button>
           </div>
+          <div class="flex items-center space-x-2">
+            <Button size="sm" variant="outline" @click="printArea"><Printer />Print</Button>
+            <Button variant="outline" size="sm"  as-child>
+              <Link href="/purchase-orders"> <ArrowLeft />Back</Link>
+            </Button>
+          </div>
         </div>
       </div>
-        <Alert 
-            v-if="showAlert && purchaseOrder.tagging === 'with_canvas'" 
-            variant="warning" 
-            class="relative pr-10"
+      <Alert 
+        v-if="showAlert && purchaseOrder.tagging === 'with_canvas'" 
+        variant="warning" 
+        class="relative pr-10"
+      >
+        <AlertCircle class="h-4 w-4" />
+          <AlertTitle>Canvas Selected Files</AlertTitle>
+          <AlertDescription>
+            <template v-if="purchaseOrder.canvas?.selected_files?.length">
+              <div class="space-y-3">
+                <div v-for="selectedFile in purchaseOrder.canvas.selected_files" :key="selectedFile.id">
+                  <!-- File Information -->
+                    <div>
+                      <span class="font-medium">File:</span> 
+                      <span v-if="selectedFile.file">
+                        {{ selectedFile.file.original_filename || 'N/A' }}
+                      </span>
+                      <span v-else>File not found</span>
+                    </div>
+                </div>
+              </div>
+            </template>
+            <template v-else>
+              <p>No selected files found for this canvas</p>
+            </template>
+          </AlertDescription>
+          <!-- Dismiss Button -->
+          <button
+            class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground"
+            @click="showAlert = false"
+            aria-label="Dismiss"
           >
-            <AlertCircle class="h-4 w-4" />
-            <AlertTitle>Canvas Information</AlertTitle>
-            <AlertDescription>
-              <template v-if="purchaseOrder.canvas">
-                <h1 class="capitalize">Filename: {{ purchaseOrder.canvas.original_filename }}</h1>
-                <h1 class="capitalize">Remarks: {{ purchaseOrder.canvas.remarks }}</h1>
-              </template>
-              <template v-else>
-                (Canvas details not available)
-              </template>
-            </AlertDescription>
-            <!-- Dismiss Button -->
-            <button
-              class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground"
-              @click="showAlert = false"
-              aria-label="Dismiss"
-            >
-              <X class="h-4 w-4 text-yellow-700" />
-            </button>
+            <X class="h-4 w-4 text-yellow-700" />
+          </button>
         </Alert>
 
       <!-- Allert Remarks -->

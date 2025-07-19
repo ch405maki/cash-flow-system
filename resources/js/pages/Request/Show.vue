@@ -152,14 +152,6 @@
                         </DialogFooter>
                         </DialogContent>
                     </Dialog>
-                    <Button 
-                        variant="outline" 
-                        size="sm" 
-                        @click="submitStatusUpdate('rejected', '')"
-                        :disabled="request.status === 'rejected' || request.status === 'approved' || form.processing"
-                    >
-                        Reject
-                    </Button>
                 </div>
                 <!-- Property access -->
                 <div v-if="user.role === 'property_custodian'" class="flex items-center gap-2">
@@ -292,20 +284,12 @@
                         </DialogFooter>
                         </DialogContent>
                     </Dialog>
-                    <Button 
-                            variant="outline" 
-                            size="sm" 
-                            @click="submitStatusUpdate('rejected', '')"
-                            :disabled="request.status === 'propertyCustodian' || request.status === 'propertyCustodian' || form.processing"
-                        >
-                            Reject
-                    </Button>
                 </div>
                 <Button
                     size="sm"
                     variant="outline"
                     @click.stop="goToEditRequest(request.id)"
-                    v-if="user.role === 'staff' && request.status === 'pending'"
+                    v-if="(user.role === 'staff' || user.role === 'department_head') && request.status === 'pending'"
                     class="relative z-10"
                 >
                     <FilePenLine class="h-4" />

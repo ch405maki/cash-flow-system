@@ -60,7 +60,8 @@ class PurchaseOrderController extends Controller
                 'department', 
                 'account',
                 'details',
-                'canvas'
+                'canvas.selected_files.file', // Load the file relation
+                'canvas.selected_files.approval' // Load the approval relation
             ]),
             'authUser' => [
                 'id' => $user->id,

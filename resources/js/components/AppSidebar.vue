@@ -43,6 +43,7 @@ const executiveMainItems: NavItem[] = [
     icon: LayoutDashboard,
   },
 ];
+
 const executiveApprovalItems: NavItem[] = [
   {
     title: 'Order Request',
@@ -79,6 +80,7 @@ const purchasingNavItems: NavItem[] = [
     icon: FileCheck2,
   },
 ];
+
 const purchasingCanvasNavItems = ref<DropdownNavItem[]>([
   {
     title: 'Canvas',
@@ -106,6 +108,7 @@ const purchasingCanvasNavItems = ref<DropdownNavItem[]>([
     ],
   },
 ]);
+
 const purchasingPONavItems = ref<DropdownNavItem[]>([
   {
     title: 'Purchase Order',
@@ -139,6 +142,7 @@ const custodianNavItems: NavItem[] = [
     icon: Package,
   },
 ];
+
 const custodianApprovalItems: NavItem[] = [
   {
     title: 'For Approval',
@@ -173,6 +177,7 @@ const staffNavItems: NavItem[] = [
     icon: SquarePen,
   },
 ];
+
 const staffRequestItems = ref<DropdownNavItem[]>([
     {
         title: 'Request',
@@ -211,6 +216,7 @@ const accountingNavItems: NavItem[] = [
     icon: ReceiptText,
   },
 ];
+
 const accountingCheckNavItems: NavItem[] = [
   {
     title: 'For Check Releasing',
@@ -218,6 +224,15 @@ const accountingCheckNavItems: NavItem[] = [
     icon: ReceiptText,
   },
 ];
+
+const accountingAuditNavItems: NavItem[] = [
+  {
+    title: 'Purchase Canvas',
+    href: '/canvas',
+    icon: ListCollapse,
+  },
+];
+
 const reportItems = ref<DropdownNavItem[]>([
     {
         title: 'Reports',
@@ -307,7 +322,7 @@ const adminNavItems: NavItem[] = [
           
           <div v-if="user?.role === 'accounting'">
             <NavMain :items="accountingNavItems" group-label="Navigation"/>
-            <NavMain :items="purchasingCanvasNavItems"/>
+            <NavMain :items="accountingAuditNavItems" group-label="Audit"/>
             <NavMain :items="accountingCheckNavItems" group-label="Check"/>
             <NavMain :items="reportItems" group-label="Reports" />
           </div>

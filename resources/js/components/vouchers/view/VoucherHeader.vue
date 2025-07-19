@@ -36,18 +36,15 @@ const emit = defineEmits(['print']);
             <h2 class="text-2xl font-bold tracking-tight">Voucher # {{ voucher.voucher_no }}</h2>
         </div>
         <div class="flex gap-2">
-            <Button variant="outline" @click="emit('print')">
-                <Printer class="h-4 w-4 mr-2" />
-                Print
-            </Button>
-
-            <ReceiptUploadDialog 
+            <template v-if="authUser.role == 'accounting' && voucher.status !== 'draft'">
+                <ReceiptUploadDialog 
                 :voucher-id="voucher.id"
                 :current-issue-date="voucher.issue_date"
                 :current-delivery-date="voucher.delivery_date"
                 :current-remarks="voucher.remarks"
                 @upload-success="handleUploadSuccess"
             />
+            </template>
 
             <!-- Executive Director Actions -->
             <template v-if="authUser.role == 'executive_director' && authUser.access_id == '1'">
@@ -58,7 +55,7 @@ const emit = defineEmits(['print']);
                             :class="voucher.status === 'forCheck' ? 'cursor-not-allowed' : ''"
                             :disabled="voucher.status === 'forCheck'"
                         >
-                            <Check class="h-4 w-4 mr-2" />
+                            <Check class="h-4 w-4" />
                             <span>{{ voucher.status === 'forCheck' ? 'For Check Releasing' : 'Approve' }}</span>
                         </Button>
                     </template>
@@ -76,7 +73,7 @@ const emit = defineEmits(['print']);
                 </Button>
             </template>
 
-            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3'">
+            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'draft'">
                 <Button
                     v-if="authUser.role === 'accounting' && voucher.status == 'forEOD'"
                     variant="default"
@@ -88,7 +85,6 @@ const emit = defineEmits(['print']);
             </template>
 
             <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status !== 'forCheck' && voucher.status !== 'unreleased' && voucher.status !== 'released'">
-
                 <DirectorVerificationDialog :voucher-id="voucher.id" action="forEod">
                     <template #trigger>
                         <Button 
@@ -104,7 +100,6 @@ const emit = defineEmits(['print']);
             </template>
 
             <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'unreleased'">
-
                 <DirectorVerificationDialog :voucher-id="voucher.id" action="released">
                     <template #trigger>
                         <Button 
@@ -118,6 +113,10 @@ const emit = defineEmits(['print']);
                     </template>
                 </DirectorVerificationDialog>
             </template>
+            <Button variant="outline" @click="emit('print')">
+                <Printer class="h-4 w-4 mr-2" />
+                Print
+            </Button>
         </div>
     </div>
     <!-- Allert Remarks -->

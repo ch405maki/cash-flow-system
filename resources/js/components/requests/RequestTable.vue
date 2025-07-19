@@ -11,6 +11,7 @@ import { defineProps } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { usePage } from '@inertiajs/vue3';
 import { formatDate, formatDateTime } from '@/lib/utils';
+import { FileText } from 'lucide-vue-next';
 
 
 const props = defineProps<{

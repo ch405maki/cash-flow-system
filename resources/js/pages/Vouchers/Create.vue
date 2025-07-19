@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from 'vue-toastification';
-import { Plus, Trash2, Check, ChevronsUpDown, Search } from 'lucide-vue-next';
+import { Plus, Trash2, FilePlus2, Ban, Check, ChevronsUpDown, Search } from 'lucide-vue-next';
 import { Combobox, ComboboxAnchor, ComboboxEmpty, ComboboxGroup, ComboboxInput, ComboboxItem, ComboboxItemIndicator, ComboboxList, ComboboxTrigger } from '@/components/ui/combobox';
 import axios from 'axios'
 import { formatCurrency } from '@/lib/utils';
@@ -55,7 +55,6 @@ const form = reactive({
     voucher_no: props.voucher_number,
     issue_date: '',
     payment_date: '',
-    check_date: '',
     delivery_date: '',
     voucher_date: '',
     purpose: '',
@@ -279,10 +278,6 @@ const handleKeyDown = (event: KeyboardEvent, index: number) => {
                 :disabled="true"
               />
             </div>
-            <div class="grid gap-2">
-              <Label for="check_date">Check Date</Label>
-              <Input id="check_date" type="date" v-model="form.check_date" />
-            </div>
           </div>
         </div>
 
@@ -399,9 +394,7 @@ const handleKeyDown = (event: KeyboardEvent, index: number) => {
                     <Button 
                         type="button" 
                         variant="default" 
-                        size="sm" 
                         @click="addItem"
-                        class="h-10"
                     >
                         <Plus class="h-4 w-4" /> Accept
                     </Button>
@@ -513,7 +506,7 @@ const handleKeyDown = (event: KeyboardEvent, index: number) => {
                     <div class="flex justify-end space-x-2">
                       <template v-if="item.editing">
                         <Button
-                          variant="outline"
+                          variant="default"
                           size="sm"
                           @click.stop="saveEdit(index)"
                         >
@@ -556,10 +549,10 @@ const handleKeyDown = (event: KeyboardEvent, index: number) => {
 
           <!-- Total Amount -->
         <div class="flex justify-between mt-4">
-          <p v-if="form.items.some(i => i.charging_tag === 'D')" class="text-sm text-muted-foreground ml-2">
+          <p class="text-sm text-muted-foreground ml-2">
             (C: ₱{{ calculateTotal('C').toFixed(2) }} - D: ₱{{ calculateTotal('D').toFixed(2) }})
           </p>
-          <div class="text-lg font-semibold">
+          <div class="text-lg font-semibold text-right">
             Total Amount: ₱{{ form.check_amount.toFixed(2) }}
           </div>
         </div>
@@ -584,18 +577,18 @@ const handleKeyDown = (event: KeyboardEvent, index: number) => {
         </div>
 
         <!-- Form Actions -->
-        <CardFooter class="flex justify-end gap-4 px-0 pb-0">
+        <CardFooter class="flex justify-end gap-2 px-0 pb-0">
           <Button 
             type="button" 
             variant="outline" 
             @click="router.visit('/vouchers')"
           >
-            Cancel
+             <Ban />Cancel
           </Button>
           <Button 
             type="submit" 
             :disabled="!isCashVoucher && form.items.length === 0"
-          >
+          ><FilePlus2 class="h-4 w-4" />
             Create Voucher
           </Button>
         </CardFooter>

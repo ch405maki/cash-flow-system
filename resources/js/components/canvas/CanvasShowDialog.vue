@@ -12,6 +12,7 @@ import { useToast } from 'vue-toastification';
 import { formatDateTime } from '@/lib/utils';
 import { router } from '@inertiajs/vue3';
 
+
 const toast = useToast();
 
 const props = defineProps({
@@ -30,6 +31,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:open', 'updated', 'reupload']);
+const showAlert = ref(true)
 
 const isApproved = computed(
   () => props.canvas.status === 'approved' || props.canvas.status === 'poCreated'
@@ -202,7 +204,31 @@ function viewRequest(id: number) {
             </p>
           </div>
         </div>
-        {{ canvas?.note || 'No Note' }}
+
+        <Alert 
+          v-if="showAlert && canvas?.note.length > 0" 
+          variant="warning" 
+          class="relative pr-10"
+        >
+          <AlertCircle class="h-4 w-4" />
+          <AlertTitle>Note!</AlertTitle>
+          <AlertDescription>
+            <template v-if="canvas">
+              <h1 class="capitalize">{{ canvas?.note || 'No Note' }}</h1>
+            </template>
+            <template v-else>
+              (Canvas details not available)
+            </template>
+          </AlertDescription>
+          <!-- Dismiss Button -->
+          <button
+            class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground"
+            @click="showAlert = false"
+            aria-label="Dismiss"
+          >
+            <X class="h-4 w-4 text-yellow-700" />
+          </button>
+        </Alert>
 
         <!-- Approved File Section (only shown for approved canvases) -->
         <div v-if="approvedFile">
@@ -228,7 +254,7 @@ function viewRequest(id: number) {
         </div>
 
         <!-- Approval History with Stepper -->
-        <div v-if="canvas.approvals?.length" class="mt-4">
+        <div v-if="canvas.approvals?.length">
           <h3 class="text-sm font-medium text-muted-foreground mb-3">Approval History</h3>
           <div class="relative pl-6">
             <!-- Vertical timeline line -->
@@ -275,12 +301,12 @@ function viewRequest(id: number) {
         <!-- Only show these sections if NOT approved -->
         <template v-if="!isApproved">
           <!-- Files Section (for non-approved canvases) -->
-          <div v-if="canvas.files?.length">
+          <div v-if="userRole != 'executive_director' && canvas.files?.length">
             <h3 class="text-sm font-medium text-muted-foreground">Files</h3>
             <div class="space-y-2 mt-2">
               <div v-for="file in canvas.files" :key="file.id" class="flex items-center justify-between p-2 border rounded">
                 <div class="flex items-center gap-2">
-                  <FileText class="h-4 w-4 text-muted-foreground" />
+                  <FileText class="max-h-4 max-w-4 text-muted-foreground" />
                   <span class="text-sm">{{ file.original_filename }}</span>
                 </div>
                 <Button 
@@ -290,6 +316,39 @@ function viewRequest(id: number) {
                 >
                   <Download class="h-4 w-4" />
                 </Button>
+              </div>
+            </div>
+          </div>
+
+          <!-- File Selection for Executive -->
+          <div v-if="userRole === 'executive_director' && canvas.files?.length">
+            <h3 class="text-sm font-medium text-muted-foreground ">Select File for Approval</h3>
+            <p class="text-xs text-muted-foreground mb-2">Please select one file to approve</p>
+            
+            <div class="space-y-2 mt-2">
+              <div v-for="file in canvas.files" :key="file.id" class="flex items-center items-start gap-3 p-2 border rounded">
+                <div class="flex items-center h-5">
+                  <input
+                    type="radio"
+                    :id="`file-${file.id}`"
+                    v-model="form.selected_file"
+                    :value="file.id"
+                    class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                  >
+                </div>
+                <div class="flex-1 flex items-center justify-between">
+                  <label :for="`file-${file.id}`" class="flex items-center gap-2 cursor-pointer">
+                    <FileText class="max-h-4 max-w-4 text-muted-foreground" />
+                    <span class="text-sm">{{ file.original_filename }}</span>
+                  </label>
+                  <Button 
+                      variant="ghost" 
+                      size="sm"
+                      @click="downloadFile(file.id)"
+                    >
+                  <Download class="h-4 w-4" />
+                </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -306,32 +365,6 @@ function viewRequest(id: number) {
                 : 'Enter approval comments...'"
               class="mt-2"
             />
-          </div>
-
-          <!-- File Selection for Executive -->
-          <div v-if="userRole === 'executive_director' && canvas.files?.length">
-            <h3 class="text-sm font-medium text-muted-foreground mt-4">Select File for Approval</h3>
-            <p class="text-xs text-muted-foreground mb-2">Please select one file to approve</p>
-            
-            <div class="space-y-2 mt-2">
-              <div v-for="file in canvas.files" :key="file.id" class="flex items-start gap-3 p-2 border rounded">
-                <div class="flex items-center h-5">
-                  <input
-                    type="radio"
-                    :id="`file-${file.id}`"
-                    v-model="form.selected_file"
-                    :value="file.id"
-                    class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
-                  >
-                </div>
-                <div class="flex-1">
-                  <label :for="`file-${file.id}`" class="flex items-center gap-2 cursor-pointer">
-                    <FileText class="h-4 w-4 text-muted-foreground" />
-                    <span class="text-sm">{{ file.original_filename }}</span>
-                  </label>
-                </div>
-              </div>
-            </div>
           </div>
         </template>
       </div>

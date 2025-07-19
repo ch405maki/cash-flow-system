@@ -182,10 +182,10 @@ async function updateVoucher() {
                         @calculate-total="calculateTotalAmount"
                     />
                     
-                    <VoucherDatesForm 
+                    <!-- <VoucherDatesForm 
                         :form="form" 
                         @file-selected="handleFileSelected"
-                    />
+                    /> -->
                     
                     <CardFooter class="flex justify-end gap-4 px-0 pb-0">
                         <Button variant="outline" type="button" @click="router.visit('/vouchers')">

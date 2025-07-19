@@ -23,7 +23,7 @@ class CanvasController extends Controller
         if ($user->role === 'executive_director') {
             // Executive Director sees canvases pending final approval
             $canvases = Canvas::with(['creator', 'request_to_order', 'files'])
-                ->where('status', 'pending_approval')
+                ->whereIn('status', ['pending_approval', 'submitted'])
                 ->latest()
                 ->get();
         } elseif ($user->role === 'accounting') {
@@ -121,7 +121,6 @@ class CanvasController extends Controller
             $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
             $extension = $file->getClientOriginalExtension();
             $filename = $this->generateUniqueFilename($originalName, $extension);
-            
             $filePath = $file->storeAs('canvases', $filename, 'public');
 
             CanvasFile::create([
