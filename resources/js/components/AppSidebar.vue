@@ -294,7 +294,6 @@ const adminNavItems: NavItem[] = [
 ];
 </script>
 
-
 <template>
     <Sidebar collapsible="icon" variant="inset">
         <SidebarHeader>

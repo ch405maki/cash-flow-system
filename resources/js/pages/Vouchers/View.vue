@@ -44,6 +44,9 @@ const props = defineProps({
     }
 });
 
+const voucherRef = ref({ ...props.voucher });
+
+
 const { accounts, voucher, authUser, signatories } = props;
 
 const executiveDirector = computed(() =>
@@ -98,17 +101,19 @@ const printArea = () => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
             <VoucherHeader 
-                :voucher="voucher" 
-                :auth-user="authUser"
-                @print="printArea"
+            :voucher="voucherRef" 
+            :auth-user="authUser"
+            @print="printArea"
+            @check-updated="voucherRef = $event"
             />
-            
+
             <VoucherInfoTables 
-                :voucher="voucher"
-                :format-date="formatDate"
-                :format-currency="formatCurrency"
-                :format-status="formatStatus"
+            :voucher="voucherRef"
+            :format-date="formatDate"
+            :format-currency="formatCurrency"
+            :format-status="formatStatus"
             />
+
             
             <!-- <VoucherDatesTable 
                 :voucher="voucher"
@@ -123,7 +128,7 @@ const printArea = () => {
             
             <PrintableVoucher 
                 id="print-section"
-                :voucher="voucher"
+                :voucher="voucherRef"
                 :auth-user="authUser"
                 :accounts="accounts"
                 :director-accounting="directorAccounting"

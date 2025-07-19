@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft,SquarePen, Printer, Check, X , BadgeCheck } from 'lucide-vue-next';
+import { ArrowLeft, SquarePen, Printer, Check, X, BadgeCheck } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
 import EodVerificationDialog from '@/components/vouchers/EodVerificationDialog.vue';
 import DirectorVerificationDialog from '@/components/vouchers/DirectorVerificationDialog.vue';
@@ -7,7 +7,8 @@ import { router } from '@inertiajs/vue3';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ref } from 'vue'
 import ReceiptUploadDialog from '@/components/vouchers/upload/ReceiptUploadDialog.vue';
-import { Upload } from 'lucide-vue-next'
+import { Upload } from 'lucide-vue-next';
+import AddCheckDialog from '@/components/vouchers/edit/AddCheckDialog.vue';
 
 defineProps({
     voucher: {
@@ -20,14 +21,11 @@ defineProps({
     }
 });
 
-const showAlert = ref(true)
+const emit = defineEmits(['print', 'check-updated']);
 
-function goToEditVoucher(id: number, e: Event) {
-  e.stopPropagation();
-  router.get(`/vouchers/${id}/edit`);
+const handleCheckSaved = (updatedData) => {
+  emit('check-updated', updatedData) 
 }
-
-const emit = defineEmits(['print']);
 </script>
 
 <template>
@@ -61,16 +59,15 @@ const emit = defineEmits(['print']);
                     </template>
                 </EodVerificationDialog>
             </template>
+
             <!-- Accounting Actions -->
             <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'forCheck'">
-                <Button
-                    v-if="authUser.role === 'accounting' && voucher.status !== 'forEOD'"
-                    variant="default"
-                    @click.stop="goToEditVoucher(voucher.id, $event)"
-                    >
-                    <SquarePen />
-                    <span>Add Check Number</span>
-                </Button>
+                <AddCheckDialog 
+                  :voucher-id="voucher.id"
+                  :current-check-no="voucher.check_no"
+                  :current-check-date="voucher.check_date"
+                  @saved="handleCheckSaved"
+                />
             </template>
 
             <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'draft'">
@@ -128,7 +125,7 @@ const emit = defineEmits(['print']);
         <BellRing class="h-4 w-4" />
         <AlertTitle>Remarks</AlertTitle>
         <AlertDescription>
-          {{ voucher.remarks }}
+            {{ voucher.remarks }}
         </AlertDescription>
         <!-- Dismiss Button -->
         <button

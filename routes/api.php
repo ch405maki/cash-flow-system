@@ -33,6 +33,7 @@ Route::put('/vouchers/{voucher}', [VoucherController::class, 'update']);
 Route::get('/vouchers/{voucher}', [VoucherController::class, 'show']);
 
 Route::post('/vouchers/{voucher}/receipt', [VoucherController::class, 'uploadReceipt']);
+Route::patch('/vouchers/{voucher}/check', [VoucherController::class, 'addCheckDetails']);
 
 // Request Routes
 Route::post('/requests', [RequestController::class, 'store']);

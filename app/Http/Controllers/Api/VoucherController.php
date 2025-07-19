@@ -306,6 +306,32 @@ class VoucherController extends Controller
         }
     }
 
+    public function addCheckDetails(Request $request, Voucher $voucher): JsonResponse
+    {
+        $validated = $request->validate([
+            'check_no' => 'required|string|max:255',
+            'check_date' => 'required|date',
+        ]);
+
+        try {
+            // Update voucher with check details
+            $voucher->update([
+                'check_no' => $validated['check_no'],
+                'check_date' => $validated['check_date'],
+                'status' => 'unreleased'
+            ]);
+
+            return $this->successResponse(
+                'Check details added successfully',
+                $voucher->fresh(),
+                200
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to add check details: ' . $e->getMessage(), 500);
+        }
+    }
+    
+
     public function show(Voucher $voucher): JsonResponse
     {
         return $this->successResponse(
