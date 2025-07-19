@@ -9,6 +9,7 @@ import { ref } from 'vue'
 import ReceiptUploadDialog from '@/components/vouchers/upload/ReceiptUploadDialog.vue';
 import { Upload } from 'lucide-vue-next';
 import AddCheckDialog from '@/components/vouchers/edit/AddCheckDialog.vue';
+import { useToast } from 'vue-toastification'
 
 defineProps({
     voucher: {
@@ -21,11 +22,9 @@ defineProps({
     }
 });
 
+const toast = useToast();
 const emit = defineEmits(['print', 'check-updated']);
 
-const handleCheckSaved = (updatedData) => {
-  emit('check-updated', updatedData) 
-}
 </script>
 
 <template>
@@ -62,12 +61,12 @@ const handleCheckSaved = (updatedData) => {
 
             <!-- Accounting Actions -->
             <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'forCheck'">
-                <AddCheckDialog 
-                  :voucher-id="voucher.id"
-                  :current-check-no="voucher.check_no"
-                  :current-check-date="voucher.check_date"
-                  @saved="handleCheckSaved"
-                />
+                <AddCheckDialog
+                    :voucher-id="voucher.id"
+                    :current-check-no="voucher.check_no"
+                    :current-check-date="voucher.check_date"
+                    @saved="$emit('check-updated', $event)"
+                    />
             </template>
 
             <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'draft'">
@@ -116,12 +115,13 @@ const handleCheckSaved = (updatedData) => {
             </Button>
         </div>
     </div>
-    <!-- Allert Remarks -->
+    
+    <!-- Alert Remarks -->
     <Alert 
         v-if="showAlert && voucher.remarks" 
         variant="success" 
         class="relative pr-10"
-      >
+    >
         <BellRing class="h-4 w-4" />
         <AlertTitle>Remarks</AlertTitle>
         <AlertDescription>
@@ -129,11 +129,11 @@ const handleCheckSaved = (updatedData) => {
         </AlertDescription>
         <!-- Dismiss Button -->
         <button
-          class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground"
-          @click="showAlert = false"
-          aria-label="Dismiss"
+            class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground"
+            @click="showAlert = false"
+            aria-label="Dismiss"
         >
-          <X class="h-4 w-4 text-purple-700" />
+            <X class="h-4 w-4 text-purple-700" />
         </button>
-      </Alert>
+    </Alert>
 </template>

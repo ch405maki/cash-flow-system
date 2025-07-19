@@ -44,9 +44,7 @@ const props = defineProps({
     }
 });
 
-const voucherRef = ref({ ...props.voucher });
-
-
+const voucherRef = ref({ ...props.voucher })
 const { accounts, voucher, authUser, signatories } = props;
 
 const executiveDirector = computed(() =>
@@ -81,6 +79,11 @@ function formatStatus(status: string): string {
     }
 }
 
+const handleCheckUpdated = (updatedData) => {
+  Object.assign(voucherRef.value, updatedData);
+  toast.success('Check details updated successfully');
+}
+
 const printArea = () => {
     const printContents = document.getElementById('print-section')?.innerHTML;
     const originalContents = document.body.innerHTML;
@@ -101,19 +104,18 @@ const printArea = () => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
             <VoucherHeader 
-            :voucher="voucherRef" 
-            :auth-user="authUser"
-            @print="printArea"
-            @check-updated="voucherRef = $event"
+                :voucher="voucherRef" 
+                :auth-user="authUser"
+                @print="printArea"
+                @check-updated="handleCheckUpdated"  
             />
 
             <VoucherInfoTables 
-            :voucher="voucherRef"
-            :format-date="formatDate"
-            :format-currency="formatCurrency"
-            :format-status="formatStatus"
+                :voucher="voucherRef"
+                :format-date="formatDate"
+                :format-currency="formatCurrency"
+                :format-status="formatStatus"
             />
-
             
             <!-- <VoucherDatesTable 
                 :voucher="voucher"

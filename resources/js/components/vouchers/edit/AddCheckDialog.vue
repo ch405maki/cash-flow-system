@@ -7,7 +7,6 @@ import { useToast } from 'vue-toastification'
 import axios from 'axios'
 import { ref } from 'vue'
 import { Loader2, Hash, Calendar } from 'lucide-vue-next'
-import { router } from '@inertiajs/vue3'
 
 const props = defineProps({
   voucherId: {
@@ -37,7 +36,7 @@ const emit = defineEmits(['saved'])
 
 const addCheckDetails = async () => {
   if (!form.value.check_no || !form.value.check_date) {
-    toast.error('Please complete all check fields');
+    toast.error('Please complete all check fields'); // keep this here
     return;
   }
 
@@ -49,14 +48,7 @@ const addCheckDetails = async () => {
       check_date: form.value.check_date
     });
 
-    toast.success('Check details updated successfully');
-        setTimeout(() => {
-        emit('saved', response.data.data);
-        isOpen.value = false;
-    }, 300);
-
-
-    emit('saved', response.data.data);
+    emit('saved', response.data.data); // ✅ emit only
     isOpen.value = false;
 
   } catch (error) {
@@ -72,6 +64,8 @@ const addCheckDetails = async () => {
 </script>
 
 <template>
+    <button @click="toast.success('Test Toast')">Test Toast</button>
+
   <Dialog v-model:open="isOpen">
     <DialogTrigger as-child>
       <Button variant="default" class="gap-2">
