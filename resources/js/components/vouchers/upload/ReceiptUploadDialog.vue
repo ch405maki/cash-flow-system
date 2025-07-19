@@ -162,6 +162,7 @@ const uploadReceipt = async () => {
         </Button>
         <Button @click="uploadReceipt" :disabled="isLoading">
           <Loader2 v-if="isLoading" class="h-4 w-4 mr-2 animate-spin" />
+          <Upload />
           <span>{{ isLoading ? 'Uploading...' : 'Upload' }}</span>
         </Button>
       </div>

@@ -289,6 +289,7 @@ class VoucherController extends Controller
                 'issue_date' => $validated['issue_date'],
                 'delivery_date' => $validated['delivery_date'],
                 'remarks' => $validated['remarks'],
+                'status' => 'completed',
             ]);
 
             return $this->successResponse(

@@ -48,7 +48,7 @@ const addCheckDetails = async () => {
       check_date: form.value.check_date
     });
 
-    emit('saved', response.data.data); // ✅ emit only
+    emit('saved', response.data.data);
     isOpen.value = false;
 
   } catch (error) {

@@ -3,7 +3,7 @@
     <DialogTrigger as-child>
       <slot name="trigger"></slot>
     </DialogTrigger>
-    <DialogContent class="sm:max-w-[425px]">
+    <DialogContent>
       <DialogHeader>
           <DialogTitle>Password Confirmation</DialogTitle>
           <DialogDescription>

@@ -29,9 +29,8 @@ defineProps({
         <div class="flex items-center justify-between">
             <p class="font-medium text-muted-foreground">Voucher Details</p>
             <div v-if="voucher.receipt">
-                <!-- {{ voucher.receipt }} -->
-                <Button variant="outline">
-                        <Download /> Download Receipt
+                <Button variant="success">
+                    <Download /> Download Receipt
                 </Button>
             </div>
         </div>
@@ -42,10 +41,17 @@ defineProps({
                 VOUCHER TYPE:
                 <span class="uppercase font-normal">{{ voucher.type }}</span> &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
                 STATUS:
-                <span class="uppercase font-normal" :class="{ 'text-red-600': voucher.status === 'unreleased' }">
-                {{ formatStatus(voucher.status) }}
-                </span>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-
+                    <span class="uppercase font-bold tracking-wide"
+                        :class="{
+                            'text-green-600': voucher.status === 'completed',
+                            'text-red-600': voucher.status === 'unreleased',
+                            'text-purple-600': voucher.status === 'released',
+                            'text-yellow-500': voucher.status === 'forCheck',
+                            'text-blue-500': voucher.status === 'forEOD',
+                            'text-gray-500': voucher.status === 'draft'
+                        }">
+                    {{ formatStatus(voucher.status) }}
+                    </span>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
                 CHECK AMOUNT:
                 <span class="uppercase font-normal">{{ formatCurrency(voucher.check_amount) }}</span>
             </th>

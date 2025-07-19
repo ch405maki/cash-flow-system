@@ -44,7 +44,7 @@ const emit = defineEmits(['print', 'check-updated']);
             </template>
 
             <!-- Executive Director Actions -->
-            <template v-if="authUser.role == 'executive_director' && authUser.access_id == '1'">
+            <template v-if="authUser.role == 'executive_director' && authUser.access_id == '1' && voucher.status == 'forEOD'">
                 <EodVerificationDialog :voucher-id="voucher.id" action="approve">
                     <template #trigger>
                         <Button 
@@ -110,7 +110,7 @@ const emit = defineEmits(['print', 'check-updated']);
                 </DirectorVerificationDialog>
             </template>
             <Button variant="outline" @click="emit('print')">
-                <Printer class="h-4 w-4 mr-2" />
+                <Printer class="h-4 w-4" />
                 Print
             </Button>
         </div>
