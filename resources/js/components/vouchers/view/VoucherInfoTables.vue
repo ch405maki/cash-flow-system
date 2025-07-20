@@ -34,7 +34,6 @@ const downloadReceipt = () => {
 </script>
 
 <template>
-
     <!-- First Table -->
     <div class="space-y-2">
         <div class="flex items-center justify-between">
