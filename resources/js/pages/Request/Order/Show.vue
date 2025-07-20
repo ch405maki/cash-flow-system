@@ -3,8 +3,8 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { ref } from 'vue'
 import { Head, usePage } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
-import { Printer, ListChecks, Send, ArrowLeft, CircleCheck } from 'lucide-vue-next';
-import { formatDate } from '@/lib/utils'
+import { Printer, ListChecks, Rocket, Send, ArrowLeft, CircleCheck } from 'lucide-vue-next';
+import { formatDate, formatDateTime } from '@/lib/utils'
 import {
     Dialog,
     DialogContent,
@@ -127,13 +127,6 @@ const breadcrumbs: BreadcrumbItem[] = [
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold">Request To Order Details</h1>
         <div class="space-x-2 flex items-center">
-          <Button 
-            v-if="requestOrder.status === 'forPO'"
-            size="sm"
-            @click="$inertia.visit(route('request-to-order.release.create', requestOrder.id))"
-          >
-            Release Items
-          </Button>
           <!-- Approve Button with Dialog -->
           <div v-if="authUser.role == 'executive_director'" class="space-x-2 flex items-center">
             <Dialog v-model:open="showApproveModal">
@@ -174,7 +167,7 @@ const breadcrumbs: BreadcrumbItem[] = [
           </Dialog>
           </div>
           <!-- for property -->
-          <div v-if="authUser.role === 'property_custodian' && authUser.access == 3" class="space-x-2 flex items-center">
+          <div v-if="authUser.role === 'property_custodian' && authUser.access == 3 && requestOrder.status === 'pending'" class="space-x-2 flex items-center">
             <Dialog v-model:open="showForEODModal">
               <DialogTrigger as-child>
                   <Button
@@ -212,7 +205,15 @@ const breadcrumbs: BreadcrumbItem[] = [
               </DialogContent>
           </Dialog>
           </div>
-          <Button v-if="authUser.role === 'purchasing'" size="sm" @click="printArea"> <ListChecks />Mark As Done</Button>
+          <div v-if="authUser.role === 'purchasing'" >
+            <Button 
+              v-if="requestOrder.status === 'forPO'"
+              size="sm"
+              @click="$inertia.visit(route('request-to-order.release.create', requestOrder.id))"
+            >
+              <Rocket />  Release Items
+            </Button>
+          </div>
           <Button size="sm" variant="outline" @click="printArea"> <Printer />Print List</Button>
           <Button size="sm" @click="goBack" variant="outline"> <ArrowLeft />Back</Button>
         </div>
@@ -278,39 +279,43 @@ const breadcrumbs: BreadcrumbItem[] = [
 
         <div v-if="requestOrder.details.some(d => d.releases.length > 0)" class="mt-8">
           <h2 class="text-xl font-semibold mb-4">Release History</h2>
-          <div class="border rounded-md overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Released By</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <template v-for="detail in requestOrder.details" :key="detail.id">
-                  <tr v-for="release in detail.releases" :key="release.id">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      {{ formatDate(release.release_date) }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+          <div class="border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead class="w-[120px]">Date</TableHead>
+                  <TableHead>Item</TableHead>
+                  <TableHead class="text-right">Quantity</TableHead>
+                  <TableHead>Released By</TableHead>
+                  <TableHead>Notes</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <template v-for="detail in requestOrder.details" :key="`detail-${detail.id}`">
+                  <TableRow 
+                    v-for="release in detail.releases" 
+                    :key="`release-${release.id}`"
+                    class="hover:bg-muted/50"
+                  >
+                    <TableCell class="font-medium w-48">
+                      {{ formatDateTime(release.created_at) }}
+                    </TableCell>
+                    <TableCell>
                       {{ detail.item_description }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    </TableCell>
+                    <TableCell class="text-right">
                       {{ release.quantity_released }} {{ detail.unit }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      {{ release.released_by.name }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      {{ release.notes }}
-                    </td>
-                  </tr>
+                    </TableCell>
+                    <TableCell class="w-48">
+                      {{ release.released_by ? `${release.released_by.first_name} ${release.released_by.last_name}` : 'N/A' }}
+                    </TableCell>
+                    <TableCell class="capitalize">
+                      {{ release.notes || 'No notes' }}
+                    </TableCell>
+                  </TableRow>
                 </template>
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
 

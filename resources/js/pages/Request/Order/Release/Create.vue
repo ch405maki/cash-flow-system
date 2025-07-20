@@ -42,7 +42,7 @@ const form = useForm({
     detail_id: detail.id,
     quantity: detail.remaining_quantity,
     notes: '',
-    selected: false // Add selected flag
+    selected: false 
   })),
 })
 

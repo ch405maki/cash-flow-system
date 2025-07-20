@@ -144,7 +144,6 @@ class RequestToOrderController extends Controller
             ->with('success', 'Order created successfully');
     }
 
-
     private function generateOrderNumber()
     {
         $prefix = 'ORD-';
