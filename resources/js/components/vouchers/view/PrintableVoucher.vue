@@ -58,7 +58,7 @@ defineProps({
             <div class="space-y-1">
                 <p><span class="text-xs">Payee:</span> <span class="font-medium uppercase">{{ voucher.payee }}</span></p>
                 <p><span class="text-xs">Check Payable to:</span> {{ voucher.check_payable_to }}</p>
-                <p><span class="text-xs">Check No./Date:</span> {{ formatDate(voucher.check_date) }}</p>
+                <p><span class="text-xs">Check No./Date:</span> {{ voucher.check_date ? formatDate(voucher.check_date) : '' }}</p>
             </div>
             <div class="space-y-1 text-left mr-[60px]">
                 <p><span class="text-xs">Voucher No:</span> {{ voucher.voucher_no }}</p>
@@ -98,7 +98,7 @@ defineProps({
                             </div>
                         </div>
                     </div>
-                    <span class="font-medium uppercase">{{ ['released', 'unreleased'].includes(voucher.status) ? 'Approved' : formatStatus(voucher.status) }}:</span>
+                    <span class="font-medium uppercase">approved:</span>
                 </div>
                 
                 <!-- Right Column - Certification -->
@@ -140,7 +140,8 @@ defineProps({
         <table class="w-full border-collapse mb-6">
             <!-- Non-Salary Voucher - General Charges Only -->
             <tr v-for="detail in voucher.details" :key="detail.id" class="border-b border-t border-zinc-400 uppercase">
-                <td class="text-left text-sm py- w-[70%]">{{accounts.find(a => a.id === detail.account_id)?.account_title || 'N/A'}}</td>
+                <td class="text-left text-sm"><span class="text-left text-sm mr-10">{{ detail.charging_tag }}</span>{{accounts.find(a => a.id === detail.account_id)?.account_title || 'N/A'}}</td>
+                
                 <td class="text-left text-sm w-[30%]">{{ formatCurrency(detail.amount) }}</td>
             </tr>
             <tr>
@@ -158,7 +159,7 @@ defineProps({
         <table class="w-full border-collapse border border-zinc-400 mt-16">
             <tr>
                 <td class="border border-zinc-400 p-2 align-top w-1/2">
-                    <div class="font-medium text-sm">PREPARED BY:</div>
+                    <div class="font-medium text-sm">PREPARED BY: <span class="capitalize">{{ voucher.user.first_name }} {{ voucher.user.last_name }}</span></div>
                 </td>
                 <td class="border border-zinc-400 p-2 align-top w-1/2">
                     <div class="font-medium text-sm">AUDITED BY:</div>
@@ -166,7 +167,7 @@ defineProps({
             </tr>
         </table>
         <p class="text-xs mt-4">
-            {{ authUser.name }} - {{ new Date().toLocaleDateString() }}
+            {{ authUser.name }} - {{ new Date().toLocaleString() }}
         </p>
     </div>
 </template>

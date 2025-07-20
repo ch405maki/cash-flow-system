@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { ArrowLeft,SquarePen, Printer, Check, X , BadgeCheck } from 'lucide-vue-next';
+import { ArrowLeft, SquarePen, Printer, Check, X, BadgeCheck } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
 import EodVerificationDialog from '@/components/vouchers/EodVerificationDialog.vue';
 import DirectorVerificationDialog from '@/components/vouchers/DirectorVerificationDialog.vue';
 import { router } from '@inertiajs/vue3';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ref } from 'vue'
+import ReceiptUploadDialog from '@/components/vouchers/upload/ReceiptUploadDialog.vue';
+import { Upload } from 'lucide-vue-next';
+import AddCheckDialog from '@/components/vouchers/edit/AddCheckDialog.vue';
+import { useToast } from 'vue-toastification'
 
 defineProps({
     voucher: {
@@ -18,14 +22,9 @@ defineProps({
     }
 });
 
-const showAlert = ref(true)
+const toast = useToast();
+const emit = defineEmits(['print', 'check-updated']);
 
-function goToEditVoucher(id: number, e: Event) {
-  e.stopPropagation();
-  router.get(`/vouchers/${id}/edit`);
-}
-
-const emit = defineEmits(['print']);
 </script>
 
 <template>
@@ -34,13 +33,18 @@ const emit = defineEmits(['print']);
             <h2 class="text-2xl font-bold tracking-tight">Voucher # {{ voucher.voucher_no }}</h2>
         </div>
         <div class="flex gap-2">
-            <Button variant="outline" @click="emit('print')">
-                <Printer class="h-4 w-4 mr-2" />
-                Print
-            </Button>
+            <template v-if="authUser.role == 'accounting' && voucher.status !== 'draft'">
+                <ReceiptUploadDialog 
+                :voucher-id="voucher.id"
+                :current-issue-date="voucher.issue_date"
+                :current-delivery-date="voucher.delivery_date"
+                :current-remarks="voucher.remarks"
+                @upload-success="handleUploadSuccess"
+            />
+            </template>
 
             <!-- Executive Director Actions -->
-            <template v-if="authUser.role == 'executive_director' && authUser.access_id == '1' && voucher.status !== 'rejected'">
+            <template v-if="authUser.role == 'executive_director' && authUser.access_id == '1' && voucher.status == 'forEOD'">
                 <EodVerificationDialog :voucher-id="voucher.id" action="approve">
                     <template #trigger>
                         <Button 
@@ -48,38 +52,24 @@ const emit = defineEmits(['print']);
                             :class="voucher.status === 'forCheck' ? 'cursor-not-allowed' : ''"
                             :disabled="voucher.status === 'forCheck'"
                         >
-                            <Check class="h-4 w-4 mr-2" />
+                            <Check class="h-4 w-4" />
                             <span>{{ voucher.status === 'forCheck' ? 'For Check Releasing' : 'Approve' }}</span>
                         </Button>
                     </template>
                 </EodVerificationDialog>
-
-                <EodVerificationDialog :voucher-id="voucher.id" action="reject">
-                    <template #trigger>
-                        <Button 
-                            variant="destructive"
-                            :class="voucher.status === 'forCheck' ? 'opacity-50 cursor-not-allowed' : ''"
-                            :disabled="voucher.status === 'forCheck'"
-                        >
-                            <X class="h-4 w-4 mr-2" />
-                            Reject
-                        </Button>
-                    </template>
-                </EodVerificationDialog>
             </template>
+
             <!-- Accounting Actions -->
             <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'forCheck'">
-                <Button
-                    v-if="authUser.role === 'accounting' && voucher.status !== 'forEOD'"
-                    variant="default"
-                    @click.stop="goToEditVoucher(voucher.id, $event)"
-                    >
-                    <SquarePen />
-                    <span>Add Check Number</span>
-                </Button>
+                <AddCheckDialog
+                    :voucher-id="voucher.id"
+                    :current-check-no="voucher.check_no"
+                    :current-check-date="voucher.check_date"
+                    @saved="$emit('check-updated', $event)"
+                    />
             </template>
 
-            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3'">
+            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'draft'">
                 <Button
                     v-if="authUser.role === 'accounting' && voucher.status == 'forEOD'"
                     variant="default"
@@ -91,7 +81,6 @@ const emit = defineEmits(['print']);
             </template>
 
             <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status !== 'forCheck' && voucher.status !== 'unreleased' && voucher.status !== 'released'">
-
                 <DirectorVerificationDialog :voucher-id="voucher.id" action="forEod">
                     <template #trigger>
                         <Button 
@@ -104,23 +93,9 @@ const emit = defineEmits(['print']);
                         </Button>
                     </template>
                 </DirectorVerificationDialog>
-
-                <DirectorVerificationDialog :voucher-id="voucher.id" action="reject">
-                    <template #trigger>
-                        <Button 
-                            variant="destructive"
-                            :class="voucher.status === 'forEOD' ? 'opacity-50 cursor-not-allowed' : ''"
-                            :disabled="voucher.status === 'forEOD'"
-                        >
-                            <X class="h-4 w-4 mr-2" />
-                            Reject
-                        </Button>
-                    </template>
-                </DirectorVerificationDialog>
             </template>
 
             <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'unreleased'">
-
                 <DirectorVerificationDialog :voucher-id="voucher.id" action="released">
                     <template #trigger>
                         <Button 
@@ -134,26 +109,31 @@ const emit = defineEmits(['print']);
                     </template>
                 </DirectorVerificationDialog>
             </template>
+            <Button variant="outline" @click="emit('print')">
+                <Printer class="h-4 w-4" />
+                Print
+            </Button>
         </div>
     </div>
-    <!-- Allert Remarks -->
+    
+    <!-- Alert Remarks -->
     <Alert 
         v-if="showAlert && voucher.remarks" 
         variant="success" 
         class="relative pr-10"
-      >
+    >
         <BellRing class="h-4 w-4" />
         <AlertTitle>Remarks</AlertTitle>
         <AlertDescription>
-          {{ voucher.remarks }}
+            {{ voucher.remarks }}
         </AlertDescription>
         <!-- Dismiss Button -->
         <button
-          class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground"
-          @click="showAlert = false"
-          aria-label="Dismiss"
+            class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground"
+            @click="showAlert = false"
+            aria-label="Dismiss"
         >
-          <X class="h-4 w-4 text-purple-700" />
+            <X class="h-4 w-4 text-purple-700" />
         </button>
-      </Alert>
+    </Alert>
 </template>

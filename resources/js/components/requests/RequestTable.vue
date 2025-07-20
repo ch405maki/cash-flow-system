@@ -10,7 +10,8 @@ import {
 import { defineProps } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { usePage } from '@inertiajs/vue3';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatDateTime } from '@/lib/utils';
+import { FileText } from 'lucide-vue-next';
 
 
 const props = defineProps<{
@@ -49,8 +50,7 @@ function goToShowRequest(requestId: number) {
           @click="goToShowRequest(request.id)"
         >
           <TableCell>{{ request.request_no }}</TableCell>
-          <TableCell>{{ formatDate(request.request_date) }}</TableCell>
-          <!-- <TableCell>{{ request.purpose }}</TableCell> -->
+          <TableCell>{{ formatDateTime(request.request_date) }}</TableCell>
           <TableCell>{{ request.department?.department_name }}</TableCell>
           <TableCell>{{ getFullName(request.user) }}</TableCell>
           <TableCell class="text-right">

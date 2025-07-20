@@ -21,6 +21,10 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\CanvasController;
 use App\Http\Controllers\Api\DashboardController;
 
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Notifications\AnonymousNotifiable;
+use App\Notifications\WelcomeEmail;
+
 
 Route::get('/', function () {
     return Inertia::render('auth/Login');
@@ -83,6 +87,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/for-voucher', [ApprovedPurchaseOrderController::class, 'forVoucher'])->name('for-voucher.index');
     Route::get('/voucher-approval', [VoucherApprovalController::class, 'index'])->name('voucher-approval.index');
     Route::get('/approved-voucher', [ApprovedVoucherController::class, 'index'])->name('approved-voucher.index');
+
+    Route::get('/vouchers/{voucher}/download-receipt', [VoucherController::class, 'downloadReceipt'])->name('vouchers.download.receipt');
 });
 
 // Report Route 
@@ -113,8 +119,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/canvas/approval', [CanvasController::class, 'approval'])->name('canvas.approval');
     Route::get('/canvas/{canvas}', [CanvasController::class, 'show'])->name('canvas.show');
-    Route::get('/canvas/{canvas}/download', [CanvasController::class, 'download'])->name('canvas.download');
+    Route::get('/canvases/{canvas}/download', [CanvasController::class, 'downloadAll'])->name('canvas.download.all');
+    Route::get('/canvases/{canvas}/download/{file}', [CanvasController::class, 'downloadFile'])->name('canvas.download.file');
     Route::patch('/canvas/{canvas}', [CanvasController::class, 'update'])->name('canvas.update');
+});
+
+Route::get('/send-test-email', function () {
+    // Create an anonymous notifiable user
+    (new AnonymousNotifiable)
+        ->route('mail', 'markmanuel0317@gmail.com')
+        ->notify(new WelcomeEmail());
+
+    return 'Test email sent to markmanuel0317@gmail.com';
 });
 
 require __DIR__.'/settings.php';

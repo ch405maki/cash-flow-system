@@ -19,6 +19,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use App\Notifications\NewRequestNotification;
 
 
 use Inertia\Inertia;
@@ -146,7 +147,6 @@ class RequestController extends Controller
     {
         try {
             $validated = $request->validate([
-                'request_date' => 'required|date',
                 'purpose' => 'required|string|max:500',
                 'status' => 'required|in:pending,approved,rejected',
                 'department_id' => 'required|exists:departments,id',
@@ -159,9 +159,16 @@ class RequestController extends Controller
 
             // Auto-generate request number
             $validated['request_no'] = $this->generateRequestNumber();
+            $validated['request_date'] = now();
 
             // Create the request
             $requestModel = Request::create(collect($validated)->except('items')->toArray());
+            $requestModel->user->notify(new NewRequestNotification($requestModel));
+
+            // Notify custom recipient
+            // (new AnonymousNotifiable())
+            //     ->route('mail', 'recipient@example.com')
+            //     ->notify(new NewRequestNotification($requestModel));
 
             // Create request details
             foreach ($validated['items'] as $item) {
@@ -322,14 +329,14 @@ class RequestController extends Controller
 
         // Determine update data
         $updateData = ['status' => $validated['status']];
+        $validated['director_approved_at'] = now();
 
         // Update user_id only if user is NOT a property custodian
-        if (auth()->user()->role !== 'property_custodian') {
-            $updateData['user_id'] = auth()->id();
-        }
+        // if (auth()->user()->role !== 'property_custodian') {
+        //     $updateData['user_id'] = auth()->id();
+        // }
 
         $request->update($updateData);
-
         return back()->with('success', 'Request status updated successfully');
     }
 

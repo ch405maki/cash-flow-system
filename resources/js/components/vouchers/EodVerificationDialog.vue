@@ -3,16 +3,16 @@
     <DialogTrigger as-child>
       <slot name="trigger"></slot>
     </DialogTrigger>
-    <DialogContent class="sm:max-w-[425px]">
+    <DialogContent>
       <DialogHeader>
-        <DialogTitle>Password Confirmation</DialogTitle>
-        <DialogDescription>
-          Please enter your password to confirm this action.
-        </DialogDescription>
+          <DialogTitle>Password Confirmation</DialogTitle>
+          <DialogDescription>
+            Please enter your password to confirm this action.
+          </DialogDescription>
       </DialogHeader>
-      <div class="grid gap-4 py-4">
-        <div class="grid grid-cols-4 items-center gap-4">
-          <Label for="password" class="text-right">
+
+        <div>
+          <Label for="password">
             Password
           </Label>
           <Input
@@ -23,8 +23,8 @@
             @keyup.enter="verify"
           />
         </div>
-      </div>
-      <div v-if="error" class="text-red-500 text-sm">{{ error }}</div>
+        <div v-if="error" class="text-red-500 text-sm">{{ error }}</div>
+
       <DialogFooter>
         <Button type="button" variant="outline" @click="clear">
           Clear

@@ -18,6 +18,8 @@ interface PurchaseOrderDetail {
   item_description: string;
   unit_price: number;
   amount: number;
+  editing?: boolean;
+  original?: PurchaseOrderDetail;
 }
 
 interface Props {
@@ -50,6 +52,44 @@ const form = ref({
   canvas_id: props.canvas_id || null,
   tagging: props.canvas_id ? 'with_canvas' : 'no_canvas' as TaggingType, // Add this line
 });
+
+const editItem = (index: number) => {
+  // Exit any other editing modes first
+  form.value.details.forEach((item, i) => {
+    if (i !== index && item.editing) {
+      cancelEdit(i);
+    }
+  });
+  
+  // Set editing mode for this item
+  form.value.details[index].editing = true;
+  form.value.details[index].original = { ...form.value.details[index] };
+};
+
+const saveEdit = (index: number) => {
+  // Recalculate amount before saving
+  form.value.details[index].amount = 
+    form.value.details[index].quantity * form.value.details[index].unit_price;
+  
+  form.value.details[index].editing = false;
+  delete form.value.details[index].original;
+};
+
+const cancelEdit = (index: number) => {
+  if (form.value.details[index].original) {
+    form.value.details[index] = { ...form.value.details[index].original };
+  }
+  form.value.details[index].editing = false;
+  delete form.value.details[index].original;
+};
+
+const handleKeyDown = (event: KeyboardEvent, index: number) => {
+  if (event.key === 'Enter') {
+    saveEdit(index);
+  } else if (event.key === 'Escape') {
+    cancelEdit(index);
+  }
+};
 
 const newItem = ref<PurchaseOrderDetail>({
   quantity: 1,
@@ -257,44 +297,130 @@ const submitForm = async () => {
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Amount
                     </th>
-                    <th class="text-right px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th 
+                      v-if="form.details.some(item => item.editing)"
+                      class="text-right px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                  <tr v-for="(item, index) in form.details" :key="index">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {{ item.item_description }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {{ item.quantity }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {{ item.unit }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {{ item.unit_price.toFixed(2) }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {{ item.amount.toFixed(2) }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        @click="removeItem(index)"
-                      >
+                <tr 
+                  v-for="(item, index) in form.details" 
+                  :key="index"
+                  @click="editItem(index)"
+                  :class="{
+                    'hover:bg-gray-50 cursor-pointer': true,
+                    'bg-blue-50': item.editing
+                  }"
+                >
+                  <!-- Description Column -->
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div v-if="!item.editing">{{ item.item_description }}</div>
+                    <Input 
+                      v-else
+                      v-model="item.item_description"
+                      @click.stop
+                      @keydown="handleKeyDown($event, index)"
+                      class="w-full"
+                    />
+                  </td>
+                  
+                  <!-- Quantity Column -->
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div v-if="!item.editing">{{ item.quantity }}</div>
+                    <Input 
+                      v-else
+                      type="number"
+                      v-model.number="item.quantity"
+                      min="1"
+                      @click.stop
+                      @keydown="handleKeyDown($event, index)"
+                      @change="item.amount = item.quantity * item.unit_price"
+                      class="w-full"
+                    />
+                  </td>
+                  
+                  <!-- Unit Column -->
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div v-if="!item.editing">{{ item.unit }}</div>
+                    <Select 
+                      v-else
+                      v-model="item.unit"
+                      @click.stop
+                    >
+                      <SelectTrigger class="w-full">
+                        <SelectValue placeholder="Select unit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="pc">pc/s</SelectItem>
+                          <SelectItem value="box">box/es</SelectItem>
+                          <SelectItem value="kg">kg/s</SelectItem>
+                          <SelectItem value="pack">pack/s</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </td>
+                  
+                  <!-- Unit Price Column -->
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div v-if="!item.editing">{{ item.unit_price.toFixed(2) }}</div>
+                    <Input 
+                      v-else
+                      type="number"
+                      step="0.01"
+                      v-model.number="item.unit_price"
+                      min="0"
+                      @click.stop
+                      @keydown="handleKeyDown($event, index)"
+                      @change="item.amount = item.quantity * item.unit_price"
+                      class="w-full"
+                    />
+                  </td>
+                  
+                  <!-- Amount Column -->
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {{ item.amount.toFixed(2) }}
+                  </td>
+                  
+                  <!-- Actions Column -->
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                    <div class="flex justify-end space-x-2">
+                      <template v-if="item.editing">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          @click.stop="saveEdit(index)"
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          @click.stop="cancelEdit(index)"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          @click.stop="removeItem(index)"
+                        >
                         Remove
                       </Button>
-                    </td>
-                  </tr>
-                  <tr v-if="form.details.length === 0">
-                    <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
-                      No items added yet
-                    </td>
-                  </tr>
-                </tbody>
+                      </template>
+                    </div>
+                  </td>
+                </tr>
+                
+                <tr v-if="form.details.length === 0">
+                  <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                    No items added yet
+                  </td>
+                </tr>
+              </tbody>
               </table>
             </div>
 

@@ -20,35 +20,35 @@ use Illuminate\Support\Facades\Auth;
 class PurchaseOrderController extends Controller
 {
     public function index(Request $request)
-{
-    $user = Auth::user();
-    $status = $request->query('status');
+    {
+        $user = Auth::user();
+        $status = $request->query('status');
 
-    $query = PurchaseOrder::with(['user', 'department', 'account', 'details'])
-                ->latest();
+        $query = PurchaseOrder::with(['user', 'department', 'account', 'details'])
+                    ->latest();
 
-    if ($user->role === 'purchasing') {
-        // Purchasing can see all statuses, but filter if specific status requested
-        if ($status) {
-            if ($status === 'approved') {
-                // Include both approved and voucherCreated
-                $query->whereIn('status', ['approved', 'voucherCreated']);
-            } elseif (in_array($status, ['draft', 'forEOD', 'rejected'])) {
-                $query->where('status', $status);
+        if ($user->role === 'purchasing') {
+            // Purchasing can see all statuses, but filter if specific status requested
+            if ($status) {
+                if ($status === 'approved') {
+                    // Include both approved and voucherCreated
+                    $query->whereIn('status', ['approved', 'voucherCreated']);
+                } elseif (in_array($status, ['draft', 'forEOD', 'rejected'])) {
+                    $query->where('status', $status);
+                }
             }
+        } else {
+            // Non-purchasing users can only see 'forEOD' status
+            $query->where('status', 'forEOD');
         }
-    } else {
-        // Non-purchasing users can only see 'forEOD' status
-        $query->where('status', 'forEOD');
+
+        $purchaseOrders = $query->paginate(10);
+
+        return Inertia::render('PurchaseOrders/Index', [
+            'purchaseOrders' => $purchaseOrders,
+            'filters' => $request->only(['status']),
+        ]);
     }
-
-    $purchaseOrders = $query->paginate(10);
-
-    return Inertia::render('PurchaseOrders/Index', [
-        'purchaseOrders' => $purchaseOrders,
-        'filters' => $request->only(['status']),
-    ]);
-}
 
     public function show(PurchaseOrder $purchaseOrder)
     {
@@ -60,7 +60,8 @@ class PurchaseOrderController extends Controller
                 'department', 
                 'account',
                 'details',
-                'canvas'
+                'canvas.selected_files.file', // Load the file relation
+                'canvas.selected_files.approval' // Load the approval relation
             ]),
             'authUser' => [
                 'id' => $user->id,

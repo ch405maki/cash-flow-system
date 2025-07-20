@@ -26,10 +26,25 @@ function formatDate(dateStr) {
     day: '2-digit'
   })
 }
+
+// Helper function to display appropriate filename
+function getDisplayFileName(canvas) {
+  // For approved canvases, show the selected file name
+  if (canvas.status === 'approved' && canvas.selected_files?.length > 0) {
+    return canvas.selected_files[0].file?.original_filename || 'Selected file';
+  }
+  
+  // For canvases with multiple files, show count
+  if (canvas.files?.length > 0) {
+    return `${canvas.files.length} file${canvas.files.length > 1 ? 's' : ''}`;
+  }
+  
+  // Fallback to title if no files
+  return canvas.title || 'No files';
+}
 </script>
 
 <template>
-  <!-- ✅ one v‑if / v‑else pair inside the same template -->
   <div v-if="canvases.length > 0" class="w-full text-sm border border-border rounded-md">
     <Table>
       <TableHeader>
@@ -53,7 +68,7 @@ function formatDate(dateStr) {
             <div class="flex items-center gap-4">
               <FileText class="h-5 w-5 text-muted-foreground" />
               <div class="font-medium capitalize">
-                {{ canvas.original_filename }}
+                {{ getDisplayFileName(canvas) }}
               </div>
             </div>
           </TableCell>
@@ -61,12 +76,12 @@ function formatDate(dateStr) {
           <TableCell>
             <Badge :class="statusVariants[canvas.status]">
               <component :is="statusIcons[canvas.status]" class="h-3 w-3 mr-1" />
-              <span class="capitalize">{{ canvas.status }}</span>
+              <span class="capitalize">{{ canvas.status.replace('_', ' ') }}</span>
             </Badge>
           </TableCell>
 
           <TableCell class="text-muted-foreground truncate max-w-[200px]">
-            {{ canvas.remarks || 'No Notes' }}
+            {{ canvas.note || canvas.selected_files[0]?.remarks || 'No remarks' }}
           </TableCell>
 
           <TableCell>{{ formatDate(canvas.created_at) }}</TableCell>
@@ -88,7 +103,6 @@ function formatDate(dateStr) {
     </Table>
   </div>
 
-  <!-- 👇 only rendered when canvases.length === 0 -->
   <template v-else>
     <div class="flex h-48 flex-col items-center justify-center rounded-xl border">
       <FileText class="h-8 w-8 text-muted-foreground" />

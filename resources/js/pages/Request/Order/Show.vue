@@ -3,7 +3,7 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { ref } from 'vue'
 import { Head, usePage } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
-import { Printer, ListChecks } from 'lucide-vue-next';
+import { Printer, ListChecks, Send, ArrowLeft, CircleCheck } from 'lucide-vue-next';
 import { formatDate } from '@/lib/utils'
 import {
     Dialog,
@@ -41,8 +41,6 @@ function getStatusVariant(status: string) {
       return 'secondary'
     case 'approved':
       return 'success'
-    case 'rejected':
-      return 'destructive'
     default:
       return 'default'
   }
@@ -53,8 +51,6 @@ const toast = useToast()
 
 const password = ref('')
 const showApproveModal = ref(false)
-const showRejectModal = ref(false)
-const showRejectCustodianModal = ref(false)
 const showForEODModal = ref(false)
 
 const form = useForm({
@@ -91,29 +87,6 @@ async function submitForEOD() {
       toast.success('Request sent for EOD approval successfully')
       showForEODModal.value = false
       form.reset('password')  
-    },
-    onError: (errors) => {
-      if (errors.password) {
-        toast.error(errors.password)
-      } else {
-        toast.error('Something went wrong.')
-      }
-    },
-    onFinish: () => {
-      form.processing = false
-    }
-  })
-}
-
-async function submitReject() {
-  form.processing = true
-
-  form.patch(route('request-to-order.reject', requestOrder.id), {
-    onSuccess: (page) => {
-      toast.success('Request rejected successfully')
-      showRejectModal.value = false
-      showRejectCustodianModal.value = false
-      form.reset('password')
     },
     onError: (errors) => {
       if (errors.password) {
@@ -192,42 +165,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                   </DialogFooter>
               </DialogContent>
           </Dialog>
-          <Dialog v-model:open="showRejectModal">
-              <DialogTrigger as-child>
-                  <Button
-                  variant="destructive"
-                  size="sm"
-                  :disabled="requestOrder.status == 'rejected' || requestOrder.status == 'forPO' || form.processing"
-                  >
-                  Reject
-                  </Button>
-              </DialogTrigger>
-              <DialogContent>
-                  <DialogHeader>
-                  <DialogTitle>Password Verification</DialogTitle>
-                  <DialogDescription>Enter your password to approve this request</DialogDescription>
-                  </DialogHeader>
-                  <div class="space-y-2">
-                  <Label for="approve-password">Password</Label>
-                  <Input
-                      id="approve-password"
-                      v-model="form.password"
-                      type="password"
-                      placeholder="Enter password"
-                      class="w-full"
-                  />
-                  </div>
-                  <DialogFooter>
-                  <Button
-                      @click="submitReject"
-                      :disabled="!form.password || form.processing"
-                  >
-                      <span v-if="form.processing">Processing...</span>
-                      <span v-else>Confirm Reject Request</span>
-                  </Button>
-                  </DialogFooter>
-              </DialogContent>
-          </Dialog>
           </div>
           <!-- for property -->
           <div v-if="authUser.role === 'property_custodian' && authUser.access == 3" class="space-x-2 flex items-center">
@@ -238,7 +175,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                   size="sm"
                   :disabled="requestOrder.status == 'forEOD' || form.processing"
                   >
-                  For EOD Approval
+                  <Send />For EOD Approval
                   </Button>
               </DialogTrigger>
               <DialogContent>
@@ -267,47 +204,10 @@ const breadcrumbs: BreadcrumbItem[] = [
                   </DialogFooter>
               </DialogContent>
           </Dialog>
-          <!-- reject -->
-           <Dialog v-model:open="showRejectCustodianModal">
-              <DialogTrigger as-child>
-                  <Button
-                  variant="destructive"
-                  size="sm"
-                  :disabled="requestOrder.status == 'forEOD' || form.processing"
-                  >
-                  Reject
-                  </Button>
-              </DialogTrigger>
-              <DialogContent>
-                  <DialogHeader>
-                  <DialogTitle>Password Verification</DialogTitle>
-                  <DialogDescription>Enter your password to approve this request</DialogDescription>
-                  </DialogHeader>
-                  <div class="space-y-2">
-                  <Label for="approve-password">Password</Label>
-                  <Input
-                      id="approve-password"
-                      v-model="form.password"
-                      type="password"
-                      placeholder="Enter password"
-                      class="w-full"
-                  />
-                  </div>
-                  <DialogFooter>
-                  <Button
-                      @click="submitReject"
-                      :disabled="!form.password || form.processing"
-                  >
-                      <span v-if="form.processing">Processing...</span>
-                      <span v-else>Confirm Reject Request</span>
-                  </Button>
-                  </DialogFooter>
-              </DialogContent>
-          </Dialog>
           </div>
           <Button v-if="authUser.role === 'purchasing'" size="sm" @click="printArea"> <ListChecks />Mark As Done</Button>
-          <Button size="sm" @click="printArea"> <Printer />Print List</Button>
-          <Button size="sm" @click="goBack" variant="outline">Back</Button>
+          <Button size="sm" variant="outline" @click="printArea"> <Printer />Print List</Button>
+          <Button size="sm" @click="goBack" variant="outline"> <ArrowLeft />Back</Button>
         </div>
       </div>
 

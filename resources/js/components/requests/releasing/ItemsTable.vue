@@ -43,7 +43,6 @@ const toggleItemSelection = (id: number, checked: boolean) => {
           <TableHead class="w-[100px] border-r text-xs">Quantity</TableHead>
           <TableHead class="w-[100px] border-r text-xs">Unit</TableHead>
           <TableHead class="border-r text-xs">Description</TableHead>
-          <TableHead class="w-[40px] text-xs text-right">Action</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -77,50 +76,15 @@ const toggleItemSelection = (id: number, checked: boolean) => {
           </TableCell>
 
           <TableCell class="border-r p-2">
-            <Input
-              :id="`quantity-${index}`"
-              type="number"
-              :modelValue="detail.quantity"
-              min="1"
-              required
-              class="border border-gray-300 rounded text-xs h-8 w-full"
-              readonly
-            />
+            <p>{{ detail.quantity }}</p>
           </TableCell>
 
           <TableCell class="border-r p-2">
-            <Input
-              :id="`unit-${index}`"
-              :modelValue="detail.unit"
-              placeholder="e.g. kg, pcs"
-              required
-              class="border border-gray-300 rounded text-xs h-8 w-full"
-              readonly
-            />
+            <p>{{ detail.unit }}</p>
           </TableCell>
 
           <TableCell class="border-r p-2">
-            <Input
-              :id="`item_description-${index}`"
-              :modelValue="detail.item_description"
-              placeholder="Item description"
-              required
-              class="border border-gray-300 rounded text-xs h-8 w-full"
-              readonly
-            />
-          </TableCell>
-
-          <TableCell class="p-2 flex justify-end items-center mr-[7px]">
-            <Button
-              type="button"
-              @click="$emit('removeDetail', index)"
-              variant="destructive"
-              size="sm"
-              class="text-xs h-8 px-3"
-              :disabled="details.length <= 1"
-            >
-              <Trash2 />
-            </Button>
+            <p>{{ detail.item_description }}</p>
           </TableCell>
         </TableRow>
       </TableBody>

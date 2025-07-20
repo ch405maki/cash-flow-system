@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Download, ArrowLeft, Clock, CheckCircle, UserRoundCheck, XCircle, Check, X, Pencil } from 'lucide-vue-next';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Download, ArrowLeft, Clock, CheckCircle, UserRoundCheck, XCircle, Check, X, Pencil, ChevronRight, FileText } from 'lucide-vue-next';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from '@inertiajs/vue3';
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch } from 'vue';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
-import { formatDate } from '@/lib/utils'
-import { router } from '@inertiajs/vue3'
+import { formatDateTime } from '@/lib/utils';
+import { router } from '@inertiajs/vue3';
+
 
 const toast = useToast();
 
@@ -19,15 +20,18 @@ const props = defineProps({
     type: Object,
     required: true,
     default: () => ({
-      request_to_order: null
+      request_to_order: null,
+      files: [],
+      approvals: [],
+      selected_files: []
     })
   },
   open: Boolean,
   userRole: String,
 });
 
-
-const emit = defineEmits(['update:open', 'updated']);
+const emit = defineEmits(['update:open', 'updated', 'reupload']);
+const showAlert = ref(true)
 
 const isApproved = computed(
   () => props.canvas.status === 'approved' || props.canvas.status === 'poCreated'
@@ -36,24 +40,31 @@ const isApproved = computed(
 const hasLinkedOrder = computed(() => props.canvas.request_to_order !== null);
 
 const statusIcons = {
-  pending: Clock,
+  draft: Pencil,
+  submitted: ChevronRight,
+  pending_approval: UserRoundCheck,
   approved: CheckCircle,
   rejected: XCircle,
-  forEOD: UserRoundCheck,
+  forEOD: CheckCircle,
 };
 
 const statusVariants = {
-  pending: 'bg-yellow-100 text-yellow-800',
+  draft: 'bg-gray-100 text-gray-800',
+  submitted: 'bg-blue-100 text-blue-800',
+  pending_approval: 'bg-purple-100 text-purple-800',
   approved: 'bg-green-100 text-green-800',
   rejected: 'bg-red-100 text-red-800',
-  forEOD: 'bg-purple-100 text-purple-800',
+  forEOD: 'bg-green-100 text-green-800',
 };
 
 const isDownloading = ref(false);
 
 const form = useForm({
   remarks: props.canvas.remarks || '',
-  status: props.canvas.status
+  status: props.canvas.status,
+  comments: props.canvas.latest_approval?.comments || '',
+  selected_file: props.canvas.selected_files?.[0]?.canvas_file_id || null,
+  file_remarks: props.canvas.selected_files?.[0]?.remarks || ''
 });
 
 watch(
@@ -61,75 +72,100 @@ watch(
   (newCanvas) => {
     form.remarks = newCanvas?.remarks || '';
     form.status = newCanvas?.status;
+    form.comments = newCanvas.latest_approval?.comments || '';
+    form.selected_file = newCanvas.selected_files?.[0]?.canvas_file_id || null;
+    form.file_remarks = newCanvas.selected_files?.[0]?.remarks || '';
   },
-  { immediate: true }
+  { immediate: true, deep: true }
 );
 
-const downloadFile = async () => {
+const downloadFile = async (fileId = null) => {
   try {
     isDownloading.value = true;
     
-    const response = await axios.get(route('canvas.download', props.canvas.id), {
-      responseType: 'blob',
-      onDownloadProgress: (progressEvent) => {
-        if (progressEvent.total) {
-          const percentCompleted = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total
-          );
-          console.log(`Download progress: ${percentCompleted}%`);
-        }
-      }
-    });
-    
-    const url = window.URL.createObjectURL(new Blob([response.data]));
+    // Create a temporary anchor element
     const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', props.canvas.original_filename);
+    
+    if (fileId) {
+      // Download single file
+      const file = props.canvas.files.find(f => f.id === fileId);
+      if (!file) {
+        throw new Error('File not found');
+      }
+      
+      link.href = route('canvas.download.file', { 
+        canvas: props.canvas.id, 
+        file: fileId 
+      });
+      link.setAttribute('download', file.original_filename);
+    }
+    
+    // Append to body, click and remove
     document.body.appendChild(link);
     link.click();
-    
-    setTimeout(() => {
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(link);
-    }, 100);
+    document.body.removeChild(link);
     
   } catch (error) {
     console.error('Download failed:', error);
-    alert(`Download failed: ${error.response?.data?.message || error.message}`);
+    toast.error(`Download failed: ${error.message}`);
   } finally {
     isDownloading.value = false;
   }
 };
 
-const updateStatus = (status) => {
-  if (status === 'rejected' && !form.remarks.trim()) {
-    toast.error('Remarks are required when rejecting.')
-    return
-  }
+const handleAction = async (action) => {
+  try {
+    const payload = {
+      status: "approved", 
+      comments: "This file Approved",
+      remarks: "",
+      selected_file: 1, 
+      file_remarks: "I want this supplier" 
+    };
 
-  form.status = status
-  form.patch(route('canvas.update', props.canvas.id), {
-    preserveScroll: true,
-    onSuccess: () => {
-      emit('updated')
-      emit('update:open', false)
-      toast.success(`Canvas ${status} successfully.`)
-    },
-  })
-}
+    if (action === 'final_approve') {
+      if (!form.selected_file) {
+        toast.error('Please select a file for approval');
+        return;
+      }
+      
+      payload.selected_files = {
+        [form.selected_file]: { remarks: form.file_remarks }
+      };
+    }
+
+    await form.patch(route('canvas.update', props.canvas.id), {
+      ...payload,
+      preserveScroll: true,
+      onSuccess: () => {
+        emit('updated');
+        emit('update:open', false);
+        toast.success(`Canvas ${action}d successfully`);
+      },
+      onError: (errors) => {
+        toast.error(`Action failed: ${errors.message || 'Unknown error'}`);
+      }
+    });
+    
+  } catch (error) {
+    console.error('Action failed:', error);
+    toast.error(`Action failed: ${error.message}`);
+  }
+};
+
+// Get the approved file
+const approvedFile = computed(() => {
+  if (props.canvas.status !== 'approved' && props.canvas.status !== 'poCreated') return null;
+  return props.canvas.selected_files?.[0]?.file || null;
+});
 
 function goToCreate() {
-  const canvasId = props.canvas?.id
-  
-  if (canvasId) {
-    router.visit(`/purchase-order/create?canvas_id=${canvasId}`);
-  } else {
-    router.visit('/purchase-order/create');
-  }
+  const canvasId = props.canvas?.id;
+  router.visit(`/purchase-order/create?canvas_id=${canvasId}`);
 }
 
 function viewRequest(id: number) {
-  router.visit(`/request-to-order/${id}`) 
+  router.visit(`/request-to-order/${id}`);
 }
 </script>
 
@@ -138,10 +174,10 @@ function viewRequest(id: number) {
     <DialogContent class="sm:max-w-[625px] max-h-[90vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle class="flex items-center gap-2">
-          <span class="truncate max-w-[400px] capitalize">{{ canvas.original_filename }}</span>
+          <span class="truncate max-w-[400px] capitalize">{{ canvas.title || 'Untitled Canvas' }}</span>
         </DialogTitle>
         <DialogDescription v-if="hasLinkedOrder" class="hover:underline hover:cursor-pointer hover:text-violet-800" @click="viewRequest(canvas.request_to_order.id)">
-          Linked to Order # {{ canvas.request_to_order.order_no }} | {{ formatDate(canvas.request_to_order.order_date) }}
+          Linked to Order # {{ canvas.request_to_order.order_no }} | {{ formatDateTime(canvas.request_to_order.order_date) }}
         </DialogDescription>
         <DialogDescription v-else>
           Not linked to any order. 
@@ -149,7 +185,7 @@ function viewRequest(id: number) {
       </DialogHeader>
 
       <div class="grid gap-6 py-4">
-        <!-- Order Information Section -->
+        <!-- Status and Upload Info -->
         <div class="grid grid-cols-2 gap-4">
           <div>
             <h3 class="text-sm font-medium text-muted-foreground">Status</h3>
@@ -158,116 +194,259 @@ function viewRequest(id: number) {
                 :is="statusIcons[canvas.status]" 
                 class="h-3 w-3 mr-1" 
               />
-              <span class="capitalize">{{ canvas.status }}</span>
+              <span class="capitalize">{{ canvas.status.replace('_', ' ') }}</span>
             </Badge>
           </div>
-
           <div>
             <h3 class="text-sm font-medium text-muted-foreground">Uploaded</h3>
             <p class="mt-1 text-sm">
-              {{ formatDate(canvas.created_at)}}
+              {{ formatDateTime(canvas.created_at)}}
             </p>
           </div>
         </div>
 
-        <Alert variant="default" class="relative pr-10">
-          <component :is="statusIcons[canvas.status]" class="h-4 w-4" />
-          <AlertTitle>Note</AlertTitle>
+        <Alert 
+          v-if="showAlert && canvas?.note.length > 0" 
+          variant="warning" 
+          class="relative pr-10"
+        >
+          <AlertCircle class="h-4 w-4" />
+          <AlertTitle>Note!</AlertTitle>
           <AlertDescription>
-            {{ canvas.note || 'No Note' }}
+            <template v-if="canvas">
+              <h1 class="capitalize">{{ canvas?.note || 'No Note' }}</h1>
+            </template>
+            <template v-else>
+              (Canvas details not available)
+            </template>
           </AlertDescription>
+          <!-- Dismiss Button -->
+          <button
+            class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground"
+            @click="showAlert = false"
+            aria-label="Dismiss"
+          >
+            <X class="h-4 w-4 text-yellow-700" />
+          </button>
         </Alert>
 
-        <!-- Remarks section -->
-        <div>
-          <template v-if="!isApproved">
-            <h3 class="text-sm font-medium text-muted-foreground">Remarks</h3>
-            <p class="text-xs text-red-500 mb-2 italic">
-              * Remarks are required.
-            </p>
-            
-            <Textarea
-              v-model="form.remarks"
-              placeholder="Enter your remarks"
-              class="mb-2"
-            />
-          </template>
-
-          <template v-else-if="isApproved">
-            <h3 class="text-sm font-medium text-muted-foreground">Remarks</h3>
-            <Alert variant="success" class="mb-2">
-              <CheckCircle class="h-4 w-4 text-green-600" />
-              <AlertTitle>Final Remarks</AlertTitle>
-              <AlertDescription>
-                {{ form.remarks || 'No remarks were provided.' }}
-              </AlertDescription>
-            </Alert>
-          </template>
-        </div>
-      </div>
-      <div class="sticky bottom-0 bg-background pt-4 border-t">
-        <div class="flex justify-between items-center">
-          <div v-if="userRole === 'executive_director'" class="space-x-2">
+        <!-- Approved File Section (only shown for approved canvases) -->
+        <div v-if="approvedFile">
+          <h3 class="text-sm font-medium text-muted-foreground">Approved File</h3>
+          <div class="p-3 border rounded-lg mt-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <FileText class="h-5 w-5 text-muted-foreground" />
+                <span class=" text-muted-foreground capitalize text-sm">{{ approvedFile.original_filename }}</span>
+              </div>
               <Button 
-                variant="default" 
-                @click="updateStatus('approved')"
-                :disabled="form.processing || !form.remarks.trim()"
+                variant="ghost" 
+                size="sm"
+                @click="downloadFile(approvedFile.id)"
               >
-                <Check class="h-4 w-4 mr-1" />
-                Approve
-              </Button>
-              <Button 
-                  variant="destructive" 
-                  @click="updateStatus('rejected')"
-                  :disabled="form.processing || !form.remarks.trim()"
-                  >
-                  <X class="h-4 w-4" />
-                  Reject
-              </Button>
-          </div>
-
-          <div v-if="canvas.status === 'pending'" class="flex gap-2">
-            <Button 
-              variant="default" 
-              @click="updateStatus('forEOD')"
-              :disabled="form.processing"
-            >
-              <Check class="h-4 w-4" />
-              Submit for EOD
-            </Button>
-            <Button 
-                variant="destructive" 
-                @click="updateStatus('rejected')"
-                :disabled="form.processing || !form.remarks.trim()"
-                >
-                <X class="h-4 w-4" />
-                Reject
-            </Button>
-          </div>
-        </div>
-        <!-- Work to Create P.O. -->
-          <div class="flex gap-2 justify-end items-right">
-            <div v-if="canvas.status === 'approved'">
-              <Button 
-                variant="default" 
-                @click="goToCreate()"
-                :disabled="form.processing"
-              >
-                <Check class="h-4 w-4" />
-                Create P. O.
+                <Download class="h-4 w-4" />
               </Button>
             </div>
+            <p v-if="canvas.selected_files[0]?.remarks" class="mt-2 text-sm text-muted-foreground">
+              Remarks: {{ canvas.selected_files[0].remarks }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Approval History with Stepper -->
+        <div v-if="canvas.approvals?.length">
+          <h3 class="text-sm font-medium text-muted-foreground mb-3">Approval History</h3>
+          <div class="relative pl-6">
+            <!-- Vertical timeline line -->
+            <div class="absolute left-0 top-0 h-full w-0.5 bg-gray-200 ml-4"></div>
+
+            <div v-for="(approval, index) in canvas.approvals" 
+                :key="approval.id"
+                class="relative mb-6 last:mb-0">
+              
+              <!-- Timeline dot -->
+              <div class="bg-green-500 border-2 border-green-500 absolute -left-6 top-0 h-8 w-8 rounded-full flex items-center justify-center z-10">
+                <component 
+                  :is="approval.approved ? CheckCircle : CheckCircle"
+                  class="h-5 w-5 text-white"
+                />
+              </div>
+
+              <!-- Connector line to next dot -->
+              <div v-if="index < canvas.approvals.length - 1"
+                  class="absolute -left-6 top-8 h-full w-0.5 ml-4 bg-green-500 z-0"
+              ></div>
+              
+              <!-- Approval content -->
+              <div class="pl-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="capitalize">{{ approval.user.username }}</span>
+                  </div>
+                  <span class="text-xs text-muted-foreground">
+                    {{ formatDateTime(approval.created_at) }}
+                  </span>
+                </div>
+
+                <div class="mt-1 flex items-start gap-2">
+                  <p class="text-sm text-gray-700">
+                    "{{ approval.comments || 'No comments' }}"
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Only show these sections if NOT approved -->
+        <template v-if="!isApproved">
+          <!-- Files Section (for non-approved canvases) -->
+          <div v-if="userRole != 'executive_director' && canvas.files?.length">
+            <h3 class="text-sm font-medium text-muted-foreground">Files</h3>
+            <div class="space-y-2 mt-2">
+              <div v-for="file in canvas.files" :key="file.id" class="flex items-center justify-between p-2 border rounded">
+                <div class="flex items-center gap-2">
+                  <FileText class="max-h-4 max-w-4 text-muted-foreground" />
+                  <span class="text-sm">{{ file.original_filename }}</span>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  @click="downloadFile(file.id)"
+                >
+                  <Download class="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <!-- File Selection for Executive -->
+          <div v-if="userRole === 'executive_director' && canvas.files?.length">
+            <h3 class="text-sm font-medium text-muted-foreground ">Select File for Approval</h3>
+            <p class="text-xs text-muted-foreground mb-2">Please select one file to approve</p>
+            
+            <div class="space-y-2 mt-2">
+              <div v-for="file in canvas.files" :key="file.id" class="flex items-center items-start gap-3 p-2 border rounded">
+                <div class="flex items-center h-5">
+                  <input
+                    type="radio"
+                    :id="`file-${file.id}`"
+                    v-model="form.selected_file"
+                    :value="file.id"
+                    class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                  >
+                </div>
+                <div class="flex-1 flex items-center justify-between">
+                  <label :for="`file-${file.id}`" class="flex items-center gap-2 cursor-pointer">
+                    <FileText class="max-h-4 max-w-4 text-muted-foreground" />
+                    <span class="text-sm">{{ file.original_filename }}</span>
+                  </label>
+                  <Button 
+                      variant="ghost" 
+                      size="sm"
+                      @click="downloadFile(file.id)"
+                    >
+                  <Download class="h-4 w-4" />
+                </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Comments Section -->
+          <div v-if="['accounting', 'executive_director', 'purchasing'].includes(userRole)">
+            <h3 class="text-sm font-medium text-muted-foreground">
+              {{ userRole === 'accounting' ? 'Audit Comments' : 'Approval Comments' }}
+            </h3>
+            <Textarea
+              v-model="form.comments"
+              :placeholder="userRole === 'accounting' 
+                ? 'Enter your audit comments...' 
+                : 'Enter approval comments...'"
+              class="mt-2"
+            />
+          </div>
+        </template>
+      </div>
+
+      <!-- Action Buttons -->
+      <DialogFooter class="border-t">
+        <div class="flex justify-between items-center mt-2">
+          <!-- Purchasing Officer Actions -->
+          <div v-if="userRole === 'purchasing'">
+            <div v-if="canvas.status === 'draft'" class="space-x-2">
+              <Button 
+                variant="default" 
+                @click="handleAction('submit')"
+                :disabled="form.processing"
+              >
+                <ChevronRight class="h-4 w-4 mr-1" />
+                Submit
+              </Button>
+            </div>
+            <div v-if="canvas.status === 'rejected'" class="space-x-2">
+              <Button 
+                variant="outline" 
+                @click="emit('reupload')"
+              >
+                <Upload class="h-4 w-4 mr-1" />
+                Re-upload
+              </Button>
+            </div>
+          </div>
+
+          <!-- Accounting Actions -->
+          <div v-if="userRole === 'accounting' && canvas.status === 'submitted'" class="space-x-2">
             <Button 
-              @click="downloadFile"
-              class="gap-2"
-              variant="outline"
-              :disabled="isDownloading"
+              variant="success" 
+              @click="handleAction('approve')"
+              :disabled="form.processing || !form.comments.trim()"
             >
-              <Download class="h-4 w-4" />
-              <span>{{ isDownloading ? 'Downloading...' : 'Download File' }}</span>
+              <Check class="h-4 w-4 mr-1" />
+              Submit
             </Button>
           </div>
-      </div>
+
+          <!-- Executive Director Actions -->
+          <div v-if="userRole === 'executive_director' && canvas.status === 'pending_approval'" class="space-x-2">
+            <Button 
+              variant="success" 
+              size="sm"
+              @click="handleAction('final_approve')"
+              :disabled="form.processing || !form.comments.trim() || !form.selected_file"
+            >
+              <Check class="h-4 w-4 mr-1" />
+              Approve
+            </Button>
+          </div>
+        </div>
+
+        <!-- Common Actions -->
+        <div class="flex gap-2 justify-end mt-4">
+          <div v-if="canvas.status === 'approved' && userRole === 'purchasing'">
+            <Button 
+              variant="default" 
+              @click="goToCreate()"
+              :disabled="form.processing"
+            >
+              <Check class="h-4 w-4 mr-1" />
+              Create P.O.
+            </Button>
+          </div>
+
+          <!-- Show download approved file button for approved canvases -->
+          <Button 
+            v-else-if="approvedFile"
+            @click="downloadFile(approvedFile.id)"
+            class="gap-2"
+            variant="outline"
+            :disabled="isDownloading"
+          >
+            <Download class="h-4 w-4" />
+            <span>{{ isDownloading ? 'Downloading...' : 'Download Approved File' }}</span>
+          </Button>
+        </div>
+      </DialogFooter>
     </DialogContent>
   </Dialog>
 </template>

@@ -16,6 +16,15 @@ import {
     ComboboxList,
     ComboboxTrigger
 } from '@/components/ui/combobox'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { formatCurrency } from '@/lib/utils'
 
 const props = defineProps({
     form: Object,
@@ -38,18 +47,19 @@ const filteredAccounts = computed(() => {
 
 <template>
     <div class="border rounded-lg p-4 mb-6">
+        <!--  -->
+        <div v-if="voucher.status !== 'forCheck'">
         <div class="flex justify-between items-center mb-4">
             <h3 class="font-medium">Update Accounts</h3>
-            <Button v-if="voucher.status !== 'forCheck'" type="button" variant="outline" size="sm" @click="emit('add-detail')">
+            <Button type="button" variant="outline" size="sm" @click="emit('add-detail')">
                 <Plus class="h-4 w-4 mr-2" />
                 Add Account
             </Button>
         </div>
-
         <div v-for="(detail, index) in form.check" :key="index" 
-            class="grid gap-4 mb-4 pb-4 border-b last:border-0"
-            :class="isCashVoucher ? 'grid-cols-3 md:grid-cols-3' : 'grid-cols-5 md:grid-cols-5'"
-        >
+                    class="grid gap-4 mb-4 pb-4 border-b last:border-0"
+                    :class="isCashVoucher ? 'grid-cols-3 md:grid-cols-3' : 'grid-cols-5 md:grid-cols-5'"
+                >
             <!-- Account Selection with Combobox -->
             <div class="grid gap-2">
                 <Label :for="`account-${index}`">Account *</Label>
@@ -108,22 +118,6 @@ const filteredAccounts = computed(() => {
                 </Select>
             </div>
 
-            <!-- Hours -->
-            <div class="grid gap-2" v-if="!isCashVoucher">
-                <Label :for="`hours-${index}`">Hours</Label>
-                <Input :id="`hours-${index}`" type="number" step="0.01" v-model="detail.hours"
-                    @blur="emit('calculate-amount', index)" placeholder="Optional"
-                    :disabled="isCashVoucher" />
-            </div>
-
-            <!-- Rate -->
-            <div class="grid gap-2" v-if="!isCashVoucher">
-                <Label :for="`rate-${index}`">Rate</Label>
-                <Input :id="`rate-${index}`" type="number" step="0.01" v-model="detail.rate"
-                    @blur="emit('calculate-amount', index)" placeholder="Optional"
-                    :disabled="isCashVoucher" />
-            </div>
-
             <!-- Amount -->
             <div class="grid gap-2">
                 <Label :for="`amount-${index}`">Amount *</Label>
@@ -137,6 +131,56 @@ const filteredAccounts = computed(() => {
                     </Button>
                 </div>
             </div>
+        </div>
+        </div>
+
+        <div v-else>
+        <div class="flex justify-between items-center mb-2">
+            <h3 class="font-medium">Accounts</h3>
+        </div>
+        <Table>
+        <TableHeader>
+            <TableRow>
+            <TableHead>Account</TableHead>
+            <TableHead>Charging Tag</TableHead>
+            <TableHead>Amount</TableHead>
+            </TableRow>
+        </TableHeader>
+        <TableBody>
+            <TableRow v-for="(detail, index) in form.check" :key="index">
+            <!-- Account -->
+            <TableCell>
+                {{ accounts.find(a => a.id == detail.account_id)?.account_title || 'N/A' }}
+            </TableCell>
+
+            <!-- Charging Tag -->
+            <TableCell>
+                <span :class="{
+                'text-green-600': detail.charging_tag === 'C',
+                'text-red-600': detail.charging_tag === 'D'
+                }">
+                {{ detail.charging_tag || 'N/A' }}
+                </span>
+            </TableCell>
+
+            <!-- Amount -->
+            <TableCell>
+                <span :class="{
+                'text-green-600': detail.charging_tag === 'C',
+                'text-red-600': detail.charging_tag === 'D'
+                }">
+                {{ formatCurrency(detail.amount) }}
+                </span>
+            </TableCell>
+            </TableRow>
+
+            <TableRow v-if="form.check.length === 0">
+            <TableCell colspan="3" class="text-center py-8 text-muted-foreground">
+                No account details available
+            </TableCell>
+            </TableRow>
+        </TableBody>
+        </Table>
         </div>
     </div>
 </template>
