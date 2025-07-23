@@ -144,7 +144,6 @@ class RequestToOrderController extends Controller
             ->with('success', 'Order created successfully');
     }
 
-
     private function generateOrderNumber()
     {
         $prefix = 'ORD-';
@@ -163,6 +162,7 @@ class RequestToOrderController extends Controller
         $user = Auth::user();
 
         $requestOrder = RequestToOrder::with([
+            'details.releases.releasedBy',
             'details.request.department'
         ])->findOrFail($id);
 

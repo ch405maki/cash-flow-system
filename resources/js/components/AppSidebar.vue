@@ -141,6 +141,11 @@ const custodianNavItems: NavItem[] = [
     href: '/request-to-order',
     icon: Package,
   },
+  {
+    title: 'Released Orders',
+    href: '/released-order',
+    icon: Package,
+  },
 ];
 
 const custodianApprovalItems: NavItem[] = [
