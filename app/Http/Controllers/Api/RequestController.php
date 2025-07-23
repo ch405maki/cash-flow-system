@@ -165,10 +165,18 @@ class RequestController extends Controller
             $requestModel = Request::create(collect($validated)->except('items')->toArray());
             $requestModel->user->notify(new NewRequestNotification($requestModel));
 
+            // Log the creation
+            activity()
+                ->performedOn($requestModel)
+                ->withProperties([
+                    'items_count' => count($validated['items']),
+                    'department' => $requestModel->department->name,
+                ]);
+
             // Notify custom recipient
             // (new AnonymousNotifiable())
             //     ->route('mail', 'recipient@example.com')
-            //     ->notify(new NewRequestNotification($requestModel));
+            //     ->notify(new NewRequestNotification($requestModel)); 
 
             // Create request details
             foreach ($validated['items'] as $item) {

@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\CanvasController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\RequestToOrderReleaseController;
+use App\Http\Controllers\Api\ActivityLogController;
 
 use App\Models\User;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -129,6 +130,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/canvases/{canvas}/download', [CanvasController::class, 'downloadAll'])->name('canvas.download.all');
     Route::get('/canvases/{canvas}/download/{file}', [CanvasController::class, 'downloadFile'])->name('canvas.download.file');
     Route::patch('/canvas/{canvas}', [CanvasController::class, 'update'])->name('canvas.update');
+});
+
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/logs', [ActivityLogController::class, 'index'])->name('logs.index');
+    Route::get('/logs/{modelType}/{modelId}', [ActivityLogController::class, 'forModel'])->name('logs.model');
 });
 
 Route::get('/send-test-email', function () {

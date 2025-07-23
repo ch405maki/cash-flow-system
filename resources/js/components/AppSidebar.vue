@@ -293,7 +293,7 @@ const adminNavItems: NavItem[] = [
   },
   {
     title: 'Logs',
-    href: '#',
+    href: '/logs',
     icon: Logs ,
   },
 ];
