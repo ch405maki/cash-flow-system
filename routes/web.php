@@ -22,8 +22,9 @@ use App\Http\Controllers\Api\CanvasController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\RequestToOrderReleaseController;
 
-use Illuminate\Notifications\Notifiable;
+use App\Models\User;
 use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Notifications\Notifiable;
 use App\Notifications\WelcomeEmail;
 
 
@@ -131,12 +132,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::get('/send-test-email', function () {
-    // Create an anonymous notifiable user
-    (new AnonymousNotifiable)
+    // Create a test user
+    $testUser = new User([
+        'first_name' => 'Test',
+        'last_name' => 'User',
+        'email' => 'test@example.com',
+        'username' => 'testuser'
+    ]);
+    
+    $tempPassword = 'temporary123';
+    
+    (new AnonymousNotifiable())
         ->route('mail', 'markmanuel0317@gmail.com')
-        ->notify(new WelcomeEmail());
+        ->notify(new WelcomeEmail($testUser, $tempPassword));
 
-    return 'Test email sent to markmanuel0317@gmail.com';
+    return 'Test email sent!';
 });
 
 require __DIR__.'/settings.php';

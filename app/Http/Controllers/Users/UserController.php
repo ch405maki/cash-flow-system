@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use App\Imports\UsersImport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Log;
+use App\Notifications\WelcomeEmail;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Illuminate\Validation\ValidationException;
@@ -49,6 +50,9 @@ class UserController extends Controller
                 'access_id' => 'required|exists:accesses,id'
             ]);
 
+            // Store plain password before hashing
+            $plainPassword = $validatedData['password'];
+
             // Create user
             $user = User::create([
                 'username' => $validatedData['username'],
@@ -56,12 +60,15 @@ class UserController extends Controller
                 'middle_name' => $validatedData['middle_name'],
                 'last_name' => $validatedData['last_name'],
                 'email' => $validatedData['email'],
-                'password' => Hash::make($validatedData['password']),
+                'password' => Hash::make($plainPassword),
                 'role' => $validatedData['role'],
                 'status' => $validatedData['status'],
                 'department_id' => $validatedData['department_id'],
                 'access_id' => $validatedData['access_id'],
             ]);
+
+            // Send welcome email with credentials
+            $user->notify(new WelcomeEmail($user, $plainPassword));
 
             // Load relationships for response
             $user->load(['department', 'access']);
