@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Search, X, Calendar } from 'lucide-vue-next';
 import LogDetails from './LogDetails.vue';
 import { ref, computed } from 'vue';
-import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -43,27 +43,32 @@ interface Log {
     created_at: string;
 }
 
-interface PaginationLink {
-    url: string | null;
-    label: string;
-    active: boolean;
-}
-
 interface Props {
     logs: {
         data: Log[];
-        links?: PaginationLink[];
-        current_page?: number;
-        last_page?: number;
+        links: {
+            url: string | null;
+            label: string;
+            active: boolean;
+        }[];
+        current_page: number;
+        last_page: number;
+        prev_page_url: string | null;
+        next_page_url: string | null;
+        from: number;
+        to: number;
+        total: number;
+    };
+    filters?: {
+        search?: string;
     };
 }
 
 const props = defineProps<Props>();
 const selectedLog = ref<Log | null>(null);
-const searchQuery = ref('');
+const searchQuery = ref(props.filters?.search || '');
 const dateFilter = ref<Date | undefined>();
 
-// Computed property for filtered logs
 const filteredLogs = computed(() => {
     if (!props.logs?.data) return [];
     
@@ -106,11 +111,6 @@ const clearSearch = () => {
 const clearDateFilter = () => {
     dateFilter.value = undefined;
 };
-
-// Safe pagination links access
-const paginationLinks = computed(() => {
-    return props.logs?.links || [];
-});
 </script>
 
 <template>
@@ -228,40 +228,48 @@ const paginationLinks = computed(() => {
             </div>
 
             <!-- Pagination -->
-            <div v-if="paginationLinks.length > 0" class="flex justify-center">
-                <template>
-  <Pagination>
-    <PaginationContent>
-      <PaginationItem v-if="props.logs.prev_page_url">
-        <PaginationPrevious :href="props.logs.prev_page_url" />
-      </PaginationItem>
+            <!-- Updated Pagination Section -->
+            <Pagination v-if="logs && logs.links.length > 3">
+                <PaginationContent class="space-x-1">
+                    <template v-for="(link, index) in logs.links" :key="index">
+                    <PaginationItem v-if="link.url">
+                        <a
+                        :href="link.url"
+                        class="px-3 py-1.5 text-sm rounded-md"
+                        :class="{
+                            'bg-primary text-primary-foreground': link.active,
+                            'hover:bg-accent hover:text-accent-foreground': !link.active,
+                            'text-muted-foreground': !link.active,
+                        }"
+                        v-html="link.label"
+                        />
+                    </PaginationItem>
+                    <PaginationItem v-else>
+                        <span class="px-3 py-1.5 text-sm text-muted-foreground" v-html="link.label" />
+                    </PaginationItem>
+                    </template>
+                </PaginationContent>
+                </Pagination>
 
-      <!-- Main page links -->
-      <PaginationItem
-        v-for="(link, index) in props.logs.links.slice(1, -1)"
-        :key="index"
-      >
-        <a
-          :href="link.url || undefined"
-          class="px-3 py-1.5 text-sm rounded-md"
-          :class="{
-            'bg-primary text-white': link.active,
-            'text-muted-foreground hover:bg-accent': !link.active && link.url,
-            'cursor-not-allowed text-muted-foreground': !link.url
-          }"
-        >
-          {{ link.label }}
-        </a>
-      </PaginationItem>
+                <Pagination v-slot="{ page }" :items-per-page="10" :total="30" :default-page="2">
+                    <PaginationContent v-slot="{ items }">
+                    <PaginationPrevious />
 
-      <PaginationItem v-if="props.logs.next_page_url">
-        <PaginationNext :href="props.logs.next_page_url" />
-      </PaginationItem>
-    </PaginationContent>
-  </Pagination>
-</template>
+                    <template v-for="(item, index) in items" :key="index">
+                        <PaginationItem
+                        v-if="item.type === 'page'"
+                        :value="item.value"
+                        :is-active="item.value === page"
+                        >
+                        {{ item.value }}
+                        </PaginationItem>
+                    </template>
 
-            </div>
+                    <PaginationEllipsis :index="4" />
+
+                    <PaginationNext />
+                    </PaginationContent>
+                </Pagination>
         </div>
     </AppLayout>
 
