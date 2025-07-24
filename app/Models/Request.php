@@ -10,7 +10,6 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Request extends Model
 {
-    use LogsActivity;
 
     protected $fillable = [
         'request_no', 'request_date', 'director_approved_at', 'purpose', 'status',
@@ -30,17 +29,5 @@ class Request extends Model
     public function details(): HasMany
     {
         return $this->hasMany(RequestDetail::class);
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['request_no', 'purpose', 'status', 'department_id'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(function(string $eventName) {
-                $creator = $this->user ? $this->user->username : 'system';
-                return "Request #{$this->request_no} was {$eventName} by {$creator}";
-            });
     }
 }

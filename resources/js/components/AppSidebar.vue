@@ -267,6 +267,11 @@ const adminNavItems: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
+    title: 'Create Request',
+    href: '/request/create',
+    icon: SquarePen,
+  },
+  {
     title: 'Users',
     href: '/configuration/users',
     icon: Users,

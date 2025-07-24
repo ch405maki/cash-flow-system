@@ -9,6 +9,7 @@ use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderDetail;
 use App\Models\Account;
 use App\Models\Release;
+use App\Models\User;
 use App\Models\ReleaseDetail;
 use Illuminate\Http\JsonResponse;
 use App\Models\Request;
@@ -165,18 +166,23 @@ class RequestController extends Controller
             $requestModel = Request::create(collect($validated)->except('items')->toArray());
             $requestModel->user->notify(new NewRequestNotification($requestModel));
 
-            // Log the creation
+            // Log the creation with full details
+            $creatorUser = User::find($validated['user_id']);
+            $creator = $creatorUser?->username ?? 'system';
+            $description = "Request #{$validated['request_no']} was created by {$creator}";
+
             activity()
                 ->performedOn($requestModel)
+                ->causedBy($creatorUser)
                 ->withProperties([
+                    'action' => 'create',
+                    'ip_address' => $request->ip(),
+                    'request_data' => $validated, 
                     'items_count' => count($validated['items']),
                     'department' => $requestModel->department->name,
-                ]);
-
-            // Notify custom recipient
-            // (new AnonymousNotifiable())
-            //     ->route('mail', 'recipient@example.com')
-            //     ->notify(new NewRequestNotification($requestModel)); 
+                    'request_no' => $validated['request_no'],
+                ])
+                ->log($description);
 
             // Create request details
             foreach ($validated['items'] as $item) {
