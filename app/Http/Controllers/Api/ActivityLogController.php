@@ -10,15 +10,14 @@ use Illuminate\Support\Facades\Request;
 class ActivityLogController extends Controller
 {
     public function index()
-{
-    return Inertia::render('Logs/Index', [
-        'logs' => Activity::with(['causer', 'subject'])
-            ->latest()
-            ->paginate(1) 
-            ->withQueryString(),
-    ]);
-}
-
+    {
+        return Inertia::render('Logs/Index', [
+            'logs' => Activity::with(['causer', 'subject'])
+                ->latest()
+                ->paginate(2) 
+                ->withQueryString(),
+        ]);
+    }
     
     public function forModel(string $modelType, int $modelId)
     {
