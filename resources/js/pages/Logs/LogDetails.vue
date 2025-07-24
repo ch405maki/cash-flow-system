@@ -1,75 +1,89 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
+import { formatDateTime } from '@/lib/utils'
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog'
+import JsonViewer from '@/components/logs/JsonViewer.vue'
 
-// Define the log data structure
 interface Log {
-    description: string;
-    properties: Record<string, unknown>;
-    causer: {
-        name: string;
-        email: string;
-    } | null;
-    created_at: string;
+  id: number
+  description: string
+  log_name: string
+  subject_type: string
+  subject_id: number
+  causer: {
+    username: string
+    first_name: string
+    last_name: string
+    email: string
+  } | null
+  subject: {
+    id: number
+    name?: string
+    title?: string
+    request_no?: string
+  } | null
+  properties: Record<string, unknown>
+  created_at: string
 }
 
-// Props - takes a single log entry or null when closed
 const props = defineProps<{
-    log: Log | null;
-}>();
+  log: Log | null
+}>()
 
-// Emits - notifies parent when dialog should close
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close'])
+
 </script>
 
 <template>
-    <!-- Dialog component that shows when log prop has a value -->
-    <Dialog :open="!!log" @update:open="(val) => !val && emit('close')">
-        <DialogContent class="max-w-2xl">
-            <DialogHeader>
-                <DialogTitle>Activity Details</DialogTitle>
-            </DialogHeader>
+  <Dialog :open="!!log" @update:open="(val) => !val && emit('close')">
+    <DialogContent class="max-w-2xl max-h-[90vh] overflow-auto">
+      <DialogHeader>
+        <DialogTitle>Activity Details</DialogTitle>
+      </DialogHeader>
 
-            <!-- Content shown when log exists -->
-            <div v-if="log" class="space-y-4">
-                <!-- Description section -->
-                <div>
-                    <h3 class="font-medium">Description</h3>
-                    <p class="text-sm text-muted-foreground">
-                        {{ log.description }}
-                    </p>
-                </div>
-
-                <!-- Who performed the action -->
+      <div v-if="log" class="space-y-6">
+        <!-- Basic Info Section -->
+        <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
+          <div class="space-y-1">
+            <h3 class="font-medium">Description</h3>
+            <p class="text-sm text-muted-foreground">
+                {{ log.description }}
+            </p>
+          </div>
+          
+          
+          <div class="space-y-1">
+            <div class="flex justify-between items-center">
                 <div>
                     <h3 class="font-medium">Performed By</h3>
                     <p class="text-sm text-muted-foreground">
-                        {{ log.causer?.name || 'System' }}
+                        {{ log.causer?.username || 'System' }}
                         <span v-if="log.causer?.email">({{ log.causer.email }})</span>
                     </p>
                 </div>
-
-                <!-- When it happened -->
                 <div>
                     <h3 class="font-medium">Date</h3>
                     <p class="text-sm text-muted-foreground">
                         {{ new Date(log.created_at).toLocaleString() }}
                     </p>
                 </div>
-
-                <!-- Raw properties data -->
-                <div>
-                    <h3 class="font-medium">Details</h3>
-                    <pre class="max-h-96 overflow-auto rounded bg-muted p-4 text-sm">
-                        {{ JSON.stringify(log.properties, null, 2) }}
-                    </pre>
-                </div>
             </div>
-        </DialogContent>
-    </Dialog>
+          </div>
+        </div>
+
+        <!-- Full Properties Section -->
+        <div class="space-y-2"> 
+          <h3 class="font-medium">All Properties</h3>
+          <div class="border rounded-lg p-4 bg-muted/50">
+            <JsonViewer :data="log.properties" />
+          </div>
+        </div>
+      </div>
+    </DialogContent>
+  </Dialog>
 </template>

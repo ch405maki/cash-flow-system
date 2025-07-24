@@ -10,18 +10,30 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
-import { Pagination } from '@/components/Pagination';
 import LogDetails from './LogDetails.vue';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 interface Log {
     id: number;
     description: string;
-    properties: Record<string, unknown>;
+    log_name: string; // Add log name
+    subject_type: string;
+    subject_id: number;
     causer: {
         name: string;
         email: string;
     } | null;
+    subject: {
+        id: number;
+        name?: string;
+        title?: string;
+        request_no?: string;
+    } | null;
+    properties: {
+        action?: string;
+        event?: string;
+        [key: string]: unknown;
+    };
     created_at: string;
 }
 
@@ -29,14 +41,10 @@ interface Model {
     id: number;
     name?: string;
     request_no?: string;
-    // Add other model-specific fields
 }
 
 interface Props {
-    logs: {
-        data: Log[];
-        links: Array<{ url: string | null; label: string; active: boolean }>;
-    };
+    logs: Log[]; // Changed from paginated structure to simple array
     model: Model;
     modelType: string;
     filters: {
@@ -47,7 +55,6 @@ interface Props {
 const props = defineProps<Props>();
 const selectedLog = ref<Log | null>(null);
 
-// Format model title based on model type
 const modelTitle = computed(() => {
     if (props.modelType === 'Request' && props.model.request_no) {
         return props.model.request_no;
@@ -77,6 +84,8 @@ const modelTitle = computed(() => {
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead>Log Name</TableHead>
+                            <TableHead>Event</TableHead>
                             <TableHead>Action</TableHead>
                             <TableHead>Description</TableHead>
                             <TableHead>User</TableHead>
@@ -85,7 +94,7 @@ const modelTitle = computed(() => {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        <TableRow v-for="log in logs.data" :key="log.id">
+                        <TableRow v-for="log in logs" :key="log.id">
                             <TableCell class="font-medium capitalize">
                                 {{ log.description.split(' ')[0] }}
                             </TableCell>
@@ -109,8 +118,6 @@ const modelTitle = computed(() => {
                     </TableBody>
                 </Table>
             </div>
-
-            <Pagination :links="logs.links" />
         </div>
     </AppLayout>
 

@@ -22,8 +22,7 @@ class ActivityLogController extends Controller
                         });
                 })
                 ->latest()
-                ->paginate(20)
-                ->withQueryString(),
+                ->get(), // Changed from paginate(20) to get()
             'filters' => Request::only(['search']),
         ]);
     }
@@ -40,7 +39,7 @@ class ActivityLogController extends Controller
             'logs' => Activity::forSubject($modelClass::findOrFail($modelId))
                 ->with(['causer'])
                 ->latest()
-                ->paginate(20),
+                ->get(), // Changed from paginate(20) to get()
             'model' => $modelClass::withTrashed()->find($modelId),
             'modelType' => $modelType,
             'filters' => Request::only(['search'])

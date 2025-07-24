@@ -174,8 +174,10 @@ class RequestController extends Controller
             activity()
                 ->performedOn($requestModel)
                 ->causedBy($creatorUser)
+                ->useLog('Request Created')
                 ->withProperties([
                     'action' => 'create',
+                    'event' => 'Request Created',
                     'ip_address' => $request->ip(),
                     'request_data' => $validated, 
                     'items_count' => count($validated['items']),
