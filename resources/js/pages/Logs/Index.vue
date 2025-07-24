@@ -12,9 +12,12 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { Input } from '@/components/ui/input'
-import { Search, X } from 'lucide-vue-next';
+import { Search, X, Calendar } from 'lucide-vue-next';
 import LogDetails from './LogDetails.vue';
 import { ref, computed } from 'vue';
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface Log {
     id: number;
@@ -40,21 +43,35 @@ interface Log {
     created_at: string;
 }
 
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
 interface Props {
-    logs: Log[];
+    logs: {
+        data: Log[];
+        links?: PaginationLink[];
+        current_page?: number;
+        last_page?: number;
+    };
 }
 
 const props = defineProps<Props>();
 const selectedLog = ref<Log | null>(null);
 const searchQuery = ref('');
+const dateFilter = ref<Date | undefined>();
 
 // Computed property for filtered logs
 const filteredLogs = computed(() => {
-    if (!searchQuery.value) return props.logs;
+    if (!props.logs?.data) return [];
     
-    const query = searchQuery.value.toLowerCase();
-    return props.logs.filter(log => {
-        return (
+    let logs = [...props.logs.data];
+    
+    if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase();
+        logs = logs.filter(log => (
             log.description.toLowerCase().includes(query) ||
             (log.log_name?.toLowerCase().includes(query) ?? false) ||
             (log.causer?.username.toLowerCase().includes(query) ?? false) ||
@@ -64,13 +81,36 @@ const filteredLogs = computed(() => {
             (log.subject?.request_no?.toLowerCase().includes(query) ?? false) ||
             (log.properties.event?.toLowerCase().includes(query) ?? false) ||
             (log.properties.action?.toLowerCase().includes(query) ?? false)
-        );
-    });
+        ));
+    }
+
+    if (dateFilter.value) {
+        const filterDate = new Date(dateFilter.value);
+        logs = logs.filter(log => {
+            const logDate = new Date(log.created_at);
+            return (
+                logDate.getFullYear() === filterDate.getFullYear() &&
+                logDate.getMonth() === filterDate.getMonth() &&
+                logDate.getDate() === filterDate.getDate()
+            );
+        });
+    }
+
+    return logs;
 });
 
 const clearSearch = () => {
     searchQuery.value = '';
 };
+
+const clearDateFilter = () => {
+    dateFilter.value = undefined;
+};
+
+// Safe pagination links access
+const paginationLinks = computed(() => {
+    return props.logs?.links || [];
+});
 </script>
 
 <template>
@@ -78,19 +118,50 @@ const clearSearch = () => {
 
     <AppLayout>
         <div class="space-y-4 p-4">
-            <!-- Client-side search filter -->
-            <div class="relative w-full max-w-md">
-                <Search class="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                    v-model="searchQuery"
-                    placeholder="Filter logs by any field..."
-                    class="w-full pl-10 pr-10"
-                />
-                <X
-                    v-if="searchQuery"
-                    class="absolute right-3 top-3 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
-                    @click="clearSearch"
-                />
+            <!-- Filters Row -->
+            <div class="flex flex-col md:flex-row gap-4">
+                <!-- Search Filter -->
+                <div class="relative w-full md:w-1/3">
+                    <Search class="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        v-model="searchQuery"
+                        placeholder="Filter logs by any field..."
+                        class="w-full pl-10 pr-10"
+                    />
+                    <X
+                        v-if="searchQuery"
+                        class="absolute right-3 top-3 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
+                        @click="clearSearch"
+                    />
+                </div>
+
+                <!-- Date Filter -->
+                <div class="w-full md:w-1/3">
+                    <Popover>
+                        <PopoverTrigger as-child>
+                            <Button
+                                variant="outline"
+                                class="w-full justify-start text-left font-normal"
+                                :class="!dateFilter ? 'text-muted-foreground' : ''"
+                            >
+                                <Calendar class="mr-2 h-4 w-4" />
+                                {{ dateFilter ? formatDateTime(dateFilter) : 'Filter by date...' }}
+                                <X
+                                    v-if="dateFilter"
+                                    class="ml-auto h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
+                                    @click.stop="clearDateFilter"
+                                />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent class="w-auto p-0">
+                            <CalendarComponent
+                                v-model="dateFilter"
+                                mode="single"
+                                initial-focus
+                            />
+                        </PopoverContent>
+                    </Popover>
+                </div>
             </div>
 
             <!-- Logs Table -->
@@ -106,50 +177,90 @@ const clearSearch = () => {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        <TableRow v-for="log in filteredLogs" :key="log.id">
-                            <TableCell class="font-medium capitalize">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                                    {{ log.properties.event || log.properties.action || 'system' }}
-                                </span>
-                            </TableCell>
-                            <TableCell class="max-w-[300px] truncate">
-                                {{ log.description }}
-                            </TableCell>
-                            <TableCell>
-                                <div class="flex items-center space-x-2">
-                                    <span class="font-medium">{{ log.causer?.username || 'System' }}</span>
-                                    <span v-if="log.causer?.email" class="text-xs text-muted-foreground">
-                                        ({{ log.causer.email }})
+                        <template v-if="filteredLogs.length > 0">
+                            <TableRow v-for="log in filteredLogs" :key="log.id">
+                                <TableCell class="font-medium capitalize">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                                        {{ log.properties.event || log.properties.action || 'system' }}
                                     </span>
-                                </div>
-                            </TableCell>
-                            <TableCell class="text-muted-foreground">
-                                {{ formatDateTime(log.created_at) }}
-                            </TableCell>
-                            <TableCell>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    class="w-full"
-                                    @click="selectedLog = log"
-                                >
-                                    View
-                                </Button>
-                            </TableCell>
-                        </TableRow>
-                        <TableRow v-if="filteredLogs.length === 0">
-                            <TableCell colspan="5" class="text-center py-8 text-muted-foreground">
-                                <div class="flex flex-col items-center justify-center space-y-2">
-                                    <Search class="h-8 w-8" />
-                                    <p>No logs found matching "{{ searchQuery }}"</p>
-                                    <Button variant="ghost" size="sm" @click="clearSearch">
-                                        Clear filter
+                                </TableCell>
+                                <TableCell class="max-w-[300px] truncate">
+                                    {{ log.description }}
+                                </TableCell>
+                                <TableCell>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="font-medium">{{ log.causer?.username || 'System' }}</span>
+                                        <span v-if="log.causer?.email" class="text-xs text-muted-foreground">
+                                            ({{ log.causer.email }})
+                                        </span>
+                                    </div>
+                                </TableCell>
+                                <TableCell class="text-muted-foreground">
+                                    {{ formatDateTime(log.created_at) }}
+                                </TableCell>
+                                <TableCell>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        class="w-full"
+                                        @click="selectedLog = log"
+                                    >
+                                        View
                                     </Button>
-                                </div>
-                            </TableCell>
-                        </TableRow>
+                                </TableCell>
+                            </TableRow>
+                        </template>
+                        <template v-else>
+                            <TableRow>
+                                <TableCell colspan="5" class="text-center py-8 text-muted-foreground">
+                                    <div class="flex flex-col items-center justify-center space-y-2">
+                                        <Search class="h-8 w-8" />
+                                        <p>No logs found matching your criteria</p>
+                                        <Button variant="ghost" size="sm" @click="[clearSearch(), clearDateFilter()]">
+                                            Clear all filters
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        </template>
                     </TableBody>
                 </Table>
+            </div>
+
+            <!-- Pagination -->
+            <div v-if="paginationLinks.length > 0" class="flex justify-center">
+                <template>
+  <Pagination>
+    <PaginationContent>
+      <PaginationItem v-if="props.logs.prev_page_url">
+        <PaginationPrevious :href="props.logs.prev_page_url" />
+      </PaginationItem>
+
+      <!-- Main page links -->
+      <PaginationItem
+        v-for="(link, index) in props.logs.links.slice(1, -1)"
+        :key="index"
+      >
+        <a
+          :href="link.url || undefined"
+          class="px-3 py-1.5 text-sm rounded-md"
+          :class="{
+            'bg-primary text-white': link.active,
+            'text-muted-foreground hover:bg-accent': !link.active && link.url,
+            'cursor-not-allowed text-muted-foreground': !link.url
+          }"
+        >
+          {{ link.label }}
+        </a>
+      </PaginationItem>
+
+      <PaginationItem v-if="props.logs.next_page_url">
+        <PaginationNext :href="props.logs.next_page_url" />
+      </PaginationItem>
+    </PaginationContent>
+  </Pagination>
+</template>
+
             </div>
         </div>
     </AppLayout>

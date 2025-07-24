@@ -15,7 +15,28 @@ public function index()
         'logs' => Activity::query()
             ->with(['causer', 'subject'])
             ->latest()
-            ->get(),
+            ->paginate(15)
+            ->through(function ($log) {
+                return [
+                    'id' => $log->id,
+                    'description' => $log->description,
+                    'log_name' => $log->log_name,
+                    'subject_type' => $log->subject_type,
+                    'subject_id' => $log->subject_id,
+                    'causer' => $log->causer ? [
+                        'username' => $log->causer->username,
+                        'email' => $log->causer->email
+                    ] : null,
+                    'subject' => $log->subject ? [
+                        'id' => $log->subject->id,
+                        'name' => $log->subject->name ?? null,
+                        'title' => $log->subject->title ?? null,
+                        'request_no' => $log->subject->request_no ?? null
+                    ] : null,
+                    'properties' => $log->properties->toArray(),
+                    'created_at' => $log->created_at->toISOString()
+                ];
+            }),
     ]);
 }
     
