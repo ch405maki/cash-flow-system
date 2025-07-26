@@ -22,6 +22,10 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  current_user: {
+    type: Object,
+    required: true,
+  },
 })
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -74,7 +78,8 @@ const releaseItems = async () => {
   try {
     const response = await axios.post(`/api/requests/${props.request.id}/release`, {
       items: itemsToRelease,
-      notes: 'Items released from request'
+      notes: 'Items released from request',
+      user_id: props.current_user.id,
     });
 
     // Update local state with the response data

@@ -9,6 +9,7 @@ use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderDetail;
 use App\Models\Account;
 use App\Models\Release;
+use App\Models\User;
 use App\Models\ReleaseDetail;
 use Illuminate\Http\JsonResponse;
 use App\Models\Request;
@@ -165,10 +166,44 @@ class RequestController extends Controller
             $requestModel = Request::create(collect($validated)->except('items')->toArray());
             $requestModel->user->notify(new NewRequestNotification($requestModel));
 
-            // Notify custom recipient
-            // (new AnonymousNotifiable())
-            //     ->route('mail', 'recipient@example.com')
-            //     ->notify(new NewRequestNotification($requestModel));
+            $departmentApprover = User::where('department_id', $validated['department_id'])
+                ->where('access_id', 3)
+                ->where('id', '!=', $validated['user_id']) // Exclude creator if needed
+                ->first();
+
+            // Notify department users with access level 3
+            if ($departmentApprover) {
+                try {
+                    $departmentApprover->notify(new NewRequestNotification($requestModel));
+                } catch (\Exception $e) {
+                    \Log::error("Approver notification failed", [
+                        'approver' => $departmentApprover->email,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            } else {
+                \Log::warning("No approver found for department {$validated['department_id']}");
+            }
+
+            // Log the creation with full details
+            $creatorUser = User::find($validated['user_id']);
+            $creator = $creatorUser?->username ?? 'system';
+            $description = "Request #{$validated['request_no']} was created by {$creator}";
+
+            activity()
+                ->performedOn($requestModel)
+                ->causedBy($creatorUser)
+                ->useLog('Request Created')
+                ->withProperties([
+                    'action' => 'create',
+                    'event' => 'Request Created',
+                    'ip_address' => $request->ip(),
+                    'request_data' => $validated, 
+                    'items_count' => count($validated['items']),
+                    'department' => $requestModel->department->name,
+                    'request_no' => $validated['request_no'],
+                ])
+                ->log($description);
 
             // Create request details
             foreach ($validated['items'] as $item) {
@@ -318,25 +353,44 @@ class RequestController extends Controller
 
         // Password verification for sensitive status changes
         $passwordRequiredStatuses = ['approved', 'propertyCustodian', 'to_order', 'released'];
+        $authUser = auth()->user();
 
         if (in_array($validated['status'], $passwordRequiredStatuses)) {
-            if (!Hash::check($validated['password'], auth()->user()->password)) {
+            if (!Hash::check($validated['password'], $authUser->password)) {
                 return back()->withErrors([
                     'password' => 'Invalid password',
                 ]);
             }
         }
 
+        // Store old status for logging
+        $oldStatus = $request->status;
+
         // Determine update data
         $updateData = ['status' => $validated['status']];
         $validated['director_approved_at'] = now();
 
-        // Update user_id only if user is NOT a property custodian
-        // if (auth()->user()->role !== 'property_custodian') {
-        //     $updateData['user_id'] = auth()->id();
-        // }
-
         $request->update($updateData);
+
+        // Log the status change
+        $description = "Request #{$request->request_no} status changed from {$oldStatus} to {$validated['status']} by {$authUser->username}";
+
+        activity()
+            ->performedOn($request)
+            ->causedBy($authUser)
+            ->useLog('Status Updated')
+            ->withProperties([
+                'action' => 'status_update',
+                'event' => 'Status Updated',
+                'ip_address' => $httpRequest->ip(),
+                'old_status' => $oldStatus,
+                'new_status' => $validated['status'],
+                'changed_by' => $authUser->username,
+                'changed_by_role' => $authUser->role,
+                'request_no' => $request->request_no,
+            ])
+            ->log($description);
+
         return back()->with('success', 'Request status updated successfully');
     }
 
@@ -351,6 +405,9 @@ class RequestController extends Controller
                 'department'
             ]),
             'departments' => Department::all(),
+            'current_user' => [
+                'id' => auth()->id(),
+            ]
         ]);
     }
 
@@ -365,15 +422,20 @@ class RequestController extends Controller
                     Rule::exists('request_details', 'id')->where('request_id', $request->id)
                 ],
                 'items.*.quantity' => 'required|integer|min:1',
-                'notes' => 'nullable|string'
+                'notes' => 'nullable|string',
+                'user_id' => 'required|exists:users,id'
             ]);
+
+            $authUser = User::findOrFail($validated['user_id']);
 
             $release = Release::create([
                 'request_id' => $request->id,
-                'user_id' => auth()->id() ?? 1,
+                'user_id' => $authUser->id,
                 'release_date' => now(),
                 'notes' => $validated['notes'] ?? null
             ]);
+
+            $totalQuantity = 0;
 
             foreach ($validated['items'] as $item) {
                 $requestDetail = RequestDetail::where('id', $item['request_detail_id'])
@@ -381,7 +443,6 @@ class RequestController extends Controller
                     ->lockForUpdate()
                     ->firstOrFail();
 
-                // Calculate available quantity (original quantity minus already released)
                 $availableQuantity = $requestDetail->quantity;
 
                 if ($item['quantity'] > $availableQuantity) {
@@ -392,20 +453,33 @@ class RequestController extends Controller
                     ]);
                 }
 
-                // Create release record
                 ReleaseDetail::create([
                     'release_id' => $release->id,
                     'request_detail_id' => $item['request_detail_id'],
                     'quantity' => $item['quantity']
                 ]);
 
-                // Update quantities
                 $requestDetail->decrement('quantity', $item['quantity']);
                 $requestDetail->increment('released_quantity', $item['quantity']);
+
+                $totalQuantity += $item['quantity'];
             }
 
-            // Update request status
             $this->updateRequestStatus($request);
+
+            // Minimal activity logging
+            activity()
+                ->performedOn($release)
+                ->causedBy($authUser)
+                ->useLog('Released Items')
+                ->withProperties([
+                    'action' => 'release',
+                    'event' => 'Items Released',
+                    'ip_address' => $httpRequest->ip(),
+                    'request_no' => $request->request_no,
+                    'released_quantity' => $totalQuantity,
+                ])
+                ->log("Released {$totalQuantity} items for request #{$request->request_no}");
 
             DB::commit();
 

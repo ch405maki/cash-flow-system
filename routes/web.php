@@ -21,9 +21,11 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\CanvasController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\RequestToOrderReleaseController;
+use App\Http\Controllers\Api\ActivityLogController;
 
-use Illuminate\Notifications\Notifiable;
+use App\Models\User;
 use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Notifications\Notifiable;
 use App\Notifications\WelcomeEmail;
 
 
@@ -130,13 +132,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/canvas/{canvas}', [CanvasController::class, 'update'])->name('canvas.update');
 });
 
-Route::get('/send-test-email', function () {
-    // Create an anonymous notifiable user
-    (new AnonymousNotifiable)
-        ->route('mail', 'markmanuel0317@gmail.com')
-        ->notify(new WelcomeEmail());
 
-    return 'Test email sent to markmanuel0317@gmail.com';
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/logs', [ActivityLogController::class, 'index'])->name('logs.index');
+    Route::get('/logs/{modelType}/{modelId}', [ActivityLogController::class, 'forModel'])->name('logs.model');
+});
+
+Route::get('/send-test-email', function () {
+    // Create a test user
+    $testUser = new User([
+        'first_name' => 'Test',
+        'last_name' => 'User',
+        'email' => 'test@example.com',
+        'username' => 'testuser'
+    ]);
+    
+    $tempPassword = 'temporary123';
+    
+    (new AnonymousNotifiable())
+        ->route('mail', 'markmanuel0317@gmail.com')
+        ->notify(new WelcomeEmail($testUser, $tempPassword));
+
+    return 'Test email sent!';
 });
 
 require __DIR__.'/settings.php';

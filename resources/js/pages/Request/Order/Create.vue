@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ShoppingCart } from 'lucide-vue-next';
 
 const toast = useToast()
 
@@ -197,7 +198,9 @@ const submitForm = () => {
                 type="button"
                 @click="addItem"
                 class="w-full"
+                :disabled="form.processing || !form.newItem.quantity || !form.newItem.unit || !form.newItem.item_description"
               >
+                <ShoppingCart/>
                 Add
               </Button>
             </div>

@@ -256,8 +256,9 @@ const capitalizeWords = (str: string): string => {
               type="button" 
               @click="addItem" 
               class="w-full"
+              :disabled="!newItem.item_description.trim() || !newItem.quantity || !newItem.unit || submitting"
             >
-              <CirclePlus class="mr-2 h-4 w-4" />
+              <CirclePlus class="h-4 w-4" />
               Add Item
             </Button>
           </div>
