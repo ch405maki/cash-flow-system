@@ -138,21 +138,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/logs/{modelType}/{modelId}', [ActivityLogController::class, 'forModel'])->name('logs.model');
 });
 
-Route::get('/send-test-email', function () {
-    // Create a test user
-    $testUser = new User([
-        'first_name' => 'Test',
-        'last_name' => 'User',
-        'email' => 'test@example.com',
-        'username' => 'testuser'
-    ]);
-    
-    $tempPassword = 'temporary123';
-    
-    (new AnonymousNotifiable())
-        ->route('mail', 'markmanuel0317@gmail.com')
-        ->notify(new WelcomeEmail($testUser, $tempPassword));
-
+Route::get('/test-email', function () {
+    $details = [
+        'subject' => 'Test Email from RPV System',
+        'body' => 'This is a test email to verify the SMTP configuration.',
+    ];
+    Mail::raw($details['body'], function ($message) use ($details) {
+        $message->from('admin@arellanolaw.edu', 'Arellano Law Foundation')
+        ->to('markmanuel0317@gmail.com')
+        ->subject($details['subject']);
+    });
     return 'Test email sent!';
 });
 
