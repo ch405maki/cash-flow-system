@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { formatDateTime } from '@/lib/utils';
+import { type BreadcrumbItem } from '@/types';
 import {
     Table,
     TableBody,
@@ -111,12 +112,23 @@ const clearSearch = () => {
 const clearDateFilter = () => {
     dateFilter.value = undefined;
 };
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Dashboard',
+        href: '/dashboard',
+    },
+    {
+        title: 'Activity Log',
+        href: '/logs',
+    },
+];
 </script>
 
 <template>
     <Head title="Activity Log" />
 
-    <AppLayout>
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-4 p-4">
             <!-- Filters Row -->
             <div class="flex flex-col md:flex-row gap-4">
@@ -169,11 +181,10 @@ const clearDateFilter = () => {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead class="w-[120px]">Event</TableHead>
+                            <TableHead class="w-[220px]">Event</TableHead>
                             <TableHead>Description</TableHead>
                             <TableHead class="w-[200px]">User</TableHead>
                             <TableHead class="w-[180px]">Date</TableHead>
-                            <TableHead class="w-[100px]">Details</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -181,10 +192,10 @@ const clearDateFilter = () => {
                             <TableRow v-for="log in filteredLogs" :key="log.id">
                                 <TableCell class="font-medium capitalize">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                                        {{ log.properties.event || log.properties.action || 'system' }}
+                                        {{ log.log_name || log.properties.action || 'system' }}
                                     </span>
                                 </TableCell>
-                                <TableCell class="max-w-[300px] truncate">
+                                <TableCell @click="selectedLog = log" class="max-w-[300px] truncate cursor-pointer hover:underline" title="View Details">
                                     {{ log.description }}
                                 </TableCell>
                                 <TableCell>
@@ -197,16 +208,6 @@ const clearDateFilter = () => {
                                 </TableCell>
                                 <TableCell class="text-muted-foreground">
                                     {{ formatDateTime(log.created_at) }}
-                                </TableCell>
-                                <TableCell>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        class="w-full"
-                                        @click="selectedLog = log"
-                                    >
-                                        View
-                                    </Button>
                                 </TableCell>
                             </TableRow>
                         </template>
@@ -228,7 +229,8 @@ const clearDateFilter = () => {
             </div>
 
             <!-- Pagination -->
-            <Pagination >
+            <div class="mr-2">
+                <Pagination class="flex items-center justify-end mt-4">
                 <PaginationContent class="space-x-4">
                     <template v-for="(link, index) in logs.links" :key="index">
                     <PaginationItem v-if="link.url">
@@ -249,6 +251,7 @@ const clearDateFilter = () => {
                     </template>
                 </PaginationContent>
             </Pagination>
+            </div>
         </div>
     </AppLayout>
 

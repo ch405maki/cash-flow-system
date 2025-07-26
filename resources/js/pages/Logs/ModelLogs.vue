@@ -16,7 +16,7 @@ import { ref, computed } from 'vue';
 interface Log {
     id: number;
     description: string;
-    log_name: string; // Add log name
+    log_name: string; 
     subject_type: string;
     subject_id: number;
     causer: {

@@ -69,7 +69,7 @@ const emit = defineEmits(['close'])
                 <div>
                     <h3 class="font-medium">Date</h3>
                     <p class="text-sm text-muted-foreground">
-                        {{ new Date(log.created_at).toLocaleString() }}
+                        {{ formatDateTime(log.created_at) }}
                     </p>
                 </div>
             </div>
