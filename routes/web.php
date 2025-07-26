@@ -20,6 +20,13 @@ use App\Http\Controllers\Api\VoucherController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\CanvasController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\RequestToOrderReleaseController;
+use App\Http\Controllers\Api\ActivityLogController;
+
+use App\Models\User;
+use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Notifications\Notifiable;
+use App\Notifications\WelcomeEmail;
 
 
 Route::get('/', function () {
@@ -58,7 +65,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/request-to-order/{id}/reject', [RequestToOrderController::class, 'reject'])->name('request-to-order.reject');
     
     Route::get('/for-approval', [RequestApprovalController::class, 'index'])->name('for-approval.index');
+
+    Route::get('/released-order', [RequestToOrderReleaseController::class, 'index'])->name('request-to-order.release.create');
+    Route::get('/request-to-order/{order}/release', [RequestToOrderReleaseController::class, 'create'])->name('request-to-order.release.create');
+    Route::post('/request-to-order/{order}/release', [RequestToOrderReleaseController::class, 'store'])->name('request-to-order.release.store');
 });
+
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/approved-request', [ApprovedRequestController::class, 'index'])->name('approved-request.index');
@@ -83,6 +95,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/for-voucher', [ApprovedPurchaseOrderController::class, 'forVoucher'])->name('for-voucher.index');
     Route::get('/voucher-approval', [VoucherApprovalController::class, 'index'])->name('voucher-approval.index');
     Route::get('/approved-voucher', [ApprovedVoucherController::class, 'index'])->name('approved-voucher.index');
+
+    Route::get('/vouchers/{voucher}/download-receipt', [VoucherController::class, 'downloadReceipt'])->name('vouchers.download.receipt');
 });
 
 // Report Route 
@@ -113,8 +127,33 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/canvas/approval', [CanvasController::class, 'approval'])->name('canvas.approval');
     Route::get('/canvas/{canvas}', [CanvasController::class, 'show'])->name('canvas.show');
-    Route::get('/canvas/{canvas}/download', [CanvasController::class, 'download'])->name('canvas.download');
+    Route::get('/canvases/{canvas}/download', [CanvasController::class, 'downloadAll'])->name('canvas.download.all');
+    Route::get('/canvases/{canvas}/download/{file}', [CanvasController::class, 'downloadFile'])->name('canvas.download.file');
     Route::patch('/canvas/{canvas}', [CanvasController::class, 'update'])->name('canvas.update');
+});
+
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/logs', [ActivityLogController::class, 'index'])->name('logs.index');
+    Route::get('/logs/{modelType}/{modelId}', [ActivityLogController::class, 'forModel'])->name('logs.model');
+});
+
+Route::get('/send-test-email', function () {
+    // Create a test user
+    $testUser = new User([
+        'first_name' => 'Test',
+        'last_name' => 'User',
+        'email' => 'test@example.com',
+        'username' => 'testuser'
+    ]);
+    
+    $tempPassword = 'temporary123';
+    
+    (new AnonymousNotifiable())
+        ->route('mail', 'markmanuel0317@gmail.com')
+        ->notify(new WelcomeEmail($testUser, $tempPassword));
+
+    return 'Test email sent!';
 });
 
 require __DIR__.'/settings.php';

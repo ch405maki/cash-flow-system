@@ -43,6 +43,7 @@ const executiveMainItems: NavItem[] = [
     icon: LayoutDashboard,
   },
 ];
+
 const executiveApprovalItems: NavItem[] = [
   {
     title: 'Order Request',
@@ -79,6 +80,7 @@ const purchasingNavItems: NavItem[] = [
     icon: FileCheck2,
   },
 ];
+
 const purchasingCanvasNavItems = ref<DropdownNavItem[]>([
   {
     title: 'Canvas',
@@ -87,6 +89,10 @@ const purchasingCanvasNavItems = ref<DropdownNavItem[]>([
     isOpen: false,
     children: [
       { title: 'Pending', href: '/canvas' },
+      { 
+        title: 'Submitted', 
+        href: '/canvas/approval?status=submitted',
+      },
       { 
         title: 'For Approval', 
         href: '/canvas/approval?status=forEOD',
@@ -99,13 +105,10 @@ const purchasingCanvasNavItems = ref<DropdownNavItem[]>([
         title: 'P. O. Created', 
         href: '/canvas/approval?status=poCreated',
       },
-      { 
-        title: 'Rejected', 
-        href: '/canvas/approval?status=rejected',
-      },
     ],
   },
 ]);
+
 const purchasingPONavItems = ref<DropdownNavItem[]>([
   {
     title: 'Purchase Order',
@@ -138,7 +141,13 @@ const custodianNavItems: NavItem[] = [
     href: '/request-to-order',
     icon: Package,
   },
+  {
+    title: 'Released Orders',
+    href: '/released-order',
+    icon: Package,
+  },
 ];
+
 const custodianApprovalItems: NavItem[] = [
   {
     title: 'For Approval',
@@ -173,6 +182,7 @@ const staffNavItems: NavItem[] = [
     icon: SquarePen,
   },
 ];
+
 const staffRequestItems = ref<DropdownNavItem[]>([
     {
         title: 'Request',
@@ -211,6 +221,7 @@ const accountingNavItems: NavItem[] = [
     icon: ReceiptText,
   },
 ];
+
 const accountingCheckNavItems: NavItem[] = [
   {
     title: 'For Check Releasing',
@@ -218,6 +229,15 @@ const accountingCheckNavItems: NavItem[] = [
     icon: ReceiptText,
   },
 ];
+
+const accountingAuditNavItems: NavItem[] = [
+  {
+    title: 'Purchase Canvas',
+    href: '/canvas',
+    icon: ListCollapse,
+  },
+];
+
 const reportItems = ref<DropdownNavItem[]>([
     {
         title: 'Reports',
@@ -234,8 +254,8 @@ const reportItems = ref<DropdownNavItem[]>([
 
 const footerNavItems: NavItem[] = [
   {
-    title: 'Configurations',
-    href: '/configuration/users',
+    title: 'Settings',
+    href: '/settings/profile',
     icon: Settings,
   },
 ];
@@ -273,12 +293,11 @@ const adminNavItems: NavItem[] = [
   },
   {
     title: 'Logs',
-    href: '#',
+    href: '/logs',
     icon: Logs ,
   },
 ];
 </script>
-
 
 <template>
     <Sidebar collapsible="icon" variant="inset">
@@ -307,6 +326,7 @@ const adminNavItems: NavItem[] = [
           
           <div v-if="user?.role === 'accounting'">
             <NavMain :items="accountingNavItems" group-label="Navigation"/>
+            <NavMain :items="accountingAuditNavItems" group-label="Audit"/>
             <NavMain :items="accountingCheckNavItems" group-label="Check"/>
             <NavMain :items="reportItems" group-label="Reports" />
           </div>
@@ -328,12 +348,10 @@ const adminNavItems: NavItem[] = [
             <NavMain :items="staffNavItems" group-label="Navigation"/>
             <NavMain :items="staffRequestItems" group-label="Request"/>
           </div>
-
         </SidebarContent>
 
         <SidebarFooter>
             <NavFooter :items="footerNavItems"/>
-            <NavUser />
         </SidebarFooter>
     </Sidebar>
     <slot />

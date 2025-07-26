@@ -1,5 +1,11 @@
 <script setup lang="ts">
-defineProps({
+import { Download } from 'lucide-vue-next';
+import { Button } from '@/components/ui/button';
+import { useToast } from 'vue-toastification';
+import { ref } from 'vue';
+
+const toast = useToast();
+const props = defineProps({
     voucher: {
         type: Object,
         required: true
@@ -17,13 +23,33 @@ defineProps({
         required: true
     }
 });
+
+const isDownloading = ref(false);
+
+const downloadReceipt = () => {
+  const link = document.createElement('a');
+  link.href = route('vouchers.download.receipt', { voucher: props.voucher.id });
+  link.click();
+};
 </script>
 
 <template>
-
     <!-- First Table -->
     <div class="space-y-2">
-        <p class="font-medium text-muted-foreground">Voucher Details</p>
+        <div class="flex items-center justify-between">
+            <p class="font-medium text-muted-foreground">Voucher Details</p>
+            <div v-if="voucher.receipt">
+                <Button 
+                    v-if="voucher.receipt" 
+                    variant="success" 
+                    @click="downloadReceipt"
+                    :disabled="isDownloading"
+                >
+                    <Download class="h-4 w-4 mr-2" />
+                    {{ isDownloading ? 'Downloading...' : 'Download Receipt' }}
+                </Button>
+            </div>
+        </div>
         <table class="w-full text-sm border border-border rounded-md">
             <thead>
             <tr class="bg-gray-50 border-b">
@@ -31,10 +57,17 @@ defineProps({
                 VOUCHER TYPE:
                 <span class="uppercase font-normal">{{ voucher.type }}</span> &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
                 STATUS:
-                <span class="uppercase font-normal" :class="{ 'text-red-600': voucher.status === 'unreleased' }">
-                {{ formatStatus(voucher.status) }}
-                </span>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-
+                    <span class="uppercase font-bold tracking-wide"
+                        :class="{
+                            'text-green-600': voucher.status === 'completed',
+                            'text-red-600': voucher.status === 'unreleased',
+                            'text-purple-600': voucher.status === 'released',
+                            'text-yellow-500': voucher.status === 'forCheck',
+                            'text-blue-500': voucher.status === 'forEOD',
+                            'text-gray-500': voucher.status === 'draft'
+                        }">
+                    {{ formatStatus(voucher.status) }}
+                    </span>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
                 CHECK AMOUNT:
                 <span class="uppercase font-normal">{{ formatCurrency(voucher.check_amount) }}</span>
             </th>
@@ -59,7 +92,7 @@ defineProps({
                 <td class="p-2 font-medium text-muted-foreground border-r">PURPOSE:</td>
                 <td class="p-2 uppercase border-r">{{ voucher.purpose }}</td>
                 <td class="p-2 font-medium text-muted-foreground border-r">CHECK DATE:</td>
-                <td class="p-2">{{ formatDate(voucher.check_date) }}</td>
+                <td class="p-2">{{ voucher.check_date ? formatDate(voucher.check_date) : '' }}</td>
             </tr>
         </tbody>
         </table>

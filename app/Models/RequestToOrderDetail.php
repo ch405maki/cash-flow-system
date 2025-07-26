@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RequestToOrderDetail extends Model
 {
@@ -37,4 +38,20 @@ class RequestToOrderDetail extends Model
             }
         });
     }
+
+    public function releases(): HasMany
+    {
+        return $this->hasMany(RequestToOrderRelease::class, 'request_to_order_detail_id');
+    }
+
+    public function getTotalReleasedAttribute()
+    {
+        return $this->releases->sum('quantity_released');
+    }
+
+    public function getRemainingQuantityAttribute()
+{
+    // Use the sum from the database rather than calculating from collection
+    return $this->quantity - ($this->releases_sum_quantity_released ?? $this->releases()->sum('quantity_released'));
+}
 }

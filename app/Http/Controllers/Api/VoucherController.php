@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Database\QueryException;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Storage;
 
 class VoucherController extends Controller
 {
@@ -69,7 +70,6 @@ class VoucherController extends Controller
                 'voucher_no' => 'required|string|unique:vouchers,voucher_no',
                 'issue_date' => 'nullable|date',
                 'payment_date' => 'nullable|date',
-                'check_date' => 'nullable|date',
                 'delivery_date' => 'nullable|date',
                 'voucher_date' => 'required|date',
                 'purpose' => 'required|string|max:500',
@@ -106,7 +106,6 @@ class VoucherController extends Controller
                 'voucher_no' => $validated['voucher_no'],
                 'issue_date' => $validated['issue_date'] ?? null,
                 'payment_date' => $validated['payment_date'] ?? null,
-                'check_date' => $validated['check_date'],
                 'delivery_date' => $validated['delivery_date'] ?? null,
                 'voucher_date' => $validated['voucher_date'],
                 'purpose' => $validated['purpose'],
@@ -225,10 +224,10 @@ class VoucherController extends Controller
                     'string',
                     Rule::unique('vouchers', 'voucher_no')->ignore($voucher->id),
                 ],
-                'issue_date' => 'required|date',
+                'issue_date' => 'nullable|date',
                 'payment_date' => 'nullable|date',
                 'check_date' => 'required|date',
-                'delivery_date' => 'required|date',
+                'delivery_date' => 'nullable|date',
                 'voucher_date' => 'required|date',
                 'purpose' => 'required|string|max:500',
                 'payee' => 'required|string|max:255',
@@ -269,6 +268,88 @@ class VoucherController extends Controller
             );
         });
     }
+
+    public function uploadReceipt(Request $request, Voucher $voucher): JsonResponse
+    {
+        $validated = $request->validate([
+            'receipt' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'issue_date' => 'nullable|date',
+            'delivery_date' => 'nullable|date',
+            'remarks' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            // Handle file upload
+            $file = $request->file('receipt');
+            $filename = 'receipt' . '_' . $voucher->voucher_no . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('receipts', $filename, 'public');
+            
+            // Update voucher with new data
+            $voucher->update([
+                'receipt' => 'receipts/' . $filename,
+                'issue_date' => $validated['issue_date'],
+                'delivery_date' => $validated['delivery_date'],
+                'remarks' => $validated['remarks'],
+                'status' => 'completed',
+            ]);
+
+            return $this->successResponse(
+                'Receipt and details uploaded successfully',
+                [
+                    'receipt_path' => 'receipts/' . $filename,
+                    'issue_date' => $validated['issue_date'],
+                    'delivery_date' => $validated['delivery_date'],
+                    'remarks' => $validated['remarks'],
+                ],
+                200
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to upload receipt: ' . $e->getMessage(), 500);
+        }
+    }
+
+    public function addCheckDetails(Request $request, Voucher $voucher): JsonResponse
+    {
+        $validated = $request->validate([
+            'check_no' => 'required|string|max:255',
+            'check_date' => 'required|date',
+        ]);
+
+        try {
+            // Update voucher with check details
+            $voucher->update([
+                'check_no' => $validated['check_no'],
+                'check_date' => $validated['check_date'],
+                'status' => 'unreleased'
+            ]);
+
+            return $this->successResponse(
+                'Check details added successfully',
+                $voucher->fresh(),
+                200
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to add check details: ' . $e->getMessage(), 500);
+        }
+    }
+    
+
+public function downloadReceipt(Voucher $voucher)
+{
+    if (!$voucher->receipt) {
+        abort(404, 'No receipt found.');
+    }
+
+    $filePath = $voucher->receipt; // e.g., 'receipts/receipt_V-202507-0003.pdf'
+
+    if (!Storage::disk('public')->exists($filePath)) {
+        abort(404, 'File not found on disk.');
+    }
+
+    $filename = 'receipt_' . $voucher->voucher_no . '.' . pathinfo($filePath, PATHINFO_EXTENSION);
+
+    return Storage::disk('public')->download($filePath, $filename);
+}
 
     public function show(Voucher $voucher): JsonResponse
     {
@@ -357,7 +438,6 @@ class VoucherController extends Controller
             'voucher' => $voucher->fresh()
         ]);
     }
-
 
     public function forEod($id, Request $request)
     {
@@ -496,21 +576,30 @@ class VoucherController extends Controller
     /**
      * Validate cash voucher amount matches sum of details
      */
+    
     protected function validateCashVoucherAmount(array $validated): void
     {
         if (!empty($validated['check'])) {
-            $sumAmount = collect($validated['check'])->sum('amount');
+            // Calculate net amount (C - D)
+            $netAmount = collect($validated['check'])->reduce(function ($sum, $item) {
+                $amount = (float) $item['amount'];
+                return $item['charging_tag'] === 'D' ? $sum - $amount : $sum + $amount;
+            }, 0);
 
-            // For cash vouchers, amount must match exactly
-            if ($validated['type'] === 'cash' && abs($sumAmount - $validated['check_amount']) > 0.01) {
+            // For cash vouchers, amount must match exactly (C - D)
+            if ($validated['type'] === 'cash' && abs($netAmount - $validated['check_amount']) > 0.01) {
                 throw ValidationException::withMessages([
-                    'check_amount' => 'For cash vouchers, check amount must equal the sum of all item amounts'
+                    'check_amount' => [
+                        'For cash vouchers, check amount must equal (C items - D items)',
+                        'Calculated net amount: ' . number_format($netAmount, 2),
+                        'Provided check amount: ' . number_format($validated['check_amount'], 2)
+                    ]
                 ]);
             }
 
-            // For salary vouchers, update the check amount to match details
+            // For salary vouchers, update the check amount to match net details (C - D)
             if ($validated['type'] === 'salary') {
-                $validated['check_amount'] = $sumAmount;
+                $validated['check_amount'] = $netAmount;
             }
         }
     }

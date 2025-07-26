@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class RequestDetail extends Model
 {
     protected $fillable = [
-        'request_id', 'quantity', 'released_quantity', 'unit', 'item_description', 'tagging'
+        'request_id', 'quantity', 'released_quantity', 'unit', 'item_description', 'released_at', 'tagging'
     ];
     public function request(): BelongsTo
     {
