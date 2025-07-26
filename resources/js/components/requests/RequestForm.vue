@@ -239,7 +239,7 @@ const capitalizeWords = (str: string): string => {
               <SelectContent>
                 <SelectGroup>
                   <SelectItem 
-                    v-for="unit in unitOptions" 
+                    v-for="unit in unitOptions"
                     :key="unit.value" 
                     :value="unit.value"
                   >
