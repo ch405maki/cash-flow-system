@@ -8,15 +8,13 @@ A new request has been submitted with the following details:
 **Request Number:** {{ $requestModel->request_no }}  
 **Purpose:** {{ $requestModel->purpose }}  
 **Status:** {{ ucfirst($requestModel->status) }}  
-**Department:** {{ $requestModel->department->name }}  
-**Requested by:** {{ $requestModel->user->name }}  
 
 ## Items Requested:
 @component('mail::table')
-| Quantity | Unit | Description |
-|----------|------|-------------|
+| Description | Unit | Quantity |
+|-------------|------|----------|
 @foreach($requestModel->details as $item)
-| {{ $item->quantity }} | {{ $item->unit }} | {{ $item->item_description }} |
+| {{ $item->item_description }} | {{ $item->unit }} | {{ $item->quantity }} |
 @endforeach
 @endcomponent
 

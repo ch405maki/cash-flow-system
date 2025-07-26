@@ -166,6 +166,25 @@ class RequestController extends Controller
             $requestModel = Request::create(collect($validated)->except('items')->toArray());
             $requestModel->user->notify(new NewRequestNotification($requestModel));
 
+            $departmentApprover = User::where('department_id', $validated['department_id'])
+                ->where('access_id', 3)
+                ->where('id', '!=', $validated['user_id']) // Exclude creator if needed
+                ->first();
+
+            // Notify department users with access level 3
+            if ($departmentApprover) {
+                try {
+                    $departmentApprover->notify(new NewRequestNotification($requestModel));
+                } catch (\Exception $e) {
+                    \Log::error("Approver notification failed", [
+                        'approver' => $departmentApprover->email,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            } else {
+                \Log::warning("No approver found for department {$validated['department_id']}");
+            }
+
             // Log the creation with full details
             $creatorUser = User::find($validated['user_id']);
             $creator = $creatorUser?->username ?? 'system';

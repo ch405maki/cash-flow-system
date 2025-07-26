@@ -36,7 +36,7 @@ class NewRequestNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('New Request Created: ' . $this->requestModel->request_no)
+            ->subject('Approval Required: Request # ' . $this->requestModel->request_no)
             ->markdown('emails.requests.new', [
                 'requestModel' => $this->requestModel
             ]);
