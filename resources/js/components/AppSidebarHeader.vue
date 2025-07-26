@@ -3,6 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItemType } from '@/types';
 import NavUser from '@/components/NavUser.vue';
+import AppearanceTabs from '@/components/AppearanceToggle.vue';
 
 defineProps<{
     breadcrumbs?: BreadcrumbItemType[];
@@ -23,7 +24,8 @@ defineProps<{
       </div>
 
       <!-- Right side: NavUser, fixed width -->
-      <div class="flex-shrink-0">
+      <div class="flex-shrink-0 flex items-center gap-2">
+        <AppearanceTabs />
         <NavUser />
       </div>
     </div>

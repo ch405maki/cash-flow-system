@@ -36,7 +36,7 @@ const props = defineProps<{
             access_level: string;
             users_count: number;
         }>;
-        users: Array<{ // Add this type definition
+        users: Array<{
             id: number;
             username: string;
             first_name: string;
@@ -79,7 +79,7 @@ const departmentChartData = computed(() => {
       ],
       borderColor: neutralViolet.border,
       borderWidth: 1.5,
-      borderRadius: 6,
+      borderRadius: 0, // Changed from 6 to 0
       hoverBackgroundColor: neutralViolet.accent,
       hoverBorderColor: neutralViolet.dark,
       hoverBorderWidth: 2
@@ -101,7 +101,7 @@ const departmentChartOptions = {
       borderColor: neutralViolet.border,
       borderWidth: 1,
       padding: 12,
-      cornerRadius: 8,
+      cornerRadius: 0, // Changed from 8 to 0
       displayColors: false,
       callbacks: {
         label: function(context) {
@@ -143,7 +143,7 @@ const departmentChartOptions = {
       backgroundColor: 'rgba(139, 92, 246, 0.7)',
       borderColor: 'rgba(124, 58, 237, 1)',
       borderWidth: 1.5,
-      borderRadius: 6,
+      borderRadius: 0, // Changed from 6 to 0
       hoverBackgroundColor: 'rgba(167, 139, 250, 0.9)',
       hoverBorderColor: 'rgba(139, 92, 246, 1)',
       hoverBorderWidth: 2
