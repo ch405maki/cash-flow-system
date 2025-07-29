@@ -12,6 +12,8 @@ use App\Models\RequestDetail;
 use App\Models\RequestToOrder;
 use App\Http\Requests\StoreRequestToOrderRequest;
 use Illuminate\Support\Facades\DB;
+use App\Models\RequestToOrderApproval;
+use Illuminate\Support\Facades\Log;
 
 
 use App\Models\Department;
@@ -82,30 +84,53 @@ class RequestToOrderController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit' => 'nullable|string|max:20',
             'items.*.item_description' => 'nullable|string|max:255',
-            'items.*.detail_id' => 'required|exists:request_details,id', // Add this
+            'items.*.detail_id' => 'required|exists:request_details,id',
         ]);
 
-        DB::transaction(function () use ($validated) {
+        DB::transaction(function () use ($validated, $request) {
+            $authUser = auth()->user();
+
+            // 1. Create RequestToOrder
             $order = RequestToOrder::create([
-                'user_id' => auth()->id(),
+                'user_id' => $authUser->id,
                 'order_no' => $this->generateOrderNumber(),
                 'order_date' => now(),
                 'notes' => $validated['notes'],
-                'status' => 'pending'
+                'status' => 'pending',
             ]);
 
+            // 2. Create each order detail
             foreach ($validated['items'] as $item) {
-                // Create order detail
                 $order->details()->create([
                     'quantity' => $item['quantity'],
                     'unit' => $item['unit'] ?? null,
                     'item_description' => $item['item_description'] ?? null,
                 ]);
 
-                // Update the original request detail with tagging
                 RequestDetail::where('id', $item['detail_id'])
                     ->update(['tagging' => 'forPurchase']);
             }
+
+            // 3. Automatically create approval record by creator
+            RequestToOrderApproval::create([
+                'request_to_order_id' => $order->id,
+                'user_id' => $authUser->id,
+                'status' => 'pending',
+                'approved_at' => now(),
+                'remarks' => $validated['notes'],
+            ]);
+
+            // 4. Log the creation action
+            activity()
+                ->performedOn($order)
+                ->causedBy($authUser)
+                ->useLog('RequestToOrder')
+                ->withProperties([
+                    'order_no' => $order->order_no,
+                    'notes' => $order->notes,
+                    'items_count' => count($validated['items']),
+                ])
+                ->log("Request to Order #{$order->order_no} created by {$authUser->username}");
         });
 
         return redirect()->route('request-to-order.index')
@@ -123,14 +148,18 @@ class RequestToOrderController extends Controller
         ]);
 
         DB::transaction(function () use ($validated) {
+            $authUser = auth()->user();
+
+            // 1. Create the RequestToOrder
             $order = RequestToOrder::create([
-                'user_id' => auth()->id(),
+                'user_id' => $authUser->id,
                 'order_no' => $this->generateOrderNumber(),
                 'order_date' => now(),
                 'notes' => $validated['notes'],
-                'status' => 'pending'
+                'status' => 'pending',
             ]);
 
+            // 2. Add each detail manually
             foreach ($validated['items'] as $item) {
                 $order->details()->create([
                     'quantity' => $item['quantity'],
@@ -138,11 +167,33 @@ class RequestToOrderController extends Controller
                     'item_description' => $item['item_description'] ?? null,
                 ]);
             }
+
+            // 3. Add approval record (auto-approved by creator)
+            RequestToOrderApproval::create([
+                'request_to_order_id' => $order->id,
+                'user_id' => $authUser->id,
+                'status' => 'pending',
+                'approved_at' => now(),
+                'remarks' => $validated['notes'],
+            ]);
+
+            // 4. Log activity
+            activity()
+                ->performedOn($order)
+                ->causedBy($authUser)
+                ->useLog('RequestToOrder')
+                ->withProperties([
+                    'order_no' => $order->order_no,
+                    'notes' => $order->notes,
+                    'items_count' => count($validated['items']),
+                ])
+                ->log("Manual Request to Order #{$order->order_no} created by {$authUser->username}");
         });
 
         return redirect()->route('request-to-order.index')
             ->with('success', 'Order created successfully');
     }
+
 
     private function generateOrderNumber()
     {
@@ -179,6 +230,7 @@ class RequestToOrderController extends Controller
     public function approve($id, HttpRequest $request)
     {
         $request->validate(['password' => 'required']);
+
         $user = auth()->user();
 
         if (!Hash::check($request->password, $user->password)) {
@@ -186,17 +238,44 @@ class RequestToOrderController extends Controller
         }
 
         $order = RequestToOrder::findOrFail($id);
+
         if ($order->status === 'forPO') {
             return back()->withErrors(['status' => 'Already approved']);
         }
 
-        $order->update(['status' => 'forPO']);
+        DB::transaction(function () use ($order, $user) {
+            // 1. Update the request-to-order status
+            $order->update(['status' => 'forPO']);
+
+            // 2. Record the approval
+            RequestToOrderApproval::create([
+                'request_to_order_id' => $order->id,
+                'user_id' => $user->id,
+                'status' => 'approved',
+                'remarks' => 'Approved by Executive Director',
+                'approved_at' => now(),
+            ]);
+
+            // 3. Log activity
+            activity()
+                ->performedOn($order)
+                ->causedBy($user)
+                ->useLog('RequestToOrder')
+                ->withProperties([
+                    'order_no' => $order->order_no,
+                ])
+                ->log("Order #{$order->order_no} approved by {$user->username}");
+        });
+
         return back()->with('success', 'Request approved');
     }
 
     public function forEod($id, HttpRequest $request)
     {
-        $request->validate(['password' => 'required']);
+        $request->validate([
+            'password' => 'required',
+        ]);
+
         $user = auth()->user();
 
         if (!Hash::check($request->password, $user->password)) {
@@ -204,11 +283,34 @@ class RequestToOrderController extends Controller
         }
 
         $order = RequestToOrder::findOrFail($id);
+
         if ($order->status === 'forEOD') {
             return back()->withErrors(['status' => 'Already sent for EOD approval']);
         }
 
-        $order->update(['status' => 'forEOD']);
+        DB::transaction(function () use ($order, $user) {
+            // 1. Update order status
+            $order->update(['status' => 'forEOD']);
+
+            // 2. Create approval record (pending)
+            RequestToOrderApproval::create([
+                'request_to_order_id' => $order->id,
+                'user_id' => $user->id,
+                'status' => 'pending',
+                'remarks' => 'Submitted for EOD approval',
+            ]);
+
+            // 3. Log the activity
+            activity()
+                ->performedOn($order)
+                ->causedBy($user)
+                ->useLog('RequestToOrder')
+                ->withProperties([
+                    'order_no' => $order->order_no,
+                ])
+                ->log("Order #{$order->order_no} submitted for EOD by {$user->username}");
+        });
+
         return back()->with('success', 'Request sent for EOD approval');
     }
 

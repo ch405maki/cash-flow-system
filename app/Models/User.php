@@ -84,5 +84,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(RequestApproval::class);
     }
-
+    
+    public function requestToOrderApprovals(): HasMany
+    {
+        return $this->hasMany(RequestToOrderApproval::class);
+    }
 }

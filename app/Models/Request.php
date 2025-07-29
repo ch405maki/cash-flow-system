@@ -12,7 +12,7 @@ class Request extends Model
 {
 
     protected $fillable = [
-        'request_no', 'request_date', 'director_approved_at', 'purpose', 'status',
+        'request_no', 'request_date', 'purpose', 'status',
         'department_id', 'user_id'
     ];
 

@@ -119,7 +119,6 @@ const purchasingPONavItems = ref<DropdownNavItem[]>([
       { title: 'Draft', href: '/purchase-orders?status=draft' },
       { title: 'For Approval', href: '/purchase-orders?status=forEOD' },
       { title: 'Approved', href: '/purchase-orders?status=approved' },
-      { title: 'Rejected', href: '/purchase-orders?status=rejected' },
     ],
   },
 ]);
