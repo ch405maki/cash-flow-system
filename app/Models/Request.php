@@ -30,4 +30,10 @@ class Request extends Model
     {
         return $this->hasMany(RequestDetail::class);
     }
+
+    public function approvals(): HasMany
+    {
+        return $this->hasMany(RequestApproval::class);
+    }
+
 }
