@@ -193,7 +193,6 @@ const staffRequestItems = ref<DropdownNavItem[]>([
         { title: 'Request', href: '/request'},
         { title: 'To Receive', href: '/request/to-receive'},
         { title: 'Completed', href: '/request/released'},
-        { title: 'Rejected', href: '/request/rejected'},
         ],
     },
   ]);

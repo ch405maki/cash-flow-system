@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGr
 import { Textarea } from '@/components/ui/textarea';
 import { CirclePlus, Trash, Send, ChevronLeft } from 'lucide-vue-next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from '@/components/ui/table'
 
 const toast = useToast();
 
@@ -266,137 +267,119 @@ const capitalizeWords = (str: string): string => {
 
         <!-- Items Table -->
         <div class="max-h-64 overflow-y-auto border rounded-lg mt-4">
-          <!-- ONE table, table-fixed so the colgroup widths are respected -->
-          <table class="min-w-full table-fixed divide-y divide-gray-100">
-            <!-- Column widths (same for header & rows) -->
-            <colgroup>
-              <col class="w-1/2" />   <!-- Description -->
-              <col class="w-20"  />   <!-- Qty -->
-              <col class="w-24"  />   <!-- Unit -->
-              <col class="w-28"  />   <!-- Actions -->
-            </colgroup>
-
-            <!-- Sticky header lives in the SAME table -->
-            <thead class="bg-gray-100 h-10 sticky top-0 z-50">
-              <tr class=" border-b">
-                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                  Description
-                </th>
-                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                  Qty
-                </th>
-                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                  Unit
-                </th>
-                <th
-                  v-if="form.items.some(item => item.editing)"
-                  class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase"
+          <Table>
+            <TableHeader class="sticky top-0">
+              <TableRow>
+                <TableHead class="w-1/2">Description</TableHead>
+                <TableHead class="w-20">Qty</TableHead>
+                <TableHead class="w-24">Unit</TableHead>
+                <TableHead 
+                  v-if="form.items.some(item => item.editing)" 
+                  class="w-28 text-right"
                 >
                   Actions
-                </th>
-              </tr>
-            </thead>
-
-            <tbody class="bg-white divide-y divide-gray-200">
-            <tr 
-              v-for="(item, index) in form.items" 
-              :key="index"
-              @click="editItem(index)"
-              :class="{
-                'hover:bg-gray-50 cursor-pointer': true,
-                'bg-blue-50': item.editing
-              }"
-            >
-              <!-- Description Column -->
-              <td class="px-3 py-2 text-sm text-gray-700 whitespace-normal break-words">
-                <div v-if="!item.editing">{{ item.item_description }}</div>
-                <Input 
-                  v-else
-                  v-model="item.item_description"
-                  @click.stop
-                  @keydown="handleKeyDown($event, index)"
-                  @input="item.item_description = capitalizeWords(item.item_description)"
-                  class="w-full"
-                />
-              </td>
-              
-              <!-- Quantity Column -->
-              <td class="px-3 py-2 text-sm text-left text-gray-700">
-                <div v-if="!item.editing">{{ item.quantity }}</div>
-                <Input 
-                  v-else
-                  type="number" 
-                  v-model.number="item.quantity" 
-                  min="1"
-                  @click.stop
-                  @keydown="handleKeyDown($event, index)"
-                  class="w-full"
-                />
-              </td>
-              
-              <!-- Unit Column -->
-              <td class="px-3 py-2 text-sm text-gray-700 text-left">
-                <div v-if="!item.editing">
-                  {{ unitOptions.find(u => u.value === item.unit)?.label || item.unit }}
-                </div>
-                <Select 
-                  v-else 
-                  v-model="item.unit" 
-                  @click.stop
-                >
-                  <SelectTrigger class="w-full">
-                    <SelectValue placeholder="Select unit" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem 
-                        v-for="unit in unitOptions" 
-                        :key="unit.value" 
-                        :value="unit.value"
-                      >
-                        {{ unit.label }}
-                      </SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </td>
-              
-              <!-- Actions Column -->
-              <td
-                v-if="item.editing"
-                class="px-3 py-2 flex justify-end text-sm text-right space-x-2"
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow
+                v-for="(item, index) in form.items"
+                :key="index"
+                @click="editItem(index)"
+                :class="{
+                  'cursor-pointer': true,
+                }"
               >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  @click.stop="saveEdit(index)"
+                <!-- Description Column -->
+                <TableCell>
+                  <div v-if="!item.editing">{{ item.item_description }}</div>
+                  <Input 
+                    v-else
+                    v-model="item.item_description"
+                    @click.stop
+                    @keydown="handleKeyDown($event, index)"
+                    @input="item.item_description = capitalizeWords(item.item_description)"
+                    class="w-full"
+                  />
+                </TableCell>
+                
+                <!-- Quantity Column -->
+                <TableCell>
+                  <div v-if="!item.editing">{{ item.quantity }}</div>
+                  <Input 
+                    v-else
+                    type="number" 
+                    v-model.number="item.quantity" 
+                    min="1"
+                    @click.stop
+                    @keydown="handleKeyDown($event, index)"
+                    class="w-full"
+                  />
+                </TableCell>
+                
+                <!-- Unit Column -->
+                <TableCell>
+                  <div v-if="!item.editing">
+                    {{ unitOptions.find(u => u.value === item.unit)?.label || item.unit }}
+                  </div>
+                  <Select 
+                    v-else 
+                    v-model="item.unit" 
+                    @click.stop
+                  >
+                    <SelectTrigger class="w-full">
+                      <SelectValue placeholder="Select unit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem 
+                          v-for="unit in unitOptions" 
+                          :key="unit.value" 
+                          :value="unit.value"
+                        >
+                          {{ unit.label }}
+                        </SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                
+                <!-- Actions Column -->
+                <TableCell 
+                  v-if="item.editing"
+                  class="flex justify-end space-x-2"
                 >
-                  Save
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  @click.stop="cancelEdit(index)"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  @click.stop="removeItem(index)"
-                >
-                  <Trash />
-                </Button>
-              </td>
-            </tr>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    @click.stop="saveEdit(index)"
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    @click.stop="cancelEdit(index)"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    @click.stop="removeItem(index)"
+                  >
+                    <Trash />
+                  </Button>
+                </TableCell>
+              </TableRow>
 
-            <tr v-if="form.items.length === 0">
-              <td colspan="4" class="px-3 py-4 text-center text-sm text-gray-500">
-                No items added yet
-              </td>
-            </tr>
-          </tbody>
-          </table>
+              <TableRow v-if="form.items.length === 0">
+                <TableCell :colspan="4" class="text-center text-sm text-gray-500">
+                  No items added yet
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </div>
       </div>
 
@@ -434,44 +417,32 @@ const capitalizeWords = (str: string): string => {
 
           <div class="space-y-2">
             <Label class="text-sm sm:text-base text-muted-foreground">Items</Label>
+            <!-- In the Preview Dialog section -->
             <div class="border rounded-lg overflow-hidden">
-              <!-- Scrollable container with max height -->
               <div class="max-h-[60vh] overflow-y-auto">
-                <div class="overflow-x-auto">
-                  <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50 sticky top-0 z-10">
-                      <tr>
-                        <th class="px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
-                          Description
-                        </th>
-                        <th class="px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
-                          Quantity
-                        </th>
-                        <th class="px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
-                          Unit
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                      <tr v-for="(item, index) in form.items" :key="index">
-                        <td class="px-4 py-3 whitespace-normal text-xs sm:text-sm text-gray-500">
-                          {{ item.item_description }}
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                          {{ item.quantity }}
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                          {{ unitOptions.find(u => u.value === item.unit)?.label || item.unit }}
-                        </td>
-                      </tr>
-                      <tr v-if="form.items.length === 0">
-                        <td colspan="3" class="px-4 py-4 text-center text-sm text-gray-500">
-                          No items added yet
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                <Table>
+                  <TableHeader class="sticky top-0">
+                    <TableRow>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Quantity</TableHead>
+                      <TableHead>Unit</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow v-for="(item, index) in form.items" :key="index">
+                      <TableCell>{{ item.item_description }}</TableCell>
+                      <TableCell>{{ item.quantity }}</TableCell>
+                      <TableCell>
+                        {{ unitOptions.find(u => u.value === item.unit)?.label || item.unit }}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow v-if="form.items.length === 0">
+                      <TableCell :colspan="3" class="text-center">
+                        No items added yet
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
               </div>
             </div>
           </div>

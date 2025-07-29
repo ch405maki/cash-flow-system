@@ -206,8 +206,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                     :departments="userStats.departments"
                     :access-levels="userStats.accessLevels"
                     @user-created="() => {
-                        // Optionally refetch data or show notification
-                        console.log('User created')
                     }"
                     />
             </div>
