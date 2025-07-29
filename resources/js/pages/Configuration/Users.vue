@@ -8,7 +8,7 @@
   import { ref, computed } from "vue";
   import CreateUserDialog from "@/components/users/CreateUserDialog.vue";
   import UsersTable from "@/components/users/UsersTable.vue";
-  import { Upload } from "lucide-vue-next";
+  import { Upload, Search } from "lucide-vue-next";
   import axios from "axios";
   import type { AxiosError } from "axios";
   import { useToast } from "vue-toastification";
@@ -41,10 +41,14 @@
     const props = defineProps<{ 
       users: User[],
       departments: Department[],
-      accessLevels: AccessLevel[]
+      accessLevels: AccessLevel[],
+      profilePictures: { id: number; file_path: string; file_name: string }[];
     }>();
   
-  const breadcrumbs = [{ title: "Users Management", href: "/users" }];
+  const breadcrumbs = [
+    { title: "Dashboard", href: "/dashboard" },
+    { title: "Users Management", href: "/users" }
+  ];
 
   const fileInput = ref<HTMLInputElement | null>(null);
   const toast = useToast();
@@ -60,7 +64,8 @@
     const query = searchQuery.value.toLowerCase();
     return props.users.filter(
       (user) =>
-        user.name.toLowerCase().includes(query) ||
+        user.first_name.toLowerCase().includes(query) ||
+        user.last_name.toLowerCase().includes(query) ||
         user.email.toLowerCase().includes(query) ||
         user.role.toLowerCase().includes(query) ||
         user.status.toLowerCase().includes(query)
@@ -116,28 +121,31 @@
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
       <Head title="Users Management" />
-            <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+            <div class="flex h-full flex-1 flex-col rounded-xl p-4">
                 <!-- Search and Buttons -->
-                <div class="flex items-center justify-between gap-4">
-                <!-- Search Input -->
-                <Input
-                    v-model="searchQuery"
-                    type="text"
-                    placeholder="Search users..."
-                    class="w-full max-w-xs h-9"
-                />
+                <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center text-lg font-medium">
+                  <h1 class="relative w-full max-w-sm items-center">User Management</h1>
+                </div>
         
                 <!-- Buttons -->
                 <div class="flex items-center gap-4">
-                    <!-- Upload Excel Button -->
-                    <input
+                  <!-- Search Input -->
+                  <div class="relative w-[300px] max-w-sm items-center">
+                    <Input v-model="searchQuery" type="text" placeholder="Search..." class="pl-10 h-9" />
+                    <span class="absolute start-0 inset-y-0 flex items-center justify-center px-2">
+                      <Search class="size-5 text-muted-foreground" />
+                    </span>
+                  </div>
+                  <!-- Upload Excel Button -->
+                  <Input
                     type="file"
                     ref="fileInput"
                     accept=".xlsx, .xls"
                     class="hidden"
                     @change="handleFileUpload"
                     />
-                    <Button
+                  <Button
                     @click="triggerFileInput"
                     :disabled="loading"
                     class="bg-green-600 hover:bg-green-700 text-white"
@@ -145,18 +153,19 @@
                     <Upload class="w-4 h-4 mr-2" />
                     <span v-if="loading">Uploading...</span>
                     <span v-else>Upload Excel</span>
-                    </Button>
+                  </Button>
         
                     <!-- Create User Button -->
                     <CreateUserDialog 
                       :departments="departments" 
-                      :access-levels="accessLevels" 
+                      :access-levels="accessLevels"
+                      :profile-pictures="props.profilePictures" 
                     />
                 </div>
                 </div>
         
                 <!-- Users Table -->
-                <div class="relative flex-1 rounded-lg border">
+                <div class="rounded-lg border">
                 <UsersTable :users="filteredUsers" />
                 </div>
             </div>

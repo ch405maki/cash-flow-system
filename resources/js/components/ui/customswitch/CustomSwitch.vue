@@ -1,7 +1,7 @@
 <template>
     <button
       :class="[
-        'relative inline-flex h-[18px] w-10 items-center rounded-full transition-colors',
+        'relative inline-flex h-[20px] w-10 items-center rounded-full transition-colors',
         checked ? 'bg-green-500' : 'bg-gray-300',
       ]"
       @click="toggle"

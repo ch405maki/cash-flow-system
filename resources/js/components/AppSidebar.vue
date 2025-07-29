@@ -272,6 +272,11 @@ const adminNavItems: NavItem[] = [
     icon: Users,
   },
   {
+    title: 'Profile Pictures',
+    href: '/configuration/profile-pictures',
+    icon: Users,
+  },
+  {
     title: 'User Access',
     href: '/configuration/users-access',
     icon: ShieldCheck,

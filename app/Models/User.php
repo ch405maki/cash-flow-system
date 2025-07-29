@@ -20,7 +20,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'username', 'first_name', 'middle_name', 'last_name', 'email',
-        'password', 'role', 'status', 'department_id', 'access_id'
+        'password', 'role', 'status', 'department_id', 'access_id', 'profile_picture_id'
     ];
 
     /**
@@ -69,5 +69,12 @@ class User extends Authenticatable
     public function vouchers(): HasMany
     {
         return $this->hasMany(Voucher::class);
+    }
+
+    protected $with = ['profilePicture'];
+
+    public function profilePicture()
+    {
+        return $this->belongsTo(ProfilePicture::class, 'profile_picture_id');
     }
 }

@@ -17,6 +17,11 @@ import {
 } from '@/components/ui/table'
 import BaseChart from '@/components/dashboard/admin/BaseChart.vue';
 import CreateUserDialog from "@/components/users/CreateUserDialog.vue";
+import {
+  Avatar,
+  AvatarImage,
+  AvatarFallback
+} from '@/components/ui/avatar'
 
 const props = defineProps<{
     userRole: string;
@@ -143,7 +148,7 @@ const departmentChartOptions = {
       backgroundColor: 'rgba(139, 92, 246, 0.7)',
       borderColor: 'rgba(124, 58, 237, 1)',
       borderWidth: 1.5,
-      borderRadius: 0, // Changed from 6 to 0
+      borderRadius: 0,
       hoverBackgroundColor: 'rgba(167, 139, 250, 0.9)',
       hoverBorderColor: 'rgba(139, 92, 246, 1)',
       hoverBorderWidth: 2
@@ -281,7 +286,24 @@ const breadcrumbs: BreadcrumbItem[] = [
                     </TableHeader>
                     <TableBody>
                         <TableRow v-for="user in filteredUsers" :key="user.id">
-                            <TableCell>{{ user.username }}</TableCell>
+                            <TableCell class="font-medium flex items-center gap-2">
+                              <Avatar>
+                                <AvatarImage
+                                  v-if="user.profile_picture"
+                                  :src="`/storage/${user.profile_picture.file_path}`"
+                                  :alt="user.name"
+                                />
+                                <AvatarFallback>
+                                  {{ user.first_name?.charAt(0).toUpperCase() || 'N' }}{{ user.last_name?.charAt(0).toUpperCase() || 'N' }}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div class="capitalize">
+                                {{ user.first_name || 'N' }} {{ user.last_name || 'N' }} <br>
+                                <span class="text-xs">
+                                  {{ user.username }}
+                                </span>
+                              </div>
+                            </TableCell>
                             <TableCell>{{ user.first_name }} {{ user.last_name }}</TableCell>
                             <TableCell>{{ user.email }}</TableCell>
                             <TableCell>{{ user.department.department_name }}</TableCell>

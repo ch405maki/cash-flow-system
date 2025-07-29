@@ -25,7 +25,7 @@ const toggleAppearance = () => {
     <button
         @click="toggleAppearance"
         :class="[
-            'group inline-flex items-center rounded-lg p-2 transition-all duration-300',
+            'group inline-flex items-center rounded-full p-2 transition-all duration-300',
             'bg-neutral-100 hover:bg-amber-50 dark:bg-neutral-800 dark:hover:bg-indigo-900/50',
             'ring-1 ring-neutral-200 dark:ring-neutral-700',
             'hover:ring-amber-200 dark:hover:ring-indigo-700',
