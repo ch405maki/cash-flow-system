@@ -300,15 +300,18 @@ class VoucherController extends Controller
             'issue_date' => 'nullable|date',
             'delivery_date' => 'nullable|date',
             'remarks' => 'nullable|string|max:500',
+            'user_id' => 'required|exists:users,id',
         ]);
+
+        $user = $validated['user_id'];
 
         try {
             // Handle file upload
             $file = $request->file('receipt');
-            $filename = 'receipt' . '_' . $voucher->voucher_no . '.' . $file->getClientOriginalExtension();
+            $filename = 'receipt_' . $voucher->voucher_no . '.' . $file->getClientOriginalExtension();
             $path = $file->storeAs('receipts', $filename, 'public');
-            
-            // Update voucher with new data
+
+            // Update voucher
             $voucher->update([
                 'receipt' => 'receipts/' . $filename,
                 'issue_date' => $validated['issue_date'],
@@ -316,6 +319,31 @@ class VoucherController extends Controller
                 'remarks' => $validated['remarks'],
                 'status' => 'completed',
             ]);
+
+            // Log approval status
+            VoucherApproval::create([
+                'voucher_id' => $voucher->id,
+                'user_id' => $user,
+                'status' => 'completed',
+                'remarks' => "Receipt uploaded for Voucher: {$voucher->voucher_no}",
+                'approved_at' => now(),
+            ]);
+
+            // Activity log
+            activity()
+                ->performedOn($voucher)
+                ->causedBy($user)
+                ->useLog('Voucher Receipt Upload')
+                ->withProperties([
+                    'voucher_id' => $voucher->id,
+                    'voucher_no' => $voucher->voucher_no,
+                    'receipt' => 'receipts/' . $filename,
+                    'issue_date' => $validated['issue_date'],
+                    'delivery_date' => $validated['delivery_date'],
+                    'remarks' => $validated['remarks'],
+                    'status' => 'completed',
+                ])
+                ->log("Uploaded receipt and completed voucher {$voucher->voucher_no}");
 
             return $this->successResponse(
                 'Receipt and details uploaded successfully',
@@ -331,6 +359,7 @@ class VoucherController extends Controller
             return $this->errorResponse('Failed to upload receipt: ' . $e->getMessage(), 500);
         }
     }
+
 
     public function addCheckDetails(Request $request, Voucher $voucher): JsonResponse
     {

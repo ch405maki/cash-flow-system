@@ -25,6 +25,10 @@ const props = defineProps({
   currentRemarks: {
     type: String,
     default: null
+  },
+  authUser: {
+    type: Object,
+    required: true
   }
 })
 
@@ -75,6 +79,7 @@ const uploadReceipt = async () => {
     formData.append('issue_date', form.value.issue_date || '')
     formData.append('delivery_date', form.value.delivery_date || '')
     formData.append('remarks', form.value.remarks || '')
+    formData.append('user_id', props.authUser.id)
 
     const response = await axios.post(`/api/vouchers/${props.voucherId}/receipt`, formData, {
       headers: {

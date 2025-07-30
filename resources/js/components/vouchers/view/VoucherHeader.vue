@@ -39,6 +39,7 @@ const emit = defineEmits(['print', 'check-updated']);
                 :current-issue-date="voucher.issue_date"
                 :current-delivery-date="voucher.delivery_date"
                 :current-remarks="voucher.remarks"
+                :auth-user="authUser"
                 @upload-success="handleUploadSuccess"
             />
             </template>
