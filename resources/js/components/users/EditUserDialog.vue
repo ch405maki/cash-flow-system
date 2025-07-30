@@ -1,8 +1,14 @@
 <template>
     <Sheet>
       <!-- Sheet Trigger -->
-      <SheetTrigger @click="openDialog">
-        <UserRoundPen class="w-4 h-4 mr-2 text-blue-500 dark:text-blue-400 hover:text-blue-700" />
+      <SheetTrigger as-child>
+        <Button
+          variant="outline"
+          size="icon"
+          @click="openDialog"
+        >
+          <UserRoundPen />
+        </Button>
       </SheetTrigger>
   
       <!-- Sheet Content -->

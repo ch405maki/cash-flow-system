@@ -14,6 +14,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Database\QueryException;
 use App\Models\Department;
 use App\Models\Access;
+use App\Models\ProfilePicture;
 use Exception;
 
 use App\Models\User;
@@ -22,14 +23,16 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::all();
+        $users = User::with('profilePicture')->get();
+        $profilePictures = ProfilePicture::all();
         $departments = Department::all();
         $accessLevels = Access::all();
 
         return Inertia::render('Configuration/Users', [
             'users' => $users,
             'departments' => $departments,
-            'accessLevels' => $accessLevels
+            'accessLevels' => $accessLevels,
+            'profilePictures' => $profilePictures,
         ]);
     }
     
@@ -47,7 +50,8 @@ class UserController extends Controller
                 'role' => 'required|string',
                 'status' => 'required|in:active,inactive',
                 'department_id' => 'required|exists:departments,id',
-                'access_id' => 'required|exists:accesses,id'
+                'access_id' => 'required|exists:accesses,id',
+                'profile_picture_id' => 'nullable|integer|exists:profile_pictures,id',
             ]);
 
             // Store plain password before hashing
@@ -65,13 +69,14 @@ class UserController extends Controller
                 'status' => $validatedData['status'],
                 'department_id' => $validatedData['department_id'],
                 'access_id' => $validatedData['access_id'],
+                'profile_picture_id' => $validatedData['profile_picture_id'] ?? null,
             ]);
 
             // Send welcome email with credentials
             $user->notify(new WelcomeEmail($user, $plainPassword));
 
             // Load relationships for response
-            $user->load(['department', 'access']);
+            $user->load(['department', 'access', 'profilePicture']);
 
             return response()->json([
                 'success' => true,

@@ -33,12 +33,13 @@ const emit = defineEmits(['print', 'check-updated']);
             <h2 class="text-2xl font-bold tracking-tight">Voucher # {{ voucher.voucher_no }}</h2>
         </div>
         <div class="flex gap-2">
-            <template v-if="authUser.role == 'accounting' && voucher.status !== 'draft'">
+            <template v-if="authUser.role == 'accounting' && voucher.status !== 'draft' && voucher.status !== 'completed'">
                 <ReceiptUploadDialog 
                 :voucher-id="voucher.id"
                 :current-issue-date="voucher.issue_date"
                 :current-delivery-date="voucher.delivery_date"
                 :current-remarks="voucher.remarks"
+                :auth-user="authUser"
                 @upload-success="handleUploadSuccess"
             />
             </template>
@@ -65,6 +66,7 @@ const emit = defineEmits(['print', 'check-updated']);
                     :voucher-id="voucher.id"
                     :current-check-no="voucher.check_no"
                     :current-check-date="voucher.check_date"
+                    :auth-user="authUser"
                     @saved="$emit('check-updated', $event)"
                     />
             </template>
@@ -80,7 +82,7 @@ const emit = defineEmits(['print', 'check-updated']);
                 </Button>
             </template>
 
-            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status !== 'forCheck' && voucher.status !== 'unreleased' && voucher.status !== 'released'">
+            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'draft'">
                 <DirectorVerificationDialog :voucher-id="voucher.id" action="forEod">
                     <template #trigger>
                         <Button 
@@ -88,7 +90,7 @@ const emit = defineEmits(['print', 'check-updated']);
                             :class="voucher.status == 'forEOD' ? 'cursor-not-allowed' : ''"
                             :disabled="voucher.status == 'forEOD'"
                         >
-                            <Check class="h-4 w-4 mr-2" />
+                            <Check class="h-4 w-4" />
                             <span>{{ voucher.status == 'forEOD' ? 'Sent to EOD' : 'For EOD Approval' }}</span>
                         </Button>
                     </template>
@@ -103,7 +105,7 @@ const emit = defineEmits(['print', 'check-updated']);
                             :class="voucher.status === 'released' ? 'opacity-50 cursor-not-allowed' : ''"
                             :disabled="voucher.status === 'released'"
                         >
-                            <BadgeCheck class="h-4 w-4 mr-2" />
+                            <BadgeCheck class="h-4 w-4" />
                             Tag as released
                         </Button>
                     </template>

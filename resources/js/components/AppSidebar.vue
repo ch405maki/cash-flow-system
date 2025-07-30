@@ -119,7 +119,6 @@ const purchasingPONavItems = ref<DropdownNavItem[]>([
       { title: 'Draft', href: '/purchase-orders?status=draft' },
       { title: 'For Approval', href: '/purchase-orders?status=forEOD' },
       { title: 'Approved', href: '/purchase-orders?status=approved' },
-      { title: 'Rejected', href: '/purchase-orders?status=rejected' },
     ],
   },
 ]);
@@ -193,7 +192,6 @@ const staffRequestItems = ref<DropdownNavItem[]>([
         { title: 'Request', href: '/request'},
         { title: 'To Receive', href: '/request/to-receive'},
         { title: 'Completed', href: '/request/released'},
-        { title: 'Rejected', href: '/request/rejected'},
         ],
     },
   ]);
@@ -269,6 +267,11 @@ const adminNavItems: NavItem[] = [
   {
     title: 'Users',
     href: '/configuration/users',
+    icon: Users,
+  },
+  {
+    title: 'Profile Pictures',
+    href: '/configuration/profile-pictures',
     icon: Users,
   },
   {

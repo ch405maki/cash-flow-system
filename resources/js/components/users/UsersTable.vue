@@ -11,7 +11,24 @@
     </TableHeader>
     <TableBody>
       <TableRow v-for="user in users" :key="user.id">
-        <TableCell class="font-medium">{{ user.username }}</TableCell>
+        <TableCell class="font-medium flex items-center gap-2">
+          <Avatar>
+            <AvatarImage
+              v-if="user.profile_picture"
+              :src="`/storage/${user.profile_picture.file_path}`"
+              :alt="user.name"
+            />
+            <AvatarFallback>
+              {{ user.first_name?.charAt(0).toUpperCase() || 'N' }}{{ user.last_name?.charAt(0).toUpperCase() || 'N' }}
+            </AvatarFallback>
+          </Avatar>
+          <div class="capitalize">
+            {{ user.first_name || 'N' }} {{ user.last_name || 'N' }} <br>
+            <span class="text-xs">
+              {{ user.username }}
+            </span>
+          </div>
+        </TableCell>
         <TableCell>{{ user.email }}</TableCell>
         <TableCell>{{ user.role }}</TableCell>
         <TableCell>
@@ -20,7 +37,7 @@
             @update:checked="(checked) => handleToggle(user, checked)"
           />
         </TableCell>
-        <TableCell class="text-right">
+        <TableCell class="text-right space-x-2">
           <!-- Edit User -->
           <EditUserDialog :user="user" />
           <!-- Delete User -->
@@ -39,6 +56,12 @@ import DeleteUserDialog from "@/components/users/DeleteUserDialog.vue";
 import CustomSwitch from '../../components/ui/customswitch/CustomSwitch.vue';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
+import {
+  Avatar,
+  AvatarImage,
+  AvatarFallback
+} from '@/components/ui/avatar'
+
 
 // Define the User type
 interface User {
