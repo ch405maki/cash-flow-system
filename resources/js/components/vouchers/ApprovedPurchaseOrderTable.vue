@@ -64,7 +64,7 @@ function goToCreate(poId?: number) {
       </TableHeader>
       <TableBody>
         <TableRow 
-          class="cursor-pointer hover:bg-gray-50 hover:underline" 
+          class="cursor-pointer hover:underline" 
           v-for="po in purchaseOrders.data"
           :key="po.id"
           @click="handleRowClick($event, po.id)"

@@ -7,6 +7,7 @@ use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderDetail;
 use App\Models\Account;
 use App\Models\Canvas;
+use App\Models\PurchaseOrderApproval;
 use App\Models\Department;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -104,32 +105,23 @@ class PurchaseOrderController extends Controller
             'canvas_id' => 'nullable|exists:canvases,id',
         ]);
 
-        // Validate canvas_id is required if tagging is 'with_canvas'
         if ($validated['tagging'] === 'with_canvas' && empty($validated['canvas_id'])) {
             return response()->json([
                 'message' => 'Canvas ID is required when tagging is "with_canvas"'
             ], 422);
         }
 
-        // Generate PO number
         $yearMonth = date('Ym');
         $lastPO = PurchaseOrder::where('po_no', 'like', "PO{$yearMonth}%")
             ->orderBy('po_no', 'desc')
             ->first();
 
-        if ($lastPO) {
-            $sequence = (int) substr($lastPO->po_no, -4);
-            $sequence++;
-        } else {
-            $sequence = 1;
-        }
-
-        $validated['po_no'] = 'PO' . $yearMonth . str_pad($sequence, 4, '0', STR_PAD_LEFT);
-
-        // Calculate total amount from details
+        $sequence = $lastPO ? ((int) substr($lastPO->po_no, -4)) + 1 : 1;
+        $validated['po_no'] = 'PO-' . $yearMonth . str_pad($sequence, 4, '0', STR_PAD_LEFT);
         $validated['amount'] = collect($validated['details'])->sum('amount');
 
         DB::beginTransaction();
+
         try {
             $purchaseOrder = PurchaseOrder::create($validated);
 
@@ -137,16 +129,46 @@ class PurchaseOrderController extends Controller
                 $purchaseOrder->details()->create($detail);
             }
 
-            // Update Canvas status if this PO is linked to a canvas
+            // Optional canvas update
             if ($validated['tagging'] === 'with_canvas' && $validated['canvas_id']) {
                 $canvas = Canvas::find($validated['canvas_id']);
                 if ($canvas) {
                     $canvas->update([
                         'status' => 'poCreated',
-                        'purchase_order_id' => $purchaseOrder->id // Optionally store the PO ID
+                        'purchase_order_id' => $purchaseOrder->id,
                     ]);
+
+                    // Log canvas update
+                    activity()
+                        ->performedOn($canvas)
+                        ->causedBy(auth()->user())
+                        ->withProperties([
+                            'linked_po' => $purchaseOrder->po_no,
+                            'canvas_id' => $canvas->id,
+                        ])
+                        ->log("Canvas tagged to PO {$purchaseOrder->po_no}");
                 }
             }
+
+            // Activity log for PO
+            activity()
+                ->performedOn($purchaseOrder)
+                ->causedBy(auth()->user())
+                ->useLog('PO Created')
+                ->withProperties([
+                    'po_no' => $purchaseOrder->po_no,
+                    'amount' => $validated['amount'],
+                    'department_id' => $validated['department_id'],
+                ])
+                ->log('Created purchase order');
+
+            // Approval entry creation
+            PurchaseOrderApproval::create([
+                'purchase_order_id' => $purchaseOrder->id,
+                'user_id' => $validated['user_id'],
+                'status' => 'pending',
+                'remarks' => "Purchase order created # {$purchaseOrder->po_no}",
+            ]);
 
             DB::commit();
 
@@ -161,32 +183,55 @@ class PurchaseOrderController extends Controller
     }
 
     public function updateStatus(Request $request, PurchaseOrder $purchaseOrder)
-    {
-        $validated = $request->validate([
-            'status' => 'required|in:approved,rejected,released,to_order,forEOD,',
-            'password' => 'required|string',
-            'remarks' => 'nullable|string|max:500'
+{
+    $validated = $request->validate([
+        'status' => 'required|in:approved,rejected,released,to_order,forEOD',
+        'password' => 'required|string',
+        'remarks' => 'nullable|string|max:500'
+    ]);
+
+    // Verify password
+    if (!Hash::check($validated['password'], auth()->user()->password)) {
+        return back()->withErrors(['password' => 'Incorrect password']);
+    }
+
+    DB::beginTransaction();
+    try {
+        $oldStatus = $purchaseOrder->status;
+
+        $purchaseOrder->update([
+            'status' => $validated['status'],
+            'remarks' => $validated['remarks'] ?? null
         ]);
 
-        // Verify password
-        if (!Hash::check($validated['password'], auth()->user()->password)) {
-            return back()->withErrors(['password' => 'Incorrect password']);
-        }
+        // Activity log
+        activity()
+            ->performedOn($purchaseOrder)
+            ->causedBy(auth()->user())
+            ->useLog('Approval')
+            ->withProperties([
+                'po_no' => $purchaseOrder->po_no,
+                'old_status' => $oldStatus,
+                'new_status' => $validated['status'],
+                'remarks' => $validated['remarks'] ?? null,
+            ])
+            ->log("Status changed to {$validated['status']}");
 
-        DB::beginTransaction();
-        try {
-            $purchaseOrder->update([
-                'status' => $validated['status'],
-                'remarks' => $validated['remarks'] ?? null
-            ]);
+        // Approval entry creation
+        PurchaseOrderApproval::create([
+            'purchase_order_id' => $purchaseOrder->id,
+            'user_id' => auth()->id(),
+            'status' => $validated['status'],
+            'remarks' => "PO #{$purchaseOrder->po_no} updated to {$validated['status']}",
+        ]);
 
-            // Log this status change
-            DB::commit();
+        DB::commit();
 
-            return redirect()->back()->with('success', 'Status updated successfully');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Failed to update status: ' . $e->getMessage());
-        }
+        return redirect()->back()->with('success', 'Status updated successfully');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->with('error', 'Failed to update status: ' . $e->getMessage());
     }
+}
+
 }

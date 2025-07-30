@@ -14,6 +14,7 @@ import { Plus, Trash2, FilePlus2, Ban, Check, ChevronsUpDown, Search } from 'luc
 import { Combobox, ComboboxAnchor, ComboboxEmpty, ComboboxGroup, ComboboxInput, ComboboxItem, ComboboxItemIndicator, ComboboxList, ComboboxTrigger } from '@/components/ui/combobox';
 import axios from 'axios'
 import { formatCurrency } from '@/lib/utils';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from '@/components/ui/table'
 
 interface VoucherItem {
   amount: number;
@@ -404,29 +405,31 @@ const handleKeyDown = (event: KeyboardEvent, index: number) => {
 
           <!-- Items Table -->
           <div class="border rounded-lg overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Account</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tag</th>
-                  <th v-if="!isCashVoucher" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hours</th>
-                  <th v-if="!isCashVoucher" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rate</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                  <th v-if="form.items.some(item => item.editing)" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr 
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead class="text-left">Account</TableHead>
+                  <TableHead class="text-left">Tag</TableHead>
+                  <TableHead class="text-left">Amount</TableHead>
+                  <TableHead 
+                    v-if="form.items.some(item => item.editing)" 
+                    class="text-right"
+                  >
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow
                   v-for="(item, index) in form.items" 
                   :key="index"
                   @click="!item.editing && editItem(index)"
                   :class="{
-                    'hover:bg-gray-50 cursor-pointer': true,
-                    'bg-blue-50': item.editing
+                    'cursor-pointer': true
                   }"
                 >
                   <!-- Account -->
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <TableCell class="whitespace-nowrap">
                     <div v-if="!item.editing">
                       {{ props.accounts?.find(a => a.id === parseInt(item.account_id))?.account_title || 'N/A' }}
                     </div>
@@ -472,10 +475,10 @@ const handleKeyDown = (event: KeyboardEvent, index: number) => {
                         </ComboboxGroup>
                       </ComboboxList>
                     </Combobox>
-                  </td>
+                  </TableCell>
                   
                   <!-- Tag -->
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <TableCell class="whitespace-nowrap">
                     <div v-if="!item.editing">{{ item.charging_tag || 'N/A' }}</div>
                     <Select v-else v-model="item.charging_tag" @click.stop>
                       <SelectTrigger>
@@ -486,10 +489,10 @@ const handleKeyDown = (event: KeyboardEvent, index: number) => {
                         <SelectItem value="D">D</SelectItem>
                       </SelectContent>
                     </Select>
-                  </td>
+                  </TableCell>
                   
                   <!-- Amount -->
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <TableCell class="whitespace-nowrap">
                     <div v-if="!item.editing">{{ item.amount.toFixed(2) }}</div>
                     <Input 
                       v-else
@@ -499,10 +502,10 @@ const handleKeyDown = (event: KeyboardEvent, index: number) => {
                       @click.stop
                       class="w-full"
                     />
-                  </td>
+                  </TableCell>
                   
                   <!-- Actions -->
-                  <td v-if="form.items.some(i => i.editing)" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                  <TableCell v-if="form.items.some(i => i.editing)" class="whitespace-nowrap text-right">
                     <div class="flex justify-end space-x-2">
                       <template v-if="item.editing">
                         <Button
@@ -536,15 +539,18 @@ const handleKeyDown = (event: KeyboardEvent, index: number) => {
                         <Trash2 class="h-4 w-4" />
                       </Button>
                     </div>
-                  </td>
-                </tr>
-                <tr v-if="form.items.length === 0">
-                  <td :colspan="isCashVoucher ? (form.items.some(i => i.editing) ? 5 : 4) : (form.items.some(i => i.editing) ? 6 : 5)" class="px-6 py-4 text-center text-sm text-gray-500">
+                  </TableCell>
+                </TableRow>
+                <TableRow v-if="form.items.length === 0">
+                  <TableCell 
+                    :colspan="isCashVoucher ? (form.items.some(i => i.editing) ? 5 : 4) : (form.items.some(i => i.editing) ? 6 : 5)" 
+                    class="text-center text-sm text-gray-500"
+                  >
                     No items added yet
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
           </div>
 
           <!-- Total Amount -->
