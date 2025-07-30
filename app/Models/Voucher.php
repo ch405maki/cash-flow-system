@@ -28,5 +28,10 @@ class Voucher extends Model
     {
         return $this->belongsTo(PurchaseOrder::class, 'po_id');
     }
+
+    public function approvals(): HasMany
+    {
+        return $this->hasMany(VoucherApproval::class);
+    }
     
 }

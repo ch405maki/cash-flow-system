@@ -10,6 +10,7 @@ use App\Models\PurchaseOrderDetail;
 use App\Models\Account;
 use App\Models\Release;
 use App\Models\User;
+use App\Models\RequestApproval;
 use App\Models\ReleaseDetail;
 use Illuminate\Http\JsonResponse;
 use App\Models\Request;
@@ -189,6 +190,14 @@ class RequestController extends Controller
             $creatorUser = User::find($validated['user_id']);
             $creator = $creatorUser?->username ?? 'system';
             $description = "Request #{$validated['request_no']} was created by {$creator}";
+
+            RequestApproval::create([
+                'request_id' => $requestModel->id,
+                'user_id' => $validated['user_id'],
+                'status' => $validated['status'],
+                'remarks' => $description,
+                'approved_at' => now(),
+            ]);
 
             activity()
                 ->performedOn($requestModel)
@@ -372,8 +381,17 @@ class RequestController extends Controller
 
         $request->update($updateData);
 
-        // Log the status change
         $description = "Request #{$request->request_no} status changed from {$oldStatus} to {$validated['status']} by {$authUser->username}";
+
+        RequestApproval::create([
+            'request_id' => $request->id,
+            'user_id' => $authUser->id,
+            'status' => $validated['status'],
+            'approved_at' => now(),
+            'remarks' => $description,
+        ]);
+
+        // Log the status change
 
         activity()
             ->performedOn($request)
@@ -466,6 +484,16 @@ class RequestController extends Controller
             }
 
             $this->updateRequestStatus($request);
+
+            $description = "Released {$totalQuantity} items for request #{$request->request_no} by {$authUser->username}";
+
+            RequestApproval::create([
+                'request_id' => $request->id,
+                'user_id' => $authUser->id,
+                'status' => 'released',
+                'approved_at' => now(),
+                'remarks' => $description,
+            ]);
 
             // Minimal activity logging
             activity()

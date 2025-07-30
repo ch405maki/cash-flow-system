@@ -16,6 +16,26 @@
       
       <form @submit.prevent="createUser" class="space-y-4">
         <div class="grid gap-4 py-4">
+          <div class="grid gap-4">
+            <div class="grid gap-1">
+              <label class="text-sm font-medium">Profile Picture</label>
+              <div class="grid grid-cols-4">
+                <div
+                  v-for="pic in profilePictures"
+                  :key="pic.id"
+                  class="h-16 w-16 flex items-center justify-center border rounded-full cursor-pointer overflow-hidden"
+                  :class="{ 'ring-2 ring-blue-500': formData.profile_picture_id === pic.id }"
+                  @click="formData.profile_picture_id = pic.id"
+                >
+                  <img
+                    :src="`/storage/${pic.file_path}`"
+                    alt="Profile Pic"
+                    class="h-full w-full object-cover"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="space-y-2">
             <Label for="username">Username</Label>
             <Input id="username" v-model="formData.username" required />
@@ -167,8 +187,9 @@ interface AccessLevel {
 }
 
 const props = defineProps<{
-  departments: Department[]
-  accessLevels: AccessLevel[]
+  departments: Department[];
+  accessLevels: AccessLevel[];
+  profilePictures: { id: number; file_path: string; file_name: string }[];
 }>()
 
 const emit = defineEmits(['user-created'])
@@ -188,6 +209,7 @@ const formData = ref({
   status: 'active',
   department_id: '',
   access_id: '',
+  profile_picture_id: null as number | null,
 })
 
 const openDialog = () => (isOpen.value = true)
@@ -204,13 +226,19 @@ const closeDialog = () => {
     status: 'active',
     department_id: '',
     access_id: '',
+    profile_picture_id: null,
   }
 }
 
 const createUser = async () => {
   loading.value = true
   try {
-    await axios.post('/api/users', formData.value)
+    await axios.post("/api/users", {
+      ...formData.value,
+      profile_picture_id: formData.value.profile_picture_id
+        ? Number(formData.value.profile_picture_id)
+        : null,
+    });
     toast.success('User created successfully!')
     closeDialog()
     emit('user-created')
@@ -227,7 +255,3 @@ const createUser = async () => {
   }
 }
 </script>
-
-<style scoped>
-
-</style>

@@ -52,10 +52,10 @@ const downloadReceipt = () => {
         </div>
         <table class="w-full text-sm border border-border rounded-md">
             <thead>
-            <tr class="bg-gray-50 border-b">
+            <tr class="border-b">
             <th colspan="4" class="p-2 text-left text-muted-foreground">
                 VOUCHER TYPE:
-                <span class="uppercase font-normal">{{ voucher.type }}</span> &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+                <span class="uppercase font-normal">{{ voucher.type }}</span> &nbsp;&nbsp;&nbsp;| &nbsp;&nbsp;&nbsp;
                 STATUS:
                     <span class="uppercase font-bold tracking-wide"
                         :class="{

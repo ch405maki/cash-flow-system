@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Models\Request as RequestData;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\RequestToOrderApproval;
 use Inertia\Inertia;
 
 class RequestToOrderReleaseController extends Controller
@@ -71,7 +72,7 @@ class RequestToOrderReleaseController extends Controller
             foreach ($validated['items'] as $item) {
                 $detail = RequestToOrderDetail::withSum('releases', 'quantity_released')
                     ->findOrFail($item['detail_id']);
-                
+
                 \Log::debug('Release detail check', [
                     'detail_id' => $detail->id,
                     'ordered_quantity' => $detail->quantity,
@@ -83,7 +84,7 @@ class RequestToOrderReleaseController extends Controller
                 $alreadyReleased = $detail->releases_sum_quantity_released ?? 0;
                 $attemptingToRelease = $item['quantity'];
                 $totalAfterRelease = $alreadyReleased + $attemptingToRelease;
-                
+
                 if ($totalAfterRelease > $detail->quantity) {
                     $remaining = $detail->quantity - $alreadyReleased;
                     \Log::error('Release quantity exceeded', [
@@ -113,14 +114,57 @@ class RequestToOrderReleaseController extends Controller
                     'release_id' => $release->id,
                     'quantity' => $item['quantity']
                 ]);
+
+                // Log activity
+                activity()
+                    ->performedOn($release)
+                    ->causedBy(Auth::user())
+                    ->useLog('RequestToOrderRelease')
+                    ->withProperties([
+                        'order_no' => $order->order_no,
+                        'detail_id' => $detail->id,
+                        'released_quantity' => $item['quantity'],
+                    ])
+                    ->log("Released {$item['quantity']} units for item: {$detail->item_description}");
             }
 
-            $this->checkOrderCompletion($order);
+            // Create approval log (optional: check if already approved to avoid duplicate)
+            RequestToOrderApproval::create([
+                'request_to_order_id' => $order->id,
+                'user_id' => Auth::id(),
+                'status' => 'approved',
+                'remarks' => "Released {$item['quantity']} units for item: {$detail->item_description}",
+                'approved_at' => now(),
+            ]);
+
+            // Reload fresh details for checking
+            $order->load('details.releases');
+
+            $allReleased = true;
+            foreach ($order->details as $detail) {
+                $releasedQty = $detail->releases->sum('quantity_released');
+                if ($releasedQty < $detail->quantity) {
+                    $allReleased = false;
+                    break;
+                }
+            }
+
+            if ($allReleased) {
+                $order->update(['status' => 'completed']);
+
+                activity()
+                    ->performedOn($order)
+                    ->causedBy(Auth::user())
+                    ->useLog('RequestToOrder')
+                    ->withProperties(['order_no' => $order->order_no])
+                    ->log('RequestToOrder marked as completed after full release');
+            }
         });
 
         return redirect()->route('request-to-order.show', $order->id)
-            ->with('success', 'Items released successfully');
+            ->with('success', 'Items released and approval recorded successfully.');
     }
+
 
     protected function checkOrderCompletion(RequestToOrder $order)
     {

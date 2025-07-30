@@ -11,14 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('requests', function (Blueprint $table) {
+        Schema::create('voucher_approvals', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('department_id')->constrained('departments');
-            $table->foreignId('user_id')->constrained('users');
-            $table->string('request_no');
-            $table->dateTime('request_date');
-            $table->text('purpose');
+            $table->foreignId('voucher_id')->constrained('vouchers')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('status');
+            $table->text('remarks')->nullable();
+            $table->dateTime('approved_at')->nullable();
             $table->timestamps();
         });
     }
@@ -28,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('requests');
+        Schema::dropIfExists('voucher_approvals');
     }
 };

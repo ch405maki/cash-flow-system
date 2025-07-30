@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 
 class User extends Authenticatable
 {
@@ -20,7 +22,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'username', 'first_name', 'middle_name', 'last_name', 'email',
-        'password', 'role', 'status', 'department_id', 'access_id'
+        'password', 'role', 'status', 'department_id', 'access_id', 'profile_picture_id'
     ];
 
     /**
@@ -69,5 +71,32 @@ class User extends Authenticatable
     public function vouchers(): HasMany
     {
         return $this->hasMany(Voucher::class);
+    }
+
+    protected $with = ['profilePicture'];
+
+    public function profilePicture()
+    {
+        return $this->belongsTo(ProfilePicture::class, 'profile_picture_id');
+    }
+
+    public function requestApprovals(): HasMany
+    {
+        return $this->hasMany(RequestApproval::class);
+    }
+    
+    public function requestToOrderApprovals(): HasMany
+    {
+        return $this->hasMany(RequestToOrderApproval::class);
+    }
+
+    public function purchaseOrderApprovals(): HasMany
+    {
+        return $this->hasMany(PurchaseOrderApproval::class);
+    }
+
+    public function voucherApprovals(): HasMany
+    {
+        return $this->hasMany(VoucherApproval::class);
     }
 }

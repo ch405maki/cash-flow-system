@@ -97,7 +97,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="w-full bg-white rounded-lg border border-violet-200 p-4 shadow-sm">
+  <div class="w-full rounded-lg border p-4 shadow-sm">
     <div class="h-[400px] w-full">
       <canvas ref="chartRef" class="w-full h-full"></canvas>
     </div>

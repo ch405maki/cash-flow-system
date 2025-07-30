@@ -13,14 +13,13 @@ class RequestToOrder extends Model
         'order_no',
         'order_date',
         'notes',
-        'status'
+        'status',
     ];
 
     protected $casts = [
-    'order_date' => 'date',
-    'created_at' => 'datetime',
-];
-
+        'order_date' => 'date',
+        'created_at' => 'datetime',
+    ];
 
     public function user(): BelongsTo
     {
@@ -32,8 +31,13 @@ class RequestToOrder extends Model
         return $this->hasMany(RequestToOrderDetail::class);
     }
 
-    public function canvases()
+    public function canvases(): HasMany
     {
         return $this->hasMany(Canvas::class);
+    }
+
+    public function approvals(): HasMany
+    {
+        return $this->hasMany(RequestToOrderApproval::class);
     }
 }

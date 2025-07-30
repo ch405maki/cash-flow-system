@@ -13,6 +13,7 @@ use App\Http\Controllers\Configuration\UserAccessController;
 use App\Http\Controllers\Configuration\DepartmentController;
 use App\Http\Controllers\Configuration\SignatoryController;
 use App\Http\Controllers\Configuration\AccountController;
+use App\Http\Controllers\Api\ProfilePictureController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -25,6 +26,11 @@ Route::post('/api/vouchers', [VoucherController::class, 'store']);
 Route::post('/upload-users', [UserController::class, 'uploadUsers']);
 Route::put('/users/{id}', [UserController::class, 'update']);
 Route::patch('/users/{user}/status', [UserController::class, 'updateStatus']);
+
+Route::prefix('profile-pictures')->group(function () {
+    Route::post('/', [ProfilePictureController::class, 'store'])->name('profile-pictures.store');
+    Route::delete('/{profilePicture}', [ProfilePictureController::class, 'destroy'])->name('profile-pictures.destroy');
+});
 
 // Voucher Routes
 Route::apiResource('vouchers', VoucherController::class);
