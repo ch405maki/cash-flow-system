@@ -140,7 +140,7 @@ class VoucherController extends Controller
 
             return response()->json([
                 'message' => 'Voucher created successfully',
-                'data' => $voucher->load(['user', 'details', 'purchaseOrder']), // Load PO relation
+                'data' => $voucher->load(['user', 'details', 'purchaseOrder']),
                 'voucher_no' => $validated['voucher_no'],
                 'items_count' => $validated['type'] === 'salary' 
                     ? count($validated['check']) 
