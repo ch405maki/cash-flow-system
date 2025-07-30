@@ -20,6 +20,10 @@ const props = defineProps({
   currentCheckDate: {
     type: String,
     default: ''
+  },
+  authUser: {
+    type: Object,
+    required: true
   }
 })
 
@@ -36,7 +40,7 @@ const emit = defineEmits(['saved'])
 
 const addCheckDetails = async () => {
   if (!form.value.check_no || !form.value.check_date) {
-    toast.error('Please complete all check fields'); // keep this here
+    toast.error('Please complete all check fields');
     return;
   }
 
@@ -45,7 +49,8 @@ const addCheckDetails = async () => {
   try {
     const response = await axios.patch(`/api/vouchers/${props.voucherId}/check`, {
       check_no: form.value.check_no,
-      check_date: form.value.check_date
+      check_date: form.value.check_date,
+      user_id: props.authUser.id
     });
 
     emit('saved', response.data.data);
@@ -64,8 +69,6 @@ const addCheckDetails = async () => {
 </script>
 
 <template>
-    <button @click="toast.success('Test Toast')">Test Toast</button>
-
   <Dialog v-model:open="isOpen">
     <DialogTrigger as-child>
       <Button variant="default" class="gap-2">

@@ -10,6 +10,7 @@ use App\Models\VoucherDetail;
 use App\Models\Account;
 use App\Models\Signatory;
 use App\Models\User;
+use App\Models\VoucherApproval;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -118,7 +119,8 @@ class VoucherController extends Controller
                 'user_id' => $validated['user_id'],
             ];
 
-            $voucher = Voucher::create($voucherData);   
+            $voucher = Voucher::create($voucherData);  
+            $creatorUser = User::find($validated['user_id']); 
 
             // Create details if salary voucher
             if (!empty($validated['check'])) {
@@ -137,6 +139,28 @@ class VoucherController extends Controller
                 PurchaseOrder::where('id', $validated['po_id'])
                     ->update(['status' => 'voucherCreated']);
             }
+
+            // Log activity
+            activity()
+                ->performedOn($voucher)
+                ->causedBy($creatorUser)
+                ->useLog('Voucher Created')
+                ->withProperties([
+                    'voucher_no' => $voucher->voucher_no,
+                    'check_amount' => $voucher->check_amount,
+                    'check_payable_to' => $voucher->check_payable_to,
+                    'type' => $voucher->type,
+                ])
+                ->log("Created Voucher {$voucher->voucher_no}");
+
+            // Create approval entry
+            VoucherApproval::create([
+                'voucher_id' => $voucher->id,
+                'user_id' => $validated['user_id'],
+                'status' => $validated['status'],
+                'approved_at' => now(),
+                'remarks' => "Voucher created #{$voucher->voucher_no}",
+            ]);
 
             return response()->json([
                 'message' => 'Voucher created successfully',
@@ -194,7 +218,7 @@ class VoucherController extends Controller
 
     protected function generateVoucherNumber(): string
     {
-        $prefix = 'V-' . now()->format('Ym') . '-';  // Format: V-YYYYMM-
+        $prefix = 'V-' . now()->format('Ym') . '-'; 
         $lastVoucher = Voucher::where('voucher_no', 'like', $prefix . '%')
             ->orderBy('voucher_no', 'desc')
             ->first();
@@ -313,7 +337,10 @@ class VoucherController extends Controller
         $validated = $request->validate([
             'check_no' => 'required|string|max:255',
             'check_date' => 'required|date',
+            'user_id' => 'required|exists:users,id',
         ]);
+
+        $user = $validated['user_id'];
 
         try {
             // Update voucher with check details
@@ -322,6 +349,28 @@ class VoucherController extends Controller
                 'check_date' => $validated['check_date'],
                 'status' => 'unreleased'
             ]);
+
+            // Fix: use $user->id instead of $user
+            VoucherApproval::create([
+                'voucher_id' => $voucher->id,
+                'user_id' => $user,
+                'status' => "unreleased",
+                'remarks' => "Voucher: {$voucher->voucher_no} updated as unreleased",
+                'approved_at' => now(),
+            ]);
+
+            activity()
+                ->performedOn($voucher)
+                ->causedBy($user)
+                ->useLog('Voucher Update')
+                ->withProperties([
+                    'voucher_id' => $voucher->id,
+                    'voucher_no' => $voucher->voucher_no,
+                    'check_no' => $validated['check_no'],
+                    'check_date' => $validated['check_date'],
+                    'status' => 'unreleased'
+                ])
+                ->log("Added check details for {$voucher->voucher_no}");
 
             return $this->successResponse(
                 'Check details added successfully',
@@ -333,23 +382,22 @@ class VoucherController extends Controller
         }
     }
     
+    public function downloadReceipt(Voucher $voucher)
+    {
+        if (!$voucher->receipt) {
+            abort(404, 'No receipt found.');
+        }
 
-public function downloadReceipt(Voucher $voucher)
-{
-    if (!$voucher->receipt) {
-        abort(404, 'No receipt found.');
+        $filePath = $voucher->receipt; // e.g., 'receipts/receipt_V-202507-0003.pdf'
+
+        if (!Storage::disk('public')->exists($filePath)) {
+            abort(404, 'File not found on disk.');
+        }
+
+        $filename = 'receipt_' . $voucher->voucher_no . '.' . pathinfo($filePath, PATHINFO_EXTENSION);
+
+        return Storage::disk('public')->download($filePath, $filename);
     }
-
-    $filePath = $voucher->receipt; // e.g., 'receipts/receipt_V-202507-0003.pdf'
-
-    if (!Storage::disk('public')->exists($filePath)) {
-        abort(404, 'File not found on disk.');
-    }
-
-    $filename = 'receipt_' . $voucher->voucher_no . '.' . pathinfo($filePath, PATHINFO_EXTENSION);
-
-    return Storage::disk('public')->download($filePath, $filename);
-}
 
     public function show(Voucher $voucher): JsonResponse
     {
@@ -395,7 +443,7 @@ public function downloadReceipt(Voucher $voucher)
         ]);
     }
 
-   public function forDirector($id, Request $request)
+    public function forDirector($id, Request $request)
     {
         $request->validate([
             'password' => 'required',
@@ -404,19 +452,16 @@ public function downloadReceipt(Voucher $voucher)
 
         $user = Auth::user();
 
-        // Password verification
         if (!Hash::check($request->password, $user->password)) {
             return back()->withErrors(['password' => 'Incorrect password']);
         }
 
         $voucher = Voucher::findOrFail($id);
 
-        // Check current status
         if ($voucher->status === 'forEOD') {
             return back()->withErrors(['status' => 'Voucher is already sent']);
         }
 
-        // Determine the action
         $action = $request->input('action');
         $newStatus = match ($action) {
             'forEod' => 'forEOD',
@@ -430,14 +475,37 @@ public function downloadReceipt(Voucher $voucher)
             default => 'Voucher rejected successfully',
         };
 
-        // Update the voucher
-        $voucher->update(['status' => $newStatus]);
+        DB::transaction(function () use ($voucher, $newStatus, $user, $action) {
+            $voucher->update(['status' => $newStatus]);
+
+            // Update the approval entry for this user if it exists
+            VoucherApproval::create([
+                'voucher_id' => $voucher->id,
+                'user_id' => $user->id,
+                'status' => $newStatus,
+                'remarks' => "Voucher: {$voucher->voucher_no} Update as {$newStatus}",
+                'approved_at' => now(),
+            ]);
+
+            // Log the activity
+            activity()
+                ->performedOn($voucher)
+                ->causedBy($user)
+                ->useLog('Voucher Update')
+                ->withProperties([
+                    'voucher_no' => $voucher->voucher_no,
+                    'action' => $action,
+                    'new_status' => $newStatus,
+                ])
+                ->log("Voucher {$voucher->voucher_no} Updated: {$action} ");
+        });
 
         return back()->with([
             'success' => $message,
             'voucher' => $voucher->fresh()
         ]);
     }
+
 
     public function forEod($id, Request $request)
     {
@@ -472,7 +540,30 @@ public function downloadReceipt(Voucher $voucher)
             : 'Voucher rejected successfully';
 
         // Update the voucher
-        $voucher->update(['status' => $newStatus]);
+        DB::transaction(function () use ($voucher, $newStatus, $user, $action) {
+            $voucher->update(['status' => $newStatus]);
+
+            // Update the approval entry for this user if it exists
+            VoucherApproval::create([
+                'voucher_id' => $voucher->id,
+                'user_id' => $user->id,
+                'status' => $newStatus,
+                'remarks' => "Voucher: {$voucher->voucher_no} Update as {$newStatus}",
+                'approved_at' => now(),
+            ]);
+
+            // Log the activity
+            activity()
+                ->performedOn($voucher)
+                ->causedBy($user)
+                ->useLog('Voucher Update')
+                ->withProperties([
+                    'voucher_no' => $voucher->voucher_no,
+                    'action' => $action,
+                    'new_status' => $newStatus,
+                ])
+                ->log("Voucher {$voucher->voucher_no} Updated: {$action} ");
+        });
 
         return back()->with([
             'success' => $message,
