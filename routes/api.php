@@ -14,11 +14,13 @@ use App\Http\Controllers\Configuration\DepartmentController;
 use App\Http\Controllers\Configuration\SignatoryController;
 use App\Http\Controllers\Configuration\AccountController;
 use App\Http\Controllers\Api\ProfilePictureController;
+use App\Http\Controllers\Api\TermsController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+Route::post('/terms/accept', [TermsController::class, 'accept']);
 
 Route::delete('/users/{id}', [UserController::class, 'destroy']);
 Route::post('/users', [UserController::class, 'store']);

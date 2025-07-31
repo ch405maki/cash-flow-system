@@ -45,14 +45,16 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'terms_accepted_at' => 'datetime'
         ];
     }
 
-    public function hasAcceptedCurrentTerms(): bool
+    protected $casts = [
+        'terms_accepted_at' => 'datetime',
+    ];
+
+   public function needsToAcceptTerms(): bool
     {
-        return $this->terms_accepted_at && 
-            $this->terms_version === config('app.terms_version');
+        return is_null($this->terms_accepted_at);
     }
 
     public function department(): BelongsTo
