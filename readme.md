@@ -32,3 +32,18 @@ sudo supervisorctl start laravel-worker:*
 
 Enable at Boot
 sudo systemctl enable supervisord
+
+# Has changes? restart
+
+1. Reload Supervisor to recognize new changes (if you modified laravel-worker.ini)
+
+sudo supervisorctl reread
+sudo supervisorctl update
+
+# 2. Restart your workers (required after .env changes)
+
+sudo supervisorctl restart laravel-worker:*
+
+# 3. Verify status
+
+sudo supervisorctl status
