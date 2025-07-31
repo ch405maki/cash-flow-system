@@ -15,6 +15,7 @@ use App\Http\Controllers\Configuration\SignatoryController;
 use App\Http\Controllers\Configuration\AccountController;
 use App\Http\Controllers\Api\ProfilePictureController;
 use App\Http\Controllers\Api\TermsController;
+use App\Http\Controllers\Api\CanvasController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -74,6 +75,8 @@ Route::prefix('configuration/accounts')->group(function () {
     Route::put('/{account}', [AccountController::class, 'update']);
     Route::delete('/{account}', [AccountController::class, 'destroy']);
 });
+
+Route::get('/canvas/{canvas}/files/{file}/preview', [CanvasController::class, 'preview'])->name('canvas.preview.file');
 
 // Purchase Order Routes
 Route::apiResource('purchase-orders', PurchaseOrderController::class)->only(['store']);

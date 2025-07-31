@@ -236,6 +236,35 @@ class CanvasController extends Controller
         return Storage::disk('public')->download($filePath, $file->original_filename);
     }
 
+    public function preview($canvasId, $fileId)
+    {
+        $file = CanvasFile::where('canvas_id', $canvasId)->findOrFail($fileId);
+
+        if (empty($file->file_path)) {
+            abort(404, 'File path is missing.');
+        }
+
+        $fullPath = Storage::disk('public')->path('canvases/' . $file->file_path);
+
+        if (!file_exists($fullPath)) {
+            abort(404, 'File not found.');
+        }
+
+        $mime = mime_content_type($fullPath);
+
+        if (!str_contains($mime, 'pdf')) {
+            abort(400, 'Preview only available for PDF files.');
+        }
+
+        // Use raw file content and return a Response object
+        return response()->make(file_get_contents($fullPath), 200, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline; filename="' . $file->original_filename . '"',
+            'Content-Transfer-Encoding' => 'binary',
+            'Accept-Ranges' => 'bytes',
+        ]);
+    }
+    
     protected function generateUniqueFilename($name, $extension)
     {
         $slug = Str::slug($name);

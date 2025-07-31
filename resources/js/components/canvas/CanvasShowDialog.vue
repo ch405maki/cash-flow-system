@@ -12,7 +12,6 @@ import { useToast } from 'vue-toastification';
 import { formatDateTime } from '@/lib/utils';
 import { router } from '@inertiajs/vue3';
 
-
 const toast = useToast();
 
 const props = defineProps({
@@ -31,7 +30,19 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:open', 'updated', 'reupload']);
-const showAlert = ref(true)
+const isDownloading = ref(false);
+// PDF Preview State
+const previewFile = ref<{
+  id: number;
+  original_filename: string;
+  mimetype?: string;
+  url?: string;
+} | null>(null);
+const showPdfPreview = ref(false);
+const dialogWidth = ref('sm:max-w-[625px]');
+const previewLoading = ref(false);
+const previewError = ref(false);
+const showAlert = ref(true);
 
 const isApproved = computed(
   () => props.canvas.status === 'approved' || props.canvas.status === 'poCreated'
@@ -57,8 +68,6 @@ const statusVariants = {
   forEOD: 'bg-green-100 text-green-800',
 };
 
-const isDownloading = ref(false);
-
 const form = useForm({
   remarks: props.canvas.remarks || '',
   status: props.canvas.status,
@@ -79,15 +88,46 @@ watch(
   { immediate: true, deep: true }
 );
 
+const openPdfPreview = async (file) => {
+  previewFile.value = file;
+  showPdfPreview.value = true;
+  dialogWidth.value = 'sm:max-w-[60vw]';
+  previewLoading.value = true;
+  previewError.value = false;
+
+  // Check if it's a PDF file first
+  if (!isPdfFile(file)) {
+    previewError.value = true;
+    previewLoading.value = false;
+    return;
+  }
+};
+
+const closePdfPreview = () => {
+  showPdfPreview.value = false;
+  dialogWidth.value = 'sm:max-w-[625px]';
+  previewFile.value = null;
+};
+
+const getPreviewUrl = (file) => {
+  // For local files (if you implement upload functionality)
+  if (file.url) {
+    return file.url;
+  }
+  
+  // Use the dedicated preview route
+  return route('canvas.preview.file', { 
+    canvas: props.canvas.id, 
+    file: file.id 
+  }) + '#view=fitH&toolbar=0&navpanes=0';
+};
+
 const downloadFile = async (fileId = null) => {
   try {
     isDownloading.value = true;
-    
-    // Create a temporary anchor element
     const link = document.createElement('a');
     
     if (fileId) {
-      // Download single file
       const file = props.canvas.files.find(f => f.id === fileId);
       if (!file) {
         throw new Error('File not found');
@@ -100,7 +140,6 @@ const downloadFile = async (fileId = null) => {
       link.setAttribute('download', file.original_filename);
     }
     
-    // Append to body, click and remove
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -153,7 +192,6 @@ const handleAction = async (action) => {
   }
 };
 
-// Get the approved file
 const approvedFile = computed(() => {
   if (props.canvas.status !== 'approved' && props.canvas.status !== 'poCreated') return null;
   return props.canvas.selected_files?.[0]?.file || null;
@@ -167,11 +205,15 @@ function goToCreate() {
 function viewRequest(id: number) {
   router.visit(`/request-to-order/${id}`);
 }
+
+const isPdfFile = (file) => {
+  return file?.mimetype?.includes('pdf') || file?.original_filename?.endsWith('.pdf');
+};
 </script>
 
 <template>
   <Dialog :open="open" @update:open="val => emit('update:open', val)">
-    <DialogContent class="sm:max-w-[625px] max-h-[90vh] overflow-y-auto">
+    <DialogContent :class="[dialogWidth, 'max-h-[90vh] overflow-y-auto']">
       <DialogHeader>
         <DialogTitle class="flex items-center gap-2">
           <span class="truncate max-w-[400px] capitalize">{{ canvas.title || 'Untitled Canvas' }}</span>
@@ -220,7 +262,6 @@ function viewRequest(id: number) {
               (Canvas details not available)
             </template>
           </AlertDescription>
-          <!-- Dismiss Button -->
           <button
             class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground"
             @click="showAlert = false"
@@ -230,14 +271,14 @@ function viewRequest(id: number) {
           </button>
         </Alert>
 
-        <!-- Approved File Section (only shown for approved canvases) -->
+        <!-- Approved File Section -->
         <div v-if="approvedFile">
           <h3 class="text-sm font-medium text-muted-foreground">Approved File</h3>
           <div class="p-3 border rounded-lg mt-2">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-3">
                 <FileText class="h-5 w-5 text-muted-foreground" />
-                <span class=" text-muted-foreground capitalize text-sm">{{ approvedFile.original_filename }}</span>
+                <span class="text-muted-foreground capitalize text-sm">{{ approvedFile.original_filename }}</span>
               </div>
               <Button 
                 variant="ghost" 
@@ -253,18 +294,69 @@ function viewRequest(id: number) {
           </div>
         </div>
 
-        <!-- Approval History with Stepper -->
+        <!-- PDF Preview Section -->
+        <div v-if="showPdfPreview" class="mt-4 border-t pt-4">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="text-sm font-medium">Preview: {{ previewFile.original_filename }}</h3>
+            <Button variant="ghost" size="sm" @click="closePdfPreview">
+              <X class="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <div v-if="isPdfFile(previewFile)" class="h-[70vh] border rounded-md overflow-hidden bg-gray-50">
+            <div v-if="previewLoading" class="h-full flex items-center justify-center">
+              <LoaderCircle class="h-8 w-8 animate-spin text-gray-400" />
+            </div>
+            
+            <iframe 
+              v-show="!previewLoading && !previewError"
+              :src="getPreviewUrl(previewFile)"
+              class="w-full h-full"
+              frameborder="0"
+              @load="previewLoading = false"
+              @error="previewError = true"
+            />
+            
+            <div v-if="previewError" class="h-full flex flex-col items-center justify-center p-4 text-center">
+              <XCircle class="h-8 w-8 text-red-400 mb-2" />
+              <p class="text-sm text-gray-600">Failed to load preview</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                class="mt-4"
+                @click="downloadFile(previewFile.id)"
+              >
+                <Download class="h-4 w-4 mr-2" />
+                Download Instead
+              </Button>
+            </div>
+          </div>
+          
+          <div v-else class="p-4 text-center">
+            <FileText class="h-12 w-12 mx-auto text-gray-400 mb-2" />
+            <p class="text-sm text-gray-500">Preview not available for this file type</p>
+            <Button 
+              variant="default" 
+              size="sm" 
+              class="mt-4"
+              @click="downloadFile(previewFile.id)"
+            >
+              <Download class="h-4 w-4 mr-2" />
+              Download File
+            </Button>
+          </div>
+        </div>
+
+        <!-- Approval History -->
         <div v-if="canvas.approvals?.length">
           <h3 class="text-sm font-medium text-muted-foreground mb-3">Approval History</h3>
           <div class="relative pl-6">
-            <!-- Vertical timeline line -->
             <div class="absolute left-0 top-0 h-full w-0.5 bg-gray-200 ml-4"></div>
 
             <div v-for="(approval, index) in canvas.approvals" 
                 :key="approval.id"
                 class="relative mb-6 last:mb-0">
               
-              <!-- Timeline dot -->
               <div class="bg-green-500 border-2 border-green-500 absolute -left-6 top-0 h-8 w-8 rounded-full flex items-center justify-center z-10">
                 <component 
                   :is="approval.approved ? CheckCircle : CheckCircle"
@@ -272,12 +364,10 @@ function viewRequest(id: number) {
                 />
               </div>
 
-              <!-- Connector line to next dot -->
               <div v-if="index < canvas.approvals.length - 1"
                   class="absolute -left-6 top-8 h-full w-0.5 ml-4 bg-green-500 z-0"
               ></div>
               
-              <!-- Approval content -->
               <div class="pl-4">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2">
@@ -300,19 +390,27 @@ function viewRequest(id: number) {
 
         <!-- Only show these sections if NOT approved -->
         <template v-if="!isApproved">
-          <!-- Files Section (for non-approved canvases) -->
+          <!-- Files Section -->
           <div v-if="userRole != 'executive_director' && canvas.files?.length">
             <h3 class="text-sm font-medium text-muted-foreground">Files</h3>
             <div class="space-y-2 mt-2">
-              <div v-for="file in canvas.files" :key="file.id" class="flex items-center justify-between p-2 border rounded">
+              <div 
+                v-for="file in canvas.files" 
+                :key="file.id" 
+                class="flex items-center justify-between p-2 border rounded hover:bg-gray-50 cursor-pointer"
+                @click="openPdfPreview(file)"
+              >
                 <div class="flex items-center gap-2">
                   <FileText class="max-h-4 max-w-4 text-muted-foreground" />
                   <span class="text-sm">{{ file.original_filename }}</span>
+                  <Badge v-if="isPdfFile(file)" variant="outline" class="text-xs">
+                    PDF
+                  </Badge>
                 </div>
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  @click="downloadFile(file.id)"
+                  @click.stop="downloadFile(file.id)"
                 >
                   <Download class="h-4 w-4" />
                 </Button>
@@ -322,11 +420,16 @@ function viewRequest(id: number) {
 
           <!-- File Selection for Executive -->
           <div v-if="userRole === 'executive_director' && canvas.files?.length">
-            <h3 class="text-sm font-medium text-muted-foreground ">Select File for Approval</h3>
+            <h3 class="text-sm font-medium text-muted-foreground">Select File for Approval</h3>
             <p class="text-xs text-muted-foreground mb-2">Please select one file to approve</p>
             
             <div class="space-y-2 mt-2">
-              <div v-for="file in canvas.files" :key="file.id" class="flex items-center items-start gap-3 p-2 border rounded">
+              <div 
+                v-for="file in canvas.files" 
+                :key="file.id" 
+                class="flex items-center items-start gap-3 p-2 border rounded hover:bg-gray-50 cursor-pointer"
+                @click="openPdfPreview(file)"
+              >
                 <div class="flex items-center h-5">
                   <input
                     type="radio"
@@ -334,20 +437,24 @@ function viewRequest(id: number) {
                     v-model="form.selected_file"
                     :value="file.id"
                     class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                    @click.stop
                   >
                 </div>
                 <div class="flex-1 flex items-center justify-between">
                   <label :for="`file-${file.id}`" class="flex items-center gap-2 cursor-pointer">
                     <FileText class="max-h-4 max-w-4 text-muted-foreground" />
                     <span class="text-sm">{{ file.original_filename }}</span>
+                    <Badge v-if="isPdfFile(file)" variant="outline" class="text-xs">
+                      PDF
+                    </Badge>
                   </label>
                   <Button 
-                      variant="ghost" 
-                      size="sm"
-                      @click="downloadFile(file.id)"
-                    >
-                  <Download class="h-4 w-4" />
-                </Button>
+                    variant="ghost" 
+                    size="sm"
+                    @click.stop="downloadFile(file.id)"
+                  >
+                    <Download class="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </div>
@@ -434,7 +541,6 @@ function viewRequest(id: number) {
             </Button>
           </div>
 
-          <!-- Show download approved file button for approved canvases -->
           <Button 
             v-else-if="approvedFile"
             @click="downloadFile(approvedFile.id)"
