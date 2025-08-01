@@ -59,9 +59,9 @@ const toggleChartExpand = () => {
             <div class="grid grid-cols-1 gap-4 py-4" :class="{'md:grid-cols-[1fr_1.5fr]': !isChartExpanded}">
                 <!-- Recent Requests Column (hidden when chart is expanded) -->
                 <div class="space-y-4" v-if="!isChartExpanded">
-                    <h3 class="font-medium text-gray-900">
+                    <h3 class="font-medium">
                         Recent Approved Requests
-                        <p class="text-sm text-gray-500">For (purchase order / canvas)</p>
+                        <p class="text-sm text-muted-foreground">For (purchase order / canvas)</p>
                     </h3>
                     <RecentRequestsTable 
                         :is-department-user="isDepartmentUser" 
@@ -74,8 +74,8 @@ const toggleChartExpand = () => {
                 <div :class="{'col-span-1': !isChartExpanded, 'col-span-1 md:col-span-2': isChartExpanded}">
                     <div class="flex justify-between items-center">
                     <div>
-                        <h3 class="font-medium text-gray-900">Most Requested Items</h3>
-                        <p class="text-sm text-gray-500">Chart for most number of request</p>
+                        <h3 class="font-medium">Most Requested Items</h3>
+                        <p class="text-sm text-muted-foreground">Chart for most number of request</p>
                     </div>
                     <Button variant="secondary" @click="toggleChartExpand">
                         <component :is="isChartExpanded ? Minimize : Expand" />
