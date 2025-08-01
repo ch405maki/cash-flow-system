@@ -28,7 +28,7 @@ const submit = () => {
 </script>
 
 <template>
-    <AuthBase title="Log in to your account" description="Enter your email and password below to log in">
+    <AuthBase title="Log in to your account" description="Enter your username and password below to log in">
         <Head title="Log in" />
 
         <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-600">
@@ -38,7 +38,7 @@ const submit = () => {
         <form @submit.prevent="submit" class="flex flex-col gap-6">
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="login">Email or Username</Label>
+                    <Label for="login">Username</Label>
                     <Input
                         id="login"
                         type="text"
@@ -46,7 +46,7 @@ const submit = () => {
                         autofocus
                         autocomplete="username"
                         v-model="form.login"
-                        placeholder="Enter email or username"
+                        placeholder="username"
                     />
                     <InputError :message="form.errors.login" />
                 </div>

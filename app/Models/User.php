@@ -22,7 +22,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'username', 'first_name', 'middle_name', 'last_name', 'email',
-        'password', 'role', 'status', 'department_id', 'access_id', 'profile_picture_id'
+        'password', 'role', 'status', 'department_id', 'access_id', 'profile_picture_id', 'terms_accepted_at', 'terms_version'
     ];
 
     /**
@@ -46,6 +46,15 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    protected $casts = [
+        'terms_accepted_at' => 'datetime',
+    ];
+
+   public function needsToAcceptTerms(): bool
+    {
+        return is_null($this->terms_accepted_at);
     }
 
     public function department(): BelongsTo

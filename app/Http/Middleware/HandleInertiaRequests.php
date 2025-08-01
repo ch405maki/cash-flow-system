@@ -49,6 +49,7 @@ class HandleInertiaRequests extends Middleware
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user()?->load('profilePicture'),
+                'needs_to_accept_terms' => $request->user()?->needsToAcceptTerms() ?? false,
             ],
             'signatories' => $signatories->map(function ($signatory) {
                 return [

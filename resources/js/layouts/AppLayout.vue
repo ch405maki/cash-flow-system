@@ -4,6 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ref, onMounted } from 'vue';
+import { usePage } from '@inertiajs/vue3';
+import axios from 'axios';
 import type { BreadcrumbItemType } from '@/types';
 
 interface Props {
@@ -16,17 +18,37 @@ withDefaults(defineProps<Props>(), {
 
 const termsAccepted = ref(false);
 const showTermsDialog = ref(false);
+const page = usePage();
 
+// Check if user needs to accept terms
 onMounted(() => {
-    const accepted = localStorage.getItem('termsAccepted');
-    if (!accepted) {
+    const user = page.props.auth.user;
+    if (user && !user.terms_accepted_at) {
         showTermsDialog.value = true;
     }
 });
 
-const acceptTerms = () => {
-    localStorage.setItem('termsAccepted', 'true');
-    showTermsDialog.value = false;
+const acceptTerms = async () => {
+    try {
+        const userId = page.props.auth.user?.id;
+        if (!userId) {
+            throw new Error('User ID not available');
+        }
+
+        await axios.post('/api/terms/accept', { 
+            accepted: true,
+            user_id: userId
+        });
+        
+        // Update the local user object to prevent the dialog from showing again
+        if (page.props.auth.user) {
+            page.props.auth.user.terms_accepted_at = new Date().toISOString();
+        }
+        showTermsDialog.value = false;
+    } catch (error) {
+        console.error('Error accepting terms:', error);
+        // Optionally show an error message to the user
+    }
 };
 </script>
 
@@ -39,7 +61,7 @@ const acceptTerms = () => {
     </div>
 
     <!-- Dialog overlay - will appear on top of the semi-transparent content -->
-    <Dialog :open="showTermsDialog">
+    <Dialog :open="showTermsDialog" :modal="true">
         <DialogContent class="sm:max-w-[625px]">
             <DialogHeader>
                 <DialogTitle>Terms and Conditions</DialogTitle>
