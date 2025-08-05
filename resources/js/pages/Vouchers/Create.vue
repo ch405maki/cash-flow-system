@@ -69,6 +69,15 @@ const form = reactive({
     items: [] as VoucherItem[],
 });
 
+if (props.purchase_order) {
+  if (props.purchase_order.payee) {
+    form.payee = props.purchase_order.payee;
+  }
+  if (props.purchase_order.check_payable_to) {
+    form.check_payable_to = props.purchase_order.check_payable_to;
+  }
+}
+
 const newItem = ref<VoucherItem>({
   amount: 0,
   charging_tag: null,
@@ -393,11 +402,12 @@ const handleKeyDown = (event: KeyboardEvent, index: number) => {
                         class="flex-1"
                     />
                     <Button 
-                        type="button" 
-                        variant="default" 
-                        @click="addItem"
+                      type="button" 
+                      variant="default" 
+                      @click="addItem"
+                      :disabled="!newItem.charging_tag || !newItem.amount"
                     >
-                        <Plus class="h-4 w-4" /> Accept
+                      <Plus class="h-4 w-4" /> Accept
                     </Button>
                     </div>
                 </div>
@@ -589,7 +599,7 @@ const handleKeyDown = (event: KeyboardEvent, index: number) => {
             variant="outline" 
             @click="router.visit('/vouchers')"
           >
-             <Ban />Cancel
+            <Ban />Cancel
           </Button>
           <Button 
             type="submit" 

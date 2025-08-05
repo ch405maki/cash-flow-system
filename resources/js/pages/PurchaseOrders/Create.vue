@@ -11,6 +11,15 @@ import { useToast } from 'vue-toastification';
 import axios from 'axios';
 import { ref } from 'vue';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
+
 
 interface PurchaseOrderDetail {
   quantity: number;
@@ -279,149 +288,127 @@ const submitForm = async () => {
 
             <!-- Items Table -->
             <div class="border rounded-lg overflow-hidden">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Description
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Quantity
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Unit
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Unit Price
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Amount
-                    </th>
-                    <th 
+              <Table class="w-full">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Unit</TableHead>
+                    <TableHead>Unit Price</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead
                       v-if="form.details.some(item => item.editing)"
-                      class="text-right px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      class="text-right"
                     >
                       Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                <tr 
-                  v-for="(item, index) in form.details" 
-                  :key="index"
-                  @click="editItem(index)"
-                  :class="{
-                    'hover:bg-gray-50 cursor-pointer': true,
-                    'bg-blue-50': item.editing
-                  }"
-                >
-                  <!-- Description Column -->
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div v-if="!item.editing">{{ item.item_description }}</div>
-                    <Input 
-                      v-else
-                      v-model="item.item_description"
-                      @click.stop
-                      @keydown="handleKeyDown($event, index)"
-                      class="w-full"
-                    />
-                  </td>
-                  
-                  <!-- Quantity Column -->
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div v-if="!item.editing">{{ item.quantity }}</div>
-                    <Input 
-                      v-else
-                      type="number"
-                      v-model.number="item.quantity"
-                      min="1"
-                      @click.stop
-                      @keydown="handleKeyDown($event, index)"
-                      @change="item.amount = item.quantity * item.unit_price"
-                      class="w-full"
-                    />
-                  </td>
-                  
-                  <!-- Unit Column -->
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div v-if="!item.editing">{{ item.unit }}</div>
-                    <Select 
-                      v-else
-                      v-model="item.unit"
-                      @click.stop
-                    >
-                      <SelectTrigger class="w-full">
-                        <SelectValue placeholder="Select unit" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="pc">pc/s</SelectItem>
-                          <SelectItem value="box">box/es</SelectItem>
-                          <SelectItem value="kg">kg/s</SelectItem>
-                          <SelectItem value="pack">pack/s</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </td>
-                  
-                  <!-- Unit Price Column -->
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div v-if="!item.editing">{{ item.unit_price.toFixed(2) }}</div>
-                    <Input 
-                      v-else
-                      type="number"
-                      step="0.01"
-                      v-model.number="item.unit_price"
-                      min="0"
-                      @click.stop
-                      @keydown="handleKeyDown($event, index)"
-                      @change="item.amount = item.quantity * item.unit_price"
-                      class="w-full"
-                    />
-                  </td>
-                  
-                  <!-- Amount Column -->
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ item.amount.toFixed(2) }}
-                  </td>
-                  
-                  <!-- Actions Column -->
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                    <div class="flex justify-end space-x-2">
-                      <template v-if="item.editing">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          @click.stop="saveEdit(index)"
-                        >
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                  <TableRow
+                    v-for="(item, index) in form.details"
+                    :key="index"
+                    @click="editItem(index)"
+                    :class="{
+                      'cursor-pointer hover:bg-muted': true,
+                      'bg-blue-50': item.editing
+                    }"
+                  >
+                    <!-- Description -->
+                    <TableCell>
+                      <div v-if="!item.editing">{{ item.item_description }}</div>
+                      <Input
+                        v-else
+                        v-model="item.item_description"
+                        @click.stop
+                        @keydown="handleKeyDown($event, index)"
+                        class="w-full"
+                      />
+                    </TableCell>
+
+                    <!-- Quantity -->
+                    <TableCell>
+                      <div v-if="!item.editing">{{ item.quantity }}</div>
+                      <Input
+                        v-else
+                        type="number"
+                        v-model.number="item.quantity"
+                        min="1"
+                        @click.stop
+                        @keydown="handleKeyDown($event, index)"
+                        @change="item.amount = item.quantity * item.unit_price"
+                        class="w-full"
+                      />
+                    </TableCell>
+
+                    <!-- Unit -->
+                    <TableCell>
+                      <div v-if="!item.editing">{{ item.unit }}</div>
+                      <Select
+                        v-else
+                        v-model="item.unit"
+                        @click.stop
+                      >
+                        <SelectTrigger class="w-full">
+                          <SelectValue placeholder="Select unit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectItem value="pc">pc/s</SelectItem>
+                            <SelectItem value="box">box/es</SelectItem>
+                            <SelectItem value="kg">kg/s</SelectItem>
+                            <SelectItem value="pack">pack/s</SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+
+                    <!-- Unit Price -->
+                    <TableCell>
+                      <div v-if="!item.editing">{{ item.unit_price.toFixed(2) }}</div>
+                      <Input
+                        v-else
+                        type="number"
+                        step="0.01"
+                        v-model.number="item.unit_price"
+                        min="0"
+                        @click.stop
+                        @keydown="handleKeyDown($event, index)"
+                        @change="item.amount = item.quantity * item.unit_price"
+                        class="w-full"
+                      />
+                    </TableCell>
+
+                    <!-- Amount -->
+                    <TableCell>
+                      {{ item.amount.toFixed(2) }}
+                    </TableCell>
+
+                    <!-- Actions -->
+                    <TableCell class="text-right">
+                      <div class="flex justify-end space-x-2" v-if="item.editing">
+                        <Button variant="outline" size="sm" @click.stop="saveEdit(index)">
                           Save
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          @click.stop="cancelEdit(index)"
-                        >
+                        <Button variant="outline" size="sm" @click.stop="cancelEdit(index)">
                           Cancel
                         </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          @click.stop="removeItem(index)"
-                        >
-                        Remove
-                      </Button>
-                      </template>
-                    </div>
-                  </td>
-                </tr>
-                
-                <tr v-if="form.details.length === 0">
-                  <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
-                    No items added yet
-                  </td>
-                </tr>
-              </tbody>
-              </table>
+                        <Button variant="destructive" size="sm" @click.stop="removeItem(index)">
+                          Remove
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+
+                  <TableRow v-if="form.details.length === 0">
+                    <TableCell colspan="6" class="text-center text-sm text-muted-foreground">
+                      No items added yet
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+
             </div>
 
             <!-- Total Amount -->
