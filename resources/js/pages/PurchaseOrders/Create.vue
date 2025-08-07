@@ -14,6 +14,7 @@ import { ref } from 'vue';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   Table,
+<<<<<<< HEAD
   TableBody,
   TableCaption,
   TableCell,
@@ -21,6 +22,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+=======
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
+
+>>>>>>> 15b2679f3ba526f2edd510b8b7acd0ce177d02c4
 
 interface PurchaseOrderDetail {
   quantity: number;
@@ -399,19 +409,34 @@ const submitForm = async () => {
 
             <!-- Items Table -->
             <div class="border rounded-lg overflow-hidden">
+<<<<<<< HEAD
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead class="w-[200px]">Description</TableHead>
+=======
+              <Table class="w-full">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Description</TableHead>
+>>>>>>> 15b2679f3ba526f2edd510b8b7acd0ce177d02c4
                     <TableHead>Quantity</TableHead>
                     <TableHead>Unit</TableHead>
                     <TableHead>Unit Price</TableHead>
                     <TableHead>Amount</TableHead>
+<<<<<<< HEAD
                     <TableHead class="text-right" v-if="form.details.some(item => item.editing)">
+=======
+                    <TableHead
+                      v-if="form.details.some(item => item.editing)"
+                      class="text-right"
+                    >
+>>>>>>> 15b2679f3ba526f2edd510b8b7acd0ce177d02c4
                       Actions
                     </TableHead>
                   </TableRow>
                 </TableHeader>
+<<<<<<< HEAD
                 <TableBody>
                   <TableRow 
                     v-for="(item, index) in form.details" 
@@ -426,6 +451,23 @@ const submitForm = async () => {
                     <TableCell>
                       <div v-if="!item.editing">{{ item.item_description }}</div>
                       <Input 
+=======
+
+                <TableBody>
+                  <TableRow
+                    v-for="(item, index) in form.details"
+                    :key="index"
+                    @click="editItem(index)"
+                    :class="{
+                      'cursor-pointer hover:bg-muted': true,
+                      'bg-blue-50': item.editing
+                    }"
+                  >
+                    <!-- Description -->
+                    <TableCell>
+                      <div v-if="!item.editing">{{ item.item_description }}</div>
+                      <Input
+>>>>>>> 15b2679f3ba526f2edd510b8b7acd0ce177d02c4
                         v-else
                         v-model="item.item_description"
                         @click.stop
@@ -433,11 +475,19 @@ const submitForm = async () => {
                         class="w-full"
                       />
                     </TableCell>
+<<<<<<< HEAD
                     
                     <!-- Quantity Column -->
                     <TableCell>
                       <div v-if="!item.editing">{{ item.quantity }}</div>
                       <Input 
+=======
+
+                    <!-- Quantity -->
+                    <TableCell>
+                      <div v-if="!item.editing">{{ item.quantity }}</div>
+                      <Input
+>>>>>>> 15b2679f3ba526f2edd510b8b7acd0ce177d02c4
                         v-else
                         type="number"
                         v-model.number="item.quantity"
@@ -448,11 +498,19 @@ const submitForm = async () => {
                         class="w-full"
                       />
                     </TableCell>
+<<<<<<< HEAD
                     
                     <!-- Unit Column -->
                     <TableCell>
                       <div v-if="!item.editing">{{ item.unit }}</div>
                       <Select 
+=======
+
+                    <!-- Unit -->
+                    <TableCell>
+                      <div v-if="!item.editing">{{ item.unit }}</div>
+                      <Select
+>>>>>>> 15b2679f3ba526f2edd510b8b7acd0ce177d02c4
                         v-else
                         v-model="item.unit"
                         @click.stop
@@ -470,11 +528,19 @@ const submitForm = async () => {
                         </SelectContent>
                       </Select>
                     </TableCell>
+<<<<<<< HEAD
                     
                     <!-- Unit Price Column -->
                     <TableCell>
                       <div v-if="!item.editing">{{ item.unit_price.toFixed(2) }}</div>
                       <Input 
+=======
+
+                    <!-- Unit Price -->
+                    <TableCell>
+                      <div v-if="!item.editing">{{ item.unit_price.toFixed(2) }}</div>
+                      <Input
+>>>>>>> 15b2679f3ba526f2edd510b8b7acd0ce177d02c4
                         v-else
                         type="number"
                         step="0.01"
@@ -486,6 +552,7 @@ const submitForm = async () => {
                         class="w-full"
                       />
                     </TableCell>
+<<<<<<< HEAD
                     
                     <!-- Amount Column -->
                     <TableCell>
@@ -500,33 +567,55 @@ const submitForm = async () => {
                           size="sm"
                           @click.stop="saveEdit(index)"
                         >
+=======
+
+                    <!-- Amount -->
+                    <TableCell>
+                      {{ item.amount.toFixed(2) }}
+                    </TableCell>
+
+                    <!-- Actions -->
+                    <TableCell class="text-right">
+                      <div class="flex justify-end space-x-2" v-if="item.editing">
+                        <Button variant="outline" size="sm" @click.stop="saveEdit(index)">
+>>>>>>> 15b2679f3ba526f2edd510b8b7acd0ce177d02c4
                           Save
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          @click.stop="cancelEdit(index)"
-                        >
+                        <Button variant="outline" size="sm" @click.stop="cancelEdit(index)">
                           Cancel
                         </Button>
+<<<<<<< HEAD
                         <Button
                           variant="destructive"
                           size="sm"
                           @click.stop="removeItem(index)"
                         >
+=======
+                        <Button variant="destructive" size="sm" @click.stop="removeItem(index)">
+>>>>>>> 15b2679f3ba526f2edd510b8b7acd0ce177d02c4
                           Remove
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
+<<<<<<< HEAD
                   
                   <TableRow v-if="form.details.length === 0">
                     <TableCell :colspan="form.details.some(item => item.editing) ? 6 : 5" class="h-24 text-center">
+=======
+
+                  <TableRow v-if="form.details.length === 0">
+                    <TableCell colspan="6" class="text-center text-sm text-muted-foreground">
+>>>>>>> 15b2679f3ba526f2edd510b8b7acd0ce177d02c4
                       No items added yet
                     </TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
+<<<<<<< HEAD
+=======
+
+>>>>>>> 15b2679f3ba526f2edd510b8b7acd0ce177d02c4
             </div>
 
             <!-- Total Amount -->
