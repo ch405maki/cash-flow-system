@@ -183,55 +183,54 @@ class PurchaseOrderController extends Controller
     }
 
     public function updateStatus(Request $request, PurchaseOrder $purchaseOrder)
-{
-    $validated = $request->validate([
-        'status' => 'required|in:approved,rejected,released,to_order,forEOD',
-        'password' => 'required|string',
-        'remarks' => 'nullable|string|max:500'
-    ]);
-
-    // Verify password
-    if (!Hash::check($validated['password'], auth()->user()->password)) {
-        return back()->withErrors(['password' => 'Incorrect password']);
-    }
-
-    DB::beginTransaction();
-    try {
-        $oldStatus = $purchaseOrder->status;
-
-        $purchaseOrder->update([
-            'status' => $validated['status'],
-            'remarks' => $validated['remarks'] ?? null
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:approved,rejected,released,to_order,forEOD',
+            'password' => 'required|string',
+            'remarks' => 'nullable|string|max:500'
         ]);
 
-        // Activity log
-        activity()
-            ->performedOn($purchaseOrder)
-            ->causedBy(auth()->user())
-            ->useLog('Approval')
-            ->withProperties([
-                'po_no' => $purchaseOrder->po_no,
-                'old_status' => $oldStatus,
-                'new_status' => $validated['status'],
-                'remarks' => $validated['remarks'] ?? null,
-            ])
-            ->log("Status changed to {$validated['status']}");
+        // Verify password
+        if (!Hash::check($validated['password'], auth()->user()->password)) {
+            return back()->withErrors(['password' => 'Incorrect password']);
+        }
 
-        // Approval entry creation
-        PurchaseOrderApproval::create([
-            'purchase_order_id' => $purchaseOrder->id,
-            'user_id' => auth()->id(),
-            'status' => $validated['status'],
-            'remarks' => "PO #{$purchaseOrder->po_no} updated to {$validated['status']}",
-        ]);
+        DB::beginTransaction();
+        try {
+            $oldStatus = $purchaseOrder->status;
 
-        DB::commit();
+            $purchaseOrder->update([
+                'status' => $validated['status'],
+                'remarks' => $validated['remarks'] ?? null
+            ]);
 
-        return redirect()->back()->with('success', 'Status updated successfully');
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return back()->with('error', 'Failed to update status: ' . $e->getMessage());
+            // Activity log
+            activity()
+                ->performedOn($purchaseOrder)
+                ->causedBy(auth()->user())
+                ->useLog('Approval')
+                ->withProperties([
+                    'po_no' => $purchaseOrder->po_no,
+                    'old_status' => $oldStatus,
+                    'new_status' => $validated['status'],
+                    'remarks' => $validated['remarks'] ?? null,
+                ])
+                ->log("Status changed to {$validated['status']}");
+
+            // Approval entry creation
+            PurchaseOrderApproval::create([
+                'purchase_order_id' => $purchaseOrder->id,
+                'user_id' => auth()->id(),
+                'status' => $validated['status'],
+                'remarks' => "PO #{$purchaseOrder->po_no} updated to {$validated['status']}",
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Status updated successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to update status: ' . $e->getMessage());
+        }
     }
-}
-
 }

@@ -68,8 +68,8 @@ const downloadReceipt = () => {
                         }">
                     {{ formatStatus(voucher.status) }}
                     </span>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-                CHECK AMOUNT:
-                <span class="uppercase font-normal">{{ formatCurrency(voucher.check_amount) }}</span>
+                VOUCHER DATE:
+                <span class="uppercase font-normal">{{ formatDate(voucher.voucher_date) }}</span>
             </th>
             </tr>
         </thead>
@@ -77,8 +77,8 @@ const downloadReceipt = () => {
             <tr class="border-b">
                 <td class="p-2 font-medium text-muted-foreground border-r w-48">PAYEE:</td>
                 <td class="p-2 uppercase border-r">{{ voucher.payee }}</td>
-                <td class="p-2 font-medium text-muted-foreground border-r w-40">VOUCHER DATE:</td>
-                <td class="p-2">{{ formatDate(voucher.voucher_date) }}</td>
+                <td class="p-2 font-medium text-muted-foreground border-r w-40">CHECK DATE:</td>
+                <td class="p-2">{{ voucher.check_date ? formatDate(voucher.check_date) : '' }}</td>
             </tr>
             <tr class="border-b">
                 <td class="p-2 font-medium text-muted-foreground border-r">CHECK PAYABLE TO:</td>
@@ -91,8 +91,8 @@ const downloadReceipt = () => {
             <tr class="border-b">
                 <td class="p-2 font-medium text-muted-foreground border-r">PURPOSE:</td>
                 <td class="p-2 uppercase border-r">{{ voucher.purpose }}</td>
-                <td class="p-2 font-medium text-muted-foreground border-r">CHECK DATE:</td>
-                <td class="p-2">{{ voucher.check_date ? formatDate(voucher.check_date) : '' }}</td>
+                <td class="p-2 font-medium text-muted-foreground border-r">CHECK AMOUNT:</td>
+                <td class="p-2">{{ formatCurrency(voucher.check_amount) }}</td>
             </tr>
         </tbody>
         </table>

@@ -38,7 +38,6 @@ class PurchaseOrder extends Model
         return $this->hasMany(PurchaseOrderDetail::class, 'po_id');
     }
 
-    // Add this new relationship
     public function canvas(): BelongsTo
     {
         return $this->belongsTo(Canvas::class);
