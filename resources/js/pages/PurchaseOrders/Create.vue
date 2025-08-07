@@ -2,10 +2,11 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
+import { Upload, File, Trash2 } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from 'vue-toastification';
 import axios from 'axios';
@@ -59,24 +60,22 @@ const form = ref({
   account_id: '',
   details: [] as PurchaseOrderDetail[],
   canvas_id: props.canvas_id || null,
-  tagging: props.canvas_id ? 'with_canvas' : 'no_canvas' as TaggingType, // Add this line
+  tagging: props.canvas_id ? 'with_canvas' : 'no_canvas' as TaggingType,
+  file: null as File | null, // Changed to single file
 });
 
 const editItem = (index: number) => {
-  // Exit any other editing modes first
   form.value.details.forEach((item, i) => {
     if (i !== index && item.editing) {
       cancelEdit(i);
     }
   });
   
-  // Set editing mode for this item
   form.value.details[index].editing = true;
   form.value.details[index].original = { ...form.value.details[index] };
 };
 
 const saveEdit = (index: number) => {
-  // Recalculate amount before saving
   form.value.details[index].amount = 
     form.value.details[index].quantity * form.value.details[index].unit_price;
   
@@ -114,9 +113,7 @@ const addItem = () => {
     return;
   }
 
-  // Calculate amount
   newItem.value.amount = newItem.value.quantity * newItem.value.unit_price;
-
   form.value.details.push({ ...newItem.value });
   resetNewItem();
 };
@@ -139,18 +136,84 @@ const calculateTotal = () => {
   return form.value.details.reduce((sum, item) => sum + item.amount, 0);
 };
 
+const fileInput = ref<HTMLInputElement | null>(null);
+const uploadedFile = ref<{name: string, size: string} | null>(null);
+
+const handleFileUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (target.files && target.files.length > 0) {
+    form.value.file = target.files[0];
+    uploadedFile.value = {
+      name: target.files[0].name,
+      size: formatFileSize(target.files[0].size)
+    };
+  }
+};
+
+const formatFileSize = (bytes: number) => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+const removeFile = () => {
+  form.value.file = null;
+  uploadedFile.value = null;
+  if (fileInput.value) {
+    fileInput.value.value = '';
+  }
+};
+
 const submitForm = async () => {
   try {
-    // Validate tagging and canvas_id
     if (form.value.tagging === 'with_canvas' && !form.value.canvas_id) {
       toast.error('Canvas ID is required when tagging is "With Canvas"');
       return;
     }
 
-    // Calculate total amount
     form.value.amount = calculateTotal();
 
-    const response = await axios.post('/api/purchase-orders', form.value);
+    let payload: any = form.value;
+    let config = {};
+
+    if (form.value.tagging === 'no_canvas' && form.value.file) {
+      const formData = new FormData();
+
+      // Basic fields
+      formData.append('payee', form.value.payee);
+      formData.append('check_payable_to', form.value.check_payable_to);
+      formData.append('date', form.value.date);
+      formData.append('purpose', form.value.purpose);
+      formData.append('status', form.value.status);
+      formData.append('user_id', String(form.value.user_id));
+      formData.append('department_id', form.value.department_id);
+      formData.append('account_id', form.value.account_id);
+      formData.append('tagging', form.value.tagging);
+      formData.append('amount', String(form.value.amount));
+
+      // ✅ Append details using correct nested array syntax
+      form.value.details.forEach((item, index) => {
+        formData.append(`details[${index}][quantity]`, String(item.quantity));
+        formData.append(`details[${index}][unit]`, item.unit);
+        formData.append(`details[${index}][item_description]`, item.item_description);
+        formData.append(`details[${index}][unit_price]`, String(item.unit_price));
+        formData.append(`details[${index}][amount]`, String(item.amount));
+      });
+
+      // File
+      if (form.value.file && form.value.file.name && form.value.file.type) {
+        formData.append('file', form.value.file);
+      }
+
+      payload = formData;
+      config = {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      };
+    }
+
+    const response = await axios.post('/api/purchase-orders', payload, config);
 
     toast.success('Purchase Order created successfully!');
     window.location.href = `/purchase-orders/${response.data.id}`;
@@ -163,22 +226,70 @@ const submitForm = async () => {
     console.error(error);
   }
 };
+
 </script>
 
 <template>
   <Head title="Create Purchase Order" />
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-6 space-y-6">
-      <form @submit.prevent="submitForm" class="space-y-2">
-        <h1 class="text-2xl font-bold">Create Purchase Order {{ canvas_id }}</h1>
-        <!-- Basic Information Section -->
+      <form @submit.prevent="submitForm" class="space-y-2" enctype="multipart/form-data">
+        <div class="flex">
+          <h1 class="text-2xl font-bold">Create Purchase Order {{ canvas_id }}</h1>
+        </div>        
+        <!-- File Upload Section (only for no_canvas) -->
+        <div v-if="form.tagging === 'no_canvas'" class="space-y-4 border p-4 rounded-lg">
+          <h2 class="text-lg font-semibold">Quote Document</h2>
+          <div class="space-y-4">
+            <div class="flex items-center gap-4">
+              <div>
+                <input
+                  id="file-upload"
+                  ref="fileInput"
+                  type="file"
+                  @change="handleFileUpload"
+                  class="hidden"
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+                />
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  @click="fileInput?.click()"
+                >
+                  <Upload class="w-4 h-4 mr-2" />
+                  Select File
+                </Button>
+              </div>
+              <span class="text-sm text-muted-foreground">
+                Upload quote document (PDF, JPG, PNG, DOC, XLS)
+              </span>
+            </div>
+
+            <div v-if="uploadedFile" class="flex items-center justify-between p-2 border rounded">
+              <div class="flex items-center gap-2">
+                <File class="w-4 h-4 text-muted-foreground" />
+                <span class="text-sm">{{ uploadedFile.name }}</span>
+                <span class="text-xs text-muted-foreground">{{ uploadedFile.size }}</span>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                @click="removeFile"
+              >
+                <Trash2 class="w-4 h-4 text-destructive" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex items-center">
           <!-- Payee Field -->
           <div class="space-y-2 md:col-span-2">
             <Label for="payee">Company Name</Label>
             <Input id="payee" v-model="form.payee" required />
           </div>
-          <!-- add 2 check box with canvas, no canvas -->
+          <!-- Tagging Radio Group -->
           <div class="space-y-2">
             <Label for="tagging">Tagging</Label>
             <RadioGroup v-model="form.tagging" class="flex">
@@ -260,21 +371,21 @@ const submitForm = async () => {
               </div>
 
               <div class="md:col-span-2 space-y-2">
-              <Label for="quantity">Unit</Label>
-              <Select v-model="newItem.unit">
-                <SelectTrigger class="w-full">
-                  <SelectValue placeholder="Select a unit" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="pc">pc/s</SelectItem>
-                    <SelectItem value="box">box/es</SelectItem>
-                    <SelectItem value="kg">kg/s</SelectItem>
-                    <SelectItem value="pack">pack/s</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
+                <Label for="quantity">Unit</Label>
+                <Select v-model="newItem.unit">
+                  <SelectTrigger class="w-full">
+                    <SelectValue placeholder="Select a unit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="pc">pc/s</SelectItem>
+                      <SelectItem value="box">box/es</SelectItem>
+                      <SelectItem value="kg">kg/s</SelectItem>
+                      <SelectItem value="pack">pack/s</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
 
               <div class="space-y-2 md:col-span-2">
                 <Label for="unit_price">Unit Price</Label>
