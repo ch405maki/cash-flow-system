@@ -286,12 +286,12 @@ function viewVoucher(poId: number) {
         </div>
       </div>
       <Alert 
-        v-if="showAlert && purchaseOrder.tagging === 'with_canvas'" 
+        v-if="showAlert" 
         variant="warning" 
         class="relative pr-10"
       >
         <AlertCircle class="h-4 w-4" />
-          <AlertTitle>Canvas Selected Files</AlertTitle>
+          <AlertTitle>Selected File</AlertTitle>
           <AlertDescription>
             <template v-if="purchaseOrder.canvas?.selected_files?.length">
               <div class="space-y-3">

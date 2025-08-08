@@ -393,9 +393,9 @@ function viewRequest(id: number) {
                   <div 
                     v-for="file in canvas.files" 
                     :key="file.id" 
-                    class="flex items-center items-start gap-3 p-2 border rounded hover:bg-gray-50 cursor-pointer"
+                    class="flex items-center items-start gap-3 p-2 border rounded hover:bg-zinc-50 dark:hover:bg-zinc-900 cursor-pointer"
                     :class="{
-                      'bg-blue-50 border-blue-200': selectedFileForPreview?.id === file.id
+                      'bg-zinc-50 dark:bg-zinc-800 border-zinc-200': selectedFileForPreview?.id === file.id
                     }"
                     @click="openPdfPreview(file)"
                   >
@@ -542,7 +542,7 @@ function viewRequest(id: number) {
           </div>
 
           <!-- Executive Director Actions -->
-          <div v-if="userRole === 'executive_director' && canvas.status === 'pending_approval'" class="space-x-2">
+          <div v-if="(userRole === 'executive_director' && canvas.status === 'pending_approval') || canvas.status === 'submitted'" class="space-x-2">
             <Button 
               variant="success" 
               size="sm"

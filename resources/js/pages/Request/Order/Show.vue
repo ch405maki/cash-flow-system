@@ -123,7 +123,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-4 space-y-4">
-
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold">Request To Order Details</h1>
         <div class="space-x-2 flex items-center">
