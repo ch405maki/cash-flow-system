@@ -116,12 +116,17 @@ class RequestController extends Controller
         ]);
     }
 
-    public function show(request $request)
+    public function show(Request $request)
     {
         $user = Auth::user();
 
         return Inertia::render('Request/Show', [
-            'request' => $request->load(['user', 'department', 'details']),
+            'request' => $request->load([
+                'user', 
+                'department', 
+                'details',
+                'approvals' 
+            ]),
             'accounts' => Account::all(['id', 'account_title']),
             'user' => [
                 'id' => $user->id,

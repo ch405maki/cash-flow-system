@@ -111,6 +111,7 @@
         <div class="p-4 space-y-4">
         <div class="flex items-center  space-x-2 justify-between">
             <h1 class="text-lg font-semibold">Request Details</h1>
+            {{ request.approvals }}
             <div class="ml-auto space-x-2 flex items-center">
                 <!-- Executive access -->
                 <div v-if="user.role === 'executive_director'" class="flex items-center gap-2">

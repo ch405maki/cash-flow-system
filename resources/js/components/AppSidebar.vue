@@ -189,8 +189,8 @@ const staffRequestItems = ref<DropdownNavItem[]>([
         icon: FileText,
         isOpen: false,
         children: [
-        { title: 'Request', href: '/request'},
-        { title: 'To Receive', href: '/request/to-receive'},
+        { title: 'Pending Request', href: '/request'},
+        { title: 'On Process', href: '/request/to-receive'},
         { title: 'Completed', href: '/request/released'},
         ],
     },
