@@ -14,7 +14,6 @@ import { ref } from 'vue';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   Table,
-<<<<<<< HEAD
   TableBody,
   TableCaption,
   TableCell,
@@ -22,15 +21,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-=======
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from '@/components/ui/table';
-
->>>>>>> 15b2679f3ba526f2edd510b8b7acd0ce177d02c4
 
 interface PurchaseOrderDetail {
   quantity: number;

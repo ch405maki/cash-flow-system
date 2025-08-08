@@ -125,7 +125,7 @@ class RequestController extends Controller
                 'user', 
                 'department', 
                 'details',
-                'approvals' 
+                'approvals.user'
             ]),
             'accounts' => Account::all(['id', 'account_title']),
             'user' => [
