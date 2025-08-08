@@ -26,7 +26,7 @@ class RequestToOrderController extends Controller
         $user = Auth::user();
 
         $requests = RequestToOrder::with('details')
-            ->whereIn('status', ['pending'])
+            // ->whereIn('status', ['pending'])
             ->get();
 
         $forOrders = Request::with(['department', 'user', 'details'])
@@ -214,7 +214,8 @@ class RequestToOrderController extends Controller
 
         $requestOrder = RequestToOrder::with([
             'details.releases.releasedBy',
-            'details.request.department'
+            'details.request.department',
+            'approvals.user',
         ])->findOrFail($id);
 
         return Inertia::render('Request/Order/Show', [
