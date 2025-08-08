@@ -1,374 +1,53 @@
 <script setup lang="ts">
-    import AppLayout from '@/layouts/AppLayout.vue'
-    import { Head } from '@inertiajs/vue3'
-    import { type BreadcrumbItem } from '@/types'
-    import PrintableSection from '@/components/printables/RequestPrint.vue'
-    import { Printer, FilePenLine, FileText } from 'lucide-vue-next';
-    import {
-    Table,
-    TableHeader,
-    TableRow,
-    TableHead,
-    TableBody,
-    TableCell,
-    } from '@/components/ui/table'
-    import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-    } from '@/components/ui/dialog'
-    import { Button } from '@/components/ui/button'
-    import { Input } from '@/components/ui/input'
-    import { Label } from '@/components/ui/label'
-    import { useToast } from 'vue-toastification'
-    import { router } from '@inertiajs/vue3';
-    import { useForm } from '@inertiajs/vue3';
-    import { ref } from 'vue'
+import AppLayout from '@/layouts/AppLayout.vue'
+import { Head } from '@inertiajs/vue3'
+import PrintableSection from '@/components/printables/RequestPrint.vue'
+import RequestDetailsTable from '@/components/requests/show/RequestDetailsTable.vue'
+import RequestItemsTable from '@/components/requests/show/RequestItemsTable.vue'
+import RequestActions from '@/components/requests/show/RequestActions.vue'
+import { ref } from 'vue'
+import type { BreadcrumbItem } from '@/types'
+import { Button } from '@/components/ui/button'
+import { Printer } from 'lucide-vue-next'
 
-    const toast = useToast()
-    const props = defineProps({
-    request: {
-        type: Object,
-        required: true,
-    },
-    user: {
-        type: Object,
-        required: true,
-    },
-    })
+const props = defineProps<{ 
+    request: any, 
+    user: any 
+}>()
 
-    const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Request', href: '/request' },
-    { title: `${props.request.request_no}`, href: '' },
-    ]
+const breadcrumbs: BreadcrumbItem[] = [
+  { title: 'Dashboard', href: '/dashboard' },
+  { title: 'Request', href: '/request' },
+  { title: `${props.request.request_no}`, href: '' },
+]
 
-    // Modal state
-    const showApproveModal = ref(false);
-    const showReleaseModal = ref(false);
-    const showOrderModal = ref(false);
-    const showForRequestModal = ref(false);
+const printableComponent = ref<InstanceType<typeof PrintableSection>>()
 
-    const password = ref('');
-
-    const form = useForm({
-        status: '',
-        password: ''
-    });
-
-    function navigateToEdit() {
-        router.get(`/requests/${props.request.id}/release`);
-    }
-
-    function goToEditRequest(requestId: number) {
-        router.get(`/requests/${requestId}/edit`)
-    } 
-
-    // Status update function
-    async function submitStatusUpdate(newStatus: string, userPassword: string) {
-        form.status = newStatus;
-        form.password = userPassword;
-        
-        form.patch(`/requests/${props.request.id}/status`, {
-            preserveScroll: true,
-            onSuccess: () => {
-                toast.success('Status updated successfully');
-                showApproveModal.value = false;
-                showReleaseModal.value = false;
-                showForRequestModal.value = false;
-                showOrderModal.value = false;
-                password.value = ''; // Clear password field
-            },
-            onError: (errors) => {
-                if (errors.password) {
-                    toast.error(errors.password);
-                } else {
-                    toast.error('Failed to update status');
-                }
-            }
-        });
-    }
-
-    // Add a ref for the printable component
-    const printableComponent = ref<InstanceType<typeof PrintableSection> | null>(null)
-
-    // Update your printArea function
-    function printArea() {
-        if (printableComponent.value) {
-            printableComponent.value.printArea()
-        }
-    }
+function printArea() {
+  printableComponent.value?.printArea()
+}
 </script>
 
-    <template>
-    <Head title="Request Details" />
-
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="p-4 space-y-4">
-        <div class="flex items-center  space-x-2 justify-between">
-            <h1 class="text-lg font-semibold">Request Details</h1>
-            {{ request.approvals }}
-            <div class="ml-auto space-x-2 flex items-center">
-                <!-- Executive access -->
-                <div v-if="user.role === 'executive_director'" class="flex items-center gap-2">
-                    <Dialog v-model:open="showApproveModal">
-                        <DialogTrigger as-child>
-                        <Button 
-                            variant="default" 
-                            size="sm" 
-                            :disabled="request.status === 'approved' || form.processing"
-                        >
-                            Approve
-                        </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Password Verification</DialogTitle>
-                            <DialogDescription>
-                            Please enter your password to approve this request
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div class="space-y-2">
-                            <Label for="approve-password">Password</Label>
-                            <Input 
-                            id="approve-password" 
-                            v-model="password" 
-                            type="password" 
-                            placeholder="Enter your password"
-                            class="w-full"
-                            />
-                        </div>
-                        <DialogFooter>
-                            <Button 
-                            @click="submitStatusUpdate('approved', password)"
-                            :disabled="!password || form.processing"
-                            >
-                            <span v-if="form.processing">Processing...</span>
-                            <span v-else>Confirm Approval</span>
-                            </Button>
-                        </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                </div>
-                <!-- Property access -->
-                <div v-if="user.role === 'property_custodian'" class="flex items-center gap-2">
-                    <Button 
-                        variant="secondary" 
-                        size="sm"
-                        @click="navigateToEdit"
-                        :disabled="request.status == 'rejected' || request.status == 'released'"
-                        >
-                        Partial Release
-                    </Button>
-                    
-                    <!-- Release All Dialog -->
-                    <Dialog v-model:open="showReleaseModal">
-                        <DialogTrigger as-child>
-                        <Button 
-                            variant="default" 
-                            size="sm" 
-                            :disabled="request.status === 'released' || form.processing"
-                        >
-                            Release All
-                        </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Password Verification</DialogTitle>
-                            <DialogDescription>
-                            Please enter your password to release this request
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div class="space-y-2">
-                            <Label for="release-password">Password</Label>
-                            <Input 
-                            id="release-password" 
-                            v-model="password" 
-                            type="password" 
-                            placeholder="Enter your password"
-                            class="w-full"
-                            />
-                        </div>
-                        <DialogFooter>
-                            <Button 
-                            @click="submitStatusUpdate('released', password)"
-                            :disabled="!password || form.processing"
-                            >
-                            <span v-if="form.processing">Processing...</span>
-                            <span v-else>Confirm Release</span>
-                            </Button>
-                        </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-
-                    <!-- Request To Order Dialog -->
-                    <Dialog v-model:open="showForRequestModal">
-                        <DialogTrigger as-child>
-                        <Button 
-                            variant="default" 
-                            size="sm" 
-                            :disabled="request.status === 'to_order' || form.processing || request.status == 'released'"
-                        >
-                            For Request To Order
-                        </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Password Verification</DialogTitle>
-                            <DialogDescription>
-                            Please enter your password to send this order
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div class="space-y-2">
-                            <Label for="order-password">Password</Label>
-                            <Input 
-                            id="order-password" 
-                            v-model="password" 
-                            type="password" 
-                            placeholder="Enter your password"
-                            class="w-full"
-                            />
-                        </div>
-                        <DialogFooter>
-                            <Button 
-                            @click="submitStatusUpdate('to_order', password)"
-                            :disabled="!password || form.processing"
-                            >
-                            <span v-if="form.processing">Processing...</span>
-                            <span v-else>Confirm Order</span>
-                            </Button>
-                        </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                </div>
-                <!-- Request To Property Dialog -->
-                <div v-if="user.role === 'department_head'" class="flex items-center gap-2">
-                    <Dialog v-model:open="showOrderModal">
-                        <DialogTrigger as-child>
-                        <Button 
-                            variant="default" 
-                            size="sm" 
-                            :disabled="request.status === 'propertyCustodian' || request.status === 'rejected' || form.processing"
-                        >
-                            Approve
-                        </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Password Verification</DialogTitle>
-                            <DialogDescription>
-                            Please enter your password to send this order
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div class="space-y-2">
-                            <Label for="order-password">Password</Label>
-                            <Input 
-                            id="order-password" 
-                            v-model="password" 
-                            type="password" 
-                            placeholder="Enter your password"
-                            class="w-full"
-                            />
-                        </div>
-                        <DialogFooter>
-                            <Button 
-                                @click="submitStatusUpdate('propertyCustodian', password)"
-                                :disabled="!password || form.processing"
-                                >
-                                <span v-if="form.processing">Processing...</span>
-                                <span v-else>Confirm Order</span>
-                                </Button>
-                        </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                </div>
-                <Button
-                    size="sm"
-                    variant="outline"
-                    @click.stop="goToEditRequest(request.id)"
-                    v-if="(user.role === 'staff' || user.role === 'department_head') && request.status === 'pending'"
-                    class="relative z-10"
-                >
-                    <FilePenLine class="h-4" />
-                    Edit
-                </Button>
-                <Button size="sm" @click="printArea"> <Printer />Print List</Button>
-            </div>
+<template>
+  <Head title="Request Details" />
+  <AppLayout :breadcrumbs="breadcrumbs">
+    <div class="p-4 space-y-4">
+      <div class="flex justify-between items-center">
+        <h1 class="text-lg font-semibold">Request Details</h1>
+        <div class="flex items-center space-x-2">
+          <RequestActions
+                :request="request"
+                :user="user"
+                @print-list="printArea"
+            />
         </div>
+      </div>
 
-        <!-- Request Details -->
-        <div>
-            <Table>
-            <TableBody>
-                <TableRow>
-                    <TableCell class="border p-2  w-10">Request No:</TableCell>
-                    <TableCell class="border p-2">{{ request.request_no }}</TableCell>
-                    <TableCell class="border p-2  w-32">Status: </TableCell>
-                    <TableCell class="border p-2 capitalize">
-                    <span :class="{
-                            'text-green-600': request.status === 'approved',
-                            'text-green-700': request.status === 'released',
-                            'text-red-600': request.status === 'rejected',
-                            'text-yellow-800': request.status === 'pending',
-                            'text-yellow-600': request.status === 'to_property'
-                        }">
-                        {{ request.status }}
-                    </span>
-                    </TableCell>
-                </TableRow>
-                <TableRow>
-                    <TableCell class="border p-2">Department:</TableCell>
-                    <TableCell class="border p-2">{{ request.department.department_name || 'N/A' }}</TableCell>
-                    <TableCell class="border p-2">Requested By:</TableCell>
-                    <TableCell class="border p-2">{{ request.user.first_name }} {{ request.user.last_name }}</TableCell>
-                </TableRow>
-                <TableRow>
-                    <TableCell class="border p-2">Purpose:</TableCell>
-                    <TableCell colspan="3" class="border p-2">{{ request.purpose || 'N/A'}}</TableCell>
-                </TableRow>
-            </TableBody>
-            </Table>
-        </div>
+      <RequestDetailsTable :request="request" />
+      <h2 class="text-lg font-semibold my-4">Items</h2>
+      <RequestItemsTable :details="request.details" />
 
-        <div>
-            <h2 class="text-lg font-semibold my-4">Items</h2>
-            <div>
-            <Table>
-                <TableHeader class="bg-muted">
-                <TableRow>
-                    <TableHead class="border p-2 w-10">#</TableHead>
-                    <TableHead class="border p-2">Quantity</TableHead>
-                    <TableHead class="border p-2">Unit</TableHead>
-                    <TableHead class="border p-2">Item Description</TableHead>
-                </TableRow>
-                </TableHeader>
-                <TableBody>
-                    <TableRow 
-                    v-for="(detail, index) in request.details" 
-                    :key="detail.id"
-                    >
-                    <TableCell class="border p-2">{{ index + 1 }}</TableCell>
-                    <TableCell class="border p-2">
-                        <span class="text-green-600">
-                        <span class="text-zinc-600">{{ +detail.quantity + +detail.released_quantity }} Request</span>
-                        (Released: {{ detail.released_quantity }})  
-                        </span>
-
-                    </TableCell>
-                    <TableCell class="border p-2">{{ detail.unit }}</TableCell>
-                    <TableCell class="border p-2">{{ detail.item_description }}</TableCell>
-                    </TableRow>
-                </TableBody>
-            </Table>
-            </div>
-        </div>
-        </div>
-        <!-- Printed Item -->
-          <PrintableSection ref="printableComponent" :request="request" :user="user" />
-        <!-- End Print Item -->
-    </AppLayout>
-    </template>
+      <PrintableSection ref="printableComponent" :request="request" :user="user" />
+    </div>
+  </AppLayout>
+</template>
