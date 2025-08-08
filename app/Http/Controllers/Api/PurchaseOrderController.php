@@ -145,7 +145,7 @@ public function store(Request $request)
             $canvas = Canvas::create([
                 'title' => 'PO-' . $purchaseOrder->po_no,
                 'description' => 'Automatically created for PO ' . $purchaseOrder->po_no,
-                'status' => 'approved',
+                'status' => 'submitted',
                 'note' => 'Supporting Document',
                 'created_by' => $validated['user_id'],
             ]);
