@@ -542,16 +542,18 @@ function viewRequest(id: number) {
           </div>
 
           <!-- Executive Director Actions -->
-          <div v-if="(userRole === 'executive_director' && canvas.status === 'pending_approval') || canvas.status === 'submitted'" class="space-x-2">
-            <Button 
-              variant="success" 
-              size="sm"
-              @click="handleAction('final_approve')"
-              :disabled="form.processing || !form.comments.trim() || !form.selected_file"
-            >
-              <Check class="h-4 w-4 mr-1" />
-              Approve
-            </Button>
+          <div v-if="(userRole === 'executive_director')" class="space-x-2">
+            <div v-if="canvas.status === 'pending_approval' || canvas.status === 'submitted'">
+              <Button 
+                variant="success" 
+                size="sm"
+                @click="handleAction('final_approve')"
+                :disabled="form.processing || !form.comments.trim() || !form.selected_file"
+              >
+                <Check class="h-4 w-4 mr-1" />
+                Approve
+              </Button>
+            </div>
           </div>
         </div>
 

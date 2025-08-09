@@ -38,6 +38,7 @@ const toast = useToast()
 const props = defineProps<{
   purchaseOrder: {
     id: number;
+    canvas_id: number;
     po_no: string;
     date: string;
     payee: string;
@@ -52,6 +53,7 @@ const props = defineProps<{
     };
     // Add other fields as needed
   };
+  firstFileId: number | null
   authUser: {
     id: number;
     name: string;
@@ -97,11 +99,13 @@ const form = useForm({
   status: '',
   password: '',
   remarks: '',
+  canvas_id: props.purchaseOrder.canvas_id
 })
 
 // Status update function
 async function submitStatusUpdate(newStatus: string) {
   form.status = newStatus
+  form.canvas_id = props.purchaseOrder.canvas_id 
   
   form.patch(`/purchase-orders/${props.purchaseOrder.id}/status`, {
     preserveScroll: true,

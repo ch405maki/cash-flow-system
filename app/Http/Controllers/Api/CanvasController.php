@@ -24,12 +24,16 @@ class CanvasController extends Controller
             // Executive Director sees canvases pending final approval
             $canvases = Canvas::with(['creator', 'request_to_order', 'files'])
                 ->whereIn('status', ['pending_approval', 'submitted'])
+                ->whereNotNull('request_to_order_id')
                 ->latest()
                 ->get();
         } elseif ($user->role === 'accounting') {
-            // accounting sees canvases waiting for audit
+            // accounting sees canvases waiting for audit that they haven't approved
             $canvases = Canvas::with(['creator', 'request_to_order', 'files'])
                 ->where('status', 'submitted')
+                ->whereDoesntHave('approvals', function ($query) {
+                    $query->where('role', 'accounting');
+                })
                 ->latest()
                 ->get();
         } else {
@@ -182,7 +186,6 @@ class CanvasController extends Controller
             );
 
             $canvas->update([
-                'status' => 'pending_approval',
                 'remarks' => $validated['remarks'] ?? null
             ]);
         } 
