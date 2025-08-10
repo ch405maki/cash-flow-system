@@ -222,7 +222,7 @@ function viewRequest(id: number) {
     <DialogContent 
       :class="[
         showTwoColumnLayout ? 'sm:max-w-[94vw]' : 'sm:max-w-[625px]',
-        'max-h-[94vh] overflow-hidden'
+        'max-h-[94vh] overflow-y-auto'
       ]">
       <DialogHeader>
         <DialogTitle class="flex items-center gap-2">
@@ -306,10 +306,9 @@ function viewRequest(id: number) {
                 </p>
               </div>
             </div>
-
             <!-- Approval History -->
             <div v-if="canvas.approvals?.length">
-              <h3 class="text-sm font-medium text-muted-foreground mb-3">Approval History</h3>
+              <h3 class="text-sm font-medium text-muted-foreground mb-3">History</h3>
               <div class="relative pl-6">
                 <div class="absolute left-0 top-0 h-full w-0.5 bg-gray-200 ml-4"></div>
 
@@ -349,9 +348,9 @@ function viewRequest(id: number) {
             </div>
 
             <!-- Only show these sections if NOT approved -->
-            <template v-if="!isApproved">
+            <template v-if="!isApproved || isApproved">
               <!-- Files Section -->
-              <div v-if="userRole != 'executive_director' && canvas.files?.length">
+              <div v-if="userRole != 'executive_director' && canvas.files?.length && canvas.status != 'approved'">
                 <h3 class="text-sm font-medium text-muted-foreground">Files</h3>
                 <div class="space-y-2 mt-2">
                   <div 
@@ -409,6 +408,7 @@ function viewRequest(id: number) {
                         @click.stop
                       >
                     </div>
+                    
                     <div class="flex-1 flex items-center justify-between">
                       <label :for="`file-${file.id}`" class="flex items-center gap-2 cursor-pointer">
                         <FileText class="max-h-4 max-w-4 text-muted-foreground" />
@@ -430,7 +430,19 @@ function viewRequest(id: number) {
               </div>
 
               <!-- Comments Section -->
-              <div v-if="['accounting', 'executive_director', 'purchasing'].includes(userRole)">
+              <div v-if="['accounting', 'executive_director'].includes(userRole) ">
+                <h3 class="text-sm font-medium text-muted-foreground">
+                  {{ userRole === 'accounting' ? 'Audit Comments' : 'Approval Comments' }}
+                </h3>
+                <Textarea
+                  v-model="form.comments"
+                  :placeholder="userRole === 'accounting' 
+                    ? 'Enter your audit comments...' 
+                    : 'Enter approval comments...'"
+                  class="mt-2"
+                />
+              </div>
+              <div v-if="['purchasing'].includes(userRole) && canvas.status != 'approved'">
                 <h3 class="text-sm font-medium text-muted-foreground">
                   {{ userRole === 'accounting' ? 'Audit Comments' : 'Approval Comments' }}
                 </h3>
@@ -530,7 +542,7 @@ function viewRequest(id: number) {
           </div>
 
           <!-- Accounting Actions -->
-          <div v-if="userRole === 'accounting' && canvas.status === 'submitted'" class="space-x-2">
+          <div v-if="userRole === 'accounting' && canvas.status !== 'pending'" class="space-x-2">
             <Button 
               variant="success" 
               @click="handleAction('approve')"

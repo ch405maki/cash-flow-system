@@ -22,15 +22,15 @@ class CanvasController extends Controller
 
         if ($user->role === 'executive_director') {
             // Executive Director sees canvases pending final approval
-            $canvases = Canvas::with(['creator', 'request_to_order', 'files'])
+            $canvases = Canvas::with(['creator', 'request_to_order', 'files', 'approvals.user',])
                 ->whereIn('status', ['pending_approval', 'submitted'])
                 ->whereNotNull('request_to_order_id')
                 ->latest()
                 ->get();
         } elseif ($user->role === 'accounting') {
             // accounting sees canvases waiting for audit that they haven't approved
-            $canvases = Canvas::with(['creator', 'request_to_order', 'files'])
-                ->where('status', 'submitted')
+            $canvases = Canvas::with(['creator', 'request_to_order', 'files', 'approvals.user',])
+                ->where('status', '!=', 'pending')  
                 ->whereDoesntHave('approvals', function ($query) {
                     $query->where('role', 'accounting');
                 })
@@ -38,7 +38,7 @@ class CanvasController extends Controller
                 ->get();
         } else {
             // Purchasing officers see their own canvases
-            $canvases = Canvas::with(['creator', 'request_to_order', 'files'])
+            $canvases = Canvas::with(['creator', 'request_to_order', 'files', 'approvals.user',])
                 ->where('created_by', $user->id)->where('status', 'draft')
                 ->latest()
                 ->get();
