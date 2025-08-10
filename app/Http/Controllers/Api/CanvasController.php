@@ -144,7 +144,7 @@ class CanvasController extends Controller
         
         $validated = $request->validate([
             'remarks' => 'nullable|string|max:500',
-            'status' => 'required|in:draft,submitted,pending_approval,approved,rejected',
+            'status' => 'required|in:draft,submitted,pending_approval,approved,rejected,poCreated',
             'comments' => 'nullable|string|max:1000',
             'selected_file' => 'nullable|integer|exists:canvas_files,id',
             'file_remarks' => 'nullable|string|max:500'

@@ -350,7 +350,7 @@ function viewRequest(id: number) {
             <!-- Only show these sections if NOT approved -->
             <template v-if="!isApproved || isApproved">
               <!-- Files Section -->
-              <div v-if="userRole != 'executive_director' && canvas.files?.length && canvas.status != 'approved'">
+              <div v-if="userRole != 'executive_director' && canvas.files?.length && canvas.status != 'approved' && canvas.status != 'poCreated' ">
                 <h3 class="text-sm font-medium text-muted-foreground">Files</h3>
                 <div class="space-y-2 mt-2">
                   <div 
@@ -442,7 +442,8 @@ function viewRequest(id: number) {
                   class="mt-2"
                 />
               </div>
-              <div v-if="['purchasing'].includes(userRole) && canvas.status != 'approved'">
+              <!-- Comments Section for Purchasing-->
+              <div v-if="['purchasing'].includes(userRole) && canvas.status != 'approved' && canvas.status != 'poCreated'">
                 <h3 class="text-sm font-medium text-muted-foreground">
                   {{ userRole === 'accounting' ? 'Audit Comments' : 'Approval Comments' }}
                 </h3>
