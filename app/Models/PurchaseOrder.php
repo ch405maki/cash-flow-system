@@ -43,7 +43,7 @@ class PurchaseOrder extends Model
         return $this->belongsTo(Canvas::class);
     }
 
-    public function purchaseOrderApprovals(): HasMany
+    public function approvals(): HasMany
     {
         return $this->hasMany(PurchaseOrderApproval::class);
     }

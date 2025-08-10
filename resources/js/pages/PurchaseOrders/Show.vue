@@ -162,6 +162,7 @@ function viewVoucher(poId: number) {
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="flex items-center justify-between">
         <h1 class="text-2xl font-bold">Purchase Order: {{ purchaseOrder.po_no }}</h1>
+        {{ purchaseOrder.approvals }}
         <div class="space-x-2 flex space-x-2">
           <Button 
               v-if="authUser.role === 'accounting'"

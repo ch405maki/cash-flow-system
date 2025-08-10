@@ -65,7 +65,8 @@ class PurchaseOrderController extends Controller
                 'account',
                 'details',
                 'canvas.selected_files.file', // Load the file relation
-                'canvas.selected_files.approval' // Load the approval relation
+                'canvas.selected_files.approval', // Load the approval relation
+                'approvals.user',
             ]),
             'authUser' => [
                 'id' => $user->id,
@@ -231,7 +232,6 @@ class PurchaseOrderController extends Controller
             ], 500);
         }
     }
-
 
     public function updateStatus(Request $request, PurchaseOrder $purchaseOrder)
     {
