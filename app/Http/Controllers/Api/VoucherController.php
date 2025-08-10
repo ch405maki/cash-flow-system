@@ -440,7 +440,7 @@ class VoucherController extends Controller
 
     public function view(Voucher $voucher)
     {
-        $voucher->load(['user', 'details.account']);
+        $voucher->load(['user', 'details.account', 'approvals.user']);
 
         return Inertia::render('Vouchers/View', [ 
             'voucher' => $voucher,

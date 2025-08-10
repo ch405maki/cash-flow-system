@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, SquarePen, Printer, Check, X, BadgeCheck } from 'lucide-vue-next';
+import { ArrowLeft, SquarePen, Printer, Check, X, BadgeCheck, History, Clock, CheckCircle, } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
 import EodVerificationDialog from '@/components/vouchers/EodVerificationDialog.vue';
 import DirectorVerificationDialog from '@/components/vouchers/DirectorVerificationDialog.vue';
@@ -10,6 +10,15 @@ import ReceiptUploadDialog from '@/components/vouchers/upload/ReceiptUploadDialo
 import { Upload } from 'lucide-vue-next';
 import AddCheckDialog from '@/components/vouchers/edit/AddCheckDialog.vue';
 import { useToast } from 'vue-toastification'
+import { formatDateTime } from '@/lib/utils'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 
 defineProps({
     voucher: {
@@ -32,7 +41,7 @@ const emit = defineEmits(['print', 'check-updated']);
         <div>
             <h2 class="text-2xl font-bold tracking-tight">Voucher # {{ voucher.voucher_no }}</h2>
         </div>
-        <div class="flex gap-2">
+        <div class="flex space-x-2">
             <template v-if="authUser.role == 'accounting' && voucher.status !== 'draft' && voucher.status !== 'completed'">
                 <ReceiptUploadDialog 
                 :voucher-id="voucher.id"
@@ -49,6 +58,7 @@ const emit = defineEmits(['print', 'check-updated']);
                 <EodVerificationDialog :voucher-id="voucher.id" action="approve">
                     <template #trigger>
                         <Button 
+                            size="sm"
                             :variant="voucher.status === 'forCheck' ? 'secondary' : 'default'"
                             :class="voucher.status === 'forCheck' ? 'cursor-not-allowed' : ''"
                             :disabled="voucher.status === 'forCheck'"
@@ -73,6 +83,7 @@ const emit = defineEmits(['print', 'check-updated']);
 
             <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'draft'">
                 <Button
+                    size="sm"
                     v-if="authUser.role === 'accounting' && voucher.status == 'forEOD'"
                     variant="default"
                     @click.stop="goToEditVoucher(voucher.id, $event)" 
@@ -86,6 +97,7 @@ const emit = defineEmits(['print', 'check-updated']);
                 <DirectorVerificationDialog :voucher-id="voucher.id" action="forEod">
                     <template #trigger>
                         <Button 
+                            size="sm"
                             :variant="voucher.status == 'forEOD' ? 'secondary' : 'default'"
                             :class="voucher.status == 'forEOD' ? 'cursor-not-allowed' : ''"
                             :disabled="voucher.status == 'forEOD'"
@@ -101,6 +113,7 @@ const emit = defineEmits(['print', 'check-updated']);
                 <DirectorVerificationDialog :voucher-id="voucher.id" action="released">
                     <template #trigger>
                         <Button 
+                            size="sm"
                             variant="default"
                             :class="voucher.status === 'released' ? 'opacity-50 cursor-not-allowed' : ''"
                             :disabled="voucher.status === 'released'"
@@ -111,7 +124,66 @@ const emit = defineEmits(['print', 'check-updated']);
                     </template>
                 </DirectorVerificationDialog>
             </template>
-            <Button variant="outline" @click="emit('print')">
+            
+            <Sheet>
+                <SheetTrigger><Button variant="outline" size="sm"><History />Time Stamp</Button></SheetTrigger>
+                <SheetContent>
+                <SheetHeader>
+                    <SheetTitle>Time Stamp</SheetTitle>
+                    <SheetDescription>
+                    <!-- Approval History -->
+                    <h3 class="text-sm font-medium text-muted-foreground">Voucher History</h3>
+                    <div class="mb-3">
+                        <h4 class="text-muted-foreground">{{ voucher.voucher_no }}</h4>
+                        <p>Created At: {{ formatDateTime(voucher.created_at) }}</p>
+                    </div>
+                    <div v-if="voucher.approvals?.length">
+                    <div class="relative pl-6">
+                        <div class="absolute left-0 top-0 h-full w-0.5 bg-gray-200 ml-4"></div>
+                        <div
+                        v-for="(approval, index) in voucher.approvals"
+                        :key="approval.id"
+                        class="relative mb-6 last:mb-0"
+                        >
+                        <div
+                            class="bg-green-500 border-2 border-green-500 absolute -left-6 top-0 h-8 w-8 rounded-full flex items-center justify-center z-10"
+                        >
+                            <component
+                            :is="approval.approved ? CheckCircle : CheckCircle"
+                            class="h-5 w-5 text-white"
+                            />
+                        </div>
+
+                        <div
+                            v-if="index < voucher.approvals.length - 1"
+                            class="absolute -left-6 top-8 h-full w-0.5 ml-4 bg-green-500 z-0"
+                        ></div>
+
+                        <div class="pl-4">
+                            <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="capitalize">{{ approval.user?.username || 'Unknown' }}</span>
+                            </div>
+                            <span class="text-xs text-muted-foreground">
+                                {{ formatDateTime(approval.created_at) }}
+                            </span>
+                            </div>
+
+                            <div class="mt-1 flex items-start gap-2">
+                            <p class="text-sm text-xs text-muted-foreground">
+                                "{{ approval.remarks || 'No remarks' }}..."
+                            </p>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    </div>
+                    </SheetDescription>
+                </SheetHeader>
+                </SheetContent>
+            </Sheet>
+
+            <Button size="sm" variant="outline" @click="emit('print')">
                 <Printer class="h-4 w-4" />
                 Print
             </Button>
