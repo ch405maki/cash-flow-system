@@ -99,7 +99,7 @@ class CanvasController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
-            'files' => 'required|array|min:3',
+            'files' => 'required|array|min:1',
             'files.*' => 'file|mimes:pdf,doc,docx,xls,xlsx|max:10240',
             'note' => 'nullable|string|max:500',
             'request_to_order_id' => 'nullable|exists:request_to_orders,id',

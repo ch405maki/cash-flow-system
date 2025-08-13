@@ -4,7 +4,7 @@ import { useToast } from 'vue-toastification'
 import { useForm, router } from '@inertiajs/vue3'
 import PasswordDialog from './PasswordDialog.vue'
 import { Button } from '@/components/ui/button'
-import { Printer, FilePenLine, History, Clock, CheckCircle, } from 'lucide-vue-next'
+import { Printer, FilePenLine, BadgeCheck, History, Rocket , Clock, CheckCircle, } from 'lucide-vue-next'
 import { formatDateTime } from '@/lib/utils'
 import {
   Sheet,
@@ -97,7 +97,7 @@ function printList() {
         :disabled="request.status === 'approved' || form.processing"
         @click="showApproveModal = true"
       >
-        Approve
+        <BadgeCheck />Approve
       </Button>
       <PasswordDialog
         v-model="showApproveModal"
@@ -112,12 +112,12 @@ function printList() {
     <!-- Property Custodian -->
     <div v-if="user.role === 'property_custodian'" class="flex gap-2">
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         @click="navigateToEdit"
         :disabled="request.status == 'rejected' || request.status == 'released'"
       >
-        Partial Release
+        <Rocket /> Partial Release
       </Button>
 
       <Button
@@ -125,7 +125,7 @@ function printList() {
         :disabled="request.status === 'released' || form.processing"
         @click="showReleaseModal = true"
       >
-        Release All
+        <Rocket /> Release All
       </Button>
       <PasswordDialog
         v-model="showReleaseModal"
@@ -141,7 +141,7 @@ function printList() {
         :disabled="request.status === 'to_order' || request.status == 'released' || form.processing"
         @click="showForRequestModal = true"
       >
-        For Request To Order
+        <FilePenLine />For Request To Order
       </Button>
       <PasswordDialog
         v-model="showForRequestModal"
@@ -157,10 +157,10 @@ function printList() {
     <div v-if="user.role === 'department_head'">
       <Button
         size="sm"
-        :disabled="request.status === 'propertyCustodian' || request.status === 'rejected' || form.processing"
+        v-if="request.status === 'pending'"
         @click="showOrderModal = true"
       >
-        Approve
+        <BadgeCheck />Approve
       </Button>
       <PasswordDialog
         v-model="showOrderModal"
@@ -242,7 +242,7 @@ function printList() {
 
     <!-- Print List -->
     <Button size="sm" @click="printList">
-     <Printer class="h-4" /> Print List
+      <Printer class="h-4" /> Print List
     </Button>
   </div>
 </template>

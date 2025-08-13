@@ -499,7 +499,7 @@ function viewVoucher(poId: number) {
               </div>
               <div class="flex  items-center text-sm uppercase space-x-[10px]">
                 <h1>ACCOUNT CHARGES:</h1>
-                <h1>{{ purchaseOrder.account.account_title }}</h1>
+                <h1>{{ purchaseOrder.account?.account_title || 'N/A' }}</h1>
               </div>
             </div>
 

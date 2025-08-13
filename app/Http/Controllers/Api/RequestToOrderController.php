@@ -26,7 +26,7 @@ class RequestToOrderController extends Controller
         $user = Auth::user();
 
         $requests = RequestToOrder::with('details')
-            // ->whereIn('status', ['pending'])
+            ->whereIn('status', ['pending'])
             ->get();
 
         $forOrders = Request::with(['department', 'user', 'details'])
@@ -193,7 +193,6 @@ class RequestToOrderController extends Controller
         return redirect()->route('request-to-order.index')
             ->with('success', 'Order created successfully');
     }
-
 
     private function generateOrderNumber()
     {

@@ -17,13 +17,12 @@ defineProps({
             <tbody>
                 <tr class="border-b">
                     <td class="p-2 font-medium text-muted-foreground border-r w-48">ISSUE DATE:</td>
-                    <td class="p-2 border-r">{{ formatDate(voucher.issue_date) }}</td>
-                    <td class="p-2 font-medium text-muted-foreground border-r">PAYMENT DATE:</td>
-                    <td class="p-2">{{ formatDate(voucher.payment_date) }}</td>
+                    <td class="p-2 border-r">{{ voucher.issue_date ? formatDate(voucher.issue_date) : '-' }}</td>
+                    <td class="p-2 font-medium text-muted-foreground border-r w-48">DELIVERY DATE:</td>
+                    <td class="p-2" colspan="3">{{ voucher.delivery_date ? formatDate(voucher.delivery_date) : '-' }}</td>
                 </tr>
-                <tr>
-                    <td class="p-2 font-medium text-muted-foreground border-r">DELIVERY DATE:</td>
-                    <td class="p-2" colspan="3">{{ formatDate(voucher.delivery_date) }}</td>
+                <tr v-if="voucher.remarks">
+                    <td class="p-2" colspan="4">REMARKS: {{ voucher.remarks }}</td>
                 </tr>
             </tbody>
         </table>

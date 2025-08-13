@@ -31,7 +31,7 @@ class VoucherController extends Controller
         $user = Auth::user();
         return Inertia::render('Vouchers/Index', [
             'vouchers' => Voucher::with(['user', 'details'])
-                                ->whereIn('status', ['draft', 'rejected', 'unreleased', 'released'])
+                                ->whereIn('status', ['draft', 'rejected', 'unreleased', 'released', 'completed'])
                                 ->get(),
             'accounts' => Account::all(),
             'authUser' => [
@@ -457,7 +457,7 @@ class VoucherController extends Controller
 
     public function viewWithPO($po_id)
     {
-        $voucher = Voucher::with(['user', 'details.account'])->where('po_id', $po_id)->firstOrFail();
+        $voucher = Voucher::with(['user', 'details.account', 'approvals.user'])->where('po_id', $po_id)->firstOrFail();
 
         return Inertia::render('Vouchers/View', [ 
             'voucher' => $voucher,

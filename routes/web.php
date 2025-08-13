@@ -65,6 +65,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/request-to-order/{id}/for-eod', [RequestToOrderController::class, 'forEod'])->name('request-to-order.for-eod');
     Route::patch('/request-to-order/{id}/reject', [RequestToOrderController::class, 'reject'])->name('request-to-order.reject');
     
+    Route::get('/to-order/on-process', [RequestApprovalController::class, 'onProcess'])->name('request-to-order.on-process');
     Route::get('/for-approval', [RequestApprovalController::class, 'index'])->name('for-approval.index');
 
     Route::get('/released-order', [RequestToOrderReleaseController::class, 'index'])->name('request-to-order.release.create');

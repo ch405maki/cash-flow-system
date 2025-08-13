@@ -3,7 +3,7 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { ref } from 'vue'
 import { Head, usePage } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
-import { Printer, History, Rocket, Send, ArrowLeft, CheckCircle } from 'lucide-vue-next';
+import { Printer, History, BadgeCheck, Rocket, Send, ArrowLeft, CheckCircle } from 'lucide-vue-next';
 import { formatDate, formatDateTime } from '@/lib/utils'
 import {
   Sheet,
@@ -143,7 +143,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                   size="sm"
                   :disabled="requestOrder.status == 'forPO' || form.processing"
                   >
-                  Approve For Purchasing
+                  <BadgeCheck />Approve For Purchasing
                   </Button>
               </DialogTrigger>
               <DialogContent>
@@ -218,7 +218,7 @@ const breadcrumbs: BreadcrumbItem[] = [
               size="sm"
               @click="$inertia.visit(route('request-to-order.release.create', requestOrder.id))"
             >
-              <Rocket />  Release Items
+              <Rocket />Release Items
             </Button>
           </div>
 

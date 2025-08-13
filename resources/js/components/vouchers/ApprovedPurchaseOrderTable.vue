@@ -79,10 +79,10 @@ function goToCreate(poId?: number) {
               {{ po?.status || 'N/A' }}
             </Badge>
           </TableCell>
-          <TableCell>{{ po.account.account_title }}</TableCell>
+          <TableCell>{{ po.account?.account_title || 'N/A' }}</TableCell>
           <TableCell class="text-right">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               @click.stop="goToCreate(po.id)"
             >
