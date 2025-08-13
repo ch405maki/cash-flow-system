@@ -61,7 +61,7 @@ class RequestController extends Controller
         $user = Auth::user();
 
         $requests = Request::with(['department', 'user', 'details'])
-            ->whereIn('status', ['propertyCustodian', 'to_order'])
+            ->whereIn('status', ['propertyCustodian', 'to_order', 'partially_released'])
             ->where('department_id', $user->department_id)
             ->get();
 

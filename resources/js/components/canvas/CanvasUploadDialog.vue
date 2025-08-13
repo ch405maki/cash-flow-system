@@ -224,7 +224,7 @@ const submit = () => {
           </Button>
           <Button 
             type="submit" 
-            :disabled="files.length < 3"
+            :disabled="files.length < 1"
             class="gap-2"
           >
             <Check class="h-4 w-4" />

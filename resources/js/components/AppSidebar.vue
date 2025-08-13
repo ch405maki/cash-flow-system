@@ -94,10 +94,6 @@ const purchasingCanvasNavItems = ref<DropdownNavItem[]>([
         href: '/canvas/approval?status=submitted',
       },
       { 
-        title: 'For Approval', 
-        href: '/canvas/approval?status=forEOD',
-      },
-      { 
         title: 'Approved', 
         href: '/canvas/approval?status=approved',
       },
@@ -136,11 +132,6 @@ const custodianNavItems: NavItem[] = [
     icon: FileText,
   },
   {
-    title: 'Requests To Order',
-    href: '/request-to-order',
-    icon: Package,
-  },
-  {
     title: 'Released Orders',
     href: '/released-order',
     icon: Package,
@@ -149,8 +140,18 @@ const custodianNavItems: NavItem[] = [
 
 const custodianApprovalItems: NavItem[] = [
   {
+    title: 'Create Order',
+    href: '/request-to-order',
+    icon: Package,
+  },
+  {
     title: 'For Approval',
     href: '/for-approval',
+    icon: ClipboardCheck,
+  },
+  {
+    title: 'On Process',
+    href: '/to-order/on-process',
     icon: ClipboardCheck,
   },
 ];
@@ -342,7 +343,7 @@ const adminNavItems: NavItem[] = [
 
           <div v-if="user?.role === 'purchasing'">
             <NavMain :items="purchasingNavItems" group-label="Navigation"/>
-            <NavMain :items="purchasingCanvasNavItems"/>
+            <NavMain :items="purchasingCanvasNavItems" group-label="Transaction"/>
             <NavMain :items="purchasingPONavItems"/>
             <NavMain :items="reportItems" group-label="Reports" />
           </div>

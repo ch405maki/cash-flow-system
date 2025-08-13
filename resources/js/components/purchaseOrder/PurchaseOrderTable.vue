@@ -60,7 +60,7 @@ function goToPO(id: number) {
               {{ po?.status || 'N/A' }}
             </Badge>
           </TableCell>
-          <TableCell>{{ po.account.account_title }}</TableCell>
+          <TableCell>{{ po.account?.account_title  || 'N/A'  }}</TableCell>
         </TableRow>
       </TableBody>
     </Table>

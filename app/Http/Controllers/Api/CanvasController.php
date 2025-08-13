@@ -22,19 +22,23 @@ class CanvasController extends Controller
 
         if ($user->role === 'executive_director') {
             // Executive Director sees canvases pending final approval
-            $canvases = Canvas::with(['creator', 'request_to_order', 'files'])
+            $canvases = Canvas::with(['creator', 'request_to_order', 'files', 'approvals.user',])
                 ->whereIn('status', ['pending_approval', 'submitted'])
+                ->whereNotNull('request_to_order_id')
                 ->latest()
                 ->get();
         } elseif ($user->role === 'accounting') {
-            // accounting sees canvases waiting for audit
-            $canvases = Canvas::with(['creator', 'request_to_order', 'files'])
-                ->where('status', 'submitted')
+            // accounting sees canvases waiting for audit that they haven't approved
+            $canvases = Canvas::with(['creator', 'request_to_order', 'files', 'approvals.user',])
+                ->where('status', '!=', 'pending')  
+                ->whereDoesntHave('approvals', function ($query) {
+                    $query->where('role', 'accounting');
+                })
                 ->latest()
                 ->get();
         } else {
             // Purchasing officers see their own canvases
-            $canvases = Canvas::with(['creator', 'request_to_order', 'files'])
+            $canvases = Canvas::with(['creator', 'request_to_order', 'files', 'approvals.user',])
                 ->where('created_by', $user->id)->where('status', 'draft')
                 ->latest()
                 ->get();
@@ -95,7 +99,7 @@ class CanvasController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
-            'files' => 'required|array|min:3',
+            'files' => 'required|array|min:1',
             'files.*' => 'file|mimes:pdf,doc,docx,xls,xlsx|max:10240',
             'note' => 'nullable|string|max:500',
             'request_to_order_id' => 'nullable|exists:request_to_orders,id',
@@ -140,7 +144,7 @@ class CanvasController extends Controller
         
         $validated = $request->validate([
             'remarks' => 'nullable|string|max:500',
-            'status' => 'required|in:draft,submitted,pending_approval,approved,rejected',
+            'status' => 'required|in:draft,submitted,pending_approval,approved,rejected,poCreated',
             'comments' => 'nullable|string|max:1000',
             'selected_file' => 'nullable|integer|exists:canvas_files,id',
             'file_remarks' => 'nullable|string|max:500'
@@ -182,7 +186,6 @@ class CanvasController extends Controller
             );
 
             $canvas->update([
-                'status' => 'pending_approval',
                 'remarks' => $validated['remarks'] ?? null
             ]);
         } 

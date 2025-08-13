@@ -108,7 +108,7 @@ const uploadReceipt = async () => {
 <template>
   <Dialog v-model:open="isOpen">
     <DialogTrigger as-child>
-      <Button variant="outline" class="gap-2">
+      <Button variant="outline" size="sm" class="gap-2">
         <Upload class="h-4 w-4" />
         Upload Receipt
       </Button>
