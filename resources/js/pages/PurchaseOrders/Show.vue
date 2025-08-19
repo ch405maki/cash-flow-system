@@ -8,6 +8,11 @@ import FormHeader from '@/components/reports/header/formHeder.vue'
 import { formatDateTime } from '@/lib/utils'
 import { computed } from 'vue';
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import {
   Table,
   TableBody,
   TableCell,
@@ -39,7 +44,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from 'vue-toastification'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useForm } from '@inertiajs/vue3'
-import { BellRing, X, ReceiptText,  Send , AlertCircle,Ticket ,Printer, ArrowLeft, Check, History, CheckCircle } from 'lucide-vue-next';
+import { BellRing, X, ReceiptText,  Send , AlertCircle,Ticket ,Printer, ArrowLeft, Check, History, CheckCircle, BadgeCheck  } from 'lucide-vue-next';
 import { router } from '@inertiajs/vue3';
 
 const toast = useToast()
@@ -60,9 +65,48 @@ const props = defineProps<{
       id: number;
       remarks: string;
     };
-    // Add other fields as needed
+    voucher?: {
+      id: number;
+      po_id: number;
+      voucher_no: string;
+      voucher_date: string;
+      issue_date: string | null;
+      payment_date: string | null;
+      type: string;
+      payee: string;
+      check_no: string | null;
+      check_date: string | null;
+      check_amount: number | null;
+      check_payable_to: string | null;
+      delivery_date: string | null;
+      purpose: string | null;
+      status: string;
+      remarks: string | null;
+      receipt: string | null;
+      user?: {
+        id: number;
+        name: string;
+        email: string;
+      };
+      details?: Array<{
+        id: number;
+        voucher_id: number;
+        description: string;
+        amount: number;
+      }>;
+      approvals?: Array<{
+        id: number;
+        voucher_id: number;
+        user_id: number;
+        status: string;
+        user?: {
+          id: number;
+          name: string;
+        };
+      }>;
+    } | null;
   };
-  firstFileId: number | null
+  firstFileId: number | null;
   authUser: {
     id: number;
     name: string;
@@ -74,6 +118,7 @@ const props = defineProps<{
     position: string;
   };
 }>();
+
 
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -285,10 +330,88 @@ function viewVoucher(poId: number) {
           </Dialog>
           </div>
 
+          <!-- Voucher Status -->
           <div class="flex items-center space-x-2" v-if="purchaseOrder.status === 'voucherCreated'">
-            <Button size="sm" class="bg-green-600 hover:bg-green-700" @click="viewVoucher(purchaseOrder.id)">
-              <ReceiptText />View Voucher
-            </Button>
+            <Popover>
+              <PopoverTrigger>
+                <Button size="sm" class="bg-green-600 hover:bg-green-700 capitalize">
+                  <ReceiptText />Voucher
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent class="max-w-sm">
+                <div class="grid gap-2">
+                  <!-- Voucher Info -->
+                  <div class="space-y-2">
+                    <h4 class="leading-none text-sm font-medium">Voucher Information</h4>
+                    <p class="text-xs text-muted-foreground">Details of the voucher linked to this purchase order.</p>
+                  </div>
+
+                  <div class="text-xs space-y-1">
+                    <div>
+                      <span class="font-medium">Voucher No: </span>
+                      <span class="text-green-700 underline">{{ purchaseOrder.voucher?.voucher_no || 'N/A' }}</span>
+                    </div>
+                    <div>
+                      <span class="font-medium">Status: </span>
+                      <span class="text-green-700 underline capitalize">{{ purchaseOrder.voucher?.status || 'N/A' }}</span>
+                    </div>
+                    <div>
+                      <span class="font-medium">Created At: </span>
+                      <span class="text-green-700 underline capitalize">{{ formatDateTime(purchaseOrder.voucher?.created_at) }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Voucher History -->
+                  <div v-if="purchaseOrder.voucher" class="text-xs">
+                    <h3 class="font-medium py-2">Voucher History</h3>
+
+                    <!-- Scrollable Container -->
+                    <div class="max-h-48 overflow-y-auto pr-2">
+                      <!-- Approvals Timeline -->
+                      <div v-if="purchaseOrder.voucher.approvals?.length">
+                        <div class="relative pl-6">
+                          <div class="absolute left-0 top-0 h-full w-0.5 bg-gray-200 ml-4"></div>
+                          <div
+                            v-for="(approval, index) in purchaseOrder.voucher.approvals"
+                            :key="approval.id"
+                            class="relative mb-6 last:mb-0"
+                          >
+                            <!-- Circle -->
+                            <div
+                              class="bg-green-500 border-2 border-green-500 absolute -left-3.5 top-0 h-4 w-4 rounded-full flex items-center justify-center z-10"
+                            >
+                              <component
+                                :is="approval.approved ? BadgeCheck  : BadgeCheck "
+                                class="h-3 w-3 text-white"
+                              />
+                            </div>
+
+                            <!-- Line connector -->
+                            <div
+                              v-if="index < purchaseOrder.voucher.approvals.length - 1"
+                              class="absolute -left-[7px] top-4 h-[calc(100%+8px)] w-0.5 bg-green-500 z-0"
+                            ></div>
+
+                            <!-- Approval Details -->
+                            <div class="pl-4">
+                              <div class="flex items-center justify-between">
+                                <span class="capitalize">{{ approval.user?.username || 'Unknown' }}</span>
+                              </div>
+                              <p class="text-xs text-muted-foreground mt-1 italic">
+                                "{{ approval.remarks || 'No remarks' }}"
+                              </p>
+                              <p class="text-xs text-right text-muted-foreground">- {{ formatDateTime(approval.created_at) }}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+
+
+            </Popover>
           </div>
 
           <div class="flex items-center space-x-2">
@@ -390,7 +513,7 @@ function viewVoucher(poId: number) {
           >
             <X class="h-4 w-4 text-yellow-700" />
           </button>
-        </Alert>
+      </Alert>
 
       <!-- Allert Remarks -->
       <Alert 

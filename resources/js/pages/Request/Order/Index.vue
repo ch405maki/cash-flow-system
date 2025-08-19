@@ -96,11 +96,10 @@ function formatDate(dateStr: string): string {
               <TableHead>Date Request</TableHead>
               <TableHead>Notes</TableHead>
               <TableHead class="w-[100px]">Status</TableHead>
-              <TableHead class="text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow v-for="request in props.requests" :key="request.id">
+            <TableRow v-for="request in props.requests" :key="request.id" @click="viewRequest(request.id)" class="cursor-pointer hover:underline">
               <TableCell class="font-medium">{{ request.order_no }}</TableCell>
               <TableCell>{{ formatDate(request.order_date) }}</TableCell>
               <TableCell>{{ request.notes }}</TableCell>
@@ -111,11 +110,6 @@ function formatDate(dateStr: string): string {
                 >
                   {{ request.status }}
                 </Badge>
-              </TableCell>
-              <TableCell class="text-center">
-                <Button size="sm" variant="outline" @click="viewRequest(request.id)">
-                  View
-                </Button>
               </TableCell>
             </TableRow>
           </TableBody>

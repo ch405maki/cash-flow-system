@@ -30,7 +30,7 @@ class CanvasController extends Controller
         } elseif ($user->role === 'accounting') {
             // accounting sees canvases waiting for audit that they haven't approved
             $canvases = Canvas::with(['creator', 'request_to_order', 'files', 'approvals.user',])
-                ->where('status', '!=', 'pending')  
+                ->whereNotIn('status', ['draft', 'pending'])
                 ->whereDoesntHave('approvals', function ($query) {
                     $query->where('role', 'accounting');
                 })

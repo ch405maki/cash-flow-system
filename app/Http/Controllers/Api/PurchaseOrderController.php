@@ -64,9 +64,12 @@ class PurchaseOrderController extends Controller
                 'department', 
                 'account',
                 'details',
-                'canvas.selected_files.file', // Load the file relation
-                'canvas.selected_files.approval', // Load the approval relation
+                'canvas.selected_files.file',
+                'canvas.selected_files.approval',
                 'approvals.user',
+                'voucher.user',  
+                'voucher.details',
+                'voucher.approvals.user',
             ]),
             'authUser' => [
                 'id' => $user->id,
@@ -76,6 +79,7 @@ class PurchaseOrderController extends Controller
             ],
         ]);
     }
+
 
     public function create(Request $request)
     {

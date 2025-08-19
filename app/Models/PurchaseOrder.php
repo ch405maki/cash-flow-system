@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+
 
 class PurchaseOrder extends Model
 {
@@ -46,5 +48,11 @@ class PurchaseOrder extends Model
     {
         return $this->hasMany(PurchaseOrderApproval::class);
     }
+
+    public function voucher(): HasOne
+    {
+        return $this->hasOne(Voucher::class, 'po_id');
+    }
+
 
 }
