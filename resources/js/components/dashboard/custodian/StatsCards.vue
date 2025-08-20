@@ -40,7 +40,7 @@ defineProps<{
     <Card class="h-full">
       <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle class="text-sm font-medium">
-          To Order
+          To Purchase
         </CardTitle>
         <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
           <ShoppingCart class="h-4 w-4 text-muted-foreground" />
@@ -48,7 +48,7 @@ defineProps<{
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ statusCounts.to_order }}</div>
-        <p class="text-xs text-muted-foreground">Tagged to order</p>
+        <p class="text-xs text-muted-foreground">Tagged to purchase</p>
       </CardContent>
     </Card>
 
@@ -72,7 +72,7 @@ defineProps<{
     <Card class="h-full">
       <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle class="text-sm font-medium">
-          Rejected
+          Approved
         </CardTitle>
         <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
           <XCircle class="h-4 w-4 text-muted-foreground" />
@@ -80,7 +80,7 @@ defineProps<{
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ statusCounts.rejected }}</div>
-        <p class="text-xs text-muted-foreground">Not approved</p>
+        <p class="text-xs text-muted-foreground">Monthly approved request</p>
       </CardContent>
     </Card>
   </div>

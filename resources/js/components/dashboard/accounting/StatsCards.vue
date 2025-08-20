@@ -19,7 +19,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="grid gap-4 md:grid-cols-4">
+  <div class="grid gap-4 md:grid-cols-3">
     <!-- Pending Requests Card -->
     <Card class="h-full">
       <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -75,7 +75,7 @@ defineProps<{
     </Card>
 
     <!-- Rejected Card -->
-    <Card class="h-full">
+    <!-- <Card class="h-full">
       <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle class="text-sm font-medium">
           Rejected
@@ -90,6 +90,6 @@ defineProps<{
           Not approved for review
         </p>
       </CardContent>
-    </Card>
+    </Card> -->
   </div>
 </template>

@@ -21,8 +21,8 @@ interface OrderItem {
 
 const breadcrumbs = [
   { title: 'Dashboard', href: '/dashboard' },
-  { title: 'Request To Order', href: '/request-to-order' },
-  { title: 'Create Request To Order', href: '/' },
+  { title: 'Purchase Request', href: '/request-to-order' },
+  { title: 'Create Purchase Request', href: '/' },
 ]
 
 const form = useForm({
@@ -131,19 +131,19 @@ const submitForm = () => {
 </script>
 
 <template>
-  <Head title="Create Request To Order" />
+  <Head title="Create Purchase Request" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="space-y-6 p-6">
       <div class="space-y-2">
-        <h1 class="text-2xl font-bold">Create New Order</h1>
-        <p class="text-muted-foreground">Fill out the form below to create a new request to order</p>
+        <h1 class="text-2xl font-bold">Create New Purchase Request</h1>
+        <p class="text-muted-foreground">Fill out the form below to create a new purchase request</p>
       </div>
 
       <div class="space-y-6">
         <!-- Notes Section -->
         <div class="">
-          <h2 class="mb-4 text-lg font-semibold">Order Information</h2>
+          <h2 class="mb-4 text-lg font-semibold">Purchase Information</h2>
           <div class="space-y-4">
             <Textarea
               id="notes"  
@@ -156,7 +156,7 @@ const submitForm = () => {
 
         <!-- Items Section -->
         <div class="">
-          <h2 class="mb-4 text-lg font-semibold">Order Items</h2>
+          <h2 class="mb-4 text-lg font-semibold">Purchase Items</h2>
           
           <!-- Input Row -->
           <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-6">
@@ -328,7 +328,7 @@ const submitForm = () => {
             :disabled="form.processing || form.items.length === 0"
           >
             <span v-if="form.processing">Processing...</span>
-            <span v-else>Submit Order</span>
+            <span v-else>Submit Request</span>
           </Button>
         </div>
       </div>

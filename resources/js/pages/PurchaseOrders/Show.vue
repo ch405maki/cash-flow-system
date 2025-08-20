@@ -541,7 +541,7 @@ function viewVoucher(poId: number) {
         <FormHeader text="Purchase Order" :bordered="false"  />
       </div>
       <div class="grid grid-cols-1 md:grid-cols-1">
-        <table class="w-full text-sm border border-border rounded-md mb-2">
+        <table class="w-full text-sm border border-border rounded-lg mb-2">
           <tbody>
             <tr class="border-b">
               <td class="p-2 font-medium text-muted-foreground border-r w-48">COMPANY NAME:</td>

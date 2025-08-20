@@ -66,7 +66,7 @@ defineProps<{
     <!-- To Order Card -->
     <Card class="h-full">
       <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle class="text-sm font-medium">To Order</CardTitle>
+        <CardTitle class="text-sm font-medium">To Purchase</CardTitle>
         <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
           <ShoppingCart class="h-4 w-4 text-muted-foreground" />
         </div>
