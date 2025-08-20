@@ -13,7 +13,7 @@ jobs:
 
       - name: Sync project to /var/www/CashFlow
         run: |
-          rsync -av --delete --exclude='.git*' ./ /var/www/CashFlow/
+          rsync -av --exclude='.git*' ./ /var/www/CashFlow/
 
       - name: Install PHP dependencies
         working-directory: /var/www/CashFlow
