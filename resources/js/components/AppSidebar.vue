@@ -140,7 +140,7 @@ const custodianNavItems: NavItem[] = [
 
 const custodianApprovalItems: NavItem[] = [
   {
-    title: 'Create Order',
+    title: 'Create',
     href: '/request-to-order',
     icon: Package,
   },
@@ -190,7 +190,8 @@ const staffRequestItems = ref<DropdownNavItem[]>([
         icon: FileText,
         isOpen: false,
         children: [
-        { title: 'Pending Request', href: '/request'},
+        { title: 'Create', href: '/request/create'},
+        { title: 'Pending', href: '/request'},
         { title: 'On Process', href: '/request/to-receive'},
         { title: 'Completed', href: '/request/released'},
         ],
@@ -337,7 +338,8 @@ const adminNavItems: NavItem[] = [
 
           <div v-if="user?.role === 'property_custodian'">
             <NavMain :items="custodianNavItems" group-label="Navigation"/>
-            <NavMain :items="custodianApprovalItems" group-label="Order Request"/>
+            <NavMain :items="staffRequestItems" group-label="Request"/>
+            <NavMain :items="custodianApprovalItems" group-label="Request for Purchase"/>
             <NavMain :items="custodianReportItems" group-label="Reports" />
           </div>
 

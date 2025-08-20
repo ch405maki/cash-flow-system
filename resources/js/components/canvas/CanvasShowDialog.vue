@@ -285,27 +285,28 @@ function viewRequest(id: number) {
             </Alert>
 
             <!-- Approved File Section -->
-            <div v-if="approvedFile">
-              <h3 class="text-sm font-medium text-muted-foreground">Approved File</h3>
-              <div class="p-3 border rounded-lg mt-2">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-3">
-                    <FileText class="h-5 w-5 text-muted-foreground" />
-                    <span class="text-muted-foreground capitalize text-sm">{{ approvedFile.original_filename }}</span>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    @click="downloadFile(approvedFile.id)"
-                  >
-                    <Download class="h-4 w-4" />
-                  </Button>
-                </div>
-                <p v-if="canvas.selected_files[0]?.remarks" class="mt-2 text-sm text-muted-foreground">
-                  Remarks: {{ canvas.selected_files[0].remarks }}
-                </p>
+            <div 
+              class="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded border"
+              @click="openPdfPreview(approvedFile)"
+            >
+              <div class="flex items-center gap-3">
+                <FileText class="h-5 w-5 text-muted-foreground" />
+                <span class="text-muted-foreground capitalize text-sm">
+                  {{ approvedFile.original_filename }}
+                </span>
+                <Badge v-if="isPdfFile(approvedFile)" variant="secondary" class="text-xs">
+                  PDF
+                </Badge>
               </div>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                @click.stop="downloadFile(approvedFile.id)"
+              >
+                <Download class="h-4 w-4" />
+              </Button>
             </div>
+
             <!-- Approval History -->
             <div v-if="canvas.approvals?.length">
               <h3 class="text-sm font-medium text-muted-foreground mb-3">History</h3>

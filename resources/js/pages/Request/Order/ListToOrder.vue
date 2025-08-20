@@ -46,8 +46,8 @@ const props = defineProps<{
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Dashboard', href: '/dashboard' },
-  { title: 'Request To Order', href: '/request-to-order' },
-  { title: 'To Order List', href: '/' }
+  { title: 'Purchase Request', href: '/request-to-order' },
+  { title: 'Purchase Request List', href: '/' }
 ];
 
 // Flatten all request details with department_id
@@ -137,7 +137,7 @@ const printArea = () =>{
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold mb-4">Create Request to Order</h1>
+        <h1 class="text-2xl font-bold mb-4">Create Purchase Request</h1>
         <Button size="sm" @click="printArea"> <Printer />Print List</Button>
       </div>
       <div v-if="Object.keys(form.errors).length > 0" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -172,7 +172,6 @@ const printArea = () =>{
         
         <div class="overflow-x-auto rounded-md border">
           <Table>
-            <TableCaption>A list of items to order.</TableCaption>
             <TableHeader>
               <TableRow>
                 <TableHead class="w-[40px]">
@@ -211,7 +210,7 @@ const printArea = () =>{
             :disabled="form.processing || form.selectedItems.length === 0"
           >
             <span v-if="form.processing">Processing...</span>
-            <span v-else>Create Order</span>
+            <span v-else>Submit Request</span>
           </Button>
           <Button
             variant="outline"
@@ -242,7 +241,6 @@ const printArea = () =>{
         </div>
         <div class="overflow-x-auto rounded-md border">
           <Table>
-            <TableCaption>A list of items to order.</TableCaption>
             <TableHeader>
               <TableRow>
                 <TableHead>Item Description</TableHead>

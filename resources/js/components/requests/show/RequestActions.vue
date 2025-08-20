@@ -141,7 +141,7 @@ function printList() {
         :disabled="request.status === 'to_order' || request.status == 'released' || form.processing"
         @click="showForRequestModal = true"
       >
-        <FilePenLine />For Request To Order
+        <FilePenLine />For Request To Purchase
       </Button>
       <PasswordDialog
         v-model="showForRequestModal"

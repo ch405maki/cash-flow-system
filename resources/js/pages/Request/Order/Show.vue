@@ -319,7 +319,7 @@ const breadcrumbs: BreadcrumbItem[] = [
             <TableCaption>      
               <h3 class="flex items-center w-full mt-2">
                 <span class="flex-grow border-t border-dashed border-zinc-300"></span>
-                <span class="mx-3 text-xs font-medium">Items to order</span>
+                <span class="mx-3 text-xs font-medium">Items to purchase</span>
                 <span class="flex-grow border-t border-dashed border-zinc-300"></span>
               </h3>
             </TableCaption>

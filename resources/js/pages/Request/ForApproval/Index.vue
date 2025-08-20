@@ -5,8 +5,8 @@
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
       <div class="flex justify-between items-center">
         <div>
-          <h1 class="text-xl font-bold">For Approval Request to Order</h1>
-          <p class="text-sm">Created Order(s) On Process</p>
+          <h1 class="text-xl font-bold">For Approval Request to Purchase</h1>
+          <p class="text-sm">Created Purchase(s) On Process</p>
         </div>
       </div>
       <!-- Table -->
