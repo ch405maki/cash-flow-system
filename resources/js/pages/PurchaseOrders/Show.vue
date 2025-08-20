@@ -204,8 +204,17 @@ function goToCreate(poId?: number) {
   router.visit(url)
 }
 
-function viewVoucher(poId: number) {
-  router.visit(`/vouchers/by-po/${poId}`);
+const previewOpen = ref(false)
+const previewFile = ref<{ name: string; path: string; type: string, path_name: string } | null>(null)
+
+function openPreview(file: any) {
+  previewFile.value = {
+    name: file.original_filename,
+    path_name: file.file_path,
+    path: `/storage/canvases/${file.file_path}`,
+    type: file.type
+  }
+  previewOpen.value = true
 }
 </script>
 
@@ -485,34 +494,41 @@ function viewVoucher(poId: number) {
         class="relative pr-10"
       >
         <AlertCircle class="h-4 w-4" />
-          <AlertTitle>Selected File</AlertTitle>
-          <AlertDescription>
-            <template v-if="purchaseOrder.canvas?.selected_files?.length">
-              <div class="space-y-3">
-                <div v-for="selectedFile in purchaseOrder.canvas.selected_files" :key="selectedFile.id">
-                  <!-- File Information -->
-                    <div>
-                      <span class="font-medium">File:</span> 
-                      <span v-if="selectedFile.file">
-                        {{ selectedFile.file.original_filename || 'N/A' }}
-                      </span>
-                      <span v-else>File not found</span>
-                    </div>
+        <AlertTitle>Selected File</AlertTitle>
+        <AlertDescription>
+          <template v-if="purchaseOrder.canvas?.selected_files?.length">
+            <div class="space-y-3">
+              <div 
+                v-for="selectedFile in purchaseOrder.canvas.selected_files" 
+                :key="selectedFile.id"
+              >
+                <!-- File Information -->
+                <div>
+                  <span class="font-medium">File: </span> 
+                  <span 
+                    v-if="selectedFile.file" 
+                    class="text-blue-600 underline cursor-pointer capitalize"
+                    @click="openPreview(selectedFile.file)"
+                  >
+                    {{ selectedFile.file.original_filename || 'N/A' }}
+                  </span>
+                  <span v-else>File not found</span>
                 </div>
               </div>
-            </template>
-            <template v-else>
-              <p>No selected files found for this canvas</p>
-            </template>
-          </AlertDescription>
-          <!-- Dismiss Button -->
-          <button
-            class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground"
-            @click="showAlert = false"
-            aria-label="Dismiss"
-          >
-            <X class="h-4 w-4 text-yellow-700" />
-          </button>
+            </div>
+          </template>
+          <template v-else>
+            <p>No selected files found for this canvas</p>
+          </template>
+        </AlertDescription>
+        <!-- Dismiss Button -->
+        <button
+          class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground"
+          @click="showAlert = false"
+          aria-label="Dismiss"
+        >
+          <X class="h-4 w-4 text-yellow-700" />
+        </button>
       </Alert>
 
       <!-- Allert Remarks -->
@@ -651,6 +667,22 @@ function viewVoucher(poId: number) {
         </div>
       </div>
     </div>
+    <!-- Dialog selected file -->
+    <!-- Preview Dialog -->
+    <Dialog v-model:open="previewOpen">
+      <DialogContent class="max-w-4xl h-[80vh]">
+        <div class="h-full py-4">
+          <iframe
+            v-if="previewFile?.type === 'application/pdf'"
+            :src="previewFile?.path"
+            class="w-full h-full border rounded"
+          ></iframe>
+          <p v-else class="text-center text-muted-foreground">
+            Preview not available for this file type
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
   </AppLayout>
 </template>
 
