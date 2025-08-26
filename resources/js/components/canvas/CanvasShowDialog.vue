@@ -118,20 +118,15 @@ const closePreviewPanel = () => {
 };
 
 const getPreviewUrl = (file) => {
-  if (!file) return null
-
-  // If backend stored a direct URL (like S3 signed url)
   if (file.url) {
-    return file.url + '#view=fitH&toolbar=0&navpanes=0'
+    return file.url;
   }
-
-  // Always use preview for PDFs
+  
   return route('canvas.preview.file', { 
     canvas: props.canvas.id, 
     file: file.id 
-  }) + '#view=fitH&toolbar=0&navpanes=0'
-}
-
+  }) + '#view=fitH&toolbar=0&navpanes=0';
+};
 
 const isPdfFile = (file) => {
   return file?.mimetype?.includes('pdf') || 
@@ -290,29 +285,27 @@ function viewRequest(id: number) {
             </Alert>
 
             <!-- Approved File Section -->
-            <div 
-              class="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded border"
-              @click="openPdfPreview(approvedFile)"
-              v-if="approvedFile"
-            >
-              <div class="flex items-center gap-3">
-                <FileText class="h-5 w-5 text-muted-foreground" />
-                <span class="text-muted-foreground capitalize text-sm">
-                  {{ approvedFile?.original_filename || 'n/a' }}
-                </span>
-                <Badge v-if="isPdfFile(approvedFile)" variant="secondary" class="text-xs">
-                  PDF
-                </Badge>
+            <div v-if="approvedFile">
+              <h3 class="text-sm font-medium text-muted-foreground">Approved File</h3>
+              <div class="p-3 border rounded-lg mt-2">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <FileText class="h-5 w-5 text-muted-foreground" />
+                    <span class="text-muted-foreground capitalize text-sm">{{ approvedFile.original_filename }}</span>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    @click="downloadFile(approvedFile.id)"
+                  >
+                    <Download class="h-4 w-4" />
+                  </Button>
+                </div>
+                <p v-if="canvas.selected_files[0]?.remarks" class="mt-2 text-sm text-muted-foreground">
+                  Remarks: {{ canvas.selected_files[0].remarks }}
+                </p>
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                @click.stop="downloadFile(approvedFile.id)"
-              >
-                <Download class="h-4 w-4" />
-              </Button>
             </div>
-
             <!-- Approval History -->
             <div v-if="canvas.approvals?.length">
               <h3 class="text-sm font-medium text-muted-foreground mb-3">History</h3>
@@ -368,7 +361,7 @@ function viewRequest(id: number) {
                       'bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-700': selectedFileForPreview?.id === file.id,
                       'hover:bg-gray-100 dark:hover:bg-gray-800': selectedFileForPreview?.id !== file.id
                     }"
-                    @click="openPdfPreview(file)" 
+                    @click="openPdfPreview(file)"
                   >
                     <div class="flex items-center gap-2">
                       <FileText class="max-h-4 max-w-4 text-muted-foreground" />
@@ -390,7 +383,6 @@ function viewRequest(id: number) {
                 </div>
               </div>
 
-
               <!-- File Selection for Executive -->
               <div v-if="userRole === 'executive_director' && canvas.files?.length">
                 <h3 class="text-sm font-medium text-muted-foreground">Select File for Approval</h3>
@@ -404,7 +396,7 @@ function viewRequest(id: number) {
                     :class="{
                       'bg-zinc-50 dark:bg-zinc-800 border-zinc-200': selectedFileForPreview?.id === file.id
                     }"
-                    @click="openPdfPreview(file)" 
+                    @click="openPdfPreview(file)"
                   >
                     <div class="flex items-center h-5">
                       <input
@@ -485,14 +477,13 @@ function viewRequest(id: number) {
             </div>
             
             <iframe 
-              v-if="isPdfFile(selectedFileForPreview) && getPreviewUrl(selectedFileForPreview)"
+              v-show="!previewLoading && !previewError"
               :src="getPreviewUrl(selectedFileForPreview)"
               class="w-full h-full min-h-[500px]"
               frameborder="0"
               @load="previewLoading = false"
               @error="previewError = true"
             />
-
             
             <div v-if="previewError" class="h-full flex flex-col items-center justify-center p-4 text-center">
               <XCircle class="h-8 w-8 text-red-400 mb-2" />
