@@ -40,6 +40,7 @@ const downloadReceipt = () => {
             <p class="font-medium text-muted-foreground">Voucher Details</p>
             <div v-if="voucher.receipt">
                 <Button 
+                    size="sm"
                     v-if="voucher.receipt" 
                     variant="success" 
                     @click="downloadReceipt"

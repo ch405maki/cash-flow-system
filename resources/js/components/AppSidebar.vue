@@ -94,10 +94,6 @@ const purchasingCanvasNavItems = ref<DropdownNavItem[]>([
         href: '/canvas/approval?status=submitted',
       },
       { 
-        title: 'For Approval', 
-        href: '/canvas/approval?status=forEOD',
-      },
-      { 
         title: 'Approved', 
         href: '/canvas/approval?status=approved',
       },
@@ -136,11 +132,6 @@ const custodianNavItems: NavItem[] = [
     icon: FileText,
   },
   {
-    title: 'Requests To Order',
-    href: '/request-to-order',
-    icon: Package,
-  },
-  {
     title: 'Released Orders',
     href: '/released-order',
     icon: Package,
@@ -149,8 +140,18 @@ const custodianNavItems: NavItem[] = [
 
 const custodianApprovalItems: NavItem[] = [
   {
+    title: 'Create',
+    href: '/request-to-order',
+    icon: Package,
+  },
+  {
     title: 'For Approval',
     href: '/for-approval',
+    icon: ClipboardCheck,
+  },
+  {
+    title: 'On Process',
+    href: '/to-order/on-process',
     icon: ClipboardCheck,
   },
 ];
@@ -189,7 +190,8 @@ const staffRequestItems = ref<DropdownNavItem[]>([
         icon: FileText,
         isOpen: false,
         children: [
-        { title: 'Pending Request', href: '/request'},
+        { title: 'Create', href: '/request/create'},
+        { title: 'Pending', href: '/request'},
         { title: 'On Process', href: '/request/to-receive'},
         { title: 'Completed', href: '/request/released'},
         ],
@@ -336,13 +338,14 @@ const adminNavItems: NavItem[] = [
 
           <div v-if="user?.role === 'property_custodian'">
             <NavMain :items="custodianNavItems" group-label="Navigation"/>
-            <NavMain :items="custodianApprovalItems" group-label="Order Request"/>
+            <NavMain :items="staffRequestItems" group-label="Request"/>
+            <NavMain :items="custodianApprovalItems" group-label="Request for Purchase"/>
             <NavMain :items="custodianReportItems" group-label="Reports" />
           </div>
 
           <div v-if="user?.role === 'purchasing'">
             <NavMain :items="purchasingNavItems" group-label="Navigation"/>
-            <NavMain :items="purchasingCanvasNavItems"/>
+            <NavMain :items="purchasingCanvasNavItems" group-label="Transaction"/>
             <NavMain :items="purchasingPONavItems"/>
             <NavMain :items="reportItems" group-label="Reports" />
           </div>

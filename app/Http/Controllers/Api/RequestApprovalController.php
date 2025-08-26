@@ -33,4 +33,21 @@ class RequestApprovalController extends Controller
             ],
         ]);
     }
+
+    public function onProcess() 
+    {
+        $user = Auth::user();
+
+        $requests = RequestToOrder::with('details')
+            ->whereIn('status', ['forEOD', 'forPO'])
+            ->get();
+
+        return Inertia::render('Request/ForApproval/Index', [
+            'requests' => $requests,
+            'authUser' => [
+                'id' => $user->id,
+                'role' => $user->role,
+            ],
+        ]);
+    }
 }

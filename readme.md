@@ -47,3 +47,6 @@ sudo supervisorctl restart laravel-worker:*
 # 3. Verify status
 
 sudo supervisorctl status
+
+
+Hello from my CentOS self-hosted runner!

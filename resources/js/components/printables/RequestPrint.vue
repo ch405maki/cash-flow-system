@@ -44,6 +44,7 @@ defineExpose({
 
 <template>
   <div id="print-section">
+    <!-- hidden print:block -->
     <div class="hidden print:block">
       <Head :title="`Order ${request.request_no}`" />
       
@@ -87,20 +88,18 @@ defineExpose({
           <div class="col-span-1 p-0.5 border-b border-zinc-500 text-center bg-zinc-100 font-medium h-6 leading-tight uppercase">Amount</div>
 
           <!-- Item Rows -->
+
           <template v-for="(detail, index) in request.details">
             <div v-if="index < 10" :key="detail.id" class="col-span-1 p-0.5 border-b border-r border-zinc-500 text-center hover:bg-zinc-50 h-5 leading-tight">
-                <span v-if="detail.quantity == 0" class="text-green-600">
-                ({{ detail.released_quantity }})
-                </span>
-                <span v-else>
-                {{ detail.quantity }}
-                </span>
+                {{ Number(detail.quantity) + Number(detail.released_quantity) }}
             </div>
             <div v-if="index < 10" class="col-span-1 p-0.5 border-b border-r border-zinc-500 text-center hover:bg-zinc-50 h-5 leading-tight">
               {{ detail.unit }}
             </div>
             <div v-if="index < 10" class="col-span-1 p-0.5 border-b border-r border-zinc-500 truncate px-1 hover:bg-zinc-50 h-5 leading-tight capitalize">
-              {{ detail.item_description }}
+              {{ detail.item_description }} 
+              <span v-if="request.status === 'released'" class="text-green-600">( Released: {{ Number(detail.quantity) + Number(detail.released_quantity) }})</span>
+              <span v-else class="text-purple-600">( Released: {{ detail.released_quantity }})</span>
             </div>
             <div v-if="index < 10" class="col-span-1 p-0.5 border-b border-r border-zinc-500 text-right pr-1 hover:bg-zinc-50 h-5 leading-tight">
               -

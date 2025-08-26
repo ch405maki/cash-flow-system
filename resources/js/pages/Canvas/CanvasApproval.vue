@@ -119,10 +119,7 @@ const breadcrumbs = [
 
           <TabsList class="flex gap-2">
             <TabsTrigger value="submitted" class="px-3 py-1.5 text-sm leading-none">
-              For Review
-            </TabsTrigger>
-            <TabsTrigger value="pending_approval" class="px-3 py-1.5 text-sm leading-none">
-              For Approval
+              Under Review
             </TabsTrigger>
             <TabsTrigger value="approved" class="px-3 py-1.5 text-sm leading-none">
               Approved

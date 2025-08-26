@@ -71,7 +71,7 @@ const addCheckDetails = async () => {
 <template>
   <Dialog v-model:open="isOpen">
     <DialogTrigger as-child>
-      <Button variant="default" class="gap-2">
+      <Button variant="default" class="gap-2" size="sm">
         <Hash class="h-4 w-4" />
         Add Check Number
       </Button>

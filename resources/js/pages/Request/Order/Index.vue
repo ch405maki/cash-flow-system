@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge'
 
 const breadcrumbs = [
   { title: 'Dashboard', href: '/dashboard' },
-  { title: 'Request To Order', href: '/request-to-order' },
+  { title: 'Purchase Request', href: '/request-to-order' },
 ]
 
 function goToList() {
@@ -72,18 +72,18 @@ function formatDate(dateStr: string): string {
 </script>
 
 <template>
-  <Head title="Request To Order List" />
+  <Head title="Purchase Request List" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="flex justify-between items-center">
         <div>
-          <h1 class="text-xl font-bold">Request To Order List</h1>
-          <p class="text-sm">Created Order List</p>
+          <h1 class="text-xl font-bold">Purchase Request List</h1>
+          <p class="text-sm">Created Purchase List</p>
         </div>
         <div class="space-x-2 items-center">
-          <Button variant="outline" @click="goToList" class="h-8"><ListChecks /> List to Order</Button>
-          <Button @click="goToCreate" class="h-8"><CirclePlus />Create New Order</Button>
+          <Button variant="outline" @click="goToList" class="h-8"><ListChecks /> List to Purchase</Button>
+          <Button @click="goToCreate" class="h-8"><CirclePlus />Create New Purchase</Button>
         </div>
       </div>
 
@@ -96,11 +96,10 @@ function formatDate(dateStr: string): string {
               <TableHead>Date Request</TableHead>
               <TableHead>Notes</TableHead>
               <TableHead class="w-[100px]">Status</TableHead>
-              <TableHead class="text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow v-for="request in props.requests" :key="request.id">
+            <TableRow v-for="request in props.requests" :key="request.id" @click="viewRequest(request.id)" class="cursor-pointer hover:underline">
               <TableCell class="font-medium">{{ request.order_no }}</TableCell>
               <TableCell>{{ formatDate(request.order_date) }}</TableCell>
               <TableCell>{{ request.notes }}</TableCell>
@@ -111,11 +110,6 @@ function formatDate(dateStr: string): string {
                 >
                   {{ request.status }}
                 </Badge>
-              </TableCell>
-              <TableCell class="text-center">
-                <Button size="sm" variant="outline" @click="viewRequest(request.id)">
-                  View
-                </Button>
               </TableCell>
             </TableRow>
           </TableBody>

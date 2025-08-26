@@ -57,7 +57,6 @@ const form = ref({
   status: 'draft',
   user_id: props.user_id,
   department_id: '',
-  account_id: '',
   details: [] as PurchaseOrderDetail[],
   canvas_id: props.canvas_id || null,
   tagging: props.canvas_id ? 'with_canvas' : 'no_canvas' as TaggingType,
@@ -189,7 +188,6 @@ const submitForm = async () => {
       formData.append('status', form.value.status);
       formData.append('user_id', String(form.value.user_id));
       formData.append('department_id', form.value.department_id);
-      formData.append('account_id', form.value.account_id);
       formData.append('tagging', form.value.tagging);
       formData.append('amount', String(form.value.amount));
 
@@ -235,7 +233,7 @@ const submitForm = async () => {
     <div class="p-6 space-y-6">
       <form @submit.prevent="submitForm" class="space-y-2" enctype="multipart/form-data">
         <div class="flex">
-          <h1 class="text-2xl font-bold">Create Purchase Order {{ canvas_id }}</h1>
+          <h1 class="text-2xl font-bold">Create Purchase Order</h1>
         </div>        
         <!-- File Upload Section (only for no_canvas) -->
         <div v-if="form.tagging === 'no_canvas'" class="space-y-4 border p-4 rounded-lg">
@@ -328,20 +326,6 @@ const submitForm = async () => {
               <SelectContent>
                 <SelectItem v-for="dept in departments" :key="dept.id" :value="dept.id.toString()">
                   {{ dept.department_name }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div class="space-y-2">
-            <Label for="account_id">Account</Label>
-            <Select v-model="form.account_id" required>
-              <SelectTrigger>
-                <SelectValue placeholder="Select account" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="account in accounts" :key="account.id" :value="account.id.toString()">
-                  {{ account.account_title }}
                 </SelectItem>
               </SelectContent>
             </Select>

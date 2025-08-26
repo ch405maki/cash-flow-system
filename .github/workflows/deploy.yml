@@ -1,0 +1,33 @@
+name: Deploy to CentOS
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted   # this uses your CentOS runner
+    steps:
+      - name: Checkout latest code
+        uses: actions/checkout@v3
+
+      - name: Sync project to /var/www/CashFlow
+        run: |
+          rsync -av --exclude='.git*' ./ /var/www/CashFlow/
+
+      - name: Install PHP dependencies
+        working-directory: /var/www/CashFlow
+        run: composer install --no-dev --optimize-autoloader
+
+      - name: Run database migrations
+        working-directory: /var/www/CashFlow
+        run: php artisan migrate --force
+
+      - name: Build frontend
+        working-directory: /var/www/CashFlow
+        run: |
+          npm ci --omit=dev
+          npm run build
+
+      - name: Restart Apache
+        run: sudo systemctl restart httpd

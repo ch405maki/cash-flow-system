@@ -26,7 +26,7 @@ class RequestToOrderController extends Controller
         $user = Auth::user();
 
         $requests = RequestToOrder::with('details')
-            // ->whereIn('status', ['pending'])
+            ->whereIn('status', ['pending'])
             ->get();
 
         $forOrders = Request::with(['department', 'user', 'details'])
@@ -194,18 +194,22 @@ class RequestToOrderController extends Controller
             ->with('success', 'Order created successfully');
     }
 
-
     private function generateOrderNumber()
     {
         $prefix = 'ORD-';
-        $date = now()->format('Ymd');
-        $latest = RequestToOrder::where('order_no', 'like', $prefix.$date.'%')
+        $datePrefix = now()->format('Ym'); // YYYYMM
+
+        // Get latest strictly matching ORD-YYYYMM##### format
+        $latest = RequestToOrder::where('order_no', 'like', $prefix . $datePrefix . '%')
+            ->whereRaw("LENGTH(order_no) = ?", [strlen($prefix . $datePrefix) + 4])
             ->orderBy('order_no', 'desc')
             ->first();
 
-        $number = $latest ? (int)substr($latest->order_no, -4) + 1 : 1;
-        
-        return $prefix.$date.str_pad($number, 4, '0', STR_PAD_LEFT);
+        $number = $latest
+            ? (int) substr($latest->order_no, -4) + 1 
+            : 1;
+
+        return $prefix . $datePrefix . str_pad($number, 4, '0', STR_PAD_LEFT);
     }
 
     public function show($id)

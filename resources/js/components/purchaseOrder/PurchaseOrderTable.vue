@@ -45,7 +45,6 @@ function goToPO(id: number) {
           <TableHead>Department</TableHead>
           <TableHead>Amount</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead>Account</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -60,7 +59,6 @@ function goToPO(id: number) {
               {{ po?.status || 'N/A' }}
             </Badge>
           </TableCell>
-          <TableCell>{{ po.account.account_title }}</TableCell>
         </TableRow>
       </TableBody>
     </Table>

@@ -5,7 +5,13 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import FormHeader from '@/components/reports/header/formHeder.vue'
+import { formatDateTime } from '@/lib/utils'
 import { computed } from 'vue';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import {
   Table,
   TableBody,
@@ -24,13 +30,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from 'vue-toastification'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useForm } from '@inertiajs/vue3'
-import { BellRing, X, ReceiptText,  Send , AlertCircle,Ticket ,Printer, ArrowLeft, Check } from 'lucide-vue-next';
+import { BellRing, X, ReceiptText,  Send , AlertCircle,Ticket ,Printer, ArrowLeft, Check, History, CheckCircle, BadgeCheck  } from 'lucide-vue-next';
 import { router } from '@inertiajs/vue3';
 
 const toast = useToast()
@@ -38,6 +52,7 @@ const toast = useToast()
 const props = defineProps<{
   purchaseOrder: {
     id: number;
+    canvas_id: number;
     po_no: string;
     date: string;
     payee: string;
@@ -50,8 +65,48 @@ const props = defineProps<{
       id: number;
       remarks: string;
     };
-    // Add other fields as needed
+    voucher?: {
+      id: number;
+      po_id: number;
+      voucher_no: string;
+      voucher_date: string;
+      issue_date: string | null;
+      payment_date: string | null;
+      type: string;
+      payee: string;
+      check_no: string | null;
+      check_date: string | null;
+      check_amount: number | null;
+      check_payable_to: string | null;
+      delivery_date: string | null;
+      purpose: string | null;
+      status: string;
+      remarks: string | null;
+      receipt: string | null;
+      user?: {
+        id: number;
+        name: string;
+        email: string;
+      };
+      details?: Array<{
+        id: number;
+        voucher_id: number;
+        description: string;
+        amount: number;
+      }>;
+      approvals?: Array<{
+        id: number;
+        voucher_id: number;
+        user_id: number;
+        status: string;
+        user?: {
+          id: number;
+          name: string;
+        };
+      }>;
+    } | null;
   };
+  firstFileId: number | null;
   authUser: {
     id: number;
     name: string;
@@ -63,6 +118,7 @@ const props = defineProps<{
     position: string;
   };
 }>();
+
 
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -97,11 +153,13 @@ const form = useForm({
   status: '',
   password: '',
   remarks: '',
+  canvas_id: props.purchaseOrder.canvas_id
 })
 
 // Status update function
 async function submitStatusUpdate(newStatus: string) {
   form.status = newStatus
+  form.canvas_id = props.purchaseOrder.canvas_id 
   
   form.patch(`/purchase-orders/${props.purchaseOrder.id}/status`, {
     preserveScroll: true,
@@ -146,8 +204,17 @@ function goToCreate(poId?: number) {
   router.visit(url)
 }
 
-function viewVoucher(poId: number) {
-  router.visit(`/vouchers/by-po/${poId}`);
+const previewOpen = ref(false)
+const previewFile = ref<{ name: string; path: string; type: string, path_name: string } | null>(null)
+
+function openPreview(file: any) {
+  previewFile.value = {
+    name: file.original_filename,
+    path_name: file.file_path,
+    path: `/storage/canvases/${file.file_path}`,
+    type: file.type
+  }
+  previewOpen.value = true
 }
 </script>
 
@@ -272,12 +339,148 @@ function viewVoucher(poId: number) {
           </Dialog>
           </div>
 
+          <!-- Voucher Status -->
           <div class="flex items-center space-x-2" v-if="purchaseOrder.status === 'voucherCreated'">
-            <Button size="sm" class="bg-green-600 hover:bg-green-700" @click="viewVoucher(purchaseOrder.id)">
-              <ReceiptText />View Voucher
-            </Button>
+            <Popover>
+              <PopoverTrigger>
+                <Button size="sm" class="bg-green-600 hover:bg-green-700 capitalize">
+                  <ReceiptText />Voucher
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent class="max-w-sm">
+                <div class="grid gap-2">
+                  <!-- Voucher Info -->
+                  <div class="space-y-2">
+                    <h4 class="leading-none text-sm font-medium">Voucher Information</h4>
+                    <p class="text-xs text-muted-foreground">Details of the voucher linked to this purchase order.</p>
+                  </div>
+
+                  <div class="text-xs space-y-1">
+                    <div>
+                      <span class="font-medium">Voucher No: </span>
+                      <span class="text-green-700 underline">{{ purchaseOrder.voucher?.voucher_no || 'N/A' }}</span>
+                    </div>
+                    <div>
+                      <span class="font-medium">Status: </span>
+                      <span class="text-green-700 underline capitalize">{{ purchaseOrder.voucher?.status || 'N/A' }}</span>
+                    </div>
+                    <div>
+                      <span class="font-medium">Created At: </span>
+                      <span class="text-green-700 underline capitalize">{{ formatDateTime(purchaseOrder.voucher?.created_at) }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Voucher History -->
+                  <div v-if="purchaseOrder.voucher" class="text-xs">
+                    <h3 class="font-medium py-2">Voucher History</h3>
+
+                    <!-- Scrollable Container -->
+                    <div class="max-h-48 overflow-y-auto pr-2">
+                      <!-- Approvals Timeline -->
+                      <div v-if="purchaseOrder.voucher.approvals?.length">
+                        <div class="relative pl-6">
+                          <div class="absolute left-0 top-0 h-full w-0.5 bg-gray-200 ml-4"></div>
+                          <div
+                            v-for="(approval, index) in purchaseOrder.voucher.approvals"
+                            :key="approval.id"
+                            class="relative mb-6 last:mb-0"
+                          >
+                            <!-- Circle -->
+                            <div
+                              class="bg-green-500 border-2 border-green-500 absolute -left-3.5 top-0 h-4 w-4 rounded-full flex items-center justify-center z-10"
+                            >
+                              <component
+                                :is="approval.approved ? BadgeCheck  : BadgeCheck "
+                                class="h-3 w-3 text-white"
+                              />
+                            </div>
+
+                            <!-- Line connector -->
+                            <div
+                              v-if="index < purchaseOrder.voucher.approvals.length - 1"
+                              class="absolute -left-[7px] top-4 h-[calc(100%+8px)] w-0.5 bg-green-500 z-0"
+                            ></div>
+
+                            <!-- Approval Details -->
+                            <div class="pl-4">
+                              <div class="flex items-center justify-between">
+                                <span class="capitalize">{{ approval.user?.username || 'Unknown' }}</span>
+                              </div>
+                              <p class="text-xs text-muted-foreground mt-1 italic">
+                                "{{ approval.remarks || 'No remarks' }}"
+                              </p>
+                              <p class="text-xs text-right text-muted-foreground">- {{ formatDateTime(approval.created_at) }}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+
+
+            </Popover>
           </div>
+
           <div class="flex items-center space-x-2">
+            <Sheet>
+              <SheetTrigger><Button variant="outline" size="sm"><History />Time Stamp</Button></SheetTrigger>
+              <SheetContent>
+              <SheetHeader>
+                  <SheetTitle>Time Stamp</SheetTitle>
+                  <SheetDescription>
+                  <!-- Approval History -->
+                  <h3 class="text-sm font-medium text-muted-foreground">Request History</h3>
+                  <div class="mb-3">
+                      <h4 class="text-muted-foreground">{{ purchaseOrder.po_no }}</h4>
+                      <p>Created At: {{ formatDateTime(purchaseOrder.created_at) }}</p>
+                  </div>
+                  <div v-if="purchaseOrder.approvals?.length">
+                  <div class="relative pl-6">
+                      <div class="absolute left-0 top-0 h-full w-0.5 bg-gray-200 ml-4"></div>
+                      <div
+                      v-for="(approval, index) in purchaseOrder.approvals"
+                      :key="approval.id"
+                      class="relative mb-6 last:mb-0"
+                      >
+                      <div
+                          class="bg-green-500 border-2 border-green-500 absolute -left-6 top-0 h-8 w-8 rounded-full flex items-center justify-center z-10"
+                      >
+                          <component
+                          :is="approval.approved ? CheckCircle : CheckCircle"
+                          class="h-5 w-5 text-white"
+                          />
+                      </div>
+
+                      <div
+                          v-if="index < purchaseOrder.approvals.length - 1"
+                          class="absolute -left-6 top-8 h-full w-0.5 ml-4 bg-green-500 z-0"
+                      ></div>
+
+                      <div class="pl-4">
+                          <div class="flex items-center justify-between">
+                          <div class="flex items-center gap-2">
+                              <span class="capitalize">{{ approval.user?.username || 'Unknown' }}</span>
+                          </div>
+                          <span class="text-xs text-muted-foreground">
+                              {{ formatDateTime(approval.created_at) }}
+                          </span>
+                          </div>
+
+                          <div class="mt-1 flex items-start gap-2">
+                          <p class="text-sm text-xs text-muted-foreground">
+                              "{{ approval.remarks || 'No remarks' }}..."
+                          </p>
+                          </div>
+                      </div>
+                      </div>
+                  </div>
+                  </div>
+                  </SheetDescription>
+              </SheetHeader>
+              </SheetContent>
+          </Sheet>
             <Button size="sm" variant="outline" @click="printArea"><Printer />Print</Button>
             <Button variant="outline" size="sm"  as-child>
               <Link href="/purchase-orders"> <ArrowLeft />Back</Link>
@@ -291,35 +494,42 @@ function viewVoucher(poId: number) {
         class="relative pr-10"
       >
         <AlertCircle class="h-4 w-4" />
-          <AlertTitle>Selected File</AlertTitle>
-          <AlertDescription>
-            <template v-if="purchaseOrder.canvas?.selected_files?.length">
-              <div class="space-y-3">
-                <div v-for="selectedFile in purchaseOrder.canvas.selected_files" :key="selectedFile.id">
-                  <!-- File Information -->
-                    <div>
-                      <span class="font-medium">File:</span> 
-                      <span v-if="selectedFile.file">
-                        {{ selectedFile.file.original_filename || 'N/A' }}
-                      </span>
-                      <span v-else>File not found</span>
-                    </div>
+        <AlertTitle>Selected File</AlertTitle>
+        <AlertDescription>
+          <template v-if="purchaseOrder.canvas?.selected_files?.length">
+            <div class="space-y-3">
+              <div 
+                v-for="selectedFile in purchaseOrder.canvas.selected_files" 
+                :key="selectedFile.id"
+              >
+                <!-- File Information -->
+                <div>
+                  <span class="font-medium">File: </span> 
+                  <span 
+                    v-if="selectedFile.file" 
+                    class="text-blue-600 underline cursor-pointer capitalize"
+                    @click="openPreview(selectedFile.file)"
+                  >
+                    {{ selectedFile.file.original_filename || 'N/A' }}
+                  </span>
+                  <span v-else>File not found</span>
                 </div>
               </div>
-            </template>
-            <template v-else>
-              <p>No selected files found for this canvas</p>
-            </template>
-          </AlertDescription>
-          <!-- Dismiss Button -->
-          <button
-            class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground"
-            @click="showAlert = false"
-            aria-label="Dismiss"
-          >
-            <X class="h-4 w-4 text-yellow-700" />
-          </button>
-        </Alert>
+            </div>
+          </template>
+          <template v-else>
+            <p>No selected files found for this canvas</p>
+          </template>
+        </AlertDescription>
+        <!-- Dismiss Button -->
+        <button
+          class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground"
+          @click="showAlert = false"
+          aria-label="Dismiss"
+        >
+          <X class="h-4 w-4 text-yellow-700" />
+        </button>
+      </Alert>
 
       <!-- Allert Remarks -->
       <Alert 
@@ -347,7 +557,7 @@ function viewVoucher(poId: number) {
         <FormHeader text="Purchase Order" :bordered="false"  />
       </div>
       <div class="grid grid-cols-1 md:grid-cols-1">
-        <table class="w-full text-sm border border-border rounded-md mb-2">
+        <table class="w-full text-sm border border-border rounded-lg mb-2">
           <tbody>
             <tr class="border-b">
               <td class="p-2 font-medium text-muted-foreground border-r w-48">COMPANY NAME:</td>
@@ -428,7 +638,7 @@ function viewVoucher(poId: number) {
               </div>
               <div class="flex  items-center text-sm uppercase space-x-[10px]">
                 <h1>ACCOUNT CHARGES:</h1>
-                <h1>{{ purchaseOrder.account.account_title }}</h1>
+                <h1>{{ purchaseOrder.account?.account_title || 'N/A' }}</h1>
               </div>
             </div>
 
@@ -457,6 +667,22 @@ function viewVoucher(poId: number) {
         </div>
       </div>
     </div>
+    <!-- Dialog selected file -->
+    <!-- Preview Dialog -->
+    <Dialog v-model:open="previewOpen">
+      <DialogContent class="max-w-4xl h-[80vh]">
+        <div class="h-full py-4">
+          <iframe
+            v-if="previewFile?.type === 'application/pdf'"
+            :src="previewFile?.path"
+            class="w-full h-full border rounded"
+          ></iframe>
+          <p v-else class="text-center text-muted-foreground">
+            Preview not available for this file type
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
   </AppLayout>
 </template>
 
