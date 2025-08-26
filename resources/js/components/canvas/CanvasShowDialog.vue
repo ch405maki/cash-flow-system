@@ -368,7 +368,7 @@ function viewRequest(id: number) {
                       'bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-700': selectedFileForPreview?.id === file.id,
                       'hover:bg-gray-100 dark:hover:bg-gray-800': selectedFileForPreview?.id !== file.id
                     }"
-                    @click="openPdfPreview(file)"
+                    @click="openPdfPreview(file)" 
                   >
                     <div class="flex items-center gap-2">
                       <FileText class="max-h-4 max-w-4 text-muted-foreground" />
@@ -390,6 +390,7 @@ function viewRequest(id: number) {
                 </div>
               </div>
 
+
               <!-- File Selection for Executive -->
               <div v-if="userRole === 'executive_director' && canvas.files?.length">
                 <h3 class="text-sm font-medium text-muted-foreground">Select File for Approval</h3>
@@ -403,7 +404,7 @@ function viewRequest(id: number) {
                     :class="{
                       'bg-zinc-50 dark:bg-zinc-800 border-zinc-200': selectedFileForPreview?.id === file.id
                     }"
-                    @click="openPdfPreview(file)"
+                    @click="openPdfPreview(file)" 
                   >
                     <div class="flex items-center h-5">
                       <input
