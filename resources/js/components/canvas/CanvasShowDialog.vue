@@ -288,11 +288,12 @@ function viewRequest(id: number) {
             <div 
               class="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded border"
               @click="openPdfPreview(approvedFile)"
+              v-if="approvedFile"
             >
               <div class="flex items-center gap-3">
                 <FileText class="h-5 w-5 text-muted-foreground" />
                 <span class="text-muted-foreground capitalize text-sm">
-                  {{ approvedFile.original_filename }}
+                  {{ approvedFile?.original_filename || 'n/a' }}
                 </span>
                 <Badge v-if="isPdfFile(approvedFile)" variant="secondary" class="text-xs">
                   PDF
