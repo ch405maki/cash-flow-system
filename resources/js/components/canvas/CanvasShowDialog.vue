@@ -118,15 +118,20 @@ const closePreviewPanel = () => {
 };
 
 const getPreviewUrl = (file) => {
+  if (!file) return null
+
+  // If backend provides a direct URL, use it
   if (file.url) {
-    return file.url;
+    return file.url + '#view=fitH&toolbar=0&navpanes=0'
   }
-  
-  return route('canvas.preview.file', { 
+
+  // Otherwise fall back to download route (which exists in prod)
+  return route('canvas.download.file', { 
     canvas: props.canvas.id, 
     file: file.id 
-  }) + '#view=fitH&toolbar=0&navpanes=0';
-};
+  }) + '#view=fitH&toolbar=0&navpanes=0'
+}
+
 
 const isPdfFile = (file) => {
   return file?.mimetype?.includes('pdf') || 
@@ -479,13 +484,14 @@ function viewRequest(id: number) {
             </div>
             
             <iframe 
-              v-show="!previewLoading && !previewError"
+              v-if="isPdfFile(selectedFileForPreview) && getPreviewUrl(selectedFileForPreview)"
               :src="getPreviewUrl(selectedFileForPreview)"
               class="w-full h-full min-h-[500px]"
               frameborder="0"
               @load="previewLoading = false"
               @error="previewError = true"
             />
+
             
             <div v-if="previewError" class="h-full flex flex-col items-center justify-center p-4 text-center">
               <XCircle class="h-8 w-8 text-red-400 mb-2" />
