@@ -120,13 +120,13 @@ const closePreviewPanel = () => {
 const getPreviewUrl = (file) => {
   if (!file) return null
 
-  // If backend provides a direct URL, use it
+  // If backend stored a direct URL (like S3 signed url)
   if (file.url) {
     return file.url + '#view=fitH&toolbar=0&navpanes=0'
   }
 
-  // Otherwise fall back to download route (which exists in prod)
-  return route('canvas.download.file', { 
+  // Always use preview for PDFs
+  return route('canvas.preview.file', { 
     canvas: props.canvas.id, 
     file: file.id 
   }) + '#view=fitH&toolbar=0&navpanes=0'
