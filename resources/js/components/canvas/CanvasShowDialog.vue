@@ -459,6 +459,85 @@ function viewRequest(id: number) {
               </div>
             </template>
           </div>
+          <div class="bottom-0 flex justify-end pb-6">
+            <!-- Action Buttons -->
+            <div class="flex justify-between items-center mt-4">
+              <!-- Purchasing Officer Actions -->
+              <div v-if="userRole === 'purchasing'">
+                <div v-if="canvas.status === 'draft'" class="space-x-2">
+                  <Button 
+                    variant="default" 
+                    @click="handleAction('submit')"
+                    :disabled="form.processing"
+                  >
+                    <ChevronRight class="h-4 w-4" />
+                    Submit
+                  </Button>
+                </div>
+                <div v-if="canvas.status === 'rejected'" class="space-x-2">
+                  <Button 
+                    variant="outline" 
+                    @click="emit('reupload')"
+                  >
+                    <Upload class="h-4 w-4 mr-1" />
+                    Re-upload
+                  </Button>
+                </div>
+              </div>
+
+              <!-- Accounting Actions -->
+              <div v-if="userRole === 'accounting' && canvas.status !== 'pending'" class="space-x-2">
+                <Button 
+                  variant="success" 
+                  @click="handleAction('approve')"
+                  :disabled="form.processing || !form.comments.trim()"
+                >
+                  <Check class="h-4 w-4 mr-1" />
+                  Submit
+                </Button>
+              </div>
+
+              <!-- Executive Director Actions -->
+              <div v-if="(userRole === 'executive_director')" class="space-x-2">
+                <div v-if="canvas.status === 'pending_approval' || canvas.status === 'submitted'">
+                  <Button 
+                    variant="success" 
+                    size="sm"
+                    @click="handleAction('final_approve')"
+                    :disabled="form.processing || !form.comments.trim() || !form.selected_file"
+                  >
+                    <Check class="h-4 w-4 mr-1" />
+                    Approve
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Common Actions -->
+            <div class="flex gap-2 justify-end mt-4">
+              <div v-if="canvas.status === 'approved' && userRole === 'purchasing'">
+                <Button 
+                  variant="default" 
+                  @click="goToCreate()"
+                  :disabled="form.processing"
+                >
+                  <Check class="h-4 w-4 mr-1" />
+                  Create P.O.
+                </Button>
+              </div>
+
+              <Button 
+                v-else-if="approvedFile"
+                @click="downloadFile(approvedFile.id)"
+                class="gap-2"
+                variant="outline"
+                :disabled="isDownloading"
+              >
+                <Download class="h-4 w-4" />
+                <span>{{ isDownloading ? 'Downloading...' : 'Download Approved File' }}</span>
+              </Button>
+            </div>
+          </div>
         </div>
 
         <!-- Right Column (PDF Preview) -->
@@ -517,86 +596,6 @@ function viewRequest(id: number) {
           </div>
         </div>
       </div>
-
-      <!-- Action Buttons -->
-      <DialogFooter class="border-t">
-        <div class="flex justify-between items-center mt-4">
-          <!-- Purchasing Officer Actions -->
-          <div v-if="userRole === 'purchasing'">
-            <div v-if="canvas.status === 'draft'" class="space-x-2">
-              <Button 
-                variant="default" 
-                @click="handleAction('submit')"
-                :disabled="form.processing"
-              >
-                <ChevronRight class="h-4 w-4" />
-                Submit
-              </Button>
-            </div>
-            <div v-if="canvas.status === 'rejected'" class="space-x-2">
-              <Button 
-                variant="outline" 
-                @click="emit('reupload')"
-              >
-                <Upload class="h-4 w-4 mr-1" />
-                Re-upload
-              </Button>
-            </div>
-          </div>
-
-          <!-- Accounting Actions -->
-          <div v-if="userRole === 'accounting' && canvas.status !== 'pending'" class="space-x-2">
-            <Button 
-              variant="success" 
-              @click="handleAction('approve')"
-              :disabled="form.processing || !form.comments.trim()"
-            >
-              <Check class="h-4 w-4 mr-1" />
-              Submit
-            </Button>
-          </div>
-
-          <!-- Executive Director Actions -->
-          <div v-if="(userRole === 'executive_director')" class="space-x-2">
-            <div v-if="canvas.status === 'pending_approval' || canvas.status === 'submitted'">
-              <Button 
-                variant="success" 
-                size="sm"
-                @click="handleAction('final_approve')"
-                :disabled="form.processing || !form.comments.trim() || !form.selected_file"
-              >
-                <Check class="h-4 w-4 mr-1" />
-                Approve
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Common Actions -->
-        <div class="flex gap-2 justify-end mt-4">
-          <div v-if="canvas.status === 'approved' && userRole === 'purchasing'">
-            <Button 
-              variant="default" 
-              @click="goToCreate()"
-              :disabled="form.processing"
-            >
-              <Check class="h-4 w-4 mr-1" />
-              Create P.O.
-            </Button>
-          </div>
-
-          <Button 
-            v-else-if="approvedFile"
-            @click="downloadFile(approvedFile.id)"
-            class="gap-2"
-            variant="outline"
-            :disabled="isDownloading"
-          >
-            <Download class="h-4 w-4" />
-            <span>{{ isDownloading ? 'Downloading...' : 'Download Approved File' }}</span>
-          </Button>
-        </div>
-      </DialogFooter>
     </DialogContent>
   </Dialog>
 </template>
