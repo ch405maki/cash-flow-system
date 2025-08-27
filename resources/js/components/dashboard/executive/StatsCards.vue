@@ -85,14 +85,14 @@ const currentMonth = new Date().toLocaleString('default', { month: 'long' });
     <!-- Pending Request To Order -->
     <Card class="h-full cursor-pointer transition-all duration-200 hover:shadow-md hover:bg-muted/50" @click="goToRequestApproval">
       <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle class="text-sm font-medium">Pending Request To Order</CardTitle>
+        <CardTitle class="text-sm font-medium">Pending Request To Purchase</CardTitle>
         <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
           <Users class="h-4 w-4 text-muted-foreground" />
         </div>
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ statusCounts.toOrderApproval }}</div>
-        <p class="text-xs text-muted-foreground">For Approval Request To Order</p>
+        <p class="text-xs text-muted-foreground">For Approval Request To Purchase</p>
       </CardContent>
     </Card>
 

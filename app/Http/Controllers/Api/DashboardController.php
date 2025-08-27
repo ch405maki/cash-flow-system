@@ -17,6 +17,10 @@ use Inertia\Inertia;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Models\CanvasApproval;
+use App\Models\PurchaseOrderApproval;
+use App\Models\RequestToOrderApproval;
+use App\Models\VoucherApproval;
 
 class DashboardController extends Controller
 {
@@ -304,6 +308,9 @@ class DashboardController extends Controller
     protected function executiveDashboard()
     {
         $user = Auth::user();
+
+        // Get approval time trends
+        $approvalTimeTrends = $this->getApprovalTimeTrends();
         
         // Recent Requests
         $requests = Request::with(['user', 'details'])
@@ -428,6 +435,7 @@ class DashboardController extends Controller
             'recentPurchaseOrders' => $purchaseOrders,
             'vouchers' => $vouchers,
             'statusCounts' => $statusCounts,
+            'approvalTimeTrends' => $approvalTimeTrends,
             'monthlyMetrics' => $monthlyMetrics,
             'userRole' => $user->role,
             'username' => $user->username,
@@ -456,5 +464,52 @@ class DashboardController extends Controller
             ->get()
             ->pluck('total', 'month')
             ->toArray();
+    }
+
+    // Helper mothod to get time trends
+    private function getApprovalTimeTrends()
+    {
+        $months = 6; // Last 6 months
+        $currentDate = Carbon::now();
+        $data = [];
+
+        // Get data for each month
+        for ($i = $months - 1; $i >= 0; $i--) {
+            $month = $currentDate->copy()->subMonths($i);
+            $monthKey = $month->format('Y-m');
+            $monthLabel = $month->format('M Y');
+
+            // Canvas Approvals
+            $canvasApprovals = CanvasApproval::whereYear('approved_at', $month->year)
+                ->whereMonth('approved_at', $month->month)
+                ->where('approved', true)
+                ->count();
+
+            // Purchase Order Approvals
+            $poApprovals = PurchaseOrderApproval::whereYear('approved_at', $month->year)
+                ->whereMonth('approved_at', $month->month)
+                ->where('status', 'approved')
+                ->count();
+
+            // Request to Order Approvals
+            $rtoApprovals = RequestToOrderApproval::whereYear('approved_at', $month->year)
+                ->whereMonth('approved_at', $month->month)
+                ->where('status', 'approved')
+                ->count();
+
+            // Voucher Approvals
+            $voucherApprovals = VoucherApproval::whereYear('approved_at', $month->year)
+                ->whereMonth('approved_at', $month->month)
+                ->where('status', 'approved')
+                ->count();
+
+            $data['labels'][] = $monthLabel;
+            $data['datasets']['canvas'][] = $canvasApprovals;
+            $data['datasets']['purchase_orders'][] = $poApprovals;
+            $data['datasets']['request_to_orders'][] = $rtoApprovals;
+            $data['datasets']['vouchers'][] = $voucherApprovals;
+        }
+
+        return $data;
     }
 }
