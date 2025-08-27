@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Download, ArrowLeft, Clock, CheckCircle, UserRoundCheck, XCircle, Check, X, Pencil, ChevronRight, FileText, LoaderCircle } from 'lucide-vue-next';
+import { Download, ArrowLeft, Clock, CheckCircle, UserRoundCheck, XCircle, Check, X, Pencil, ChevronRight, ChevronDown, FileText, LoaderCircle } from 'lucide-vue-next';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from '@inertiajs/vue3';
@@ -44,6 +44,7 @@ const selectedFileForPreview = ref<{
 const previewLoading = ref(false);
 const previewError = ref(false);
 const dialogWidth = ref('sm:max-w-[625px]');
+const showAllApprovals = ref(false)
 
 // Computed properties
 const isApproved = computed(
@@ -314,21 +315,28 @@ function viewRequest(id: number) {
               <div class="relative pl-6">
                 <div class="absolute left-0 top-0 h-full w-0.5 bg-gray-200 ml-4"></div>
 
-                <div v-for="(approval, index) in canvas.approvals" 
-                    :key="approval.id"
-                    class="relative mb-6 last:mb-0">
-                  
-                  <div class="bg-green-500 border-2 border-green-500 absolute -left-6 top-0 h-8 w-8 rounded-full flex items-center justify-center z-10">
-                    <component 
+                <!-- Show only the first item unless expanded -->
+                <div
+                  v-for="(approval, index) in showAllApprovals 
+                    ? canvas.approvals 
+                    : canvas.approvals.slice(0, 1)"
+                  :key="approval.id"
+                  class="relative mb-6 last:mb-0"
+                >
+                  <div
+                    class="bg-green-500 border-2 border-green-500 absolute -left-6 top-0 h-8 w-8 rounded-full flex items-center justify-center z-10"
+                  >
+                    <component
                       :is="approval.approved ? CheckCircle : CheckCircle"
                       class="h-5 w-5 text-white"
                     />
                   </div>
 
-                  <div v-if="index < canvas.approvals.length - 1"
-                      class="absolute -left-6 top-8 h-full w-0.5 ml-4 bg-green-500 z-0"
+                  <div
+                    v-if="index < (showAllApprovals ? canvas.approvals.length - 1 : 0)"
+                    class="absolute -left-6 top-8 h-full w-0.5 ml-4 bg-green-500 z-0"
                   ></div>
-                  
+
                   <div class="pl-4">
                     <div class="flex items-center justify-between">
                       <div class="flex items-center gap-2">
@@ -346,6 +354,22 @@ function viewRequest(id: number) {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <!-- Toggle Button -->
+              <div v-if="canvas.approvals.length > 1" class="flex justify-center mt-2">
+                <button
+                  class="flex items-center text-sm text-gray-500 hover:text-gray-700 transition"
+                  @click="showAllApprovals = !showAllApprovals"
+                >
+                  <span>
+                    {{ showAllApprovals ? "Show less" : `+${canvas.approvals.length - 1} more` }}
+                  </span>
+                  <ChevronDown
+                    class="h-4 w-4 ml-1 transition-transform"
+                    :class="{ 'rotate-180': showAllApprovals }"
+                  />
+                </button>
               </div>
             </div>
 
@@ -459,6 +483,85 @@ function viewRequest(id: number) {
               </div>
             </template>
           </div>
+          <div class="bottom-0 flex justify-end pb-6">
+            <!-- Action Buttons -->
+            <div class="flex justify-between items-center mt-4">
+              <!-- Purchasing Officer Actions -->
+              <div v-if="userRole === 'purchasing'">
+                <div v-if="canvas.status === 'draft'" class="space-x-2">
+                  <Button 
+                    variant="default" 
+                    @click="handleAction('submit')"
+                    :disabled="form.processing"
+                  >
+                    <ChevronRight class="h-4 w-4" />
+                    Submit
+                  </Button>
+                </div>
+                <div v-if="canvas.status === 'rejected'" class="space-x-2">
+                  <Button 
+                    variant="outline" 
+                    @click="emit('reupload')"
+                  >
+                    <Upload class="h-4 w-4 mr-1" />
+                    Re-upload
+                  </Button>
+                </div>
+              </div>
+
+              <!-- Accounting Actions -->
+              <div v-if="userRole === 'accounting' && canvas.status !== 'pending'" class="space-x-2">
+                <Button 
+                  variant="success" 
+                  @click="handleAction('approve')"
+                  :disabled="form.processing || !form.comments.trim()"
+                >
+                  <Check class="h-4 w-4 mr-1" />
+                  Submit
+                </Button>
+              </div>
+
+              <!-- Executive Director Actions -->
+              <div v-if="(userRole === 'executive_director')" class="space-x-2">
+                <div v-if="canvas.status === 'pending_approval' || canvas.status === 'submitted'">
+                  <Button 
+                    variant="success" 
+                    size="sm"
+                    @click="handleAction('final_approve')"
+                    :disabled="form.processing || !form.comments.trim() || !form.selected_file"
+                  >
+                    <Check class="h-4 w-4 mr-1" />
+                    Approve
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Common Actions -->
+            <div class="flex gap-2 justify-end mt-4">
+              <div v-if="canvas.status === 'approved' && userRole === 'purchasing'">
+                <Button 
+                  variant="default" 
+                  @click="goToCreate()"
+                  :disabled="form.processing"
+                >
+                  <Check class="h-4 w-4 mr-1" />
+                  Create P.O.
+                </Button>
+              </div>
+
+              <Button 
+                v-else-if="approvedFile"
+                @click="downloadFile(approvedFile.id)"
+                class="gap-2"
+                variant="outline"
+                :disabled="isDownloading"
+              >
+                <Download class="h-4 w-4" />
+                <span>{{ isDownloading ? 'Downloading...' : 'Download Approved File' }}</span>
+              </Button>
+            </div>
+          </div>
         </div>
 
         <!-- Right Column (PDF Preview) -->
@@ -517,86 +620,6 @@ function viewRequest(id: number) {
           </div>
         </div>
       </div>
-
-      <!-- Action Buttons -->
-      <DialogFooter class="border-t">
-        <div class="flex justify-between items-center mt-4">
-          <!-- Purchasing Officer Actions -->
-          <div v-if="userRole === 'purchasing'">
-            <div v-if="canvas.status === 'draft'" class="space-x-2">
-              <Button 
-                variant="default" 
-                @click="handleAction('submit')"
-                :disabled="form.processing"
-              >
-                <ChevronRight class="h-4 w-4" />
-                Submit
-              </Button>
-            </div>
-            <div v-if="canvas.status === 'rejected'" class="space-x-2">
-              <Button 
-                variant="outline" 
-                @click="emit('reupload')"
-              >
-                <Upload class="h-4 w-4 mr-1" />
-                Re-upload
-              </Button>
-            </div>
-          </div>
-
-          <!-- Accounting Actions -->
-          <div v-if="userRole === 'accounting' && canvas.status !== 'pending'" class="space-x-2">
-            <Button 
-              variant="success" 
-              @click="handleAction('approve')"
-              :disabled="form.processing || !form.comments.trim()"
-            >
-              <Check class="h-4 w-4 mr-1" />
-              Submit
-            </Button>
-          </div>
-
-          <!-- Executive Director Actions -->
-          <div v-if="(userRole === 'executive_director')" class="space-x-2">
-            <div v-if="canvas.status === 'pending_approval' || canvas.status === 'submitted'">
-              <Button 
-                variant="success" 
-                size="sm"
-                @click="handleAction('final_approve')"
-                :disabled="form.processing || !form.comments.trim() || !form.selected_file"
-              >
-                <Check class="h-4 w-4 mr-1" />
-                Approve
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Common Actions -->
-        <div class="flex gap-2 justify-end mt-4">
-          <div v-if="canvas.status === 'approved' && userRole === 'purchasing'">
-            <Button 
-              variant="default" 
-              @click="goToCreate()"
-              :disabled="form.processing"
-            >
-              <Check class="h-4 w-4 mr-1" />
-              Create P.O.
-            </Button>
-          </div>
-
-          <Button 
-            v-else-if="approvedFile"
-            @click="downloadFile(approvedFile.id)"
-            class="gap-2"
-            variant="outline"
-            :disabled="isDownloading"
-          >
-            <Download class="h-4 w-4" />
-            <span>{{ isDownloading ? 'Downloading...' : 'Download Approved File' }}</span>
-          </Button>
-        </div>
-      </DialogFooter>
     </DialogContent>
   </Dialog>
 </template>
