@@ -9,7 +9,7 @@ import VoucherStats from '@/components/dashboard/accounting/VoucherStats.vue';
 import { ChartArea } from 'lucide-vue-next';
 import { ref } from 'vue';
 
-const showVoucherStats = ref(false);
+const showVoucherStats = ref(true);
 
 const props = defineProps<{
     isDepartmentUser: boolean;

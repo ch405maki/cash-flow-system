@@ -7,6 +7,7 @@ import RecentRequestsTable from '@/components/dashboard/executive/RecentRequests
 import RecentRequestToOrdersTable from '@/components/dashboard/executive/RecentRequestToOrdersTable.vue';
 import RecentPurchaseOrdersTable from '@/components/dashboard/executive/RecentPurchaseOrdersTable.vue';
 import RecentVoucherTable from '@/components/dashboard/executive/RecentVoucherTable.vue';
+import ApprovalTimeTrendsChart from '@/components/dashboard/executive/ApprovalTimeTrendsChart.vue';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const props = defineProps<{
@@ -31,6 +32,7 @@ const props = defineProps<{
     purchaseOrders: Record<number, number>;
     purchaseOrderAmounts: Record<number, number>;
   };
+  approvalTimeTrends: any; 
   userRole: string;
   username: string;
 }>();
@@ -54,6 +56,9 @@ const breadcrumbs: BreadcrumbItem[] = [
       </h1>
 
       <StatsCards :status-counts="statusCounts" />
+
+      <!-- Add the chart here -->
+      <ApprovalTimeTrendsChart :approval-time-trends="approvalTimeTrends" />
 
       <Tabs default-value="requestToOrders" class="mt-4 w-full">
         <div class="flex items-center justify-between">
