@@ -261,7 +261,7 @@ function viewRequest(id: number) {
             </div>
 
             <Alert 
-              v-if="showAlert && canvas?.note.length > 0" 
+              v-if="showAlert && canvas?.note && canvas.note.length > 0" 
               variant="warning" 
               class="relative pr-10"
             >
