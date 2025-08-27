@@ -133,9 +133,9 @@ watch(() => props.approvalTimeTrends, () => {
 
 <template>
   <div class="rounded-lg">
-    <h3 class="text-lg font-semibold mb-2">Approval Trends</h3>
+    <h3 class="text-lg font-semibold">Approval Trends</h3>
     <p class="text-sm text-gray-600 mb-4">
-        Tracking approval processing times and volume trends over the last 6 months
+        Tracking approval and volume trends over the last 6 months
     </p>
     <div class="h-80">
       <canvas ref="chartRef"></canvas>

@@ -80,6 +80,7 @@ class DashboardController extends Controller
         
         $purchaseOrders = PurchaseOrder::with(['user', 'department', 'details'])
         ->orderBy('date', 'desc')
+        ->where('status', 'approved')
         ->limit(10)
         ->get()
         ->map(function ($po) {
