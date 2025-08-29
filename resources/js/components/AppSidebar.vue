@@ -338,7 +338,7 @@ const adminNavItems: NavItem[] = [
 
           <div v-if="user?.role === 'property_custodian'">
             <NavMain :items="custodianNavItems" group-label="Navigation"/>
-            <NavMain :items="staffRequestItems" group-label="Request"/>
+            <!-- <NavMain :items="staffRequestItems" group-label="Request"/> -->
             <NavMain :items="custodianApprovalItems" group-label="Request for Purchase"/>
             <NavMain :items="custodianReportItems" group-label="Reports" />
           </div>
