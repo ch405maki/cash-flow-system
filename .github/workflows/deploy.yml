@@ -1,18 +1,23 @@
-name: Deploy to CentOS
+name: Deploy Laravel + Vue App
 
 on:
   push:
     branches:
-      - master   # deploy only when pushing to master
+      - master
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Deploy App
-        run: |
-          /var/www/cash-flow-system/deploy.sh
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            bash /var/www/deploy.sh
