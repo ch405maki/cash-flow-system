@@ -7,17 +7,34 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy to Server
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            bash /var/www/deploy.sh
+      - name: Deploy Application
+        working-directory: /var/www/cash-flow-system
+        run: |
+          echo "🚀 Starting deployment..."
+          git reset --hard
+          git pull origin master
+          
+          # Install PHP dependencies
+          composer install --no-dev --optimize-autoloader
+
+          # Run migrations
+          php artisan migrate --force
+
+          # Build frontend
+          npm ci --omit=dev
+          npm run build
+
+          # Fix permissions
+          sudo chown -R mmanuel:apache /var/www/cash-flow-system
+          sudo chmod -R 775 /var/www/cash-flow-system/storage /var/www/cash-flow-system/bootstrap/cache
+
+          # Restart Apache
+          sudo systemctl restart httpd
+
+          echo "✅ Deployment complete!"
