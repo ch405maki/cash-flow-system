@@ -5,11 +5,9 @@ import { Separator } from '@/components/ui/separator';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
 
+const user = usePage().props.auth.user;
+
 const sidebarNavItems: NavItem[] = [
-    {
-        title: 'Users',
-        href: '/settings/profile',
-    },
     {
         title: 'Password',
         href: '/settings/password',
@@ -18,6 +16,13 @@ const sidebarNavItems: NavItem[] = [
         title: 'Appearance',
         href: '/settings/appearance',
     },
+];
+
+const adminNavItems: NavItem[] = [
+    {
+        title: 'Users',
+        href: '/settings/profile',
+    }
 ];
 
 const page = usePage();
@@ -32,6 +37,18 @@ const currentPath = page.props.ziggy?.location ? new URL(page.props.ziggy.locati
         <div class="flex flex-col space-y-8 md:space-y-0 lg:flex-row lg:space-x-12 lg:space-y-0">
             <aside class="w-full max-w-xl lg:w-48">
                 <nav class="flex flex-col space-x-0 space-y-1">
+                    <Button
+                        v-if="user.role === 'admin'"
+                        v-for="item in adminNavItems"
+                        :key="item.href"
+                        variant="ghost"
+                        :class="['w-full justify-start', { 'bg-muted': currentPath === item.href }]"
+                        as-child
+                    >
+                        <Link :href="item.href">
+                            {{ item.title }}
+                        </Link>
+                    </Button>
                     <Button
                         v-for="item in sidebarNavItems"
                         :key="item.href"

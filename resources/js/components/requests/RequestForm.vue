@@ -215,7 +215,6 @@ const capitalizeWords = (str: string): string => {
               id="item_description" 
               v-model="newItem.item_description" 
               placeholder="Item description"
-              @input="newItem.item_description = capitalizeWords(newItem.item_description)"
             />
           </div>
 
@@ -387,7 +386,7 @@ const capitalizeWords = (str: string): string => {
       <div class="flex justify-end">
         <Button type="submit" :disabled="submitting">
           <Send class="mr-2 h-4 w-4" />
-          {{ submitting ? 'Submitting...' : 'Review Request' }}
+          {{ submitting ? 'Submitting...' : 'Review and Submit Request' }}
         </Button>
       </div>
     </form>
@@ -448,13 +447,13 @@ const capitalizeWords = (str: string): string => {
           </div>
         </div>
 
-        <DialogFooter class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between sm:gap-0">
+        <DialogFooter class="flex flex-col-reverse gap-2 sm:flex-row justify-between space-x-2 sm:gap-0">
           <Button variant="outline" @click="showPreview = false" class="w-full sm:w-auto">
-            <ChevronLeft class="h-4 w-4 mr-2" />
+            <ChevronLeft class="h-4 w-4" />
             Back to Edit
           </Button>
           <Button type="button" @click="submitRequest" :disabled="submitting" class="w-full sm:w-auto">
-            <Send class="h-4 w-4 mr-2" />
+            <Send class="h-4 w-4" />
             {{ submitting ? 'Submitting...' : 'Submit Request' }}
           </Button>
         </DialogFooter>

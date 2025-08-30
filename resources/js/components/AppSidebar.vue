@@ -255,7 +255,7 @@ const reportItems = ref<DropdownNavItem[]>([
 const footerNavItems: NavItem[] = [
   {
     title: 'Settings',
-    href: '/settings/profile',
+    href: '/settings/password',
     icon: Settings,
   },
 ];
