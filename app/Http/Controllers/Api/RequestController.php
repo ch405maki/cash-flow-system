@@ -359,63 +359,69 @@ class RequestController extends Controller
     }
 
     public function updateStatus(HttpRequest $httpRequest, Request $request)
-    {
-        $validated = $httpRequest->validate([
-            'status' => 'required|in:approved,rejected,propertyCustodian,to_order,released',
-            'password' => 'required_if:status,approved,propertyCustodian,to_order,released',
-        ]);
+{
+    $validated = $httpRequest->validate([
+        'status' => 'required|in:approved,rejected,propertyCustodian,to_order,released',
+        'password' => 'required_if:status,approved,propertyCustodian,to_order,released',
+    ]);
 
-        // Password verification for sensitive status changes
-        $passwordRequiredStatuses = ['approved', 'propertyCustodian', 'to_order', 'released'];
-        $authUser = auth()->user();
+    $passwordRequiredStatuses = ['approved', 'propertyCustodian', 'to_order', 'released'];
+    $authUser = auth()->user();
 
-        if (in_array($validated['status'], $passwordRequiredStatuses)) {
-            if (!Hash::check($validated['password'], $authUser->password)) {
-                return back()->withErrors([
-                    'password' => 'Invalid password',
-                ]);
-            }
+    // Check password if required
+    if (in_array($validated['status'], $passwordRequiredStatuses)) {
+        if (!Hash::check($validated['password'], $authUser->password)) {
+            return back()->withErrors([
+                'password' => 'Invalid password',
+            ]);
         }
-
-        // Store old status for logging
-        $oldStatus = $request->status;
-
-        // Determine update data
-        $updateData = ['status' => $validated['status']];
-        $validated['director_approved_at'] = now();
-
-        $request->update($updateData);
-
-        $description = "Request #{$request->request_no} status changed from {$oldStatus} to {$validated['status']} by {$authUser->username}";
-
-        RequestApproval::create([
-            'request_id' => $request->id,
-            'user_id' => $authUser->id,
-            'status' => $validated['status'],
-            'approved_at' => now(),
-            'remarks' => $description,
-        ]);
-
-        // Log the status change
-
-        activity()
-            ->performedOn($request)
-            ->causedBy($authUser)
-            ->useLog('Status Updated')
-            ->withProperties([
-                'action' => 'status_update',
-                'event' => 'Status Updated',
-                'ip_address' => $httpRequest->ip(),
-                'old_status' => $oldStatus,
-                'new_status' => $validated['status'],
-                'changed_by' => $authUser->username,
-                'changed_by_role' => $authUser->role,
-                'request_no' => $request->request_no,
-            ])
-            ->log($description);
-
-        return back()->with('success', 'Request status updated successfully');
     }
+
+    // Store old status for logging
+    $oldStatus = $request->status;
+
+    // Base update data
+    $updateData = ['status' => $validated['status']];
+
+    // ✅ If approver is same department as request, assign them as request owner
+    if ($authUser->department_id === $request->department_id) {
+        $updateData['user_id'] = $authUser->id;
+    }
+
+    $validated['director_approved_at'] = now();
+
+    $request->update($updateData);
+
+    $description = "Request #{$request->request_no} status changed from {$oldStatus} to {$validated['status']} by {$authUser->username}";
+
+    RequestApproval::create([
+        'request_id' => $request->id,
+        'user_id' => $authUser->id,
+        'status' => $validated['status'],
+        'approved_at' => now(),
+        'remarks' => $description,
+    ]);
+
+    // Log activity
+    activity()
+        ->performedOn($request)
+        ->causedBy($authUser)
+        ->useLog('Status Updated')
+        ->withProperties([
+            'action' => 'status_update',
+            'event' => 'Status Updated',
+            'ip_address' => $httpRequest->ip(),
+            'old_status' => $oldStatus,
+            'new_status' => $validated['status'],
+            'changed_by' => $authUser->username,
+            'changed_by_role' => $authUser->role,
+            'request_no' => $request->request_no,
+        ])
+        ->log($description);
+
+    return back()->with('success', 'Request status updated successfully');
+}
+
 
     public function release(Request $request)
     {
