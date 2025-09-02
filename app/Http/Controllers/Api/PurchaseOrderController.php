@@ -103,7 +103,7 @@ class PurchaseOrderController extends Controller
             'user_id' => 'required|exists:users,id',
             'department_id' => 'required|exists:departments,id',
             'account_id' => 'nullable|exists:accounts,id',
-            'details' => 'required|array|min:1',
+            'details' => 'required|array|min:1',    
             'details.*.quantity' => 'required|numeric|min:1',
             'details.*.unit' => 'required|string',
             'details.*.item_description' => 'required|string',
@@ -125,6 +125,7 @@ class PurchaseOrderController extends Controller
         }
 
         $validated['amount'] = collect($validated['details'])->sum('amount');
+        $validated['account_id'] = 1;
 
         DB::beginTransaction();
         try {
