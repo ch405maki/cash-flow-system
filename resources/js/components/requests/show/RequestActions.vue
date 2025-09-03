@@ -147,7 +147,7 @@ function printList() {
         v-model="showForRequestModal"
         title="Password Verification"
         description="Please enter your password to send this order"
-        confirm-label="Confirm Order"
+        confirm-label="Confirm Approval"
         :loading="form.processing"
         @confirm="(password) => submitStatusUpdate('to_order', password)"
       />
@@ -166,7 +166,7 @@ function printList() {
         v-model="showOrderModal"
         title="Password Verification"
         description="Please enter your password to send this order"
-        confirm-label="Confirm Order"
+        confirm-label="Confirm Approval"
         :loading="form.processing"
         @confirm="(password) => submitStatusUpdate('propertyCustodian', password)"
       />

@@ -47,7 +47,7 @@ defineProps({
                 </TableRow>
                 <TableRow>
                     <TableCell colspan="5" class="text-right font-bold">
-                        NET AMMOUNT: {{ formatCurrency(voucher.check_amount) }}
+                        NET AMOUNT: {{ formatCurrency(voucher.check_amount) }}
                     </TableCell>
                 </TableRow>
             </TableBody>
