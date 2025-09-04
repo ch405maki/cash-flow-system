@@ -57,7 +57,6 @@ const downloadReceipt = () => {
             <th colspan="4" class="p-2 text-left text-muted-foreground">
                 VOUCHER TYPE:
                 <span class="uppercase font-normal">{{ voucher.type }}</span> &nbsp;&nbsp;&nbsp;| &nbsp;&nbsp;&nbsp;
-                STATUS:
                     <span class="uppercase font-bold tracking-wide"
                         :class="{
                             'text-green-600': voucher.status === 'completed',
@@ -67,8 +66,11 @@ const downloadReceipt = () => {
                             'text-blue-500': voucher.status === 'forEOD',
                             'text-gray-500': voucher.status === 'draft'
                         }">
-                    {{ formatStatus(voucher.status) }}
-                    </span>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+                    <span class="text-muted-foreground" v-if="voucher.status != 'forCheck'">STATUS: </span>{{ formatStatus(voucher.status) }}
+                    </span>
+                    <span v-if="voucher.status != 'forCheck'">
+                        &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+                    </span>
                 VOUCHER DATE:
                 <span class="uppercase font-normal">{{ formatDate(voucher.voucher_date) }}</span>
             </th>

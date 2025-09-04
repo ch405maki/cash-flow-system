@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3'
+import { watch } from "vue"
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useToast } from 'vue-toastification'
 import { Button } from '@/components/ui/button'
@@ -128,6 +129,18 @@ const submitForm = () => {
     }
   })
 }
+
+
+watch(
+  () => form.newItem.quantity,
+  (val) => {
+    if (val === null || val === undefined || val < 1) {
+      form.newItem.quantity = 1
+    }
+  },
+  { immediate: true }
+)
+
 </script>
 
 <template>

@@ -73,7 +73,7 @@ function formatStatus(status: string): string {
         case 'forEOD':
             return 'For EOD Approval';
         case 'forCheck':
-            return 'For Check Releasing';
+            return '';
         default:
             return status; 
     }

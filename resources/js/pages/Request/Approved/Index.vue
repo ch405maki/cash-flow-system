@@ -67,10 +67,6 @@ function getStatusVariant(status: string) {
           <p class="text-sm font-normal">Order list for creation of purchase order</p>
         </h1>
         <div class="space-x-2">
-          <Button variant="outline" size="sm" @click="goToCanvas()" class="h-8">
-            <PlusCircle class="h-4 w-4" />
-            Create Canvas
-          </Button>      
           <Button variant="default" size="sm" @click="goToCreate()" class="h-8">
             <PlusCircle class="h-4 w-4" />
             Create P. O.

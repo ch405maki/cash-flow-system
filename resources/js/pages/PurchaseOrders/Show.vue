@@ -533,14 +533,19 @@ function openPreview(file: any) {
 
       <!-- Allert Remarks -->
       <Alert 
-        v-if="showAlert && purchaseOrder.remarks" 
+        v-if="showAlert && (purchaseOrder.remarks || purchaseOrder.canvas.approvals)" 
         variant="success" 
         class="relative pr-10"
       >
         <BellRing class="h-4 w-4" />
-        <AlertTitle>Remarks</AlertTitle>
+        <AlertTitle>Remarks and Comments</AlertTitle>
         <AlertDescription>
-          {{ purchaseOrder.remarks }}
+          <div>
+            Purchasing: <span class="font-medium">{{ purchaseOrder.remarks }}.</span>
+          </div>
+          <div class="capitalize" v-for="comment in purchaseOrder.canvas.approvals" >
+            {{ comment.user.username }}: <span class="font-medium">{{ comment.comments }}.</span> 
+          </div>
         </AlertDescription>
         <!-- Dismiss Button -->
         <button

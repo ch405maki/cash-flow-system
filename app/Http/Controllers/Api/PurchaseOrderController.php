@@ -66,6 +66,7 @@ class PurchaseOrderController extends Controller
                 'details',
                 'canvas.selected_files.file',
                 'canvas.selected_files.approval',
+                'canvas.approvals.user',
                 'approvals.user',
                 'voucher.user',  
                 'voucher.details',

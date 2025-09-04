@@ -10,87 +10,95 @@ html {
 
 @layer base {
     :root {
-  --background: 0 0% 100%;
-  --foreground: 0 0% 3.9%;
+        --background: 270 100% 98%;            /* very light pastel violet bg */
+        --foreground: 270 40% 20%;             /* deep violet text */
 
-  --card: 270 100% 98%;
-  --card-foreground: 270 40% 30%;
-  --popover: 270 100% 98%;
-  --popover-foreground: 270 40% 30%;
+        --card: 270 100% 97%;
+        --card-foreground: 270 40% 20%;
 
-  --primary: 272 75% 60%;                /* Violete tone */
-  --primary-foreground: 0 0% 100%;
+        --popover: 270 100% 97%;
+        --popover-foreground: 270 40% 20%;
 
-  --secondary: 270 40% 94%;
-  --secondary-foreground: 270 40% 25%;
+        --primary: 270 80% 60%;                /* main vibrant violet */
+        --primary-foreground: 0 0% 100%;       /* white text on violet */
 
-  --muted: 270 30% 96%;
-  --muted-foreground: 270 20% 40%;
+        --secondary: 270 90% 90%;              /* pale violet */
+        --secondary-foreground: 270 40% 20%;
 
-  --accent: 270 50% 95%;
-  --accent-foreground: 270 50% 25%;
+        --muted: 270 50% 92%;                  /* muted soft violet */
+        --muted-foreground: 270 30% 35%;
 
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
+        --accent: 270 70% 80%;                 /* lighter accent violet */
+        --accent-foreground: 270 40% 20%;
 
-  --border: 270 40% 80%;
-  --input: 270 40% 80%;
-  --ring: 272 70% 55%;
+        --destructive: 0 70% 50%;              /* keep red for alerts */
+        --destructive-foreground: 0 0% 98%;
 
-  --chart-1: 278 65% 66%;
-  --chart-2: 268 45% 55%;
-  --chart-3: 280 60% 35%;
-  --chart-4: 270 80% 75%;
-  --chart-5: 275 70% 50%;
+        --border: 270 40% 88%;                 /* subtle violet border */
+        --input: 270 40% 88%;
+        --ring: 270 80% 60%;                   /* ring matches main violet */
 
-  --radius: 0.5rem;
+        --chart-1: 270 80% 60%;                /* main vibrant violet */
+        --chart-2: 270 70% 50%;                /* darker violet */
+        --chart-3: 270 60% 40%;                /* deep violet */
+        --chart-4: 270 50% 30%;                /* very deep violet */
+        --chart-5: 270 40% 25%;                /* almost black violet */
 
-  /* Sidebar (violet tones) */
-  --sidebar-background: 270 100% 97%;
-  --sidebar-foreground: 270 30% 30%;
-  --sidebar-primary: 272 80% 55%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 270 100% 92%;
-  --sidebar-accent-foreground: 270 40% 35%;
-  --sidebar-border: 270 45% 85%;
-  --sidebar-ring: 272 70% 55%;
-}
+        --radius: 0.5rem;
 
+        --sidebar-background: 270 100% 96%;
+        --sidebar-foreground: 270 40% 20%;
+        --sidebar-primary: 270 80% 60%;
+        --sidebar-primary-foreground: 0 0% 100%;
+        --sidebar-accent: 270 90% 90%;
+        --sidebar-accent-foreground: 270 40% 20%;
+        --sidebar-border: 270 40% 88%;
+        --sidebar-ring: 270 80% 60%;
+    }
 
     .dark {
-        --background: 0 0% 3.9%;
-        --foreground: 0 0% 98%;
-        --card: 0 0% 3.9%;
-        --card-foreground: 0 0% 98%;
-        --popover: 0 0% 3.9%;
-        --popover-foreground: 0 0% 98%;
-        --primary:263.4 70% 50.4%;
-        --primary-foreground:210 20% 98%;
-    
-        --secondary:215 27.9% 16.9%;
-        --secondary-foreground:210 20% 98%;
-        --muted: 0 0% 6.9%;
-        --muted-foreground: 0 0% 63.9%;
-        --accent: 0 0% 14.9%;
-        --accent-foreground: 0 0% 98%;
-        --destructive: 0 84% 60%;
+        --background: 270 20% 10%;             /* dark violet */
+        --foreground: 270 80% 90%;             /* light violet text */
+
+        --card: 270 20% 12%;
+        --card-foreground: 270 80% 90%;
+
+        --popover: 270 20% 12%;
+        --popover-foreground: 270 80% 90%;
+
+        --primary: 270 80% 60%;                /* keep vibrant violet as strong accent */
+        --primary-foreground: 0 0% 100%;
+
+        --secondary: 270 30% 25%;              /* muted dark violet */
+        --secondary-foreground: 270 80% 90%;
+
+        --muted: 270 20% 20%;                  /* muted dark violet */
+        --muted-foreground: 270 40% 70%;
+
+        --accent: 270 25% 30%;                 /* deep violet */
+        --accent-foreground: 270 80% 90%;
+
+        --destructive: 0 70% 40%;
         --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 14.9%;
-        --input: 0 0% 14.9%;
-        --ring: 0 0% 83.1%;
-        --chart-1: 220 70% 50%;
-        --chart-2: 160 60% 45%;
-        --chart-3: 30 80% 55%;
-        --chart-4: 280 65% 60%;
-        --chart-5: 340 75% 55%;
-        --sidebar-background: 0 0% 7%;
-        --sidebar-foreground: 0 0% 95.9%;
-        --sidebar-primary: 360, 100%, 100%;
+
+        --border: 270 20% 20%;
+        --input: 270 20% 20%;
+        --ring: 270 80% 60%;
+
+        --chart-1: 270 80% 60%;
+        --chart-2: 270 70% 50%;
+        --chart-3: 270 60% 40%;
+        --chart-4: 270 50% 30%;
+        --chart-5: 270 40% 20%;
+
+        --sidebar-background: 270 20% 8%;
+        --sidebar-foreground: 270 80% 90%;
+        --sidebar-primary: 270 80% 60%;
         --sidebar-primary-foreground: 0 0% 100%;
-        --sidebar-accent: 0 0% 15.9%;
-        --sidebar-accent-foreground: 240 4.8% 95.9%;
-        --sidebar-border: 0 0% 15.9%;
-        --sidebar-ring: 217.2 91.2% 59.8%;
+        --sidebar-accent: 270 30% 25%;
+        --sidebar-accent-foreground: 270 80% 90%;
+        --sidebar-border: 270 20% 20%;
+        --sidebar-ring: 270 80% 60%;
     }
 }
 

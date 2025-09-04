@@ -21,6 +21,7 @@ use Illuminate\Database\QueryException;
 use Inertia\Inertia;
 
 class ApprovedPurchaseOrderController extends Controller {
+    
     public function forVoucher() {
 
         $user = Auth::user();

@@ -20,7 +20,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="grid gap-4 md:grid-cols-4">
+  <div class="grid gap-4 md:grid-cols-3">
     <!-- Total Requests Card -->
     <Card class="h-full">
       <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -64,7 +64,7 @@ defineProps<{
     </Card>
 
     <!-- To Order Card -->
-    <Card class="h-full">
+    <!-- <Card class="h-full">
       <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle class="text-sm font-medium">To Purchase</CardTitle>
         <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
@@ -75,6 +75,6 @@ defineProps<{
         <div class="text-2xl font-bold">{{ statusCounts.to_order }}</div>
         <p class="text-xs text-muted-foreground">Ready for purchase</p>
       </CardContent>
-    </Card>
+    </Card> -->
   </div>
 </template>

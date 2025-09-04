@@ -46,17 +46,17 @@ const executiveMainItems: NavItem[] = [
 
 const executiveApprovalItems: NavItem[] = [
   {
-    title: 'Order Request',
+    title: 'Request For Purchase',
     href: '/for-approval',
     icon: FileCheck2,
   },
   {
-    title: 'Purchase Canvas',
+    title: 'Canvas Approval',
     href: '/canvas',
     icon: ListCollapse,
   },
   {
-    title: 'Purchase Request',
+    title: 'P. O. Approval',
     href: '/purchase-orders',
     icon: ShoppingCart,
   },
@@ -113,8 +113,8 @@ const purchasingPONavItems = ref<DropdownNavItem[]>([
     isOpen: false,
     children: [
       { title: 'Draft', href: '/purchase-orders?status=draft' },
-      { title: 'For Approval', href: '/purchase-orders?status=forEOD' },
-      { title: 'Approved', href: '/purchase-orders?status=approved' },
+      { title: 'For EOD Approval', href: '/purchase-orders?status=forEOD' },
+      { title: 'P. O. Status', href: '/purchase-orders?status=approved' },
     ],
   },
 ]);
@@ -145,12 +145,12 @@ const custodianApprovalItems: NavItem[] = [
     icon: Package,
   },
   {
-    title: 'For Approval',
+    title: 'For EOD Approval',
     href: '/for-approval',
     icon: ClipboardCheck,
   },
   {
-    title: 'On Process',
+    title: 'P. O. Status',
     href: '/to-order/on-process',
     icon: ClipboardCheck,
   },
@@ -224,7 +224,7 @@ const accountingNavItems: NavItem[] = [
 
 const accountingCheckNavItems: NavItem[] = [
   {
-    title: 'For Check Releasing',
+    title: 'For Check',
     href: '/approved-voucher',
     icon: ReceiptText,
   },
