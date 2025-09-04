@@ -132,7 +132,7 @@ class DashboardController extends Controller
             
         $statusCounts = [
             'totalForVoucher' => PurchaseOrder::where('status', 'approved')->count(),
-            'pending' => Voucher::where('status', 'pending')->count(),
+            'pending' => Voucher::where('status', 'draft')->count(),
             'forApproval' => Voucher::where('status', 'forEOD')->count(),
             'approved' => Voucher::whereIn('status', ['forCheck', 'unreleased', 'released'])->count(),
             'rejected' => Voucher::where('status', 'rejected')->count(),

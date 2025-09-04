@@ -34,6 +34,10 @@ defineProps({
 const toast = useToast();
 const emit = defineEmits(['print', 'check-updated']);
 
+function goToEditVoucher(voucherId, e) {
+  e.preventDefault()
+  router.get(route("vouchers.edit", voucherId))
+}
 </script>
 
 <template>
@@ -81,17 +85,17 @@ const emit = defineEmits(['print', 'check-updated']);
                     />
             </template>
 
-            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'draft'">
+            <!-- <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'draft'">
                 <Button
                     size="sm"
-                    v-if="authUser.role === 'accounting' && voucher.status == 'forEOD'"
+                    v-if="authUser.role === 'accounting' && voucher.status == 'draft'"
                     variant="default"
                     @click.stop="goToEditVoucher(voucher.id, $event)" 
                     >
                     <SquarePen />
                     <span>Edit</span>
                 </Button>
-            </template>
+            </template> -->
 
             <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'draft'">
                 <DirectorVerificationDialog :voucher-id="voucher.id" action="forEod">
