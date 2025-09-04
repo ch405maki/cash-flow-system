@@ -224,7 +224,7 @@ const accountingNavItems: NavItem[] = [
 
 const accountingCheckNavItems: NavItem[] = [
   {
-    title: 'For Check Releasing',
+    title: 'For Check',
     href: '/approved-voucher',
     icon: ReceiptText,
   },

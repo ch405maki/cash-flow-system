@@ -194,7 +194,7 @@ const handleAction = async (action) => {
       onSuccess: () => {
         emit('updated');
         emit('update:open', false);
-        toast.success(`Canvas ${action}d successfully`);
+        toast.success(`Canvas ${action} successfully`);
       },
       onError: (errors) => {
         toast.error(`Action failed: ${errors.message || 'Unknown error'}`);
@@ -491,7 +491,7 @@ function viewRequest(id: number) {
                 <div v-if="canvas.status === 'draft'" class="space-x-2">
                   <Button 
                     variant="default" 
-                    @click="handleAction('submit')"
+                    @click="handleAction('submited')"
                     :disabled="form.processing"
                   >
                     <ChevronRight class="h-4 w-4" />
