@@ -26,6 +26,7 @@ const props = defineProps<{
         overdueVouchers: number
         currentMonthVouchers: number
         statusCounts: {
+            totalForVoucher?: number
             pending?: number
             forApproval?: number
             approved?: number
