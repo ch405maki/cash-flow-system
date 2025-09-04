@@ -540,7 +540,7 @@ function openPreview(file: any) {
         <BellRing class="h-4 w-4" />
         <AlertTitle>Remarks and Comments</AlertTitle>
         <AlertDescription>
-          <div>
+          <div v-if="purchaseOrder.remarks">
             Purchasing: <span class="font-medium">{{ purchaseOrder.remarks }}.</span>
           </div>
           <div class="capitalize" v-for="comment in purchaseOrder.canvas.approvals" >
