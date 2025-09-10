@@ -79,8 +79,9 @@ class ReportController extends Controller
 
     public function voucherSummary()
     {
-        $vouchers = Voucher::orderBy('voucher_date', 'desc')
-            ->get(['id', 'voucher_no', 'voucher_date', 'payee', 'check_amount', 'type']);
+        $vouchers = Voucher::with(['details.account'])
+            ->orderBy('voucher_date', 'desc')
+            ->get(['id', 'voucher_no', 'voucher_date', 'payee', 'check_amount', 'type', 'purpose']);
 
         return Inertia::render('Reports/Vouchers/Index', [
             'vouchers' => $vouchers
@@ -95,7 +96,7 @@ class ReportController extends Controller
         ]);
     }
 
-   public function preview(Voucher $voucher)
+    public function preview(Voucher $voucher)
     {
         $signatories = Signatory::where('status', 'active')->get();
         $roles = [
