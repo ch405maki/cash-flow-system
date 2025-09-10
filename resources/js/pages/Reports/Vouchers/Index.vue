@@ -86,9 +86,9 @@ function exportExcel() {
       rows.push({
         "Voucher Date": idx === 0 ? formatDate(v.voucher_date) : "",
         "Voucher No": idx === 0 ? v.voucher_no : "",
+        "Check Amount": idx === 0 ? v.check_amount : "",
         "Payee": idx === 0 ? v.payee : "",
         "Purpose": idx === 0 ? v.purpose : "",
-        "Check Amount": idx === 0 ? v.check_amount : "",
         "Account": detail.account?.account_title || "Unspecified",
         "Detail Amount": detail.amount || 0,
         "Charging Tag": detail.charging_tag,
@@ -101,8 +101,13 @@ function exportExcel() {
   XLSX.utils.book_append_sheet(workbook, worksheet, "Voucher Summary");
   const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
   const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-  saveAs(blob, "voucher_summary.xlsx");
+
+  const oldestMonth = getOldestMonth();
+  const filename = oldestMonth ? `voucher_summary_${oldestMonth}.xlsx` : "voucher_summary.xlsx";
+
+  saveAs(blob, filename);
 }
+
 
 
 // Export to PDF
@@ -115,9 +120,9 @@ function exportPdf() {
       tableData.push([
         idx === 0 ? formatDate(v.voucher_date) : "",
         idx === 0 ? v.voucher_no : "",
+        idx === 0 ? formatCurrency(v.check_amount) : "",
         idx === 0 ? v.payee : "",
         idx === 0 ? v.purpose : "",
-        idx === 0 ? formatCurrency(v.check_amount) : "",
         detail.account?.account_title || "Unspecified",
         formatCurrency(detail.amount || 0),
         detail.charging_tag,
@@ -125,14 +130,33 @@ function exportPdf() {
     });
   });
 
+  const oldestMonth = getOldestMonth();
+  const title = oldestMonth ? `Voucher Summary - ${oldestMonth}` : "Voucher Summary";
+
   autoTable(doc, {
-    head: [["Voucher Date", "Voucher No", "Payee", "Purpose", "Check Amount", "Account", "Detail Amount", "Charging Tag"]],
+    head: [["Voucher Date", "Voucher No",  "Check Amount", "Payee", "Purpose", "Account", "Detail Amount", "Charging Tag"]],
     body: tableData,
     styles: { fontSize: 8 },
     headStyles: { fillColor: [99, 102, 241] },
+    didDrawPage: () => {
+      doc.setFontSize(12);
+      doc.text(title, 14, 10);
+    }
   });
 
-  doc.save("voucher_summary.pdf");
+  doc.save(`${title.replace(/\s+/g, "_").toLowerCase()}.pdf`);
+}
+
+
+function getOldestMonth(): string {
+  if (!filteredVouchers.value.length) return "";
+
+  const oldest = filteredVouchers.value.reduce((min, v) => {
+    const vDate = new Date(v.voucher_date);
+    return vDate < min ? vDate : min;
+  }, new Date(filteredVouchers.value[0].voucher_date));
+
+  return oldest.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 
 
