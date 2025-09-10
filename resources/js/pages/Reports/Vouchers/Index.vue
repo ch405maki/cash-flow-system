@@ -80,20 +80,22 @@ const filteredVouchers = computed(() => {
 // Export to Excel
 function exportExcel() {
   const rows: any[] = [];
+
   filteredVouchers.value.forEach(v => {
-    v.details.forEach(detail => {
+    v.details.forEach((detail, idx) => {
       rows.push({
-        "Voucher Date": formatDate(v.voucher_date),
-        "Voucher No": v.voucher_no,
-        "Payee": v.payee,
-        "Purpose": v.purpose,
-        "Check Amount": v.check_amount,
+        "Voucher Date": idx === 0 ? formatDate(v.voucher_date) : "",
+        "Voucher No": idx === 0 ? v.voucher_no : "",
+        "Payee": idx === 0 ? v.payee : "",
+        "Purpose": idx === 0 ? v.purpose : "",
+        "Check Amount": idx === 0 ? v.check_amount : "",
         "Account": detail.account?.account_title || "Unspecified",
         "Detail Amount": detail.amount || 0,
         "Charging Tag": detail.charging_tag,
       });
     });
   });
+
   const worksheet = XLSX.utils.json_to_sheet(rows);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Voucher Summary");
@@ -102,18 +104,20 @@ function exportExcel() {
   saveAs(blob, "voucher_summary.xlsx");
 }
 
+
 // Export to PDF
 function exportPdf() {
   const doc = new jsPDF({ orientation: "landscape" });
   const tableData: any[] = [];
+
   filteredVouchers.value.forEach(v => {
-    v.details.forEach(detail => {
+    v.details.forEach((detail, idx) => {
       tableData.push([
-        formatDate(v.voucher_date),
-        v.voucher_no,
-        v.payee,
-        v.purpose,
-        formatCurrency(v.check_amount),
+        idx === 0 ? formatDate(v.voucher_date) : "",
+        idx === 0 ? v.voucher_no : "",
+        idx === 0 ? v.payee : "",
+        idx === 0 ? v.purpose : "",
+        idx === 0 ? formatCurrency(v.check_amount) : "",
         detail.account?.account_title || "Unspecified",
         formatCurrency(detail.amount || 0),
         detail.charging_tag,
@@ -130,6 +134,7 @@ function exportPdf() {
 
   doc.save("voucher_summary.pdf");
 }
+
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
