@@ -2,11 +2,10 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { computed, ref } from 'vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import FormHeader from '@/components/reports/header/formHeder.vue'
 import { Button } from '@/components/ui/button'
-import { Eraser, Printer, Rocket, X   } from 'lucide-vue-next';
-import { router } from '@inertiajs/vue3'
+import { Eraser, Printer, Rocket, X, FileDown } from 'lucide-vue-next';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { formatCurrency } from '@/lib/utils';
 import {
@@ -26,65 +25,144 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+// 📦 Export dependencies
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
 const props = defineProps<{
   vouchers: Array<{
     id: number;
     voucher_no: string;
     voucher_date: string;
     payee: string;
+    purpose: string;
     check_amount: number;
     type: string;
+    details: Array<{
+      id: number;
+      amount: string;
+      charging_tag: string;
+      account?: {
+        id: number;
+        account_title: string;
+      };
+    }>;
   }>;
 }>();
 
-// Filter states
+// Filters
 const showAlert = ref(true)
 const startDate = ref<string>('');
 const endDate = ref<string>('');
 const selectedType = ref<string>('all');
 
-// Get unique voucher type for filter dropdown
+// Voucher type dropdown
 const voucherType = computed(() => {
   const uniqueTypes = new Set<string>();
-  props.vouchers.forEach(v => {
-    uniqueTypes.add(v.type);
-  });
+  props.vouchers.forEach(v => uniqueTypes.add(v.type));
   return Array.from(uniqueTypes).sort();
 });
 
-// Filtered purchase orders
+// Filtered vouchers
 const filteredVouchers = computed(() => {
   return props.vouchers.filter(v => {
-    // Filter by date range
     const vDate = new Date(v.voucher_date);
     const start = startDate.value ? new Date(startDate.value) : null;
     const end = endDate.value ? new Date(endDate.value) : null;
-    
-    const dateInRange = 
-      (!start || vDate >= start) && 
-      (!end || vDate <= end);
-    
-    // Filter by department
-    const typeMatch = 
-      selectedType.value === 'all' || 
-      v.type === selectedType.value;
-    
+    const dateInRange = (!start || vDate >= start) && (!end || vDate <= end);
+    const typeMatch = selectedType.value === 'all' || v.type === selectedType.value;
     return dateInRange && typeMatch;
   });
 });
 
-// Total amount calculation based on filtered data
-const totalAmount = computed(() =>
-  filteredVouchers.value.reduce((sum, v) => sum + Number(v.check_amount || 0), 0)
-);
+// Export to Excel
+function exportExcel() {
+  const rows: any[] = [];
+
+  filteredVouchers.value.forEach(v => {
+    v.details.forEach((detail, idx) => {
+      rows.push({
+        "Voucher Date": idx === 0 ? formatDate(v.voucher_date) : "",
+        "Voucher No": idx === 0 ? v.voucher_no : "",
+        "Check Amount": idx === 0 ? v.check_amount : "",
+        "Payee": idx === 0 ? v.payee : "",
+        "Purpose": idx === 0 ? v.purpose : "",
+        "Account": detail.account?.account_title || "Unspecified",
+        "Detail Amount": detail.amount || 0,
+        "Charging Tag": detail.charging_tag,
+      });
+    });
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Voucher Summary");
+  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+
+  const oldestMonth = getOldestMonth();
+  const filename = oldestMonth ? `voucher_summary_${oldestMonth}.xlsx` : "voucher_summary.xlsx";
+
+  saveAs(blob, filename);
+}
+
+
+
+// Export to PDF
+function exportPdf() {
+  const doc = new jsPDF({ orientation: "landscape" });
+  const tableData: any[] = [];
+
+  filteredVouchers.value.forEach(v => {
+    v.details.forEach((detail, idx) => {
+      tableData.push([
+        idx === 0 ? formatDate(v.voucher_date) : "",
+        idx === 0 ? v.voucher_no : "",
+        idx === 0 ? formatCurrency(v.check_amount) : "",
+        idx === 0 ? v.payee : "",
+        idx === 0 ? v.purpose : "",
+        detail.account?.account_title || "Unspecified",
+        formatCurrency(detail.amount || 0),
+        detail.charging_tag,
+      ]);
+    });
+  });
+
+  const oldestMonth = getOldestMonth();
+  const title = oldestMonth ? `Voucher Summary - ${oldestMonth}` : "Voucher Summary";
+
+  autoTable(doc, {
+    head: [["Voucher Date", "Voucher No",  "Check Amount", "Payee", "Purpose", "Account", "Detail Amount", "Charging Tag"]],
+    body: tableData,
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [99, 102, 241] },
+    didDrawPage: () => {
+      doc.setFontSize(12);
+      doc.text(title, 14, 10);
+    }
+  });
+
+  doc.save(`${title.replace(/\s+/g, "_").toLowerCase()}.pdf`);
+}
+
+
+function getOldestMonth(): string {
+  if (!filteredVouchers.value.length) return "";
+
+  const oldest = filteredVouchers.value.reduce((min, v) => {
+    const vDate = new Date(v.voucher_date);
+    return vDate < min ? vDate : min;
+  }, new Date(filteredVouchers.value[0].voucher_date));
+
+  return oldest.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+}
+
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit'
-  });
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -93,20 +171,6 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Voucher Summary', href: '/' },
 ];
 
-const printArea = () =>{
-  const printContents = document.getElementById('print-section')?.innerHTML;
-  const originalContents = document.body.innerHTML;
-
-  if (printContents) {
-    document.body.innerHTML = printContents;
-    window.print();
-    document.body.innerHTML = originalContents;
-    location.reload();
-  } else {
-    console.error('Print section not found');
-  }
-}
-
 function goToVoucher(id: number) {
   router.visit(`/vouchers/${id}`)
 }
@@ -114,131 +178,107 @@ function goToVoucher(id: number) {
 
 <template>
   <Head title="Voucher Summary" />
-
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+
+      <!-- Notice -->
       <Alert v-if="showAlert" variant="success" class="relative pr-10">
         <Rocket class="h-4 w-4 text-green-500" />
         <AlertTitle>Notice</AlertTitle>
         <AlertDescription>
-          This is a collection of all Vouchers.
+          This is a collection of all Vouchers. Export data or click a voucher to view its details.
         </AlertDescription>
-
-        <!-- Dismiss Button -->
-        <button
-          class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground"
-          @click="showAlert = false"
-          aria-label="Dismiss"
-        >
+        <button class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground" @click="showAlert = false">
           <X class="h-4 w-4 text-purple-700" />
         </button>
       </Alert>
 
-    <div class="flex items-center justify-between">
+      <!-- Page Header -->
+      <div class="flex items-center justify-between">
         <h1 class="text-xl font-bold">Voucher Summary</h1>
-        <Button size="sm" @click="printArea"> <Printer />Print</Button>
-    </div>
-    <!-- Filters Section -->
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-12">
-        <!-- Start Date -->
-        <div class="flex flex-col col-span-3 h-full">
-            <label class="block text-sm font-medium mb-1">Start Date</label>
-            <Input type="date" v-model="startDate" class="h-8" />
+        <div class="flex gap-2">
+          <Button size="sm" variant="default" @click="exportExcel"><FileDown class="mr-1 h-4 w-4"/>Excel</Button>
+          <Button size="sm" variant="secondary" @click="exportPdf"><FileDown class="mr-1 h-4 w-4"/>PDF</Button>
         </div>
+      </div>
 
-        <!-- End Date -->
-        <div class="flex flex-col col-span-3 h-full">
-            <label class="block text-sm font-medium mb-1">End Date</label>
-            <Input type="date" v-model="endDate" class="h-8" />
+      <!-- Filters -->
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-12">
+        <div class="col-span-3">
+          <label class="block text-sm font-medium mb-1">Start Date</label>
+          <Input type="date" v-model="startDate" class="h-8" />
         </div>
-        
-
-        <!-- Voucher Type Dropdown (Wider) -->
-        <div class="flex flex-col col-span-5 h-full">
-            <label class="block text-sm font-medium mb-1">Voucher Type</label>
-            <Select v-model="selectedType" class="w-[250px] h-8">
-                <SelectTrigger class="h-8 w-full">
-                    <SelectValue placeholder="All Voucher Type" />
-                </SelectTrigger>
-                <SelectContent class="w-[250px]">
-                    <SelectItem value="all">All Voucher Type</SelectItem>
-                    <SelectItem 
-                        v-for="type in voucherType" 
-                        :key="type" 
-                        :value="type"
-                    >
-                        {{ type }}
-                    </SelectItem>
-                </SelectContent>
-            </Select>
+        <div class="col-span-3">
+          <label class="block text-sm font-medium mb-1">End Date</label>
+          <Input type="date" v-model="endDate" class="h-8" />
         </div>
-
-        <!-- Clear Button -->
-        <div class="flex flex-col col-span-1 justify-end h-full">
-            <Button 
-                variant="destructive" 
-                @click="() => {
-                    startDate = '';
-                    endDate = '';
-                    selectedType = 'all';
-                }"
-                class="h-8"
-            >
-                <Eraser /> Clear
-            </Button>
+        <div class="col-span-5">
+          <label class="block text-sm font-medium mb-1">Voucher Type</label>
+          <Select v-model="selectedType" class="h-8">
+            <SelectTrigger class="h-8 w-full">
+              <SelectValue placeholder="All Voucher Types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Voucher Types</SelectItem>
+              <SelectItem v-for="type in voucherType" :key="type" :value="type">{{ type }}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-    </div>
+        <div class="col-span-1 flex items-end">
+          <Button variant="destructive" class="h-8" @click="() => { startDate=''; endDate=''; selectedType='all'; }">
+            <Eraser class="mr-1 h-4 w-4"/>Clear
+          </Button>
+        </div>
+      </div>
 
-    <!-- Results Count -->
-    <div class="text-sm text-muted-foreground">
-    Showing {{ filteredVouchers.length }} of {{ props.vouchers.length }} records
-    </div>
-
-      <!-- Table Section -->
-    <div id="print-section">
-    <div class="hidden print:block">
-        <FormHeader text="Voucher Summary" :bordered="false" />
-    </div>
-    <div class="relative flex-1 border border-sidebar-border/70 dark:border-sidebar-border md:min-h-min">
-      <Table>
+      <!-- Table -->
+      <div class="relative border border-sidebar-border/70 dark:border-sidebar-border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead class="w-32">Voucher Date</TableHead>
+              <TableHead class="w-32">Voucher No</TableHead>
+              <TableHead class="w-32 text-right">Check Amount</TableHead>
+              <TableHead class="w-48">Payee</TableHead>
+              <TableHead class="w-64">Purpose</TableHead>
+              <TableHead class="w-48">Account</TableHead>
+              <TableHead class="w-32 text-right">Amount (₱)</TableHead>
+              <TableHead class="w-40">Charging Tag</TableHead>
+            </TableRow>
+          </TableHeader>
           <TableBody>
-            <TableRow>
-              <TableCell>Voucher No</TableCell>
-              <TableCell>Voucher Date</TableCell>
-              <TableCell>Voucher Type</TableCell>
-              <TableCell>Payee</TableCell>
-              <TableCell class="text-right">Amount (₱)</TableCell>
-            </TableRow>
-            <TableRow v-for="v in filteredVouchers" :key="v.id">
-              <TableCell><button class="hover:text-purple-700 hover:underline" @click="goToVoucher(v.id)">{{ v.voucher_no }}</button></TableCell>
-              <TableCell>{{ formatDate(v.voucher_date) }}</TableCell>
-              <TableCell>{{ v.type }}</TableCell>
-              <TableCell>{{ v.payee }}</TableCell>
-              <TableCell class="text-right">{{ formatCurrency(v.check_amount) }}</TableCell>
-            </TableRow>
-
-            <!-- Total Row -->
-            <TableRow>
-              <TableCell colspan="4" class="text-right font-semibold">Total:</TableCell>
-              <TableCell class="text-right font-bold text-foreground">
-                <div v-if="totalAmount === 0" class="text-warning">Warning: Total is zero</div>
-                {{ formatCurrency(totalAmount) }}
-              </TableCell>
-            </TableRow>
+            <template v-for="v in filteredVouchers" :key="v.id">
+              <TableRow class="bg-muted/50 hover:bg-muted/70">
+                <TableCell>{{ formatDate(v.voucher_date) }}</TableCell>
+                <TableCell>
+                  <button class="hover:text-purple-700 hover:underline font-medium" @click.stop="goToVoucher(v.id)">
+                    {{ v.voucher_no }}
+                  </button>
+                </TableCell>
+                <TableCell class="text-right font-medium">{{ formatCurrency(v.check_amount) }}</TableCell>
+                <TableCell class="truncate" :title="v.payee">{{ v.payee }}</TableCell>
+                <TableCell class="truncate" :title="v.purpose">{{ v.purpose }}</TableCell>
+                <TableCell colspan="3" class="text-muted-foreground text-sm">
+                  {{ v.details.length }} account{{ v.details.length > 1 ? 's' : '' }}
+                </TableCell>
+              </TableRow>
+              <TableRow v-for="detail in v.details" :key="detail.id" class="bg-muted/20">
+                <TableCell></TableCell>
+                <TableCell colspan="4"></TableCell>
+                <TableCell class="text-sm">{{ detail.account?.account_title || 'Unspecified' }}</TableCell>
+                <TableCell class="text-right text-sm font-medium">{{ formatCurrency(detail.amount || 0) }}</TableCell>
+                <TableCell class="text-sm">{{ detail.charging_tag }}</TableCell>
+              </TableRow>
+            </template>
           </TableBody>
         </Table>
       </div>
-    </div>
+
+      <!-- Empty -->
+      <div v-if="filteredVouchers.length === 0" class="text-center py-12 text-muted-foreground">
+        <p>No vouchers found matching your criteria.</p>
+        <Button variant="outline" class="mt-4" @click="() => { startDate=''; endDate=''; selectedType='all'; }">Clear filters</Button>
+      </div>
     </div>
   </AppLayout>
 </template>
-
-<style scoped>
-table tr {
-  padding: 0 !important;
-  line-height: 1.25 !important;
-}
-table td {
-  padding: 0.45rem !important;
-}
-</style>
