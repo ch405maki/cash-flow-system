@@ -70,6 +70,7 @@ class VoucherController extends Controller
                 'po_id' => 'nullable|exists:purchase_orders,id',
                 'voucher_no' => 'required|string|unique:vouchers,voucher_no',
                 'issue_date' => 'nullable|date',
+                'tin_no' => 'nullable|string',
                 'payment_date' => 'nullable|date',
                 'delivery_date' => 'nullable|date',
                 'voucher_date' => 'required|date',
@@ -106,6 +107,7 @@ class VoucherController extends Controller
                 'po_id' => $validated['po_id'] ?? null,  
                 'voucher_no' => $validated['voucher_no'],
                 'issue_date' => $validated['issue_date'] ?? null,
+                'tin_no' => $validated['tin_no'] ?? null,
                 'payment_date' => $validated['payment_date'] ?? null,
                 'delivery_date' => $validated['delivery_date'] ?? null,
                 'voucher_date' => $validated['voucher_date'],
@@ -187,6 +189,7 @@ class VoucherController extends Controller
         return Voucher::create([
             'issue_date' => $data['issue_date'],
             'payment_date' => $data['payment_date'],
+            'tin_no' => $data['tin_no'] ?? null,
             'check_date' => $data['check_date'],
             'delivery_date' => $data['delivery_date'],
             'voucher_date' => $data['voucher_date'],    
@@ -359,7 +362,6 @@ class VoucherController extends Controller
             return $this->errorResponse('Failed to upload receipt: ' . $e->getMessage(), 500);
         }
     }
-
 
     public function addCheckDetails(Request $request, Voucher $voucher): JsonResponse
     {

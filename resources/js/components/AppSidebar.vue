@@ -236,6 +236,11 @@ const accountingAuditNavItems: NavItem[] = [
     href: '/canvas',
     icon: ListCollapse,
   },
+  {
+    title: 'Vouchers',
+    href: '/voucher-approval',
+    icon: ReceiptText,
+  },
 ];
 
 const reportItems = ref<DropdownNavItem[]>([
