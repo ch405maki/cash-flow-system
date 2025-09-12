@@ -54,13 +54,14 @@ const form = ref({
   check_payable_to: '',
   date: new Date().toISOString().split('T')[0], 
   purpose: '',
+  tin_no: '',
   status: 'draft',
   user_id: props.user_id,
   department_id: '',
   details: [] as PurchaseOrderDetail[],
   canvas_id: props.canvas_id || null,
   tagging: props.canvas_id ? 'with_canvas' : 'no_canvas' as TaggingType,
-  file: null as File | null, // Changed to single file
+  file: null as File | null, 
 });
 
 const editItem = (index: number) => {
@@ -185,6 +186,7 @@ const submitForm = async () => {
       formData.append('check_payable_to', form.value.check_payable_to);
       formData.append('date', form.value.date);
       formData.append('purpose', form.value.purpose);
+      formData.append('tin_no', form.value.tin_no);
       formData.append('status', form.value.status);
       formData.append('user_id', String(form.value.user_id));
       formData.append('department_id', form.value.department_id);
@@ -329,6 +331,10 @@ const submitForm = async () => {
                 </SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div class="space-y-2 md:col-span-1">
+            <Label for="tin_no">Company TIN</Label>
+            <Input id="tin_no" type="text" v-model="form.tin_no" required />
           </div>
         </div>
 

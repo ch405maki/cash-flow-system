@@ -53,6 +53,7 @@ const props = defineProps<{
   purchaseOrder: {
     id: number;
     canvas_id: number;
+    tin_no: string;
     po_no: string;
     date: string;
     payee: string;
@@ -111,15 +112,12 @@ const props = defineProps<{
     id: number;
     name: string;
     email: string;
-    // Add other fields as needed
   };
   signatories: {
     full_name: string;
     position: string;
   };
 }>();
-
-
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Purchase Orders', href: '/purchase-orders' },
@@ -568,13 +566,15 @@ function openPreview(file: any) {
               <td class="p-2 font-medium text-muted-foreground border-r w-48">COMPANY NAME:</td>
               <td class="p-2 uppercase border-r w-xl">{{ purchaseOrder.payee }}</td>
               <td class="p-2 font-medium text-muted-foreground border-r w-40">P.O. NUMBER:</td>
-              <td class="p-2 w-40">{{ purchaseOrder.po_no }}</td>
+              <td class="p-2 w-40 border-r">{{ purchaseOrder.po_no }}</td>
+              <td class="p-2 w-40 font-medium text-muted-foreground border-r">P.O. DATE:</td>
+              <td class="p-2 w-40 ">{{ formatDate(purchaseOrder.date) }}</td>
             </tr>
             <tr class="border-b">
               <td class="p-2 font-medium text-muted-foreground border-r">CHECK PAYABLE TO:</td>
               <td class="p-2 uppercase border-r">{{ purchaseOrder.check_payable_to }}</td>
-              <td class="p-2 font-medium text-muted-foreground border-r">P.O. DATE:</td>
-              <td class="p-2">{{ formatDate(purchaseOrder.date) }}</td>
+              <td class="p-2 font-medium text-muted-foreground border-r">TIN:</td>
+              <td class="p-2">{{ purchaseOrder.tin_no }}</td>
             </tr>
           </tbody>
         </table>

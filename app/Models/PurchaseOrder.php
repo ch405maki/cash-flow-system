@@ -15,8 +15,20 @@ class PurchaseOrder extends Model
     ];
 
     protected $fillable = [
-        'po_no', 'payee', 'check_payable_to', 'date', 'amount',
-        'purpose', 'status', 'remarks', 'user_id', 'account_id', 'department_id', 'canvas_id', 'tagging'
+        'po_no', 
+        'payee', 
+        'tin_no',
+        'check_payable_to', 
+        'date', 
+        'amount',
+        'purpose', 
+        'status', 
+        'remarks', 
+        'user_id', 
+        'account_id', 
+        'department_id', 
+        'canvas_id', 
+        'tagging'
     ];
 
     public function user(): BelongsTo   

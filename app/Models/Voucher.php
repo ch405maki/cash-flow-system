@@ -9,9 +9,24 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Voucher extends Model
 {
     protected $fillable = [
-        'po_id', 'voucher_no', 'voucher_date', 'issue_date', 'payment_date', 'type',
-        'payee', 'check_no', 'check_date', 'check_amount', 'check_payable_to',
-        'delivery_date', 'purpose', 'status', 'user_id', 'remarks', 'receipt'
+        'po_id', 
+        'voucher_no', 
+        'tin_no', 
+        'voucher_date', 
+        'issue_date', 
+        'payment_date', 
+        'type',
+        'payee', 
+        'check_no', 
+        'check_date', 
+        'check_amount', 
+        'check_payable_to',
+        'delivery_date', 
+        'purpose', 
+        'status', 
+        'user_id', 
+        'remarks', 
+        'receipt'
     ];
 
     public function user(): BelongsTo

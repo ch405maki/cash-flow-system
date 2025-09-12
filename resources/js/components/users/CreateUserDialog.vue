@@ -74,9 +74,10 @@
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="admin">Administrator</SelectItem>
-                <SelectItem value="executive_director">Executive Director</SelectItem>
                 <SelectItem value="accounting">Accounting</SelectItem>
+                <SelectItem value="audit">Audit</SelectItem>
                 <SelectItem value="department_head">Department Head</SelectItem>
+                <SelectItem value="executive_director">Executive Director</SelectItem>
                 <SelectItem value="property_custodian">Property Custodian</SelectItem>
                 <SelectItem value="purchasing">Purchasing</SelectItem>
                 <SelectItem value="staff">Staff</SelectItem>
