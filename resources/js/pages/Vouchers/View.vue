@@ -70,8 +70,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 function formatStatus(status: string): string {
     switch (status) {
-        case 'forEOD':
-            return 'For EOD Approval';
+        case 'forAudit':
+            return 'For Audit Review';
         case 'forCheck':
             return '';
         default:

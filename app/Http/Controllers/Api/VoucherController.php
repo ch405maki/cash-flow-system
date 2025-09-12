@@ -79,7 +79,7 @@ class VoucherController extends Controller
                 'check_no' => 'nullable|string|max:500',
                 'check_payable_to' => 'required|string|max:500',
                 'check_amount' => 'required|numeric|min:0',
-                'status' => 'required|in:forEOD,forCheck,rejected,draft',
+                'status' => 'required|in:forAudit,forCheck,rejected,draft',
                 'type' => 'required|in:cash,salary',
                 'user_id' => 'required|exists:users,id',
                 'check' => 'required|array|min:1',
@@ -262,7 +262,7 @@ class VoucherController extends Controller
                 'remarks' => 'nullable|string|max:500',
                 'check_payable_to' => 'required|string|max:500',
                 'check_amount' => 'required|numeric|min:0',
-                'status' => 'required|in:forEOD,forCheck,rejected,draft',
+                'status' => 'required|in:forAudit,forCheck,rejected,draft',
                 'type' => 'required|in:cash,salary',
                 'user_id' => 'required|exists:users,id',
                 'check' => 'nullable|array',
@@ -478,7 +478,7 @@ class VoucherController extends Controller
     {
         $request->validate([
             'password' => 'required',
-            'action' => 'required|in:forEod,reject,released'
+            'action' => 'required|in:forAudit,reject,released'
         ]);
 
         $user = Auth::user();
@@ -489,19 +489,19 @@ class VoucherController extends Controller
 
         $voucher = Voucher::findOrFail($id);
 
-        if ($voucher->status === 'forEOD') {
+        if ($voucher->status === 'forAudit') {
             return back()->withErrors(['status' => 'Voucher is already sent']);
         }
 
         $action = $request->input('action');
         $newStatus = match ($action) {
-            'forEod' => 'forEOD',
+            'forAudit' => 'forAudit',
             'released' => 'released',
             default => 'rejected',
         };
 
         $message = match ($action) {
-            'forEod' => 'Voucher sent to Executive Director',
+            'forAudit' => 'Voucher sent to Executive Director',
             'released' => 'Voucher marked as released',
             default => 'Voucher rejected successfully',
         };
@@ -538,23 +538,22 @@ class VoucherController extends Controller
     }
 
 
-    public function forEod($id, Request $request)
+    public function auditreview($id, Request $request) 
     {
         $request->validate([
             'password' => 'required',
-            'action' => 'required|in:approve,reject'
+            'action' => 'required|in:approve,reject',
+            'comment' => 'nullable|string|max:500', // 🆕 Optional comment
         ]);
 
         $user = Auth::user();
 
-        // Password verification
         if (!Hash::check($request->password, $user->password)) {
             return back()->withErrors(['password' => 'Incorrect password']);
         }
 
         $voucher = Voucher::findOrFail($id);
 
-        // Check current status
         if ($voucher->status === 'forCheck') {
             return back()->withErrors(['status' => 'Voucher is already approved for check releasing']);
         }
@@ -563,27 +562,24 @@ class VoucherController extends Controller
             return back()->withErrors(['status' => 'Voucher is already rejected']);
         }
 
-        // Determine the action
         $action = $request->input('action');
+        $comment = $request->input('comment');
         $newStatus = $action === 'approve' ? 'forCheck' : 'rejected';
         $message = $action === 'approve'
             ? 'Voucher approved successfully'
             : 'Voucher rejected successfully';
 
-        // Update the voucher
-        DB::transaction(function () use ($voucher, $newStatus, $user, $action) {
+        DB::transaction(function () use ($voucher, $newStatus, $user, $action, $comment) {
             $voucher->update(['status' => $newStatus]);
 
-            // Update the approval entry for this user if it exists
             VoucherApproval::create([
                 'voucher_id' => $voucher->id,
                 'user_id' => $user->id,
                 'status' => $newStatus,
-                'remarks' => "Voucher: {$voucher->voucher_no} Update as {$newStatus}",
+                'remarks' => $comment ?: "Voucher: {$voucher->voucher_no} updated to {$newStatus}", // 🆕 Store comment if any
                 'approved_at' => now(),
             ]);
 
-            // Log the activity
             activity()
                 ->performedOn($voucher)
                 ->causedBy($user)
@@ -592,8 +588,9 @@ class VoucherController extends Controller
                     'voucher_no' => $voucher->voucher_no,
                     'action' => $action,
                     'new_status' => $newStatus,
+                    'comment' => $comment,
                 ])
-                ->log("Voucher {$voucher->voucher_no} Updated: {$action} ");
+                ->log("Voucher {$voucher->voucher_no} Updated: {$action}" . ($comment ? " | Comment: {$comment}" : ""));
         });
 
         return back()->with([
@@ -601,6 +598,7 @@ class VoucherController extends Controller
             'voucher' => $voucher->fresh()
         ]);
     }
+
 
     protected function validateRequest(Request $request): array
     {

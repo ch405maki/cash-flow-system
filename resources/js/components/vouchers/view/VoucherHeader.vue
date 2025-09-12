@@ -58,7 +58,7 @@ function goToEditVoucher(voucherId, e) {
             </template>
 
             <!-- Executive Director Actions -->
-            <template v-if="authUser.role == 'executive_director' && authUser.access_id == '1' && voucher.status == 'forEOD'">
+            <template v-if="authUser.role == 'audit' && authUser.access_id == '2' && voucher.status == 'forAudit'">
                 <EodVerificationDialog :voucher-id="voucher.id" action="approve">
                     <template #trigger>
                         <Button 
@@ -98,16 +98,16 @@ function goToEditVoucher(voucherId, e) {
             </template> -->
 
             <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'draft'">
-                <DirectorVerificationDialog :voucher-id="voucher.id" action="forEod">
+                <DirectorVerificationDialog :voucher-id="voucher.id" action="forAudit">
                     <template #trigger>
                         <Button 
                             size="sm"
-                            :variant="voucher.status == 'forEOD' ? 'secondary' : 'default'"
-                            :class="voucher.status == 'forEOD' ? 'cursor-not-allowed' : ''"
-                            :disabled="voucher.status == 'forEOD'"
+                            :variant="voucher.status == 'forAudit' ? 'secondary' : 'default'"
+                            :class="voucher.status == 'forAudit' ? 'cursor-not-allowed' : ''"
+                            :disabled="voucher.status == 'forAudit'"
                         >
                             <Check class="h-4 w-4" />
-                            <span>{{ voucher.status == 'forEOD' ? 'Sent to EOD' : 'For EOD Approval' }}</span>
+                            <span>{{ voucher.status == 'forAudit' ? 'Sent to EOD' : 'For Audit Review' }}</span>
                         </Button>
                     </template>
                 </DirectorVerificationDialog>
