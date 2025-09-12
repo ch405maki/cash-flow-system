@@ -37,6 +37,7 @@ interface Props {
   purchase_order?: {
     id: number;
     po_no: string;
+    tin_no: string;
   };
 }
 
@@ -54,6 +55,7 @@ const filteredAccounts = computed(() => {
 const form = reactive({
     po_id: props.purchase_order?.id,
     voucher_no: props.voucher_number,
+    tin_no: props.purchase_order?.tin_no,
     issue_date: '',
     payment_date: '',
     delivery_date: '',
@@ -259,25 +261,35 @@ const handleKeyDown = (event: KeyboardEvent, index: number) => {
 
       <form @submit.prevent="submitVoucher" class="space-y-6">
         <!-- Voucher Header Section -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Column 1 -->
-          <div class="space-y-4">
+        <div class="grid grid-cols-3 gap-4">
+          <div class="...">
             <div class="grid gap-2">
               <Label for="payee">Payee *</Label>
               <Input id="payee" v-model="form.payee" required />
             </div>
+          </div>
+          <div class="...">
+            <div class="grid gap-2">
+              <Label for="tin_no">TIN *</Label>
+              <Input id="tin_no" v-model="form.tin_no" required />
+            </div>
+          </div>
+          <div class="...">
+            <div class="grid gap-2">
+              <Label for="voucher_date">Voucher Date *</Label>
+              <Input id="voucher_date" type="date" v-model="form.voucher_date" required />
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="...">
             <div class="grid gap-2">
               <Label for="check_payable_to">Check Pay To *</Label>
               <Input id="check_payable_to" v-model="form.check_payable_to" required />
             </div>
           </div>
-
-          <!-- Column 2 -->
-          <div class="space-y-4">
-            <div class="grid gap-2">
-              <Label for="voucher_date">Voucher Date *</Label>
-              <Input id="voucher_date" type="date" v-model="form.voucher_date" required />
-            </div>
+          <div class="...">
             <div class="grid gap-2">
               <Label for="check_amount">Check Amount</Label>
               <Input 
