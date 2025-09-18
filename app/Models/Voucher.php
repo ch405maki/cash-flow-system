@@ -25,6 +25,7 @@ class Voucher extends Model
         'purpose', 
         'status', 
         'user_id', 
+        'audited_by',
         'remarks', 
         'receipt'
     ];
@@ -48,5 +49,11 @@ class Voucher extends Model
     {
         return $this->hasMany(VoucherApproval::class);
     }
+
+    public function auditor()
+    {
+        return $this->belongsTo(User::class, 'audited_by');
+    }
+
     
 }

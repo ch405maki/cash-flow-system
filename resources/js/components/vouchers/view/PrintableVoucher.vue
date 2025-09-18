@@ -43,7 +43,7 @@ defineProps({
 
 <template>
     <!-- hidden print:block -->
-    <div id="printable-voucher" class="mx-auto px-8 max-w-4xl print:max-w-full font-sans">
+    <div id="printable-voucher" class="hidden print:block mx-auto px-8 max-w-4xl print:max-w-full font-sans">
         <!-- Header Section -->
         <div class="text-center mb-8">
             <FormHeader
@@ -162,7 +162,17 @@ defineProps({
                     <div class="font-medium text-sm">PREPARED BY: <span class="capitalize">{{ voucher.user.first_name }} {{ voucher.user.last_name }}</span></div>
                 </td>
                 <td class="border border-zinc-400 p-2 align-top w-1/2">
-                    <div class="font-medium text-sm">AUDITED BY:</div>
+                    <div class="font-medium text-sm">
+                        AUDITED BY: 
+                        <span v-if="voucher.auditor">
+                        <span class="capitalize">
+                            {{ voucher.auditor.first_name }} {{ voucher.auditor.last_name }}
+                        </span>
+                        </span>
+                        <span v-else class="italic text-gray-500">
+                        Not yet audited
+                        </span>
+                    </div>
                 </td>
             </tr>
         </table>

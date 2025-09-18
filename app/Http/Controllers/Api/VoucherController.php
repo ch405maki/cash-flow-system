@@ -442,7 +442,7 @@ class VoucherController extends Controller
 
     public function view(Voucher $voucher)
     {
-        $voucher->load(['user', 'details.account', 'approvals.user']);
+        $voucher->load(['user', 'auditor', 'details.account', 'approvals.user']);
 
         return Inertia::render('Vouchers/View', [ 
             'voucher' => $voucher,
@@ -529,68 +529,6 @@ class VoucherController extends Controller
                     'new_status' => $newStatus,
                 ])
                 ->log("Voucher {$voucher->voucher_no} Updated: {$action} ");
-        });
-
-        return back()->with([
-            'success' => $message,
-            'voucher' => $voucher->fresh()
-        ]);
-    }
-
-
-    public function auditreview($id, Request $request) 
-    {
-        $request->validate([
-            'password' => 'required',
-            'action' => 'required|in:approve,reject',
-            'comment' => 'nullable|string|max:500', // 🆕 Optional comment
-        ]);
-
-        $user = Auth::user();
-
-        if (!Hash::check($request->password, $user->password)) {
-            return back()->withErrors(['password' => 'Incorrect password']);
-        }
-
-        $voucher = Voucher::findOrFail($id);
-
-        if ($voucher->status === 'forCheck') {
-            return back()->withErrors(['status' => 'Voucher is already approved for check releasing']);
-        }
-
-        if ($voucher->status === 'rejected') {
-            return back()->withErrors(['status' => 'Voucher is already rejected']);
-        }
-
-        $action = $request->input('action');
-        $comment = $request->input('comment');
-        $newStatus = $action === 'approve' ? 'forCheck' : 'rejected';
-        $message = $action === 'approve'
-            ? 'Voucher approved successfully'
-            : 'Voucher rejected successfully';
-
-        DB::transaction(function () use ($voucher, $newStatus, $user, $action, $comment) {
-            $voucher->update(['status' => $newStatus]);
-
-            VoucherApproval::create([
-                'voucher_id' => $voucher->id,
-                'user_id' => $user->id,
-                'status' => $newStatus,
-                'remarks' =>  "Voucher: {$voucher->voucher_no} updated to {$newStatus} Comment: {$comment}",
-                'approved_at' => now(),
-            ]);
-
-            activity()
-                ->performedOn($voucher)
-                ->causedBy($user)
-                ->useLog('Voucher Update')
-                ->withProperties([
-                    'voucher_no' => $voucher->voucher_no,
-                    'action' => $action,
-                    'new_status' => $newStatus,
-                    'comment' => $comment,
-                ])
-                ->log("Voucher {$voucher->voucher_no} Updated: {$action}" . ($comment ? " | Comment: {$comment}" : ""));
         });
 
         return back()->with([

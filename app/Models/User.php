@@ -108,4 +108,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(VoucherApproval::class);
     }
+
+    public function auditedVouchers()
+    {
+        return $this->hasMany(Voucher::class, 'audited_by');
+    }
+
 }
