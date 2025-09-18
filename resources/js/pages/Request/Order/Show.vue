@@ -212,13 +212,13 @@ const breadcrumbs: BreadcrumbItem[] = [
               </DialogContent>
           </Dialog>
           </div>
-          <div v-if="authUser.role === 'purchasing'" >
+          <div v-if="authUser.role === 'property_custodian'" >
             <Button 
               v-if="requestOrder.status === 'forPO'"
               size="sm"
               @click="$inertia.visit(route('request-to-order.release.create', requestOrder.id))"
             >
-              <Rocket />Release Items
+              <Rocket />Receive Items
             </Button>
           </div>
 
@@ -269,7 +269,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
                         <div class="mt-1 flex items-start gap-2">
                         <p class="text-sm text-xs text-muted-foreground">
-                            "{{ approval.remarks || 'No remarks' }}..."
+                            "{{ approval.remarks || 'No remarks' }}."
                         </p>
                         </div>
                     </div>
