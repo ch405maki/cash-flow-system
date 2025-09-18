@@ -576,7 +576,7 @@ class VoucherController extends Controller
                 'voucher_id' => $voucher->id,
                 'user_id' => $user->id,
                 'status' => $newStatus,
-                'remarks' => $comment ?: "Voucher: {$voucher->voucher_no} updated to {$newStatus}", // 🆕 Store comment if any
+                'remarks' =>  "Voucher: {$voucher->voucher_no} updated to {$newStatus} Comment: {$comment}",
                 'approved_at' => now(),
             ]);
 

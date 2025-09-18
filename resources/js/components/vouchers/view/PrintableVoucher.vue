@@ -43,7 +43,7 @@ defineProps({
 
 <template>
     <!-- hidden print:block -->
-    <div id="printable-voucher" class="hidden print:block mx-auto px-8 max-w-4xl print:max-w-full font-sans">
+    <div id="printable-voucher" class="mx-auto px-8 max-w-4xl print:max-w-full font-sans">
         <!-- Header Section -->
         <div class="text-center mb-8">
             <FormHeader
@@ -115,10 +115,10 @@ defineProps({
                 <div class="flex">
                     <div class="w-2/3">
                         <div v-if="executiveDirector" class="signature-block">
-                            <img v-if="voucher.status !== 'forEOD' && voucher.status !== 'rejected' && voucher.status !== 'draft'"
+                            <!-- <img v-if="voucher.status !== 'forEOD' && voucher.status !== 'rejected' && voucher.status !== 'draft'"
                                 src="/images/signatures/oed_signature.png" 
                                 alt="Signature"
-                                class="signature-image" />
+                                class="signature-image" /> -->
                             <div class="signature-line">{{ executiveDirector.full_name.toUpperCase() }}</div>
                             <div class="signature-title">{{ executiveDirector.position }}</div>
                         </div>
