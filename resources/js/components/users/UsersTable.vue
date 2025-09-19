@@ -4,6 +4,7 @@
       <TableRow>
         <TableHead>User Name</TableHead>
         <TableHead>Email</TableHead>
+        <TableHead>Department</TableHead>
         <TableHead>Role</TableHead>
         <TableHead>Status</TableHead>
         <TableHead class="text-right">Action</TableHead>
@@ -30,6 +31,7 @@
           </div>
         </TableCell>
         <TableCell>{{ user.email }}</TableCell>
+        <TableCell>{{ user.department?.department_name }}</TableCell>
         <TableCell>{{ user.role }}</TableCell>
         <TableCell>
           <CustomSwitch

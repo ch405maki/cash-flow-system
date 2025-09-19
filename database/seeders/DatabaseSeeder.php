@@ -22,13 +22,22 @@ class DatabaseSeeder extends Seeder
     {
         // Create departments
         $departments = [
-            ['department_name' => 'Administration', 'department_description' => 'Main administrative department'],
-            ['department_name' => 'IT', 'department_description' => 'Information Technology department'],
-            ['department_name' => 'Finance', 'department_description' => 'Financial operations department'],
-            ['department_name' => 'Procurement', 'department_description' => 'Purchasing and supply department'],
-            ['department_name' => 'Registrar', 'department_description' => 'Purchasing and supply department'],
-            ['department_name' => 'Supply', 'department_description' => 'Purchasing and supply department'],
+            ['department_name' => 'Accounting', 'department_description' => 'Handles all financial operations, including budgeting, payroll, and expense tracking.'],
+            ['department_name' => 'Administration', 'department_description' => 'Oversees general management and administrative support for the institution.'],
+            ['department_name' => 'Bursar', 'department_description' => 'Responsible for student billing, tuition collection, and other financial transactions.'],
+            ['department_name' => 'Deans', 'department_description' => 'Academic leadership responsible for managing colleges, programs, and faculty performance.'],
+            ['department_name' => 'Executive Office', 'department_description' => 'Provides executive-level decision-making, planning, and institutional oversight.'],
+            ['department_name' => 'Guidance', 'department_description' => 'Offers counseling services, student support, and career guidance.'],
+            ['department_name' => 'IT Center', 'department_description' => 'Manages IT infrastructure, systems development, and technical support services.'],
+            ['department_name' => 'Library', 'department_description' => 'Provides access to learning resources, research materials, and digital services.'],
+            ['department_name' => 'OSA', 'department_description' => 'Office of Student Affairs — responsible for student activities, discipline, and welfare.'],
+            ['department_name' => 'OGS', 'department_description' => 'Office of Graduate Studies — manages graduate programs and student services.'],
+            ['department_name' => 'Property Custodian', 'department_description' => 'Oversees inventory, property management, and asset accountability.'],
+            ['department_name' => 'Purchasing', 'department_description' => 'Handles procurement of goods, supplies, and services for the institution.'],
+            ['department_name' => 'Records', 'department_description' => 'Maintains and secures student records, transcripts, and official documents.'],
+            ['department_name' => 'Registrar', 'department_description' => 'Oversees enrollment, course scheduling, and academic records management.'],
         ];
+
 
         foreach ($departments as $department) {
             Department::create($department);
@@ -212,7 +221,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'department_head',
             'status' => 'active',
-            'department_id' => Department::where('department_name', 'IT')->first()->id,
+            'department_id' => Department::where('department_name', 'IT Center')->first()->id,
             'access_id' => Access::where('access_level', 'Approver')->first()->id,
         ],
         [
@@ -223,7 +232,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'staff',
             'status' => 'active',
-            'department_id' => Department::where('department_name', 'IT')->first()->id,
+            'department_id' => Department::where('department_name', 'IT Center')->first()->id,
             'access_id' => Access::where('access_level', 'Write')->first()->id,
         ],
         [
@@ -234,7 +243,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'property_custodian',
             'status' => 'active',
-            'department_id' => Department::where('department_name', 'Supply')->first()->id,
+            'department_id' => Department::where('department_name', 'Property Custodian')->first()->id,
             'access_id' => Access::where('access_level', 'Approver')->first()->id,
         ],
         [
@@ -245,7 +254,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'property_custodian',
             'status' => 'active',
-            'department_id' => Department::where('department_name', 'Supply')->first()->id,
+            'department_id' => Department::where('department_name', 'Property Custodian')->first()->id,
             'access_id' => Access::where('access_level', 'Write')->first()->id,
         ],
         [
@@ -256,7 +265,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'purchasing',
             'status' => 'active',
-            'department_id' => Department::where('department_name', 'Supply')->first()->id,
+            'department_id' => Department::where('department_name', 'Purchasing')->first()->id,
             'access_id' => Access::where('access_level', 'Approver')->first()->id,
         ],
         [
@@ -267,7 +276,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'purchasing',
             'status' => 'active',
-            'department_id' => Department::where('department_name', 'Supply')->first()->id,
+            'department_id' => Department::where('department_name', 'Purchasing')->first()->id,
             'access_id' => Access::where('access_level', 'Write')->first()->id,
         ],
         [
@@ -278,7 +287,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'accounting',
             'status' => 'active',
-            'department_id' => Department::where('department_name', 'Finance')->first()->id,
+            'department_id' => Department::where('department_name', 'Accounting')->first()->id,
             'access_id' => Access::where('access_level', 'Approver')->first()->id,
         ],
         [
@@ -289,7 +298,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'accounting',
             'status' => 'active',
-            'department_id' => Department::where('department_name', 'Finance')->first()->id,
+            'department_id' => Department::where('department_name', 'Accounting')->first()->id,
             'access_id' => Access::where('access_level', 'Write')->first()->id,
         ],
         [
@@ -300,7 +309,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'audit',
             'status' => 'active',
-            'department_id' => Department::where('department_name', 'Finance')->first()->id,
+            'department_id' => Department::where('department_name', 'Accounting')->first()->id,
             'access_id' => Access::where('access_level', 'Read Only')->first()->id,
         ],
     ];
@@ -325,7 +334,7 @@ class DatabaseSeeder extends Seeder
                 'request_date' => now()->subDays(9),
                 'purpose' => 'New laptops for IT department',
                 'status' => 'pending',
-                'department_id' => Department::where('department_name', 'IT')->first()->id,
+                'department_id' => Department::where('department_name', 'Administration')->first()->id,
                 'user_id' => User::where('username', 'director')->first()->id,
             ],
             [
@@ -333,7 +342,7 @@ class DatabaseSeeder extends Seeder
                 'request_date' => now()->subDays(8),
                 'purpose' => 'Maintenance tools',
                 'status' => 'approved',
-                'department_id' => Department::where('department_name', 'Registrar')->first()->id,
+                'department_id' => Department::where('department_name', 'Administration')->first()->id,
                 'user_id' => User::where('username', 'staff')->first()->id,
             ],
             [
@@ -341,7 +350,7 @@ class DatabaseSeeder extends Seeder
                 'request_date' => now()->subDays(7),
                 'purpose' => 'Medical supplies',
                 'status' => 'approved',
-                'department_id' => Department::where('department_name', 'Registrar')->first()->id,
+                'department_id' => Department::where('department_name', 'Administration')->first()->id,
                 'user_id' => User::where('username', 'staff')->first()->id,
             ],
             [
@@ -349,7 +358,7 @@ class DatabaseSeeder extends Seeder
                 'request_date' => now()->subDays(6),
                 'purpose' => 'Classroom equipments',
                 'status' => 'approved',
-                'department_id' => Department::where('department_name', 'Registrar')->first()->id,
+                'department_id' => Department::where('department_name', 'Administration')->first()->id,
                 'user_id' => User::where('username', 'staff')->first()->id,
             ],
         ];

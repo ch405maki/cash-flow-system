@@ -23,7 +23,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::with('profilePicture')->get();
+        $users = User::with('profilePicture', 'department')->get();
         $profilePictures = ProfilePicture::all();
         $departments = Department::all();
         $accessLevels = Access::all();
