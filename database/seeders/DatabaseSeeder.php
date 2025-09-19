@@ -28,7 +28,6 @@ class DatabaseSeeder extends Seeder
             ['department_name' => 'Procurement', 'department_description' => 'Purchasing and supply department'],
             ['department_name' => 'Registrar', 'department_description' => 'Purchasing and supply department'],
             ['department_name' => 'Supply', 'department_description' => 'Purchasing and supply department'],
-            ['department_name' => 'Supply', 'department_description' => 'Purchasing and supply department'],
         ];
 
         foreach ($departments as $department) {
@@ -292,6 +291,17 @@ class DatabaseSeeder extends Seeder
             'status' => 'active',
             'department_id' => Department::where('department_name', 'Finance')->first()->id,
             'access_id' => Access::where('access_level', 'Write')->first()->id,
+        ],
+        [
+            'username' => 'auditor',
+            'first_name' => 'Audit',
+            'last_name' => 'Officer',
+            'email' => 'audit@itc.com',
+            'password' => Hash::make('password'),
+            'role' => 'audit',
+            'status' => 'active',
+            'department_id' => Department::where('department_name', 'Finance')->first()->id,
+            'access_id' => Access::where('access_level', 'Read Only')->first()->id,
         ],
     ];
 
