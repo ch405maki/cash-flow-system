@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('po_id')->nullable()->constrained('purchase_orders');
             $table->string('voucher_no');
             $table->date('voucher_date');
-            $table->string('tin_no')->nullable();
             $table->date('issue_date')->nullable();
             $table->date('payment_date')->nullable();
             $table->string('type');

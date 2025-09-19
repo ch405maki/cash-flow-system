@@ -11,14 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('vouchers', function (Blueprint $table) {
-            $table->foreignId('audited_by')
-                ->nullable()
-                ->after('user_id')
-                ->constrained('users')
-                ->nullOnDelete();
+        Schema::table('purchase_orders', function (Blueprint $table) {
             $table->string('tin_no')
-                ->after('voucher_no')
+                ->after('po_no')
                 ->nullable();
         });
     }
@@ -28,9 +23,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('vouchers', function (Blueprint $table) {
-            $table->dropForeign(['audited_by']);
-            $table->dropColumn('audited_by');
+        Schema::table('purchase_orders', function (Blueprint $table) {
+            //
         });
     }
 };
