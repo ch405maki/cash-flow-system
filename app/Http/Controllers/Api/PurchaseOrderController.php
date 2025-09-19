@@ -100,6 +100,7 @@ class PurchaseOrderController extends Controller
             'check_payable_to' => 'required|string',
             'date' => 'required|date',
             'purpose' => 'required|string',
+            'tin_no' => 'nullable|string',
             'status' => 'required|string',
             'user_id' => 'required|exists:users,id',
             'department_id' => 'required|exists:departments,id',

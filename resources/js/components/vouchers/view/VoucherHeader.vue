@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ArrowLeft, SquarePen, Printer, Check, X, BadgeCheck, History, Clock, CheckCircle, } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
-import EodVerificationDialog from '@/components/vouchers/EodVerificationDialog.vue';
+import AuditVerificationDialog from '@/components/vouchers/AuditVerificationDialog.vue';
 import DirectorVerificationDialog from '@/components/vouchers/DirectorVerificationDialog.vue';
 import { router } from '@inertiajs/vue3';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -46,7 +46,7 @@ function goToEditVoucher(voucherId, e) {
             <h2 class="text-2xl font-bold tracking-tight">Voucher # {{ voucher.voucher_no }}</h2>
         </div>
         <div class="flex space-x-2">
-            <template v-if="authUser.role == 'accounting' && voucher.status !== 'draft' && voucher.status !== 'completed'">
+            <template v-if="authUser.role == 'accounting' && voucher.status !== 'draft' && voucher.status !== 'completed' && voucher.status !== 'forAudit'">
                 <ReceiptUploadDialog 
                 :voucher-id="voucher.id"
                 :current-issue-date="voucher.issue_date"
@@ -57,9 +57,9 @@ function goToEditVoucher(voucherId, e) {
             />
             </template>
 
-            <!-- Executive Director Actions -->
-            <template v-if="authUser.role == 'executive_director' && authUser.access_id == '1' && voucher.status == 'forEOD'">
-                <EodVerificationDialog :voucher-id="voucher.id" action="approve">
+            <!-- Auditing Actions -->
+            <template v-if="authUser.role == 'audit' && authUser.access_id == '2' && voucher.status == 'forAudit'">
+                <AuditVerificationDialog :voucher-id="voucher.id" action="approve">
                     <template #trigger>
                         <Button 
                             size="sm"
@@ -71,7 +71,7 @@ function goToEditVoucher(voucherId, e) {
                             <span>{{ voucher.status === 'forCheck' ? 'For Check Releasing' : 'Approve' }}</span>
                         </Button>
                     </template>
-                </EodVerificationDialog>
+                </AuditVerificationDialog>
             </template>
 
             <!-- Accounting Actions -->
@@ -85,7 +85,7 @@ function goToEditVoucher(voucherId, e) {
                     />
             </template>
 
-            <!-- <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'draft'">
+            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'draft'">
                 <Button
                     size="sm"
                     v-if="authUser.role === 'accounting' && voucher.status == 'draft'"
@@ -95,19 +95,19 @@ function goToEditVoucher(voucherId, e) {
                     <SquarePen />
                     <span>Edit</span>
                 </Button>
-            </template> -->
+            </template>
 
             <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'draft'">
-                <DirectorVerificationDialog :voucher-id="voucher.id" action="forEod">
+                <DirectorVerificationDialog :voucher-id="voucher.id" action="forAudit">
                     <template #trigger>
                         <Button 
                             size="sm"
-                            :variant="voucher.status == 'forEOD' ? 'secondary' : 'default'"
-                            :class="voucher.status == 'forEOD' ? 'cursor-not-allowed' : ''"
-                            :disabled="voucher.status == 'forEOD'"
+                            :variant="voucher.status == 'forAudit' ? 'secondary' : 'default'"
+                            :class="voucher.status == 'forAudit' ? 'cursor-not-allowed' : ''"
+                            :disabled="voucher.status == 'forAudit'"
                         >
                             <Check class="h-4 w-4" />
-                            <span>{{ voucher.status == 'forEOD' ? 'Sent to EOD' : 'For EOD Approval' }}</span>
+                            <span>{{ voucher.status == 'forAudit' ? 'Sent to EOD' : 'For Audit Review' }}</span>
                         </Button>
                     </template>
                 </DirectorVerificationDialog>
@@ -175,7 +175,7 @@ function goToEditVoucher(voucherId, e) {
 
                             <div class="mt-1 flex items-start gap-2">
                             <p class="text-sm text-xs text-muted-foreground">
-                                "{{ approval.remarks || 'No remarks' }}..."
+                                "{{ approval.remarks || 'No remarks' }}."
                             </p>
                             </div>
                         </div>

@@ -132,7 +132,6 @@ const openEditDialog = (access: Access) => {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>ID</TableHead>
-                                <TableHead>Program Name</TableHead>
                                 <TableHead>Access Level</TableHead>
                                 <TableHead class="text-right">Actions</TableHead>
                             </TableRow>
@@ -140,7 +139,6 @@ const openEditDialog = (access: Access) => {
                         <TableBody>
                             <TableRow v-for="access in accesses" :key="access.id">
                                 <TableCell>{{ access.id }}</TableCell>
-                                <TableCell>{{ access.program_name }}</TableCell>
                                 <TableCell>{{ access.access_level }}</TableCell>
                                 <TableCell class="text-right">
                                     <div class="flex gap-2 justify-end">

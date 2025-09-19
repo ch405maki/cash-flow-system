@@ -70,6 +70,7 @@ class VoucherController extends Controller
                 'po_id' => 'nullable|exists:purchase_orders,id',
                 'voucher_no' => 'required|string|unique:vouchers,voucher_no',
                 'issue_date' => 'nullable|date',
+                'tin_no' => 'nullable|string',
                 'payment_date' => 'nullable|date',
                 'delivery_date' => 'nullable|date',
                 'voucher_date' => 'required|date',
@@ -78,7 +79,7 @@ class VoucherController extends Controller
                 'check_no' => 'nullable|string|max:500',
                 'check_payable_to' => 'required|string|max:500',
                 'check_amount' => 'required|numeric|min:0',
-                'status' => 'required|in:forEOD,forCheck,rejected,draft',
+                'status' => 'required|in:forAudit,forCheck,rejected,draft',
                 'type' => 'required|in:cash,salary',
                 'user_id' => 'required|exists:users,id',
                 'check' => 'required|array|min:1',
@@ -106,6 +107,7 @@ class VoucherController extends Controller
                 'po_id' => $validated['po_id'] ?? null,  
                 'voucher_no' => $validated['voucher_no'],
                 'issue_date' => $validated['issue_date'] ?? null,
+                'tin_no' => $validated['tin_no'] ?? null,
                 'payment_date' => $validated['payment_date'] ?? null,
                 'delivery_date' => $validated['delivery_date'] ?? null,
                 'voucher_date' => $validated['voucher_date'],
@@ -187,6 +189,7 @@ class VoucherController extends Controller
         return Voucher::create([
             'issue_date' => $data['issue_date'],
             'payment_date' => $data['payment_date'],
+            'tin_no' => $data['tin_no'] ?? null,
             'check_date' => $data['check_date'],
             'delivery_date' => $data['delivery_date'],
             'voucher_date' => $data['voucher_date'],    
@@ -259,7 +262,7 @@ class VoucherController extends Controller
                 'remarks' => 'nullable|string|max:500',
                 'check_payable_to' => 'required|string|max:500',
                 'check_amount' => 'required|numeric|min:0',
-                'status' => 'required|in:forEOD,forCheck,rejected,draft',
+                'status' => 'required|in:forAudit,forCheck,rejected,draft',
                 'type' => 'required|in:cash,salary',
                 'user_id' => 'required|exists:users,id',
                 'check' => 'nullable|array',
@@ -360,7 +363,6 @@ class VoucherController extends Controller
         }
     }
 
-
     public function addCheckDetails(Request $request, Voucher $voucher): JsonResponse
     {
         $validated = $request->validate([
@@ -440,7 +442,7 @@ class VoucherController extends Controller
 
     public function view(Voucher $voucher)
     {
-        $voucher->load(['user', 'details.account', 'approvals.user']);
+        $voucher->load(['user', 'auditor', 'details.account', 'approvals.user']);
 
         return Inertia::render('Vouchers/View', [ 
             'voucher' => $voucher,
@@ -476,7 +478,7 @@ class VoucherController extends Controller
     {
         $request->validate([
             'password' => 'required',
-            'action' => 'required|in:forEod,reject,released'
+            'action' => 'required|in:forAudit,reject,released'
         ]);
 
         $user = Auth::user();
@@ -487,19 +489,19 @@ class VoucherController extends Controller
 
         $voucher = Voucher::findOrFail($id);
 
-        if ($voucher->status === 'forEOD') {
+        if ($voucher->status === 'forAudit') {
             return back()->withErrors(['status' => 'Voucher is already sent']);
         }
 
         $action = $request->input('action');
         $newStatus = match ($action) {
-            'forEod' => 'forEOD',
+            'forAudit' => 'forAudit',
             'released' => 'released',
             default => 'rejected',
         };
 
         $message = match ($action) {
-            'forEod' => 'Voucher sent to Executive Director',
+            'forAudit' => 'Voucher sent to Executive Director',
             'released' => 'Voucher marked as released',
             default => 'Voucher rejected successfully',
         };
@@ -535,70 +537,6 @@ class VoucherController extends Controller
         ]);
     }
 
-
-    public function forEod($id, Request $request)
-    {
-        $request->validate([
-            'password' => 'required',
-            'action' => 'required|in:approve,reject'
-        ]);
-
-        $user = Auth::user();
-
-        // Password verification
-        if (!Hash::check($request->password, $user->password)) {
-            return back()->withErrors(['password' => 'Incorrect password']);
-        }
-
-        $voucher = Voucher::findOrFail($id);
-
-        // Check current status
-        if ($voucher->status === 'forCheck') {
-            return back()->withErrors(['status' => 'Voucher is already approved for check releasing']);
-        }
-
-        if ($voucher->status === 'rejected') {
-            return back()->withErrors(['status' => 'Voucher is already rejected']);
-        }
-
-        // Determine the action
-        $action = $request->input('action');
-        $newStatus = $action === 'approve' ? 'forCheck' : 'rejected';
-        $message = $action === 'approve'
-            ? 'Voucher approved successfully'
-            : 'Voucher rejected successfully';
-
-        // Update the voucher
-        DB::transaction(function () use ($voucher, $newStatus, $user, $action) {
-            $voucher->update(['status' => $newStatus]);
-
-            // Update the approval entry for this user if it exists
-            VoucherApproval::create([
-                'voucher_id' => $voucher->id,
-                'user_id' => $user->id,
-                'status' => $newStatus,
-                'remarks' => "Voucher: {$voucher->voucher_no} Update as {$newStatus}",
-                'approved_at' => now(),
-            ]);
-
-            // Log the activity
-            activity()
-                ->performedOn($voucher)
-                ->causedBy($user)
-                ->useLog('Voucher Update')
-                ->withProperties([
-                    'voucher_no' => $voucher->voucher_no,
-                    'action' => $action,
-                    'new_status' => $newStatus,
-                ])
-                ->log("Voucher {$voucher->voucher_no} Updated: {$action} ");
-        });
-
-        return back()->with([
-            'success' => $message,
-            'voucher' => $voucher->fresh()
-        ]);
-    }
 
     protected function validateRequest(Request $request): array
     {

@@ -228,7 +228,7 @@ function printList() {
 
                     <div class="mt-1 flex items-start gap-2">
                     <p class="text-sm text-xs text-muted-foreground">
-                        "{{ approval.remarks || 'No remarks' }}..."
+                        "{{ approval.remarks || 'No remarks' }}."
                     </p>
                     </div>
                 </div>

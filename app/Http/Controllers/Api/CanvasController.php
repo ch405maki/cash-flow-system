@@ -27,12 +27,12 @@ class CanvasController extends Controller
                 ->whereNotNull('request_to_order_id')
                 ->latest()
                 ->get();
-        } elseif ($user->role === 'accounting') {
-            // accounting sees canvases waiting for audit that they haven't approved
+        } elseif ($user->role === 'audit') {
+            // Audit sees canvases waiting for audit that they haven't approved
             $canvases = Canvas::with(['creator', 'request_to_order', 'files', 'approvals.user',])
                 ->whereNotIn('status', ['draft', 'pending'])
                 ->whereDoesntHave('approvals', function ($query) {
-                    $query->where('role', 'accounting');
+                    $query->where('role', 'audit');
                 })
                 ->latest()
                 ->get();
@@ -170,13 +170,13 @@ class CanvasController extends Controller
                 'remarks' => $validated['remarks'] ?? null
             ]);
         } 
-        elseif ($user->role === 'accounting') {
-            // Handle accounting approval/comment
+        elseif ($user->role === 'audit') {
+            // Handle audit approval/comment
             $approval = CanvasApproval::updateOrCreate(
                 [
                     'canvas_id' => $canvas->id,
                     'user_id' => $user->id,
-                    'role' => 'accounting'
+                    'role' => 'audit'
                 ],
                 [
                     'comments' => $validated['comments'] ?? null,

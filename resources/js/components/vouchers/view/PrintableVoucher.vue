@@ -115,10 +115,10 @@ defineProps({
                 <div class="flex">
                     <div class="w-2/3">
                         <div v-if="executiveDirector" class="signature-block">
-                            <img v-if="voucher.status !== 'forEOD' && voucher.status !== 'rejected' && voucher.status !== 'draft'"
+                            <!-- <img v-if="voucher.status !== 'forEOD' && voucher.status !== 'rejected' && voucher.status !== 'draft'"
                                 src="/images/signatures/oed_signature.png" 
                                 alt="Signature"
-                                class="signature-image" />
+                                class="signature-image" /> -->
                             <div class="signature-line">{{ executiveDirector.full_name.toUpperCase() }}</div>
                             <div class="signature-title">{{ executiveDirector.position }}</div>
                         </div>
@@ -162,7 +162,17 @@ defineProps({
                     <div class="font-medium text-sm">PREPARED BY: <span class="capitalize">{{ voucher.user.first_name }} {{ voucher.user.last_name }}</span></div>
                 </td>
                 <td class="border border-zinc-400 p-2 align-top w-1/2">
-                    <div class="font-medium text-sm">AUDITED BY:</div>
+                    <div class="font-medium text-sm">
+                        AUDITED BY: 
+                        <span v-if="voucher.auditor">
+                        <span class="capitalize">
+                            {{ voucher.auditor.first_name }} {{ voucher.auditor.last_name }}
+                        </span>
+                        </span>
+                        <span v-else class="italic text-gray-500">
+                        Not yet audited
+                        </span>
+                    </div>
                 </td>
             </tr>
         </table>

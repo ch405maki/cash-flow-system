@@ -456,13 +456,13 @@ function viewRequest(id: number) {
               </div>
 
               <!-- Comments Section -->
-              <div v-if="['accounting', 'executive_director'].includes(userRole) ">
+              <div v-if="['audit', 'executive_director'].includes(userRole) ">
                 <h3 class="text-sm font-medium text-muted-foreground">
-                  {{ userRole === 'accounting' ? 'Audit Comments' : 'Approval Comments' }}
+                  {{ userRole === 'audit' ? 'Audit Comments' : 'Approval Comments' }}
                 </h3>
                 <Textarea
                   v-model="form.comments"
-                  :placeholder="userRole === 'accounting' 
+                  :placeholder="userRole === 'audit' 
                     ? 'Enter your audit comments...' 
                     : 'Enter approval comments...'"
                   class="mt-2"
@@ -471,11 +471,11 @@ function viewRequest(id: number) {
               <!-- Comments Section for Purchasing-->
               <div v-if="['purchasing'].includes(userRole) && canvas.status != 'approved' && canvas.status != 'poCreated'">
                 <h3 class="text-sm font-medium text-muted-foreground">
-                  {{ userRole === 'accounting' ? 'Audit Comments' : 'Approval Comments' }}
+                  {{ userRole === 'audit' ? 'Audit Comments' : 'Approval Comments' }}
                 </h3>
                 <Textarea
                   v-model="form.comments"
-                  :placeholder="userRole === 'accounting' 
+                  :placeholder="userRole === 'audit' 
                     ? 'Enter your audit comments...' 
                     : 'Enter approval comments...'"
                   class="mt-2"
@@ -509,8 +509,8 @@ function viewRequest(id: number) {
                 </div>
               </div>
 
-              <!-- Accounting Actions -->
-              <div v-if="userRole === 'accounting' && canvas.status !== 'pending'" class="space-x-2">
+              <!-- audit Actions -->
+              <div v-if="userRole === 'audit' && canvas.status !== 'pending'" class="space-x-2">
                 <Button 
                   variant="success" 
                   @click="handleAction('approve')"

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('po_no');
             $table->string('payee');
+            $table->string('tin_no')->nullable();
             $table->string('check_payable_to');
             $table->date('date');
             $table->decimal('amount', 12, 2);

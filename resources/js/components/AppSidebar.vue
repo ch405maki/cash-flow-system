@@ -232,9 +232,19 @@ const accountingCheckNavItems: NavItem[] = [
 
 const accountingAuditNavItems: NavItem[] = [
   {
+    title: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
+  },
+  {
     title: 'Purchase Canvas',
     href: '/canvas',
     icon: ListCollapse,
+  },
+  {
+    title: 'Vouchers',
+    href: '/voucher-approval',
+    icon: ReceiptText,
   },
 ];
 
@@ -331,9 +341,12 @@ const adminNavItems: NavItem[] = [
           
           <div v-if="user?.role === 'accounting'">
             <NavMain :items="accountingNavItems" group-label="Navigation"/>
-            <NavMain :items="accountingAuditNavItems" group-label="Audit"/>
             <NavMain :items="accountingCheckNavItems" group-label="Check"/>
             <NavMain :items="reportItems" group-label="Reports" />
+          </div>
+          
+          <div v-if="user?.role === 'audit'">
+            <NavMain :items="accountingAuditNavItems" group-label="Audit"/>
           </div>
 
           <div v-if="user?.role === 'property_custodian'">
