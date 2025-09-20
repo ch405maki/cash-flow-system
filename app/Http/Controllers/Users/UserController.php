@@ -169,17 +169,33 @@ class UserController extends Controller
 
             // Validate input
             $validated = $request->validate([
-                'status' => 'required|string|in:active,inactive',
+                'username'      => 'required|string|max:255|unique:users,username,' . $id,
+                'first_name'    => 'required|string|max:255',
+                'middle_name'   => 'nullable|string|max:255',
+                'last_name'     => 'required|string|max:255',
+                'email'         => 'required|email|max:255|unique:users,email,' . $id,
+                'role'          => 'required|in:admin,executive_director,department_head,accounting,audit,property_custodian,purchasing,staff',
+                'status'        => 'required|in:active,inactive',
             ]);
 
-            // Update user status
+            // Update user
             $user->update($validated);
 
-            return response()->json(['message' => 'User updated successfully!', 'user' => $user], 200);
+            return response()->json([
+                'message' => 'User updated successfully!',
+                'user' => $user
+            ], 200);
+
         } catch (ValidationException $e) {
-            return response()->json(['message' => 'Validation failed', 'errors' => $e->errors()], 422);
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Failed to update user', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'message' => 'Failed to update user',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 

@@ -63,12 +63,13 @@
       const response = await axios.put(`/api/users/${userData.value.id}`, userData.value);
       toast.success("User updated successfully!");
       setTimeout(() => {
-        location.reload(); // Reload the page to reflect changes
-      }, 2000);
+        location.reload();
+      }, 1500);
     } catch (error) {
-      toast.error("Failed to update user. Please try again.");
+      toast.error(error.response?.data?.message || "Failed to update user.");
     }
   };
+
 </script>
   
   <template>
@@ -114,18 +115,17 @@
               />
             </label>
             <label class="block">
-              <span class="text-gray-700 dark:text-gray-300">Username</span>
+              <span class="text-gray-700 dark:text-gray-300">Middle Name</span>
               <input
-                v-model="userData.username"
+                v-model="userData.middle_name"
                 type="text"
                 class="input dark:bg-gray-700 dark:text-white"
-                required
               />
             </label>
             <label class="block">
-              <span class="text-gray-700 dark:text-gray-300">Username</span>
+              <span class="text-gray-700 dark:text-gray-300">Last Name</span>
               <input
-                v-model="userData.username"
+                v-model="userData.last_name"
                 type="text"
                 class="input dark:bg-gray-700 dark:text-white"
                 required
@@ -151,10 +151,16 @@
                 class="input dark:bg-gray-700 dark:text-white"
               >
                 <option value="admin">Admin</option>
-                <option value="user">User</option>
+                <option value="executive_director">Executive Director</option>
+                <option value="department_head">Department Head</option>
+                <option value="accounting">Accounting</option>
+                <option value="audit">Audit</option>
+                <option value="property_custodian">Property Custodian</option>
+                <option value="purchasing">Purchasing</option>
+                <option value="staff">Staff</option>
               </select>
             </label>
-  
+
             <!-- Status Field -->
             <label class="block">
               <span class="text-gray-700 dark:text-gray-300">Status</span>
