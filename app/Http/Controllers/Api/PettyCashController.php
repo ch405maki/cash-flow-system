@@ -13,7 +13,12 @@ class PettyCashController extends Controller
 {
     public function index()
     {
-        return Inertia::render('PettyCash/Index');
+        // Generate next PCV number
+        $nextPcvNo = $this->generateNextPcvNo();
+
+        return Inertia::render('PettyCash/Index', [
+            'nextPcvNo' => $nextPcvNo,
+        ]);
     }
 
     public function store(Request $request)
@@ -32,7 +37,6 @@ class PettyCashController extends Controller
             'items.*.receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
-        // Create main petty cash record
         $pettyCash = PettyCash::create([
             'pcv_no' => $validated['pcv_no'],
             'user_id' => Auth::id(),
@@ -43,7 +47,6 @@ class PettyCashController extends Controller
             'remarks' => $validated['remarks'] ?? null,
         ]);
 
-        // Store petty cash items
         foreach ($validated['items'] as $item) {
             $receiptPath = null;
             if (isset($item['receipt'])) {
@@ -60,5 +63,12 @@ class PettyCashController extends Controller
         }
 
         return back()->with('success', 'Petty cash voucher created successfully.');
+    }
+
+    private function generateNextPcvNo(): string
+    {
+        $latest = PettyCash::latest('id')->first();
+        $nextId = $latest ? $latest->id + 1 : 1;
+        return 'PCV-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
     }
 }
