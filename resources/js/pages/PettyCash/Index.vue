@@ -76,11 +76,9 @@ const submitForm = async () => {
     <Head title="Petty Cash Voucher" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-    <Card class="p-4">
-      <CardHeader>
-        <CardTitle class="text-xl font-bold">Create Petty Cash Voucher</CardTitle>
-      </CardHeader>
-      <CardContent class="space-y-4">
+    <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+        <h1 class="text-xl font-bold">Create Petty Cash Voucher</h1>
+        <div class="rounded-xl border border-sidebar-border/70 dark:border-sidebar-border md:min-h-min p-4">
         <!-- Main Fields -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -135,7 +133,7 @@ const submitForm = async () => {
         <div class="flex justify-end">
           <Button @click="submitForm">Save Voucher</Button>
         </div>
-      </CardContent>
-    </Card>
+        </div>
+    </div>
   </AppLayout>
 </template>
