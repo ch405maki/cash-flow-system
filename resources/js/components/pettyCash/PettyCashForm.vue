@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, computed } from 'vue'
+import { reactive, computed, ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { useToast } from 'vue-toastification'
 import { Button } from '@/components/ui/button'
@@ -30,7 +30,9 @@ const newItem = reactive({
   receipt: null as File | null
 })
 
-// 🟢 Computed total
+// 🔑 Key to force file input reset
+const fileKey = ref(0)
+
 const totalAmount = computed(() => {
   return form.items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
 })
@@ -41,12 +43,14 @@ const addItem = () => {
     return
   }
 
-  form.items.push({ ...newItem }) // push copy
-  // reset newItem fields
+  form.items.push({ ...newItem }) // shallow copy of new item
+
+  // ✅ Reset all fields
   newItem.particulars = ''
   newItem.date = ''
   newItem.amount = 0
   newItem.receipt = null
+  fileKey.value++ // ⬅ triggers re-render to reset file input
 }
 
 const removeItem = (index: number) => {
@@ -126,7 +130,13 @@ const submitForm = async () => {
         </div>
         <div>
           <Label>Receipt</Label>
-          <Input type="file" @change="e => newItem.receipt = e.target.files[0]" />
+          <!-- ✅ Use native input + key reset -->
+          <input
+            :key="fileKey"
+            type="file"
+            class="block w-full text-sm border rounded-lg p-2"
+            @change="e => newItem.receipt = e.target.files[0]"
+          />
         </div>
       </div>
       <div class="flex justify-end">
@@ -143,7 +153,8 @@ const submitForm = async () => {
             <th class="text-left p-2 border-b">Particulars</th>
             <th class="text-left p-2 border-b">Date</th>
             <th class="text-right p-2 border-b">Amount</th>
-            <th class="p-2 border-b">Action</th>
+            <th class="text-left p-2 border-b">Receipt</th>
+            <th class="p-2 border-b text-center">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -151,6 +162,10 @@ const submitForm = async () => {
             <td class="p-2">{{ item.particulars }}</td>
             <td class="p-2">{{ item.date }}</td>
             <td class="p-2 text-right">{{ item.amount.toLocaleString() }}</td>
+            <td class="p-2">
+              <span v-if="item.receipt">{{ item.receipt.name }}</span>
+              <span v-else class="text-muted-foreground italic">No file</span>
+            </td>
             <td class="p-2 text-center">
               <Button variant="destructive" size="sm" @click="removeItem(index)">Remove</Button>
             </td>
