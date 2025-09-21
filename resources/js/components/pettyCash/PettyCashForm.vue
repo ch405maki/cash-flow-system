@@ -19,9 +19,15 @@ const form = reactive({
   status: 'draft',
   date: '',
   remarks: '',
-  items: [
-    { particulars: '', date: '', amount: 0, receipt: null }
-  ]
+  items: []
+})
+
+// Temporary input holder for adding new items
+const newItem = reactive({
+  particulars: '',
+  date: '',
+  amount: 0,
+  receipt: null as File | null
 })
 
 // 🟢 Computed total
@@ -30,7 +36,17 @@ const totalAmount = computed(() => {
 })
 
 const addItem = () => {
-  form.items.push({ particulars: '', date: '', amount: 0, receipt: null })
+  if (!newItem.particulars || !newItem.date || !newItem.amount) {
+    toast.warning('Please fill in all item fields before adding.')
+    return
+  }
+
+  form.items.push({ ...newItem }) // push copy
+  // reset newItem fields
+  newItem.particulars = ''
+  newItem.date = ''
+  newItem.amount = 0
+  newItem.receipt = null
 }
 
 const removeItem = (index: number) => {
@@ -92,39 +108,62 @@ const submitForm = async () => {
       </div>
     </div>
 
-    <!-- Dynamic Items -->
-    <div class="space-y-2">
-      <h3 class="text-lg font-semibold">Items</h3>
-      <div v-for="(item, index) in form.items" :key="index" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end border p-3 rounded-lg">
+    <!-- Fixed Input for New Item -->
+    <div class="border rounded-xl p-4 space-y-3">
+      <h3 class="text-lg font-semibold">Add Item</h3>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <Label>Particulars</Label>
-          <Input v-model="item.particulars" placeholder="e.g., Office Supplies" />
+          <Input v-model="newItem.particulars" placeholder="e.g., Office Supplies" />
         </div>
         <div>
           <Label>Date</Label>
-          <Input v-model="item.date" type="date" />
+          <Input v-model="newItem.date" type="date" />
         </div>
         <div>
           <Label>Amount</Label>
-          <Input v-model.number="item.amount" type="number" min="0" />
+          <Input v-model.number="newItem.amount" type="number" min="0" />
         </div>
         <div>
           <Label>Receipt</Label>
-          <Input type="file" @change="e => item.receipt = e.target.files[0]" />
-        </div>
-        <div class="md:col-span-4 flex justify-end">
-          <Button v-if="form.items.length > 1" variant="destructive" size="sm" @click="removeItem(index)">Remove</Button>
+          <Input type="file" @change="e => newItem.receipt = e.target.files[0]" />
         </div>
       </div>
-
-      <!-- 🟢 Running Total Display -->
-      <div class="flex justify-end text-right mt-2 font-semibold">
-        <span>Total: {{ totalAmount.toLocaleString() }}</span>
+      <div class="flex justify-end">
+        <Button variant="secondary" @click="addItem">Accept Item</Button>
       </div>
-
-      <Button variant="secondary" @click="addItem">+ Add Item</Button>
     </div>
 
+    <!-- Table of Added Items -->
+    <div v-if="form.items.length > 0" class="border rounded-xl p-4">
+      <h3 class="text-lg font-semibold mb-3">Item List</h3>
+      <table class="w-full border-collapse">
+        <thead class="bg-muted">
+          <tr>
+            <th class="text-left p-2 border-b">Particulars</th>
+            <th class="text-left p-2 border-b">Date</th>
+            <th class="text-right p-2 border-b">Amount</th>
+            <th class="p-2 border-b">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(item, index) in form.items" :key="index" class="border-b">
+            <td class="p-2">{{ item.particulars }}</td>
+            <td class="p-2">{{ item.date }}</td>
+            <td class="p-2 text-right">{{ item.amount.toLocaleString() }}</td>
+            <td class="p-2 text-center">
+              <Button variant="destructive" size="sm" @click="removeItem(index)">Remove</Button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="flex justify-end mt-3 font-semibold">
+        Total: {{ totalAmount.toLocaleString() }}
+      </div>
+    </div>
+
+    <!-- Submit -->
     <div class="flex justify-end">
       <Button @click="submitForm">Save Voucher</Button>
     </div>

@@ -8,6 +8,7 @@ use App\Models\PettyCash;
 use App\Models\PettyCashItem;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Illuminate\Support\Carbon;
 
 class PettyCashController extends Controller
 {
@@ -67,8 +68,22 @@ class PettyCashController extends Controller
 
     private function generateNextPcvNo(): string
     {
-        $latest = PettyCash::latest('id')->first();
-        $nextId = $latest ? $latest->id + 1 : 1;
-        return 'PCV-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
+        $now = Carbon::now();
+        $yearMonth = $now->format('Ym'); // e.g. 202509
+
+        // Get last PCV number for this month
+        $latest = PettyCash::whereYear('date', $now->year)
+            ->whereMonth('date', $now->month)
+            ->orderByDesc('pcv_no')
+            ->first();
+
+        $nextCounter = 1;
+
+        if ($latest && preg_match('/PCV-\d{6}-(\d{4})$/', $latest->pcv_no, $matches)) {
+            $lastCounter = (int) $matches[1];
+            $nextCounter = $lastCounter + 1;
+        }
+
+        return 'PCV-' . $yearMonth . '-' . str_pad($nextCounter, 4, '0', STR_PAD_LEFT);
     }
 }
