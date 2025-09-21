@@ -6,11 +6,13 @@ import DeleteUserDialog from "@/components/users/DeleteUserDialog.vue";
 import CustomSwitch from '../../components/ui/customswitch/CustomSwitch.vue';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
+import { Button } from '@/components/ui/button'
 import {
   Avatar,
   AvatarImage,
   AvatarFallback
 } from '@/components/ui/avatar'
+import { KeyRound } from 'lucide-vue-next';
 
 
 // Define the User type
@@ -106,7 +108,12 @@ const handleToggle = async (user: User, checked: boolean) => {
             @update:checked="(checked) => handleToggle(user, checked)"
           />
         </TableCell>
-        <TableCell class="text-right space-x-2">
+        <TableCell class="justify-end space-x-2 flex  items-center">
+          <Button 
+            variant="outline"
+            size="icon">
+            <KeyRound  />
+          </Button>
           <!-- Edit User -->
           <EditUserDialog :user="user" />
           <!-- Delete User -->
