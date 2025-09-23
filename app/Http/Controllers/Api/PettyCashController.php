@@ -14,10 +14,16 @@ class PettyCashController extends Controller
 {
     public function index()
     {
+        $pettyCash = PettyCash::with('items')->orderBy('date', 'desc')->get();
+        return Inertia::render('PettyCash/Index', [ 'pettyCash' => $pettyCash ]);
+    }
+
+    public function create()
+    {
         // Generate next PCV number
         $nextPcvNo = $this->generateNextPcvNo();
 
-        return Inertia::render('PettyCash/Index', [
+        return Inertia::render('PettyCash/Create', [
             'nextPcvNo' => $nextPcvNo,
         ]);
     }
