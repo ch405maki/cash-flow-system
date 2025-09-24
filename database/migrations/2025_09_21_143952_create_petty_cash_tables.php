@@ -17,8 +17,7 @@ return new class extends Migration
             $table->string('pcv_no')->unique();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('paid_to');
-            $table->string('type');
-            $table->string('status')->default('draft'); // draft, submitted, approved, released
+            $table->string('status')->default('draft');
             $table->date('date');
             $table->text('remarks')->nullable();
             $table->timestamps();
@@ -29,6 +28,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('petty_cash_id')->constrained('petty_cash')->onDelete('cascade');
             $table->string('particulars');
+            $table->string('type');
             $table->date('date');
             $table->decimal('amount', 12, 2);
             $table->string('receipt')->nullable(); // file path

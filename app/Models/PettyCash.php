@@ -15,7 +15,6 @@ class PettyCash extends Model
         'pcv_no',
         'user_id',
         'paid_to',
-        'type',
         'status',
         'date',
         'remarks',

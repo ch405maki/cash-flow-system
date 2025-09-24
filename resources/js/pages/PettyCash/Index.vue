@@ -64,7 +64,9 @@ const goToCreate = () => {
                 </TableCell>
                 <TableCell>Paid</TableCell>
                 <TableCell class="text-right">
-                  <Button>Edit</Button>
+                  <Button @click="router.get(route('petty-cash.edit', item.id))">
+                    Edit
+                  </Button>
                 </TableCell>
               </TableRow>
             </TableBody>

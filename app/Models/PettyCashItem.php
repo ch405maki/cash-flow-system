@@ -15,6 +15,7 @@ class PettyCashItem extends Model
         'date',
         'amount',
         'receipt',
+        'type',
     ];
 
     protected $casts = [
