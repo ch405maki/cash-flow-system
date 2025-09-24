@@ -84,36 +84,35 @@ class PettyCashController extends Controller
     public function update(Request $request, PettyCash $pettyCash)
     {
         $validated = $request->validate([
-            'paid_to' => 'sometimes|required|string',
-            'type' => 'sometimes|required|string',
-            'status' => 'sometimes|required|string',
-            'date' => 'sometimes|required|date',
+            'paid_to' => 'sometimes|string',
+            'status' => 'sometimes|string',
+            'date' => 'sometimes|date',
             'remarks' => 'nullable|string',
             'items' => 'nullable|array',
-            'items.*.particulars' => 'required|string',
-            'items.*.date' => 'required|date',
-            'items.*.amount' => 'required|numeric|min:0',
+            'items.*.type' => 'required_with:items|string',
+            'items.*.particulars' => 'required_with:items|string',
+            'items.*.date' => 'required_with:items|date',
+            'items.*.amount' => 'required_with:items|numeric|min:0',
             'items.*.receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
-        // 🔄 Only update fields that are in the request
-        $pettyCash->update([
-            'paid_to' => $validated['paid_to'] ?? $pettyCash->paid_to,
-            'type' => $validated['type'] ?? $pettyCash->type,
-            'status' => $validated['status'] ?? $pettyCash->status,
-            'date' => $validated['date'] ?? $pettyCash->date,
-            'remarks' => $validated['remarks'] ?? $pettyCash->remarks,
-        ]);
+        // 🔄 Only update fields that belong to PettyCash
+        $pettyCash->update(array_filter([
+            'paid_to' => $validated['paid_to'] ?? null,
+            'status' => $validated['status'] ?? null,
+            'date' => $validated['date'] ?? null,
+            'remarks' => $validated['remarks'] ?? null,
+        ]));
 
         if (!empty($validated['items'])) {
             foreach ($validated['items'] as $item) {
-                $receiptPath = null;
-                if (isset($item['receipt'])) {
-                    $receiptPath = $item['receipt']->store('petty_cash_receipts', 'public');
-                }
+                $receiptPath = isset($item['receipt'])
+                    ? $item['receipt']->store('petty_cash_receipts', 'public')
+                    : null;
 
                 \App\Models\PettyCashItem::create([
                     'petty_cash_id' => $pettyCash->id,
+                    'type' => $item['type'],
                     'particulars' => $item['particulars'],
                     'date' => $item['date'],
                     'amount' => $item['amount'],
@@ -124,6 +123,7 @@ class PettyCashController extends Controller
 
         return back()->with('success', 'Petty cash voucher updated successfully.');
     }
+
 
 
     public function destroy(PettyCashItem $item)
