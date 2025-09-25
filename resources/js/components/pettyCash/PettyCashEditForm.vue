@@ -10,14 +10,12 @@ import {
   RadioGroupItem
 } from '@/components/ui/radio-group'
 
-// Props from controller
 const props = defineProps<{
   pettyCash: any
 }>()
 
 const toast = useToast()
 
-// Reactive form state (no type here, type is per-item now)
 const form = reactive({
   paid_to: props.pettyCash.paid_to,
   status: props.pettyCash.status,
@@ -28,9 +26,8 @@ const form = reactive({
 
 const existingItems = ref(props.pettyCash.items ?? [])
 
-// Input for new items
 const newItem = reactive({
-  type: '', // radio button value
+  type: '',
   particulars: '',
   date: '',
   amount: 0,
@@ -39,14 +36,42 @@ const newItem = reactive({
 
 const fileKey = ref(0)
 
-// ✅ Combined running total (existing + new items)
 const totalAmount = computed(() => {
   const existingTotal = existingItems.value.reduce((sum, i) => sum + (Number(i.amount) || 0), 0)
   const newTotal = form.items.reduce((sum, i) => sum + (Number(i.amount) || 0), 0)
   return existingTotal + newTotal
 })
 
-// Add item to list
+/**
+ * Compute totals per date (cash advance + liquidation combined)
+ */
+const groupedByDate = computed(() => {
+  const map: Record<string, { cashAdvance: number; liquidation: number }> = {}
+  const allItems = [...existingItems.value, ...form.items]
+  allItems.forEach(item => {
+    const key = item.date
+    if (!map[key]) map[key] = { cashAdvance: 0, liquidation: 0 }
+    if (item.type === 'Cash Advance') map[key].cashAdvance += Number(item.amount)
+    if (item.type === 'Liquidation') map[key].liquidation += Number(item.amount)
+  })
+  return map
+})
+
+/**
+ * Returns background class for any item based on date totals
+ */
+const getRowClass = (item: any) => {
+  const totals = groupedByDate.value[item.date]
+  if (!totals || totals.cashAdvance === 0) return '' // no cash advance = no highlight
+  if (totals.liquidation >= totals.cashAdvance) {
+    return 'bg-green-100'
+  }
+  if (totals.liquidation > 0 && totals.liquidation < totals.cashAdvance) {
+    return 'bg-yellow-100'
+  }
+  return ''
+}
+
 const addItem = () => {
   if (!newItem.type || !newItem.particulars || !newItem.date || !newItem.amount) {
     toast.warning('Please select type and fill all fields before adding.')
@@ -59,10 +84,9 @@ const addItem = () => {
   newItem.date = ''
   newItem.amount = 0
   newItem.receipt = null
-  fileKey.value++ // reset file input
+  fileKey.value++
 }
 
-// Remove existing item (calls backend delete)
 const removeExistingItem = async (id: number) => {
   if (!confirm('Are you sure you want to remove this item?')) return
 
@@ -75,13 +99,25 @@ const removeExistingItem = async (id: number) => {
   })
 }
 
-// Remove newly added item (frontend only)
 const removeNewItem = (index: number) => {
   form.items.splice(index, 1)
 }
 
-// Submit updated voucher
 const submitForm = async () => {
+  let hasUnderLiquidation = false
+  for (const [date, totals] of Object.entries(groupedByDate.value)) {
+    if (totals.cashAdvance > 0 && totals.liquidation < totals.cashAdvance) {
+      hasUnderLiquidation = true
+      toast.warning(
+        `⚠️ Liquidation for ${date} is less than cash advance (₱${totals.liquidation.toLocaleString()} / ₱${totals.cashAdvance.toLocaleString()}).`
+      )
+    }
+  }
+
+  if (hasUnderLiquidation) {
+    if (!confirm('Some dates are under-liquidated. Do you still want to proceed?')) return
+  }
+
   const data = new FormData()
   data.append('_method', 'PUT')
   data.append('paid_to', form.paid_to || '')
@@ -135,8 +171,13 @@ const submitForm = async () => {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in existingItems" :key="item.id" class="border-b">
-            <td class="p-2">{{ item.type }}</td>
+          <tr
+            v-for="item in existingItems"
+            :key="item.id"
+            class="border-b"
+            :class="getRowClass(item)"
+          >
+            <td class="p-2 font-semibold">{{ item.type }}</td>
             <td class="p-2">{{ item.particulars }}</td>
             <td class="p-2">{{ item.date }}</td>
             <td class="p-2 text-right">{{ item.amount.toLocaleString() }}</td>
@@ -169,7 +210,12 @@ const submitForm = async () => {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(item, index) in form.items" :key="index" class="border-b">
+          <tr
+            v-for="(item, index) in form.items"
+            :key="index"
+            class="border-b"
+            :class="getRowClass(item)"
+          >
             <td class="p-2">{{ item.type }}</td>
             <td class="p-2">{{ item.particulars }}</td>
             <td class="p-2">{{ item.date }}</td>
@@ -197,22 +243,22 @@ const submitForm = async () => {
 
       <!-- Radio buttons for Type -->
       <div>
-          <Label>Type</Label>
-          <RadioGroup v-model="newItem.type" class="flex mt-2 items-center">
-            <div class="flex items-center space-x-2">
-              <RadioGroupItem id="reimbursement" value="Reimbursement" />
-              <Label for="reimbursement">Reimbursement</Label>
-            </div>
-            <div class="flex items-center space-x-2">
-              <RadioGroupItem id="cash-advance" value="Cash Advance" />
-              <Label for="cash-advance">Cash Advance</Label>
-            </div>
-            <div class="flex items-center space-x-2">
-              <RadioGroupItem id="liquidation" value="Liquidation" />
-              <Label for="liquidation">Liquidation</Label>
-            </div>
-          </RadioGroup>
-        </div>
+        <Label>Type</Label>
+        <RadioGroup v-model="newItem.type" class="flex mt-2 items-center">
+          <div class="flex items-center space-x-2">
+            <RadioGroupItem id="reimbursement" value="Reimbursement" />
+            <Label for="reimbursement">Reimbursement</Label>
+          </div>
+          <div class="flex items-center space-x-2">
+            <RadioGroupItem id="cash-advance" value="Cash Advance" />
+            <Label for="cash-advance">Cash Advance</Label>
+          </div>
+          <div class="flex items-center space-x-2">
+            <RadioGroupItem id="liquidation" value="Liquidation" />
+            <Label for="liquidation">Liquidation</Label>
+          </div>
+        </RadioGroup>
+      </div>
 
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
