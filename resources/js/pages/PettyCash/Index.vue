@@ -41,9 +41,6 @@ const goToCreate = () => {
             </div>
             <Button @click="goToCreate">Create New Petty Cash</Button>
           </div>
-
-          {{ pettyCash }}
-
           <Table>
             <TableCaption>A list of your petty cash.</TableCaption>
             <TableHeader>
@@ -62,7 +59,7 @@ const goToCreate = () => {
                 <TableCell class="font-medium">
                   {{ item.pcv_no }}
                 </TableCell>
-                <TableCell>Paid</TableCell>
+                <TableCell>Draft</TableCell>
                 <TableCell class="text-right">
                   <Button @click="router.get(route('petty-cash.edit', item.id))">
                     Edit
