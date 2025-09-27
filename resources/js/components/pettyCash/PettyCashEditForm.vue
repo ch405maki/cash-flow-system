@@ -9,6 +9,16 @@ import {
   RadioGroup,
   RadioGroupItem
 } from '@/components/ui/radio-group'
+import { formatDate } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog'
+import { Checkbox } from '@/components/ui/checkbox'
 
 const props = defineProps<{
   pettyCash: any
@@ -166,15 +176,24 @@ const saveEdit = (index: number, field: string) => {
   editing.field = null
 }
 
-const submitPettyCash = async () => {
-  if (!confirm('Are you sure you want to submit this petty cash for audit?')) return;
+const isSubmitDialogOpen = ref(false)
+const confirmChecked = ref(false)
+
+const confirmAndSubmit = async () => {
+  if (!confirmChecked.value) {
+    toast.warning('Please confirm before submitting.')
+    return
+  }
 
   await router.put(`/petty-cash/${props.pettyCash.id}/submit`, {}, {
-    onSuccess: () => toast.success('Petty Cash submitted for audit!'),
+    onSuccess: () => {
+      toast.success('Petty Cash submitted for audit!')
+      isSubmitDialogOpen.value = false
+      confirmChecked.value = false
+    },
     onError: () => toast.error('Failed to submit petty cash.')
   })
 }
-
 </script>
 
 <template>
@@ -215,7 +234,7 @@ const submitPettyCash = async () => {
           >
             <td class="p-2 font-semibold">{{ item.type }}</td>
             <td class="p-2">{{ item.particulars }}</td>
-            <td class="p-2">{{ item.date }}</td>
+            <td class="p-2">{{ formatDate(item.date) }}</td>
             <td class="p-2 text-right">{{ item.amount.toLocaleString() }}</td>
             <td class="p-2">
               <a v-if="item.receipt" :href="`/storage/${item.receipt}`" target="_blank" class="text-blue-600 underline">
@@ -277,7 +296,7 @@ const submitPettyCash = async () => {
                 class="w-full"
               />
             </template>
-            <template v-else>{{ item.date }}</template>
+            <template v-else>{{ formatDate(item.date) }}</template>
           </td>
 
           <!-- Amount (inline editable) -->
@@ -370,9 +389,38 @@ const submitPettyCash = async () => {
     <!-- Submit -->
     <div class="flex justify-end space-x-2">
       <Button @click="submitForm" variant="outline">Update Petty Cash</Button>
-      <Button @click="submitPettyCash" class="bg-green-600 text-white hover:bg-green-700">
+      <Button @click="isSubmitDialogOpen = true" class="bg-green-600 text-white hover:bg-green-700">
         Submit Petty Cash
       </Button>
     </div>
+
+    <!-- ✅ Confirmation Dialog -->
+    <Dialog v-model:open="isSubmitDialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Submit Petty Cash</DialogTitle>
+          <DialogDescription>
+            Please confirm that all entries are correct before submitting this petty cash voucher for audit.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="flex items-center space-x-2 mt-4">
+          <Checkbox id="confirm" v-model:checked="confirmChecked" />
+          <Label for="confirm">I have reviewed all items and confirm they are correct.</Label>
+        </div>
+
+        <DialogFooter class="mt-4 flex justify-end space-x-2">
+          <Button variant="outline" @click="isSubmitDialogOpen = false">Cancel</Button>
+          <Button 
+            class="bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed" 
+            :disabled="!confirmChecked" 
+            @click="confirmAndSubmit"
+            >
+            Confirm & Submit
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
   </div>
 </template>
