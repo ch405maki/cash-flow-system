@@ -183,6 +183,15 @@ const staffNavItems: NavItem[] = [
   },
 ];
 
+// Staff
+const pettyCashNavItems: NavItem[] = [
+  {
+    title: 'Petty Cash',
+    href: '/petty-cash',
+    icon: SquarePen,
+  },
+];
+
 const staffRequestItems = ref<DropdownNavItem[]>([
     {
         title: 'Request',
@@ -365,6 +374,7 @@ const adminNavItems: NavItem[] = [
 
           <div v-if="user?.role === 'staff' || user?.role === 'department_head'">
             <NavMain :items="staffNavItems" group-label="Navigation"/>
+            <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
             <NavMain :items="staffRequestItems" group-label="Request"/>
           </div>
         </SidebarContent>

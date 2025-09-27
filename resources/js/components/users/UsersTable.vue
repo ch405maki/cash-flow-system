@@ -1,53 +1,3 @@
-<template>
-  <Table>
-    <TableHeader>
-      <TableRow>
-        <TableHead>User Name</TableHead>
-        <TableHead>Email</TableHead>
-        <TableHead>Role</TableHead>
-        <TableHead>Status</TableHead>
-        <TableHead class="text-right">Action</TableHead>
-      </TableRow>
-    </TableHeader>
-    <TableBody>
-      <TableRow v-for="user in users" :key="user.id">
-        <TableCell class="font-medium flex items-center gap-2">
-          <Avatar>
-            <AvatarImage
-              v-if="user.profile_picture"
-              :src="`/storage/${user.profile_picture.file_path}`"
-              :alt="user.name"
-            />
-            <AvatarFallback>
-              {{ user.first_name?.charAt(0).toUpperCase() || 'N' }}{{ user.last_name?.charAt(0).toUpperCase() || 'N' }}
-            </AvatarFallback>
-          </Avatar>
-          <div class="capitalize">
-            {{ user.first_name || 'N' }} {{ user.last_name || 'N' }} <br>
-            <span class="text-xs">
-              {{ user.username }}
-            </span>
-          </div>
-        </TableCell>
-        <TableCell>{{ user.email }}</TableCell>
-        <TableCell>{{ user.role }}</TableCell>
-        <TableCell>
-          <CustomSwitch
-            :checked="user.status === 'active'"
-            @update:checked="(checked) => handleToggle(user, checked)"
-          />
-        </TableCell>
-        <TableCell class="text-right space-x-2">
-          <!-- Edit User -->
-          <EditUserDialog :user="user" />
-          <!-- Delete User -->
-          <DeleteUserDialog :user="user" />
-        </TableCell>
-      </TableRow>
-    </TableBody>
-  </Table>
-</template>
-
 <script setup lang="ts">
 import { ref } from "vue";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -56,21 +6,26 @@ import DeleteUserDialog from "@/components/users/DeleteUserDialog.vue";
 import CustomSwitch from '../../components/ui/customswitch/CustomSwitch.vue';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
+import { Button } from '@/components/ui/button'
 import {
   Avatar,
   AvatarImage,
   AvatarFallback
 } from '@/components/ui/avatar'
+import { KeyRound } from 'lucide-vue-next';
 
 
 // Define the User type
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  status: string;
-}
+  interface User {
+    id: number;
+    username: string;
+    first_name: string;
+    middle_name: string;
+    last_name: string;
+    email: string;
+    role: string;
+    status: string;
+  }
 
 // Define props
 const props = defineProps<{ users: User[] }>();
@@ -111,3 +66,60 @@ const handleToggle = async (user: User, checked: boolean) => {
   }
 };
 </script>
+
+<template>
+  <Table>
+    <TableHeader>
+      <TableRow>
+        <TableHead>User Name</TableHead>
+        <TableHead>Email</TableHead>
+        <TableHead>Department</TableHead>
+        <TableHead>Role</TableHead>
+        <TableHead>Status</TableHead>
+        <TableHead class="text-right">Action</TableHead>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      <TableRow v-for="user in users" :key="user.id">
+        <TableCell class="font-medium flex items-center gap-2">
+          <Avatar>
+            <AvatarImage
+              v-if="user.profile_picture"
+              :src="`/storage/${user.profile_picture.file_path}`"
+              :alt="user.name"
+            />
+            <AvatarFallback>
+              {{ user.first_name?.charAt(0).toUpperCase() || 'N' }}{{ user.last_name?.charAt(0).toUpperCase() || 'N' }}
+            </AvatarFallback>
+          </Avatar>
+          <div class="capitalize">
+            {{ user.first_name || 'N' }} {{ user.last_name || 'N' }} <br>
+            <span class="text-xs">
+              {{ user.username }}
+            </span>
+          </div>
+        </TableCell>
+        <TableCell>{{ user.email }}</TableCell>
+        <TableCell>{{ user.department?.department_name }}</TableCell>
+        <TableCell>{{ user.role }}</TableCell>
+        <TableCell>
+          <CustomSwitch
+            :checked="user.status === 'active'"
+            @update:checked="(checked) => handleToggle(user, checked)"
+          />
+        </TableCell>
+        <TableCell class="justify-end space-x-2 flex  items-center">
+          <Button 
+            variant="outline"
+            size="icon">
+            <KeyRound  />
+          </Button>
+          <!-- Edit User -->
+          <EditUserDialog :user="user" />
+          <!-- Delete User -->
+          <DeleteUserDialog :user="user" />
+        </TableCell>
+      </TableRow>
+    </TableBody>
+  </Table>
+</template>

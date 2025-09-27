@@ -1,4 +1,78 @@
-<template>
+  <script setup lang="ts">
+  import { ref } from "vue";
+  import {
+    Sheet,
+    SheetTrigger,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetDescription,
+  } from "@/components/ui/sheet"; // Adjust the import path as needed
+  import { Button } from "@/components/ui/button"; // Adjust the import path as needed
+  import { UserRoundPen } from "lucide-vue-next"; // Icon for the trigger
+  import axios from "axios";
+  import { useToast } from "vue-toastification";
+  
+  // Props
+  const props = defineProps<{
+    user: {
+      id: number;
+      username: string;
+      first_name: string;
+      middle_name: string;
+      last_name: string;
+      email: string;
+      role: string;
+      status: string;
+    };
+  }>();
+  
+  // Toast
+  const toast = useToast();
+  
+  // User Data
+  const userData = ref({
+    id: props.user.id,
+    username: props.user.username,
+    first_name: props.user.first_name,
+    middle_name: props.user.middle_name,
+    last_name: props.user.last_name,
+    email: props.user.email,
+    role: props.user.role,
+    status: props.user.status,
+  });
+  
+  // Open Dialog
+  const openDialog = () => {
+    // Reset form data to the current user's data
+    userData.value = {
+      id: props.user.id,
+      username: props.user.username,
+      first_name: props.user.first_name,
+      middle_name: props.user.middle_name,
+      last_name: props.user.last_name,
+      email: props.user.email,
+      role: props.user.role,
+      status: props.user.status,
+    };
+  };
+  
+  // Update User
+  const updateUser = async () => {
+    try {
+      const response = await axios.put(`/api/users/${userData.value.id}`, userData.value);
+      toast.success("User updated successfully!");
+      setTimeout(() => {
+        location.reload();
+      }, 1500);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update user.");
+    }
+  };
+
+</script>
+  
+  <template>
     <Sheet>
       <!-- Sheet Trigger -->
       <SheetTrigger as-child>
@@ -23,9 +97,35 @@
           <div class="space-y-4">
             <!-- Name Field -->
             <label class="block">
-              <span class="text-gray-700 dark:text-gray-300">Name</span>
+              <span class="text-gray-700 dark:text-gray-300">Username</span>
               <input
-                v-model="userData.name"
+                v-model="userData.username"
+                type="text"
+                class="input dark:bg-gray-700 dark:text-white"
+                required
+              />
+            </label>
+            <label class="block">
+              <span class="text-gray-700 dark:text-gray-300">First Name</span>
+              <input
+                v-model="userData.first_name"
+                type="text"
+                class="input dark:bg-gray-700 dark:text-white"
+                required
+              />
+            </label>
+            <label class="block">
+              <span class="text-gray-700 dark:text-gray-300">Middle Name</span>
+              <input
+                v-model="userData.middle_name"
+                type="text"
+                class="input dark:bg-gray-700 dark:text-white"
+              />
+            </label>
+            <label class="block">
+              <span class="text-gray-700 dark:text-gray-300">Last Name</span>
+              <input
+                v-model="userData.last_name"
                 type="text"
                 class="input dark:bg-gray-700 dark:text-white"
                 required
@@ -51,10 +151,16 @@
                 class="input dark:bg-gray-700 dark:text-white"
               >
                 <option value="admin">Admin</option>
-                <option value="user">User</option>
+                <option value="executive_director">Executive Director</option>
+                <option value="department_head">Department Head</option>
+                <option value="accounting">Accounting</option>
+                <option value="audit">Audit</option>
+                <option value="property_custodian">Property Custodian</option>
+                <option value="purchasing">Purchasing</option>
+                <option value="staff">Staff</option>
               </select>
             </label>
-  
+
             <!-- Status Field -->
             <label class="block">
               <span class="text-gray-700 dark:text-gray-300">Status</span>
@@ -74,70 +180,6 @@
       </SheetContent>
     </Sheet>
   </template>
-  
-  <script setup lang="ts">
-  import { ref } from "vue";
-  import {
-    Sheet,
-    SheetTrigger,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetDescription,
-  } from "@/components/ui/sheet"; // Adjust the import path as needed
-  import { Button } from "@/components/ui/button"; // Adjust the import path as needed
-  import { UserRoundPen } from "lucide-vue-next"; // Icon for the trigger
-  import axios from "axios";
-  import { useToast } from "vue-toastification";
-  
-  // Props
-  const props = defineProps<{
-    user: {
-      id: number;
-      name: string;
-      email: string;
-      role: string;
-      status: string;
-    };
-  }>();
-  
-  // Toast
-  const toast = useToast();
-  
-  // User Data
-  const userData = ref({
-    id: props.user.id,
-    name: props.user.name,
-    email: props.user.email,
-    role: props.user.role,
-    status: props.user.status,
-  });
-  
-  // Open Dialog
-  const openDialog = () => {
-    // Reset form data to the current user's data
-    userData.value = {
-      id: props.user.id,
-      name: props.user.name,
-      email: props.user.email,
-      role: props.user.role,
-      status: props.user.status,
-    };
-  };
-  
-  // Update User
-  const updateUser = async () => {
-    try {
-      const response = await axios.put(`/api/users/${userData.value.id}`, userData.value);
-      toast.success("User updated successfully!");
-      setTimeout(() => {
-        location.reload(); // Reload the page to reflect changes
-      }, 2000);
-    } catch (error) {
-      toast.error("Failed to update user. Please try again.");
-    }
-  };
-  </script>
   
   <style scoped>
   .input {

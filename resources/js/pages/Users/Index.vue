@@ -1,52 +1,4 @@
-<template>
-    <Head title="Users Management" />
-  
-    <AppLayout :breadcrumbs="breadcrumbs">
-      <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-        <!-- Search and Buttons -->
-        <div class="flex items-center justify-between gap-4">
-          <!-- Search Input -->
-          <Input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search users..."
-            class="w-full max-w-xs h-9"
-          />
-  
-          <!-- Buttons -->
-          <div class="flex items-center gap-4">
-            <!-- Upload Excel Button -->
-            <input
-              type="file"
-              ref="fileInput"
-              accept=".xlsx, .xls"
-              class="hidden"
-              @change="handleFileUpload"
-            />
-            <Button
-              @click="triggerFileInput"
-              :disabled="loading"
-              class="bg-green-600 hover:bg-green-700 text-white"
-            >
-              <Upload class="w-4 h-4 mr-2" />
-              <span v-if="loading">Uploading...</span>
-              <span v-else>Upload Excel</span>
-            </Button>
-  
-            <!-- Create User Button -->
-            <CreateUserDialog />
-          </div>
-        </div>
-  
-        <!-- Users Table -->
-        <div class="relative min-h-[100vh] flex-1 rounded-xl border">
-          <UsersTable :users="filteredUsers" />
-        </div>
-      </div>
-    </AppLayout>
-  </template>
-  
-  <script setup lang="ts">
+<script setup lang="ts">
   import { ref, computed } from "vue";
   import { Head } from "@inertiajs/vue3";
   import AppLayout from "@/layouts/AppLayout.vue";
@@ -62,7 +14,9 @@
   // Define the User type
   interface User {
     id: number;
-    name: string;
+    first_name: string;
+    middle_name: string;
+    last_name: string;
     email: string;
     role: string;
     status: string;
@@ -137,4 +91,52 @@
       }
     }
   };
-  </script>
+</script>
+  
+<template>
+    <Head title="Users Management" />
+  
+    <AppLayout :breadcrumbs="breadcrumbs">
+      <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+        <!-- Search and Buttons -->
+        <div class="flex items-center justify-between gap-4">
+          <!-- Search Input -->
+          <Input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search users..."
+            class="w-full max-w-xs h-9"
+          />
+  
+          <!-- Buttons -->
+          <div class="flex items-center gap-4">
+            <!-- Upload Excel Button -->
+            <input
+              type="file"
+              ref="fileInput"
+              accept=".xlsx, .xls"
+              class="hidden"
+              @change="handleFileUpload"
+            />
+            <Button
+              @click="triggerFileInput"
+              :disabled="loading"
+              class="bg-green-600 hover:bg-green-700 text-white"
+            >
+              <Upload class="w-4 h-4 mr-2" />
+              <span v-if="loading">Uploading...</span>
+              <span v-else>Upload Excel</span>
+            </Button>
+  
+            <!-- Create User Button -->
+            <CreateUserDialog />
+          </div>
+        </div>
+  
+        <!-- Users Table -->
+        <div class="relative min-h-[100vh] flex-1 rounded-xl border">
+          <UsersTable :users="filteredUsers" />
+        </div>
+      </div>
+    </AppLayout>
+  </template>
