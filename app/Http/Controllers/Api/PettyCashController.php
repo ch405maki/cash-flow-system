@@ -124,8 +124,6 @@ class PettyCashController extends Controller
         return back()->with('success', 'Petty cash voucher updated successfully.');
     }
 
-
-
     public function destroy(PettyCashItem $item)
     {
         if ($item->receipt) {
@@ -157,4 +155,15 @@ class PettyCashController extends Controller
 
         return 'PCV-' . $yearMonth . '-' . str_pad($nextCounter, 4, '0', STR_PAD_LEFT);
     }
+
+    public function submit(Request $request, $id)
+    {
+        $pettyCash = PettyCash::findOrFail($id);
+        $pettyCash->status = 'audit';
+        $pettyCash->updated_at = now();
+        $pettyCash->save();
+
+        return redirect()->back()->with('success', 'Petty Cash submitted for audit.');
+    }
+
 }

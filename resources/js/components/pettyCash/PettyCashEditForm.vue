@@ -69,6 +69,9 @@ const getRowClass = (item: any) => {
   if (totals.liquidation > 0 && totals.liquidation < totals.cashAdvance) {
     return 'bg-yellow-100'
   }
+  if (item.type?.toLowerCase() === 'cash advance') {
+    return 'bg-rose-100';
+  }
   return ''
 }
 
@@ -138,6 +141,40 @@ const submitForm = async () => {
     onError: () => toast.error('Failed to update voucher.')
   })
 }
+
+const editing = reactive<{ index: number | null; field: string | null }>({
+  index: null,
+  field: null
+})
+const editValue = ref('')
+
+const startEditing = (index: number, field: string) => {
+  editing.index = index
+  editing.field = field
+  editValue.value = form.items[index][field]
+}
+
+const isEditing = (index: number, field: string) => {
+  return editing.index === index && editing.field === field
+}
+
+const saveEdit = (index: number, field: string) => {
+  form.items[index][field] = field === 'amount'
+    ? Number(editValue.value)
+    : editValue.value
+  editing.index = null
+  editing.field = null
+}
+
+const submitPettyCash = async () => {
+  if (!confirm('Are you sure you want to submit this petty cash for audit?')) return;
+
+  await router.put(`/petty-cash/${props.pettyCash.id}/submit`, {}, {
+    onSuccess: () => toast.success('Petty Cash submitted for audit!'),
+    onError: () => toast.error('Failed to submit petty cash.')
+  })
+}
+
 </script>
 
 <template>
@@ -167,7 +204,6 @@ const submitForm = async () => {
             <th class="text-left p-2 border-b">Date</th>
             <th class="text-right p-2 border-b">Amount</th>
             <th class="text-left p-2 border-b">Receipt</th>
-            <th class="p-2 border-b text-center">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -187,13 +223,11 @@ const submitForm = async () => {
               </a>
               <span v-else class="text-muted-foreground italic">No file</span>
             </td>
-            <td class="p-2 text-center">
-              <Button variant="destructive" size="sm" @click="removeExistingItem(item.id)">Remove</Button>
-            </td>
           </tr>
         </tbody>
       </table>
     </div>
+
 
     <!-- New Items Table -->
     <div v-if="form.items.length" class="border rounded-xl p-4">
@@ -210,25 +244,70 @@ const submitForm = async () => {
           </tr>
         </thead>
         <tbody>
-          <tr
-            v-for="(item, index) in form.items"
-            :key="index"
-            class="border-b"
-            :class="getRowClass(item)"
-          >
-            <td class="p-2">{{ item.type }}</td>
-            <td class="p-2">{{ item.particulars }}</td>
-            <td class="p-2">{{ item.date }}</td>
-            <td class="p-2 text-right">{{ item.amount.toLocaleString() }}</td>
-            <td class="p-2">
-              <span v-if="item.receipt">{{ item.receipt.name }}</span>
-              <span v-else class="text-muted-foreground italic">No file</span>
-            </td>
-            <td class="p-2 text-center">
-              <Button variant="destructive" size="sm" @click="removeNewItem(index)">Remove</Button>
-            </td>
-          </tr>
-        </tbody>
+        <tr
+          v-for="(item, index) in form.items"
+          :key="index"
+          class="border-b"
+          :class="getRowClass(item)"
+        >
+          <!-- Type (read-only) -->
+          <td class="p-2">{{ item.type }}</td>
+
+          <!-- Particulars (inline editable) -->
+          <td class="p-2" @dblclick="startEditing(index, 'particulars')">
+            <template v-if="isEditing(index, 'particulars')">
+              <Input
+                v-model="editValue"
+                @blur="saveEdit(index, 'particulars')"
+                @keyup.enter="saveEdit(index, 'particulars')"
+                class="w-full"
+              />
+            </template>
+            <template v-else>{{ item.particulars }}</template>
+          </td>
+
+          <!-- Date (inline editable) -->
+          <td class="p-2" @dblclick="startEditing(index, 'date')">
+            <template v-if="isEditing(index, 'date')">
+              <Input
+                v-model="editValue"
+                type="date"
+                @blur="saveEdit(index, 'date')"
+                @keyup.enter="saveEdit(index, 'date')"
+                class="w-full"
+              />
+            </template>
+            <template v-else>{{ item.date }}</template>
+          </td>
+
+          <!-- Amount (inline editable) -->
+          <td class="p-2 text-right" @dblclick="startEditing(index, 'amount')">
+            <template v-if="isEditing(index, 'amount')">
+              <Input
+                v-model.number="editValue"
+                type="number"
+                min="0"
+                @blur="saveEdit(index, 'amount')"
+                @keyup.enter="saveEdit(index, 'amount')"
+                class="w-full text-right"
+              />
+            </template>
+            <template v-else>{{ item.amount.toLocaleString() }}</template>
+          </td>
+
+          <!-- Receipt (read-only for now) -->
+          <td class="p-2">
+            <span v-if="item.receipt">{{ item.receipt.name }}</span>
+            <span v-else class="text-muted-foreground italic">No file</span>
+          </td>
+
+          <!-- Action -->
+          <td class="p-2 text-center">
+            <Button variant="destructive" size="sm" @click="removeNewItem(index)">Remove</Button>
+          </td>
+        </tr>
+      </tbody>
+
       </table>
     </div>
 
@@ -289,8 +368,11 @@ const submitForm = async () => {
     </div>
 
     <!-- Submit -->
-    <div class="flex justify-end">
-      <Button @click="submitForm">Update Voucher</Button>
+    <div class="flex justify-end space-x-2">
+      <Button @click="submitForm" variant="outline">Update Petty Cash</Button>
+      <Button @click="submitPettyCash" class="bg-green-600 text-white hover:bg-green-700">
+        Submit Petty Cash
+      </Button>
     </div>
   </div>
 </template>

@@ -59,7 +59,7 @@ const goToCreate = () => {
                 <TableCell class="font-medium">
                   {{ item.pcv_no }}
                 </TableCell>
-                <TableCell>Draft</TableCell>
+                <TableCell class="capitalize">{{ item.status }}</TableCell>
                 <TableCell class="text-right">
                   <Button @click="router.get(route('petty-cash.edit', item.id))">
                     Edit

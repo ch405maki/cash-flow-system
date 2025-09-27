@@ -29,7 +29,7 @@ const form = reactive({
 
 const newItem = reactive({
   particulars: '',
-  type: '', // <-- will be controlled by radio
+  type: '',
   date: '',
   amount: 0,
   receipt: null as File | null
@@ -220,7 +220,7 @@ const submitForm = async () => {
 
     <!-- Submit -->
     <div class="flex justify-end">
-      <Button @click="submitForm">Save Voucher</Button>
+      <Button @click="submitForm">Save Petty Cash</Button>
     </div>
   </div>
 </template>
