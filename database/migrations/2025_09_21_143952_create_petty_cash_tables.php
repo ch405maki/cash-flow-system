@@ -30,8 +30,9 @@ return new class extends Migration
             $table->string('particulars');
             $table->string('type');
             $table->date('date');
+            $table->date('liquidation_for_date')->nullable();
             $table->decimal('amount', 12, 2);
-            $table->string('receipt')->nullable(); // file path
+            $table->string('receipt')->nullable();
             $table->timestamps();
         });
 

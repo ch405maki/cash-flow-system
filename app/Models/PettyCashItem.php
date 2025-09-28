@@ -13,6 +13,7 @@ class PettyCashItem extends Model
         'petty_cash_id',
         'particulars',
         'date',
+        'liquidation_for_date',
         'amount',
         'receipt',
         'type',
@@ -20,6 +21,7 @@ class PettyCashItem extends Model
 
     protected $casts = [
         'date' => 'date',
+        'liquidation_for_date' => 'date',
         'amount' => 'decimal:2',
     ];
 

@@ -40,6 +40,7 @@ const newItem = reactive({
   type: '',
   particulars: '',
   date: '',
+  liquidation_for_date: '',
   amount: 0,
   receipt: null as File | null
 })
@@ -95,6 +96,7 @@ const addItem = () => {
   newItem.type = ''
   newItem.particulars = ''
   newItem.date = ''
+  newItem.liquidation_for_date = ''
   newItem.amount = 0
   newItem.receipt = null
   fileKey.value++
@@ -142,6 +144,7 @@ const submitForm = async () => {
     data.append(`items[${i}][type]`, item.type)
     data.append(`items[${i}][particulars]`, item.particulars)
     data.append(`items[${i}][date]`, item.date)
+    data.append(`items[${i}][liquidation_for_date]`, item.liquidation_for_date)
     data.append(`items[${i}][amount]`, item.amount.toString())
     if (item.receipt) data.append(`items[${i}][receipt]`, item.receipt)
   })
@@ -194,6 +197,16 @@ const confirmAndSubmit = async () => {
     onError: () => toast.error('Failed to submit petty cash.')
   })
 }
+
+const canSubmitVoucher = computed(() => {
+  return Object.values(groupedByDate.value).every(totals => {
+    // If there is no cash advance, it's fine to submit
+    if (totals.cashAdvance === 0) return true
+    // Allow submit only if liquidation >= cash advance
+    return totals.liquidation >= totals.cashAdvance
+  })
+})
+
 </script>
 
 <template>
@@ -257,6 +270,7 @@ const confirmAndSubmit = async () => {
             <th class="text-left p-2 border-b">Type</th>
             <th class="text-left p-2 border-b">Particulars</th>
             <th class="text-left p-2 border-b">Date</th>
+            <th class="text-left p-2 border-b">Liquidation Dated</th>
             <th class="text-right p-2 border-b">Amount</th>
             <th class="text-left p-2 border-b">Receipt</th>
             <th class="p-2 border-b text-center">Action</th>
@@ -297,6 +311,20 @@ const confirmAndSubmit = async () => {
               />
             </template>
             <template v-else>{{ formatDate(item.date) }}</template>
+          </td>
+
+          <!-- Date (inline editable) -->
+          <td class="p-2" @dblclick="startEditing(index, 'liquidation_for_date')">
+            <template v-if="isEditing(index, 'liquidation_for_date')">
+              <Input
+                v-model="editValue"
+                type="date"
+                @blur="saveEdit(index, 'liquidation_for_date')"
+                @keyup.enter="saveEdit(index, 'liquidation_for_date')"
+                class="w-full"
+              />
+            </template>
+            <template v-else>{{ formatDate(item.liquidation_for_date) }}</template>
           </td>
 
           <!-- Amount (inline editable) -->
@@ -368,6 +396,10 @@ const confirmAndSubmit = async () => {
           <Input v-model="newItem.date" type="date" />
         </div>
         <div>
+          <Label>Liquidation Dated</Label>
+          <Input v-model="newItem.liquidation_for_date" type="date" />
+        </div>
+        <div>
           <Label>Amount</Label>
           <Input v-model.number="newItem.amount" type="number" min="0" />
         </div>
@@ -389,9 +421,13 @@ const confirmAndSubmit = async () => {
     <!-- Submit -->
     <div class="flex justify-end space-x-2">
       <Button @click="submitForm" variant="outline">Update Petty Cash</Button>
-      <Button @click="isSubmitDialogOpen = true" class="bg-green-600 text-white hover:bg-green-700">
+      <Button
+        @click="isSubmitDialogOpen = true"
+        class="bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        :disabled="!canSubmitVoucher"
+      >
         Submit Petty Cash
-      </Button>
+      </Button> 
     </div>
 
     <!-- ✅ Confirmation Dialog -->

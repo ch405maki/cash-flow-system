@@ -92,6 +92,7 @@ class PettyCashController extends Controller
             'items.*.type' => 'required_with:items|string',
             'items.*.particulars' => 'required_with:items|string',
             'items.*.date' => 'required_with:items|date',
+            'items.*.liquidation_for_date' => 'nullable:items|date',
             'items.*.amount' => 'required_with:items|numeric|min:0',
             'items.*.receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
@@ -110,11 +111,12 @@ class PettyCashController extends Controller
                     ? $item['receipt']->store('petty_cash_receipts', 'public')
                     : null;
 
-                \App\Models\PettyCashItem::create([
+                PettyCashItem::create([
                     'petty_cash_id' => $pettyCash->id,
                     'type' => $item['type'],
                     'particulars' => $item['particulars'],
                     'date' => $item['date'],
+                    'liquidation_for_date' => $item['liquidation_for_date'],
                     'amount' => $item['amount'],
                     'receipt' => $receiptPath,
                 ]);
