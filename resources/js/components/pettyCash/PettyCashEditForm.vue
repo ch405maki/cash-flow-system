@@ -48,10 +48,16 @@ const newItem = reactive({
 const fileKey = ref(0)
 
 const totalAmount = computed(() => {
-  const existingTotal = existingItems.value.reduce((sum, i) => sum + (Number(i.amount) || 0), 0)
-  const newTotal = form.items.reduce((sum, i) => sum + (Number(i.amount) || 0), 0)
-  return existingTotal + newTotal
+  const allItems = [...existingItems.value, ...form.items]
+
+  return allItems.reduce((sum, item) => {
+    if (item.type === 'Liquidation' || item.type === 'Reimbursement') {
+      return sum + (Number(item.amount) || 0)
+    }
+    return sum
+  }, 0)
 })
+
 
 /**
  * Compute totals per date (cash advance + liquidation combined)
@@ -59,12 +65,19 @@ const totalAmount = computed(() => {
 const groupedByDate = computed(() => {
   const map: Record<string, { cashAdvance: number; liquidation: number }> = {}
   const allItems = [...existingItems.value, ...form.items]
+
   allItems.forEach(item => {
-    const key = item.date
+    // Group by *cash advance date* (or liquidation_for_date if type is liquidation)
+    const key = item.type === 'Liquidation'
+      ? item.liquidation_for_date || item.date
+      : item.date
+
     if (!map[key]) map[key] = { cashAdvance: 0, liquidation: 0 }
+
     if (item.type === 'Cash Advance') map[key].cashAdvance += Number(item.amount)
     if (item.type === 'Liquidation') map[key].liquidation += Number(item.amount)
   })
+
   return map
 })
 
@@ -72,8 +85,14 @@ const groupedByDate = computed(() => {
  * Returns background class for any item based on date totals
  */
 const getRowClass = (item: any) => {
-  const totals = groupedByDate.value[item.date]
-  if (!totals || totals.cashAdvance === 0) return '' // no cash advance = no highlight
+  const key = item.type === 'Liquidation'
+    ? item.liquidation_for_date || item.date
+    : item.date
+
+  const totals = groupedByDate.value[key]
+
+  if (!totals || totals.cashAdvance === 0) return ''
+
   if (totals.liquidation >= totals.cashAdvance) {
     return 'bg-green-100'
   }
@@ -81,7 +100,7 @@ const getRowClass = (item: any) => {
     return 'bg-yellow-100'
   }
   if (item.type?.toLowerCase() === 'cash advance') {
-    return 'bg-rose-100';
+    return 'bg-rose-100'
   }
   return ''
 }
@@ -102,17 +121,6 @@ const addItem = () => {
   fileKey.value++
 }
 
-const removeExistingItem = async (id: number) => {
-  if (!confirm('Are you sure you want to remove this item?')) return
-
-  await router.delete(`/petty-cash-items/${id}`, {
-    onSuccess: () => {
-      existingItems.value = existingItems.value.filter(item => item.id !== id)
-      toast.success('Item removed.')
-    },
-    onError: () => toast.error('Failed to delete item.')
-  })
-}
 
 const removeNewItem = (index: number) => {
   form.items.splice(index, 1)
@@ -207,6 +215,17 @@ const canSubmitVoucher = computed(() => {
   })
 })
 
+const totalsByType = computed(() => {
+  const allItems = [...existingItems.value, ...form.items]
+  return allItems.reduce(
+    (totals, item) => {
+      const type = item.type || 'Unknown'
+      totals[type] = (totals[type] || 0) + Number(item.amount || 0)
+      return totals
+    },
+    {} as Record<string, number>
+  )
+})
 </script>
 
 <template>
@@ -245,7 +264,7 @@ const canSubmitVoucher = computed(() => {
             class="border-b"
             :class="getRowClass(item)"
           >
-            <td class="p-2 font-semibold">{{ item.type }}</td>
+            <td class="p-2 font-semibold">{{ item.type }} <span v-if="item?.liquidation_for_date != null" class="text-sm font-normal">({{ formatDate(item.liquidation_for_date) }})</span></td>
             <td class="p-2">{{ item.particulars }}</td>
             <td class="p-2">{{ formatDate(item.date) }}</td>
             <td class="p-2 text-right">{{ item.amount.toLocaleString() }}</td>
@@ -258,6 +277,22 @@ const canSubmitVoucher = computed(() => {
           </tr>
         </tbody>
       </table>
+      <!-- Running Totals per Type -->
+    <div class="mt-4 flex justify-end">
+      <div class="grid grid-cols-1 gap-2">
+          <h3 class="text-md font-semibold">Running Totals</h3>
+          <div v-for="(amount, type) in totalsByType" :key="type" class="flex space-x-2">
+            <h1 class="font-medium w-48">{{ type }}:</h1>
+            <h1 class="font-bold w-48 text-right">₱{{ amount.toLocaleString() }}</h1>
+          </div>
+          <div class="font-bold flex space-x-2">
+            <h1 class="w-48">
+              Grand Total: 
+            </h1>
+            <h1 class="w-48 text-right">₱{{ totalAmount.toLocaleString() }}</h1>
+          </div>
+        </div>
+      </div>
     </div>
 
 
@@ -358,11 +393,6 @@ const canSubmitVoucher = computed(() => {
       </table>
     </div>
 
-    <!-- Running Total -->
-    <div class="flex justify-end font-semibold text-lg">
-      Total: {{ totalAmount.toLocaleString() }}
-    </div>
-
     <!-- Add New Item Form -->
     <div class="border rounded-xl p-4 space-y-3">
       <h3 class="text-lg font-semibold">Add New Item</h3>
@@ -395,7 +425,7 @@ const canSubmitVoucher = computed(() => {
           <Label>Date</Label>
           <Input v-model="newItem.date" type="date" />
         </div>
-        <div>
+        <div v-if="newItem.type === 'Liquidation'">
           <Label>Liquidation Dated</Label>
           <Input v-model="newItem.liquidation_for_date" type="date" />
         </div>
