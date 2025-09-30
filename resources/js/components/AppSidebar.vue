@@ -61,8 +61,8 @@ const executiveApprovalItems: NavItem[] = [
     icon: ShoppingCart,
   },
   {
-    title: 'Vouchers',
-    href: '/voucher-approval',
+    title: 'Petty Cash',
+    href: '/petty-cash/approval',
     icon: ReceiptText,
   },
 ];
@@ -179,15 +179,6 @@ const staffNavItems: NavItem[] = [
   {
     title: 'Create Request',
     href: '/request/create',
-    icon: SquarePen,
-  },
-];
-
-// Staff
-const pettyCashNavItems: NavItem[] = [
-  {
-    title: 'Petty Cash',
-    href: '/petty-cash',
     icon: SquarePen,
   },
 ];
@@ -326,6 +317,15 @@ const adminNavItems: NavItem[] = [
     icon: Logs ,
   },
 ];
+
+// Pettycash
+const pettyCashNavItems: NavItem[] = [
+  {
+    title: 'Petty Cash',
+    href: '/petty-cash',
+    icon: SquarePen,
+  },
+];
 </script>
 
 <template>
@@ -350,12 +350,18 @@ const adminNavItems: NavItem[] = [
           <div v-if="user?.role === 'executive_director'">
             <NavMain :items="executiveMainItems" group-label="Navigation"/>
             <NavMain :items="executiveApprovalItems" group-label="For Approval"/>
+            <div v-if="user?.is_petty_cash === 1">
+              <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
+            </div>
             <NavMain :items="reportItems" group-label="Reports" />
           </div>
           
           <div v-if="user?.role === 'accounting'">
             <NavMain :items="accountingNavItems" group-label="Navigation"/>
             <NavMain :items="accountingCheckNavItems" group-label="Check"/>
+            <div v-if="user?.is_petty_cash === 1">
+              <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
+            </div>
             <NavMain :items="reportItems" group-label="Reports" />
           </div>
           
@@ -367,6 +373,9 @@ const adminNavItems: NavItem[] = [
             <NavMain :items="custodianNavItems" group-label="Navigation"/>
             <!-- <NavMain :items="staffRequestItems" group-label="Request"/> -->
             <NavMain :items="custodianApprovalItems" group-label="Request for Purchase"/>
+            <div v-if="user?.is_petty_cash === 1">
+              <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
+            </div>
             <NavMain :items="custodianReportItems" group-label="Reports" />
           </div>
 
@@ -374,12 +383,17 @@ const adminNavItems: NavItem[] = [
             <NavMain :items="purchasingNavItems" group-label="Navigation"/>
             <NavMain :items="purchasingCanvasNavItems" group-label="Transaction"/>
             <NavMain :items="purchasingPONavItems"/>
+            <div v-if="user?.is_petty_cash === 1">
+              <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
+            </div>
             <NavMain :items="reportItems" group-label="Reports" />
           </div>
 
           <div v-if="user?.role === 'staff' || user?.role === 'department_head'">
             <NavMain :items="staffNavItems" group-label="Navigation"/>
-            <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
+            <div v-if="user?.is_petty_cash === 1">
+              <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
+            </div>
             <NavMain :items="staffRequestItems" group-label="Request"/>
           </div>
         </SidebarContent>

@@ -161,7 +161,7 @@ class PettyCashController extends Controller
     public function submit(Request $request, $id)
     {
         $pettyCash = PettyCash::findOrFail($id);
-        $pettyCash->status = 'audit';
+        $pettyCash->status = 'submitted';
         $pettyCash->updated_at = now();
         $pettyCash->save();
 

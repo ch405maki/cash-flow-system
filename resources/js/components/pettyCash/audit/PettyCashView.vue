@@ -101,6 +101,18 @@ const approval = reactive({
 
 const submitApproval = async () => {
   try {
+    await router.post(`/petty-cash/${props.pettyCash.id}/remarks`, {  
+      remarks: approval.remarks
+    })
+    toast.success('Remarks submitted!')
+    approval.remarks = ''
+  } catch (error) {
+    toast.error('Failed to submit approval')
+  }
+}
+
+const submitExecutiveApproval = async () => {
+  try {
     await router.post(`/petty-cash/${props.pettyCash.id}/approve`, {  
       remarks: approval.remarks
     })
@@ -198,10 +210,18 @@ const submitApproval = async () => {
         </div>
 
         <!-- Submit Button -->
-        <div class="flex justify-end">
+        <div class="flex justify-end space-x-2">
           <Button
+            v-if="user.role === 'audit'"
             :disabled="!approval.remarks"
             @click="submitApproval"
+          >
+            Submit Review
+          </Button>
+          <Button
+            v-if="user.role === 'executive_director'"
+            :disabled="!approval.remarks"
+            @click="submitExecutiveApproval"
           >
             Submit Approval
           </Button>
