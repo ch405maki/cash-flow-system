@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref, computed } from 'vue'
+import { usePage } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3'
 import { useToast } from 'vue-toastification'
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,7 @@ import {
 } from '@/components/ui/dialog'
 import { Checkbox } from '@/components/ui/checkbox'
 
+const user = usePage().props.auth.user;
 const props = defineProps<{
   pettyCash: any
 }>()
@@ -400,18 +402,22 @@ const totalsByType = computed(() => {
       <!-- Radio buttons for Type -->
       <div>
         <Label>Type</Label>
-        <RadioGroup v-model="newItem.type" class="flex mt-2 items-center">
-          <div class="flex items-center space-x-2">
-            <RadioGroupItem id="reimbursement" value="Reimbursement" />
-            <Label for="reimbursement">Reimbursement</Label>
-          </div>
-          <div class="flex items-center space-x-2">
-            <RadioGroupItem id="cash-advance" value="Cash Advance" />
-            <Label for="cash-advance">Cash Advance</Label>
-          </div>
-          <div class="flex items-center space-x-2">
-            <RadioGroupItem id="liquidation" value="Liquidation" />
-            <Label for="liquidation">Liquidation</Label>
+        <RadioGroup v-model="newItem.type">
+          <div class="flex mt-2 items-center space-x-4">
+            <div class="flex items-center space-x-2">
+              <RadioGroupItem id="reimbursement" value="Reimbursement" />
+              <Label for="reimbursement">Reimbursement</Label>
+            </div>
+            <div class="flex items-center space-x-4" v-if="user.is_cash_advance === 1">
+              <div class="flex items-center space-x-2">
+                <RadioGroupItem id="cash-advance" value="Cash Advance" />
+                <Label for="cash-advance">Cash Advance</Label>
+              </div>
+              <div class="flex items-center space-x-2">
+                <RadioGroupItem id="liquidation" value="Liquidation" />
+                <Label for="liquidation">Liquidation</Label>
+              </div>
+            </div>
           </div>
         </RadioGroup>
       </div>

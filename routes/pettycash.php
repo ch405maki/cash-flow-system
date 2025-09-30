@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 use App\Http\Controllers\Api\PettyCashController;
+use App\Http\Controllers\Api\AuditPettyCashController;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/petty-cash', [PettyCashController::class, 'index'])->name('petty-cash.index');
@@ -14,4 +15,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/petty-cash-items/{item}', [PettyCashItemController::class, 'destroy']);
     Route::put('/petty-cash/{id}/submit', [PettyCashController::class, 'submit'])->name('petty-cash.submit');
 });
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/audit/petty-cash', [AuditPettyCashController::class, 'index'])->name('audit.petty-cash.index');
+    Route::get('/petty-cash/{pettyCash}/view', [AuditPettyCashController::class, 'view'])->name('petty-cash.view');
+});
+
+
+
 

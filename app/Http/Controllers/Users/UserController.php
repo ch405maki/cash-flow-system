@@ -178,7 +178,10 @@ class UserController extends Controller
                 'status'        => 'required|in:active,inactive',
             ]);
 
-            // Update user
+            // ✅ Add boolean values manually (convert to true/false)
+            $validated['is_petty_cash'] = (bool) $request->input('is_petty_cash', false);
+            $validated['is_cash_advance'] = (bool) $request->input('is_cash_advance', false);
+
             $user->update($validated);
 
             return response()->json([
@@ -198,6 +201,7 @@ class UserController extends Controller
             ], 500);
         }
     }
+
 
     public function updateStatus(Request $request, User $user)
     {

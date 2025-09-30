@@ -255,6 +255,11 @@ const accountingAuditNavItems: NavItem[] = [
     href: '/voucher-approval',
     icon: ReceiptText,
   },
+  {
+    title: 'Petty Cash',
+    href: '/audit/petty-cash',
+    icon: ReceiptText,
+  },
 ];
 
 const reportItems = ref<DropdownNavItem[]>([

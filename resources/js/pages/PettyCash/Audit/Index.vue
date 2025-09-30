@@ -16,31 +16,29 @@ import {
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard', },
-    { title: 'Petty Cash', href: '#', },
+    { title: 'Petty Cash Review', href: '#', },
 ];
 
 const props = defineProps<{
-  pettyCash: object
-}>()
+    pettyCash: Object;
+}>();
 
-const goToCreate = () => {
-  router.get(route('petty-cash.create'))
-}
+console.log(props.pettyCash)
 </script>
 
 <template>
-    <Head title="Petty Cash" />
+<Head title="Audit Petty Cash" />
 
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-          <div class="flex justify-between">
-            <div>
-              <h1 class="text-xl font-bold">Petty Cash</h1>
-              <p class="text-sm font-medium">List of created petty cash.</p>
-            </div>
-            <Button @click="goToCreate">Create New Petty Cash</Button>
-          </div>
-          <Table>
+<AppLayout :breadcrumbs="breadcrumbs">
+    <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+        <div class="flex justify-between">
+        <div>
+            <h1 class="text-xl font-bold">Petty Cash</h1>
+            <p class="text-sm font-medium">List of created petty cash.</p>
+        </div>
+        </div>
+        <!-- Table -->
+        <Table>
             <TableCaption>A list of your petty cash.</TableCaption>
             <TableHeader>
               <TableRow>
@@ -60,13 +58,13 @@ const goToCreate = () => {
                 </TableCell>
                 <TableCell class="capitalize">{{ item.status }}</TableCell>
                 <TableCell class="text-right">
-                  <Button @click="router.get(route('petty-cash.edit', item.id))">
-                    Edit
+                  <Button @click="router.get(route('petty-cash.view', item.id))">
+                    Review
                   </Button>
                 </TableCell>
               </TableRow>
             </TableBody>
           </Table>
-        </div>
-    </AppLayout>
+    </div>
+</AppLayout>
 </template>

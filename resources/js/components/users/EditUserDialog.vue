@@ -7,11 +7,12 @@
     SheetHeader,
     SheetTitle,
     SheetDescription,
-  } from "@/components/ui/sheet"; // Adjust the import path as needed
-  import { Button } from "@/components/ui/button"; // Adjust the import path as needed
-  import { UserRoundPen } from "lucide-vue-next"; // Icon for the trigger
+  } from "@/components/ui/sheet";
+  import { Button } from "@/components/ui/button";
+  import { UserRoundPen } from "lucide-vue-next";
   import axios from "axios";
   import { useToast } from "vue-toastification";
+  import { Checkbox } from '@/components/ui/checkbox';
   
   // Props
   const props = defineProps<{
@@ -24,6 +25,8 @@
       email: string;
       role: string;
       status: string;
+      is_petty_cash: boolean;
+      is_cash_advance: boolean;
     };
   }>();
   
@@ -40,11 +43,13 @@
     email: props.user.email,
     role: props.user.role,
     status: props.user.status,
+    is_petty_cash: props.user.is_petty_cash,
+    is_cash_advance: props.user.is_cash_advance,
   });
+
   
   // Open Dialog
   const openDialog = () => {
-    // Reset form data to the current user's data
     userData.value = {
       id: props.user.id,
       username: props.user.username,
@@ -54,8 +59,11 @@
       email: props.user.email,
       role: props.user.role,
       status: props.user.status,
+      is_petty_cash: props.user.is_petty_cash,
+      is_cash_advance: props.user.is_cash_advance,
     };
   };
+
   
   // Update User
   const updateUser = async () => {
@@ -160,6 +168,19 @@
                 <option value="staff">Staff</option>
               </select>
             </label>
+
+            <!-- Boolean Checkboxes -->
+            <div class="flex items-center space-x-4">
+              <div class="flex items-center space-x-2">
+                <Checkbox id="petty-cash" v-model:checked="userData.is_petty_cash" />
+                <label for="petty-cash" class="text-sm font-medium">Petty Cash User</label>
+              </div>
+              <div class="flex items-center space-x-2">
+                <Checkbox id="cash-advance" v-model:checked="userData.is_cash_advance" />
+                <label for="cash-advance" class="text-sm font-medium">Cash Advance User</label>
+              </div>
+            </div>
+
 
             <!-- Status Field -->
             <label class="block">
