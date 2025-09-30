@@ -4,6 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
+import { FileText } from 'lucide-vue-next';
 import {
   Table,
   TableBody,
@@ -20,10 +21,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const props = defineProps<{
-    pettyCash: Object;
+  pettyCash: Object,
 }>();
 
-console.log(props.pettyCash)
+const hasItem = Object.keys(props.pettyCash).length;
 </script>
 
 <template>
@@ -38,7 +39,8 @@ console.log(props.pettyCash)
         </div>
         </div>
         <!-- Table -->
-        <Table>
+        <div v-if="hasItem">
+          <Table>
             <TableCaption>A list of your petty cash.</TableCaption>
             <TableHeader>
               <TableRow>
@@ -65,6 +67,13 @@ console.log(props.pettyCash)
               </TableRow>
             </TableBody>
           </Table>
+        </div>
+
+        <div v-else class="flex h-48 flex-col items-center justify-center rounded-xl border">
+          <FileText class="h-8 w-8 text-muted-foreground" />
+          <p class="mt-2 text-sm text-muted-foreground">No petty cash to review found</p>
+          <p class="text-xs text-muted-foreground">Petty cash for review will appear here</p>
+        </div>
     </div>
 </AppLayout>
 </template>

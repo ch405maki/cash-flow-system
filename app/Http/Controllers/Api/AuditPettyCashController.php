@@ -13,7 +13,11 @@ class AuditPettyCashController extends Controller
 {
     public function index()
     {
-        $pettyCash = PettyCash::with('items')->orderBy('date', 'desc')->get();
+        $pettyCash = PettyCash::with('items')
+        ->whereNot('status', 'audited')
+        ->orderBy('date', 'desc')
+        ->get();
+
         return Inertia::render('PettyCash/Audit/Index', [ 'pettyCash' => $pettyCash ]);
     }
 
@@ -25,5 +29,4 @@ class AuditPettyCashController extends Controller
             'pettyCash' => $pettyCash,
         ]);
     }
-
 }

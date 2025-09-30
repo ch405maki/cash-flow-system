@@ -39,4 +39,9 @@ class PettyCash extends Model
     {
         return $this->hasMany(DistributionExpense::class);
     }
+
+    public function approvals(): HasMany
+    {
+        return $this->hasMany(PettyCashApproval::class);
+    }
 }

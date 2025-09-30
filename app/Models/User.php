@@ -120,6 +120,11 @@ class User extends Authenticatable
         return $this->hasMany(PettyCash::class);
     }
 
+    public function pettyCashApprovals(): HasMany
+    {
+        return $this->hasMany(PettyCashApproval::class);
+    }
+
     // DistributionExpense roles
     public function distributionExpensesPrepared()
     {

@@ -8,6 +8,9 @@ import { Label } from '@/components/ui/label'
 import { formatDate } from '@/lib/utils';
 import { Rocket } from "lucide-vue-next"
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import Textarea from '@/components/ui/textarea/Textarea.vue';
+
 
 const user = usePage().props.auth.user;
 const props = defineProps<{
@@ -91,16 +94,32 @@ const totalsByType = computed(() => {
     {} as Record<string, number>
   )
 })
+
+const approval = reactive({
+  remarks: ''
+})
+
+const submitApproval = async () => {
+  try {
+    await router.post(`/petty-cash/${props.pettyCash.id}/approve`, {  
+      remarks: approval.remarks
+    })
+    toast.success('Approval submitted!')
+    approval.remarks = ''
+  } catch (error) {
+    toast.error('Failed to submit approval')
+  }
+}
 </script>
 
 <template>
   <div class="space-y-6">
     <!-- Voucher Header -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="space-y-2">
         <Label>PCV No: {{ props.pettyCash.pcv_no }}</Label><br />
         <Label>Paid To: {{ props.pettyCash.paid_to }}</Label><br />
-        <Label>Status: {{ props.pettyCash.status }}</Label><br />
+        <Label>Status: <span class="capitalize">{{ props.pettyCash.status }}</span></Label><br />
         <Label>Date: {{ props.pettyCash.date }}</Label>
       </div>
       <div class="md:col-span-2">
@@ -148,21 +167,45 @@ const totalsByType = computed(() => {
         </tbody>
       </table>
       <!-- Running Totals per Type -->
-    <div class="mt-4 flex justify-end">
-      <div class="grid grid-cols-1 gap-2">
-          <h3 class="text-md font-semibold">Running Totals</h3>
-          <div v-for="(amount, type) in totalsByType" :key="type" class="flex space-x-2">
-            <h1 class="font-medium w-48">{{ type }}:</h1>
-            <h1 class="font-bold w-48 text-right">₱{{ amount.toLocaleString() }}</h1>
-          </div>
-          <div class="font-bold flex space-x-2">
-            <h1 class="w-48">
-              Grand Total: 
-            </h1>
-            <h1 class="w-48 text-right">₱{{ totalAmount.toLocaleString() }}</h1>
+      <div class="mt-4 flex justify-end">
+        <div class="grid grid-cols-1 gap-2">
+            <h3 class="text-md font-semibold">Running Totals</h3>
+            <div v-for="(amount, type) in totalsByType" :key="type" class="flex space-x-2">
+              <h1 class="font-medium w-48">{{ type }}:</h1>
+              <h1 class="font-bold w-48 text-right">₱{{ amount.toLocaleString() }}</h1>
+            </div>
+            <div class="font-bold flex space-x-2">
+              <h1 class="w-48">
+                Grand Total: 
+              </h1>
+              <h1 class="w-48 text-right">₱{{ totalAmount.toLocaleString() }}</h1>
+            </div>
           </div>
         </div>
       </div>
+
+      <div class="mt-6 border rounded-lg p-4">
+        <!-- Remarks -->
+        <div class="mb-4">
+          <Label for="approvalRemarks">Remarks</Label>
+          <Textarea
+            id="approvalRemarks"
+            v-model="approval.remarks"
+            rows="3"
+            class="block w-full border rounded-md p-2"
+            placeholder="Add optional remarks for this approval..."
+          ></Textarea>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex justify-end">
+          <Button
+            :disabled="!approval.remarks"
+            @click="submitApproval"
+          >
+            Submit Approval
+          </Button>
+        </div>
+      </div>
     </div>
-  </div>
 </template>
