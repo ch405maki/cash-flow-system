@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { Head, router } from '@inertiajs/vue3'
 import { type BreadcrumbItem } from '@/types'
 import PettyCashView from '@/components/pettyCash/audit/PettyCashView.vue'
+import PettyCashPrint from '@/components/pettyCash/printables/PettyCash.vue'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -22,8 +23,6 @@ const props = defineProps<{
     pettyCash: any,
     pettyCashFund: Number,
 }>()
-
-console.log(props.pettyCashFund)
 
 const confirmChecked = ref(false)
 
@@ -72,7 +71,6 @@ const grandTotal = computed(() => reimbursementTotal.value + liquidationTotal.va
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="flex items-center justify-between">
         <h1 class="text-xl font-bold">Review Petty Cash Voucher</h1>
-{{ props.pettyCashFund }}
         <!-- AlertDialog -->
         <AlertDialog v-if="props.pettyCash.status == 'approved'">
           <AlertDialogTrigger as-child>
@@ -108,6 +106,7 @@ const grandTotal = computed(() => reimbursementTotal.value + liquidationTotal.va
 
       <div class="rounded-xl border p-4">
         <PettyCashView :petty-cash="props.pettyCash" />
+        <PettyCashPrint :petty-cash="props.pettyCash" />
       </div>
     </div>
   </AppLayout>
