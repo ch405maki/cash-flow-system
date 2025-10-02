@@ -148,4 +148,10 @@ class User extends Authenticatable
         return $this->hasMany(DistributionExpense::class, 'paid_by');
     }
 
+    // Pettycash release
+    public function pettyCashFund()
+    {
+        return $this->hasOne(PettyCashFund::class);
+    }
+
 }

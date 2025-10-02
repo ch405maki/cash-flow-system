@@ -5,6 +5,13 @@ import { Head } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 import { FileText } from 'lucide-vue-next';
+import { PhilippinePeso, Eye } from 'lucide-vue-next';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from '@/components/ui/tooltip'
 import {
   Table,
   TableBody,
@@ -16,12 +23,13 @@ import {
 } from '@/components/ui/table'
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/dashboard', },
-    { title: 'Petty Cash Review', href: '#', },
+    { title: 'Dashboard', href: '#', },
+    { title: 'Approved Petty Cash', href: '#', },
 ];
 
 const props = defineProps<{
   pettyCash: Object,
+  pettyCashFund:Number
 }>();
 
 const hasItem = Object.keys(props.pettyCash).length;
@@ -32,16 +40,29 @@ const hasItem = Object.keys(props.pettyCash).length;
 
 <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center">
           <div>
               <h1 class="text-xl font-bold">Petty Cash</h1>
-              <p class="text-sm font-medium">List of created petty cash.</p>
+              <p class="text-sm font-medium">List of approved petty cash.</p>
           </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <div class="rounded-lg border p-4 hover:border-green-500 hover:text-green-600">
+                  <h1 class="text-xl font-medium flex items-center"><PhilippinePeso />{{ props.pettyCashFund.fund_amount }}</h1>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Allocated Fund</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
         </div>
         <!-- Table -->
-        <div v-if="hasItem">
+        <div v-if="hasItem" class="border rounded-lg">
           <Table>
-            <TableCaption>A list of your petty cash.</TableCaption>
+            <TableCaption class="py-4">A list of your petty cash.</TableCaption>
             <TableHeader>
               <TableRow>
                 <TableHead class="w-[300px]">
@@ -61,7 +82,7 @@ const hasItem = Object.keys(props.pettyCash).length;
                 <TableCell class="capitalize">{{ item.status }}</TableCell>
                 <TableCell class="text-right">
                   <Button @click="router.get(route('bursar.petty-cash.view', item.id))">
-                    Review
+                    <Eye/>Review
                   </Button>
                 </TableCell>
               </TableRow>
