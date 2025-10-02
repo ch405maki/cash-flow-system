@@ -28,7 +28,16 @@ return new class extends Migration
             $table->string('last_name');
             $table->string('email')->unique()->nullable();
             $table->timestamp('email_verified_at')->nullable();
-            $table->enum('role', ['admin', 'executive_director', 'department_head','accounting', 'audit','property_custodian','purchasing', 'staff'])->default('staff');
+            $table->enum('role', [
+                'admin', 
+                'executive_director', 
+                'department_head',
+                'accounting', 
+                'bursar',
+                'audit',
+                'property_custodian',
+                'purchasing', 
+                'staff'])->default('staff');
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->unsignedBigInteger('profile_picture_id')->nullable();
             $table->foreignId('department_id')

@@ -14,9 +14,20 @@ class PettyCashController extends Controller
 {
     public function index()
     {
-        $pettyCash = PettyCash::with('items')->orderBy('date', 'desc')->get();
-        return Inertia::render('PettyCash/Index', [ 'pettyCash' => $pettyCash ]);
+        $user = auth()->user();
+
+        $pettyCash = PettyCash::with(['items', 'user.department'])
+            ->whereHas('user', function ($query) use ($user) {
+                $query->where('department_id', $user->department_id);
+            })
+            ->orderBy('date', 'desc')
+            ->get();
+
+        return Inertia::render('PettyCash/Index', [
+            'pettyCash' => $pettyCash,
+        ]);
     }
+
 
     public function create()
     {

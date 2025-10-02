@@ -14,7 +14,7 @@ class AuditPettyCashController extends Controller
     public function index()
     {
         $pettyCash = PettyCash::with('items')
-        ->whereNot('status', 'audited')
+        ->whereNot('status', 'draft')
         ->orderBy('date', 'desc')
         ->get();
 

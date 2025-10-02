@@ -302,6 +302,17 @@ class DatabaseSeeder extends Seeder
             'access_id' => Access::where('access_level', 'Write')->first()->id,
         ],
         [
+            'username' => 'bursar',
+            'first_name' => 'Bursar',
+            'last_name' => 'Staff',
+            'email' => 'bursar@itc.com',
+            'password' => Hash::make('password'),
+            'role' => 'bursar',
+            'status' => 'active',
+            'department_id' => Department::where('department_name', 'Bursar')->first()->id,
+            'access_id' => Access::where('access_level', 'Write')->first()->id,
+        ],
+        [
             'username' => 'auditor',
             'first_name' => 'Audit',
             'last_name' => 'Officer',

@@ -17,32 +17,30 @@ import {
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard', },
-    { title: 'Petty Cash', href: '#', },
+    { title: 'Petty Cash Review', href: '#', },
 ];
 
 const props = defineProps<{
-  pettyCash: object
-}>()
-const hasItem = Object.keys(props.pettyCash).length;
+  pettyCash: Object,
+}>();
 
-const goToCreate = () => {
-  router.get(route('petty-cash.create'))
-}
+const hasItem = Object.keys(props.pettyCash).length;
 </script>
 
 <template>
-    <Head title="Petty Cash" />
+<Head title="Bursar's Petty Cash" />
 
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-          <div class="flex justify-between">
-            <div>
+<AppLayout :breadcrumbs="breadcrumbs">
+    <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+        <div class="flex justify-between">
+          <div>
               <h1 class="text-xl font-bold">Petty Cash</h1>
               <p class="text-sm font-medium">List of created petty cash.</p>
-            </div>
-            <Button v-if="hasItem" @click="goToCreate">Create New Petty Cash</Button>
           </div>
-          <Table v-if="hasItem">
+        </div>
+        <!-- Table -->
+        <div v-if="hasItem">
+          <Table>
             <TableCaption>A list of your petty cash.</TableCaption>
             <TableHeader>
               <TableRow>
@@ -62,20 +60,20 @@ const goToCreate = () => {
                 </TableCell>
                 <TableCell class="capitalize">{{ item.status }}</TableCell>
                 <TableCell class="text-right">
-                  <Button @click="router.get(route('petty-cash.edit', item.id))">
-                    View
+                  <Button @click="router.get(route('bursar.petty-cash.view', item.id))">
+                    Review
                   </Button>
                 </TableCell>
               </TableRow>
             </TableBody>
           </Table>
-
-          <div v-else class="flex h-48 flex-col items-center justify-center rounded-xl border">
-            <FileText class="h-8 w-8 text-muted-foreground" />
-            <p class="mt-2 text-sm text-muted-foreground">No petty cash created found</p>
-            <p class="text-xs text-muted-foreground mb-4">List of your petty cash will appear here</p>
-            <Button @click="goToCreate">Create New Petty Cash</Button>
-          </div>
         </div>
-    </AppLayout>
+
+        <div v-else class="flex h-48 flex-col items-center justify-center rounded-xl border">
+          <FileText class="h-8 w-8 text-muted-foreground" />
+          <p class="mt-2 text-sm text-muted-foreground">No petty cash to review found</p>
+          <p class="text-xs text-muted-foreground">Petty cash for review will appear here</p>
+        </div>
+    </div>
+</AppLayout>
 </template>

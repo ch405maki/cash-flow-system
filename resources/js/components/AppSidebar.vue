@@ -326,6 +326,14 @@ const pettyCashNavItems: NavItem[] = [
     icon: SquarePen,
   },
 ];
+
+const bursarNavItems: NavItem[] = [
+  {
+    title: 'Petty Cash',
+    href: '/bursar/petty-cash',
+    icon: SquarePen,
+  },
+];
 </script>
 
 <template>
@@ -367,6 +375,10 @@ const pettyCashNavItems: NavItem[] = [
           
           <div v-if="user?.role === 'audit'">
             <NavMain :items="accountingAuditNavItems" group-label="Audit"/>
+          </div>
+
+          <div v-if="user?.role === 'bursar'">
+            <NavMain :items="bursarNavItems" group-label="Petty Cash"/>
           </div>
 
           <div v-if="user?.role === 'property_custodian'">

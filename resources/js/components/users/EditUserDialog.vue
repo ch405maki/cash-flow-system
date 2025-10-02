@@ -173,11 +173,11 @@
             <div class="flex items-center space-x-4">
               <div class="flex items-center space-x-2">
                 <Checkbox id="petty-cash" v-model:checked="userData.is_petty_cash" />
-                <label for="petty-cash" class="text-sm font-medium">Petty Cash User</label>
+                <label for="petty-cash" class="text-sm font-medium">Reimbursement</label>
               </div>
               <div class="flex items-center space-x-2">
                 <Checkbox id="cash-advance" v-model:checked="userData.is_cash_advance" />
-                <label for="cash-advance" class="text-sm font-medium">Cash Advance User</label>
+                <label for="cash-advance" class="text-sm font-medium">Cash Advance / Liquidation</label>
               </div>
             </div>
 

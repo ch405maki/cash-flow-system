@@ -458,6 +458,7 @@ const totalsByType = computed(() => {
     <div class="flex justify-end space-x-2">
       <Button @click="submitForm" variant="outline">Update Petty Cash</Button>
       <Button
+        v-if="user.role == 'department_head'"
         @click="isSubmitDialogOpen = true"
         class="bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
         :disabled="!canSubmitVoucher"

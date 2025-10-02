@@ -223,7 +223,7 @@ const submitExecutiveApproval = async () => {
             :disabled="!approval.remarks"
             @click="submitExecutiveApproval"
           >
-            Submit Approval
+            Confirm Approval
           </Button>
         </div>
       </div>
