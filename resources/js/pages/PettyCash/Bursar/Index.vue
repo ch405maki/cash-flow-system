@@ -48,7 +48,7 @@ const hasItem = Object.keys(props.pettyCash).length;
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger>
-                <div class="rounded-lg border p-4 hover:border-green-500 hover:text-green-600">
+                <div class="rounded-lg border p-4 text-purple-600 border-purple-500 bg-purple-100 hover:border-purple-600 hover:text-purple-700">
                   <h1 class="text-xl font-medium flex items-center"><PhilippinePeso />{{ props.pettyCashFund.fund_amount }}</h1>
                 </div>
               </TooltipTrigger>

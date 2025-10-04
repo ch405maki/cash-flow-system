@@ -26,12 +26,17 @@ class BursarPettycashController extends Controller
 
     public function view(PettyCash $pettyCash)
     {
-        $pettyCash->load('items');
+        $pettyCash->load([
+            'items',
+            'approvals.user', 
+            'distributionExpenses',
+        ]);
 
         return Inertia::render('PettyCash/Bursar/View', [
             'pettyCash' => $pettyCash,
         ]);
     }
+
 
     public function release(Request $request, PettyCash $pettyCash)
     {

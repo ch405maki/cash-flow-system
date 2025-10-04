@@ -23,7 +23,11 @@ class AuditPettyCashController extends Controller
 
     public function view(PettyCash $pettyCash)
     {
-        $pettyCash->load('items');
+        $pettyCash->load([
+            'items',
+            'approvals.user', 
+            'distributionExpenses',
+        ]);
 
         return Inertia::render('PettyCash/Audit/View', [
             'pettyCash' => $pettyCash,

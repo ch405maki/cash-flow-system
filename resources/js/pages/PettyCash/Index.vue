@@ -61,9 +61,12 @@ const goToCreate = () => {
                   {{ item.pcv_no }}
                 </TableCell>
                 <TableCell class="capitalize">{{ item.status }}</TableCell>
-                <TableCell class="text-right">
-                  <Button @click="router.get(route('petty-cash.edit', item.id))">
-                    View
+                <TableCell class="flex justify-end space-x-2">
+                  <Button v-if="item.status != 'draft'" @click="router.get(route('bursar.petty-cash.view', item.id))">
+                    View Status
+                  </Button>
+                  <Button v-if="item.status == 'draft'" @click="router.get(route('petty-cash.edit', item.id))">
+                    Review
                   </Button>
                 </TableCell>
               </TableRow>
