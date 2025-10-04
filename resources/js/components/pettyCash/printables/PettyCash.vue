@@ -5,12 +5,11 @@ const props = defineProps<{
 </script>
 
 <template>
-  <div class="p-4 text-black bg-white w-[900px] mx-auto border border-black text-xs font-sans">
+  <div class="p-4 text-black bg-white w-[900px] mx-auto text-xs font-sans">
     <!-- HEADER -->
-    <div class="text-center">
+    <div class="text-center border-t border-x border-black">
       <h2 class="font-bold uppercase">ARELLANO LAW FOUNDATION INC.</h2>
       <p>Taft Avenue Corner Menlo Street, Pasay City</p>
-      
     </div>
 
     <!-- Paid to + Date / PCV No -->
@@ -138,7 +137,7 @@ const props = defineProps<{
             </tbody>
           </table>
           
-          <div class="grid grid-cols-1 grid-rows-4 gap-0 border-r border-black">
+          <div class="grid grid-cols-1 grid-rows-4 gap-0 border-r border-black ">
               <div class="border-b border-black">
                 <p>Prepared by: ____________________</p>
               </div>
