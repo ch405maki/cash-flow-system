@@ -1,16 +1,23 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
-import { computed, ref } from 'vue';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
+import AppLayout from '@/layouts/AppLayout.vue'
+import { computed, ref } from 'vue'
+import { type BreadcrumbItem } from '@/types'
+import { Head } from '@inertiajs/vue3'
+import FormHeader from '@/components/reports/header/formHeder.vue'
+import { formatDate } from '@/lib/utils'
 
-// destructure directly
+// Props
 const { releases } = defineProps({
   releases: Array
 })
 
+// Date filters
+const startDate = ref<string | null>(null)
+const endDate = ref<string | null>(null)
+
+// Grouping releases by request
 const groupedReleases = computed(() => {
-  const groups = {}
+  const groups: Record<string, any> = {}
 
   for (const release of releases) {
     const reqNo = release.request.request_no
@@ -28,56 +35,132 @@ const groupedReleases = computed(() => {
   return Object.values(groups)
 })
 
+// Filtered releases by date range
+const filteredReleases = computed(() => {
+  if (!startDate.value && !endDate.value) return groupedReleases.value
+
+  return groupedReleases.value.filter((group: any) => {
+    const releaseDate = new Date(group.release_date)
+    const start = startDate.value ? new Date(startDate.value) : null
+    const end = endDate.value ? new Date(endDate.value) : null
+
+    if (start && releaseDate < start) return false
+    if (end && releaseDate > end) return false
+    return true
+  })
+})
+
+// Print action
+const printReport = () => {
+  const printContents = document.getElementById('print-section')?.innerHTML;
+  const originalContents = document.body.innerHTML;
+
+  if (printContents) {
+    document.body.innerHTML = printContents;
+    window.print();
+    document.body.innerHTML = originalContents;
+    location.reload();
+  } else {
+    console.error('Print section not found');
+  }
+}
+
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Dashboard', href: '/dashboard' },
   { title: 'Reports', href: '/reports' },
   { title: 'Request Summary', href: '/' },
-];
+]
 </script>
 
 <template>
   <Head title="Released Items Report" />
 
-    <Head title="Request Summary" />
-
-    <AppLayout :breadcrumbs="breadcrumbs">
-
+  <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-6">
-        <h1 class="text-xl font-bold mb-4">Released Items Report</h1>
+      <div class="flex justify-between items-center mb-4">
+        <h1 class="text-xl font-bold">Released Items Report</h1>
+        <button
+          @click="printReport"
+          class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Print
+        </button>
+      </div>
 
+      <!-- Filters -->
+      <div class="flex gap-4 mb-6">
+        <div>
+          <label class="block text-xs font-medium">Start Date</label>
+          <input
+            type="date"
+            v-model="startDate"
+            class="border rounded px-2 py-1 text-sm"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-medium">End Date</label>
+          <input
+            type="date"
+            v-model="endDate"
+            class="border rounded px-2 py-1 text-sm"
+          />
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div id="print-section">
+        <div class="hidden print:block">
+            <FormHeader text="Released Items" :bordered="false" />
+        </div>
         <table class="table-auto border-collapse border w-full text-sm">
-        <thead>
-            <tr class="bg-gray-100">
-            <th class="border px-2 py-1">Release Date</th>
-            <th class="border px-2 py-1">Request No</th>
-            <th class="border px-2 py-1">Department</th>
-            <th class="border px-2 py-1">Item</th>
-            <th class="border px-2 py-1">Qty</th>
-            <th class="border px-2 py-1">Unit</th>
-            </tr>
-        </thead>
-        <tbody>
-            <template v-for="group in groupedReleases" :key="group.request_no">
-            <tr v-for="(detail, index) in group.details" :key="detail.id">
-                <!-- Only show parent info on the first row -->
-                <td v-if="index === 0" :rowspan="group.details.length" class="border px-2 py-1">
-                {{ group.release_date }}
-                </td>
-                <td v-if="index === 0" :rowspan="group.details.length" class="border px-2 py-1">
-                {{ group.request_no }}
-                </td>
-                <td v-if="index === 0" :rowspan="group.details.length" class="border px-2 py-1">
-                {{ group.department }}
-                </td>
+            <thead>
+                <tr class="bg-gray-100">
+                <th class="border px-2 w-[15%]">Release Date</th>
+                <th class="border px-2 w-[15%]">Request No</th>
+                <th class="border px-2 w-[15%]">Department</th>
+                <th class="border px-2 w-[40%]">Item</th>
+                <th class="border px-2 w-[7.5%]">Qty</th>
+                <th class="border px-2 w-[7.5%]">Unit</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template v-for="group in filteredReleases" :key="group.request_no">
+                <tr v-for="(detail, index) in group.details" :key="detail.id">
+                    <!-- Parent info -->
+                    <td
+                    v-if="index === 0"
+                    :rowspan="group.details.length"
+                    class="border px-2"
+                    >
+                    {{ formatDate(group.release_date) }}
+                    </td>
+                    <td
+                    v-if="index === 0"
+                    :rowspan="group.details.length"
+                    class="border px-2"
+                    >
+                    {{ group.request_no }}
+                    </td>
+                    <td
+                    v-if="index === 0"
+                    :rowspan="group.details.length"
+                    class="border px-2"
+                    >
+                    {{ group.department }}
+                    </td>
 
-                <!-- Details -->
-                <td class="border px-2 py-1">{{ detail.request_detail.item_description }}</td>
-                <td class="border px-2 py-1">{{ detail.quantity }}</td>
-                <td class="border px-2 py-1">{{ detail.request_detail.unit }}</td>
-            </tr>
-            </template>
-        </tbody>
-        </table>
+                    <!-- Details -->
+                    <td class="border px-2">
+                    {{ detail.request_detail.item_description }}
+                    </td>
+                    <td class="border px-2">{{ detail.quantity }}</td>
+                    <td class="border px-2">{{ detail.request_detail.unit }}</td>
+                </tr>
+                </template>
+            </tbody>
+            </table>
+
+      </div>
     </div>
-    </AppLayout>
+  </AppLayout>
 </template>
