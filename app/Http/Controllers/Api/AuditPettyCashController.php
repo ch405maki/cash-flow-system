@@ -14,9 +14,9 @@ class AuditPettyCashController extends Controller
     public function index()
     {
         $pettyCash = PettyCash::with('items')
-        ->whereNot('status', 'draft')
-        ->orderBy('date', 'desc')
-        ->get();
+            ->whereNotIn('status', ['draft', 'for liquidation'])
+            ->orderBy('date', 'desc')
+            ->get();
 
         return Inertia::render('PettyCash/Audit/Index', [ 'pettyCash' => $pettyCash ]);
     }

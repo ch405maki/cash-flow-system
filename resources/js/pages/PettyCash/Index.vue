@@ -62,11 +62,14 @@ const goToCreate = () => {
                 </TableCell>
                 <TableCell class="capitalize">{{ item.status }}</TableCell>
                 <TableCell class="flex justify-end space-x-2">
-                  <Button v-if="item.status != 'draft'" @click="router.get(route('bursar.petty-cash.view', item.id))">
+                  <Button v-if="item.status != 'draft' && item.status != 'requested' " @click="router.get(route('bursar.petty-cash.view', item.id))">
                     View Status
                   </Button>
                   <Button v-if="item.status == 'draft'" @click="router.get(route('petty-cash.edit', item.id))">
                     Review
+                  </Button>
+                  <Button v-if="item.status == 'requested'" @click="router.get(route('bursar.petty-cash.view', item.id))">
+                    View Request
                   </Button>
                 </TableCell>
               </TableRow>

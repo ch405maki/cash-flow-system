@@ -25,6 +25,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/bursar/petty-cash', [BursarPettycashController::class, 'index'])->name('bursar.petty-cash.index');
     Route::get('/bursar/petty-cash/{pettyCash}/view', [BursarPettycashController::class, 'view'])->name('bursar.petty-cash.view');
     Route::put('/bursar/petty-cash/{pettyCash}/release', [BursarPettycashController::class, 'release'])->name('bursar.petty-cash.release');
+    Route::put('/bursar/cashAdvance/{pettyCash}/release', [BursarPettycashController::class, 'releaseCashAdvance'])->name('bursar.cashAdvance.release');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

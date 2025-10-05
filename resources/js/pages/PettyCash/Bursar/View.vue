@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Checkbox } from '@/components/ui/checkbox'
 import { reactive, ref, computed } from 'vue'
+import { useToast } from "vue-toastification";
 import {
   Sheet,
   SheetContent,
@@ -29,6 +30,8 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { usePage } from '@inertiajs/vue3';
+
+const toast = useToast();
 
 const user = usePage().props.auth.user;
 const props = defineProps<{
@@ -43,18 +46,45 @@ const releasePettyCash = () => {
     reimbursement_total: reimbursementTotal.value,
     liquidation_total: liquidationTotal.value,
     grand_total: grandTotal.value,
-  }
+  };
 
   router.put(
-    route('bursar.petty-cash.release', props.pettyCash.id),
+    route("bursar.petty-cash.release", props.pettyCash.id),
     data,
     {
       onSuccess: () => {
-        confirmChecked.value = false
-      }
+        confirmChecked.value = false;
+        toast.success("Petty Cash released successfully");
+      },
+      onError: () => {
+        toast.error("Failed to release Petty Cash");
+      },
     }
-  )
-}
+  );
+};
+
+const releaseCashAdvance = () => {
+  const data = {
+    reimbursement_total: reimbursementTotal.value,
+    liquidation_total: liquidationTotal.value,
+    grand_total: cashAdvanceTotal.value,
+  };
+
+  router.put(
+    route("bursar.cashAdvance.release", props.pettyCash.id),
+    data,
+    {
+      onSuccess: () => {
+        confirmChecked.value = false;
+        toast.success("Cash Advance released successfully");
+      },
+      onError: () => {
+        toast.error("Failed to release Cash Advance");
+      },
+    }
+  );
+};
+
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Dashboard', href: '/dashboard' },
@@ -65,6 +95,12 @@ const breadcrumbs: BreadcrumbItem[] = [
 const reimbursementTotal = computed(() => {
   return props.pettyCash.items
     .filter((item: any) => item.type === 'Reimbursement')
+    .reduce((sum: number, item: any) => sum + Number(item.amount || 0), 0)
+})
+
+const cashAdvanceTotal = computed(() => {
+  return props.pettyCash.items
+    .filter((item: any) => item.type === 'Cash Advance')
     .reduce((sum: number, item: any) => sum + Number(item.amount || 0), 0)
 })
 
@@ -85,6 +121,9 @@ const grandTotal = computed(() => reimbursementTotal.value + liquidationTotal.va
         <h1 class="text-xl font-bold">Review Petty Cash Voucher</h1>
 
         <div class="flex items-center space-x-2">
+          <Button v-if="props.pettyCash.status == 'for liquidation'"  @click="router.get(route('petty-cash.edit', props.pettyCash.id))">
+            Liquidate
+          </Button>
           <!-- Approval History Button -->
             <Sheet>
               <SheetTrigger as-child>
@@ -156,6 +195,41 @@ const grandTotal = computed(() => reimbursementTotal.value + liquidationTotal.va
                 </SheetHeader>
               </SheetContent>
             </Sheet>
+
+        <div v-if="user.role == 'accounting'">
+          <!-- Release button -->
+          <AlertDialog v-if="props.pettyCash.status == 'requested'">
+            <AlertDialogTrigger as-child>
+              <Button>Tag Release</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Release Cash Advance?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action will mark the request
+                  <b>{{ props.pettyCash.pcv_no }}</b> as <i>to liquidate</i>.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <div class="flex items-center space-x-2 my-4">
+                <Checkbox v-model:checked="confirmChecked" id="confirm-release" />
+                <label for="confirm-release" class="text-sm">
+                  I confirm release of this request.
+                </label>
+              </div>
+
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  :disabled="!confirmChecked"
+                  @click="releaseCashAdvance"
+                >
+                  Confirm Release
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
 
         <div v-if="user.role == 'bursar'">
           <!-- Release button -->

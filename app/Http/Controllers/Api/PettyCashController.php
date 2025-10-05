@@ -16,18 +16,24 @@ class PettyCashController extends Controller
     {
         $user = auth()->user();
 
-        $pettyCash = PettyCash::with(['items', 'user.department'])
-            ->whereHas('user', function ($query) use ($user) {
-                $query->where('department_id', $user->department_id);
-            })
-            ->orderBy('date', 'desc')
-            ->get();
+        $query = PettyCash::with(['items', 'user.department']);
+
+        if ($user->role === 'accounting') {
+            // Accounting sees all requested petty cash
+            $query->where('status', 'requested');
+        } else {
+            // Other users only see their own department’s
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('department_id', $user->department_id);
+            });
+        }
+
+        $pettyCash = $query->orderBy('date', 'desc')->get();
 
         return Inertia::render('PettyCash/Index', [
             'pettyCash' => $pettyCash,
         ]);
     }
-
 
     public function create()
     {
@@ -55,13 +61,19 @@ class PettyCashController extends Controller
             'items.*.receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
+        // 👇 Override status if type is "Cash Advance"
+        $hasCashAdvance = collect($validated['items'])
+            ->contains(fn($item) => strtolower($item['type']) === 'cash advance');
+
+        $status = $hasCashAdvance ? 'requested' : $validated['status'];
+
         $pettyCash = PettyCash::create([
-            'pcv_no' => $validated['pcv_no'],
-            'user_id' => Auth::id(),
-            'paid_to' => $validated['paid_to'],
-            'status' => $validated['status'],
-            'date' => $validated['date'],
-            'remarks' => $validated['remarks'] ?? null,
+            'pcv_no'   => $validated['pcv_no'],
+            'user_id'  => Auth::id(),
+            'paid_to'  => $validated['paid_to'],
+            'status'   => $status,
+            'date'     => $validated['date'],
+            'remarks'  => $validated['remarks'] ?? null,
         ]);
 
         foreach ($validated['items'] as $item) {
@@ -72,11 +84,11 @@ class PettyCashController extends Controller
 
             PettyCashItem::create([
                 'petty_cash_id' => $pettyCash->id,
-                'particulars' => $item['particulars'],
-                'type' => $item['type'],
-                'date' => $item['date'],
-                'amount' => $item['amount'],
-                'receipt' => $receiptPath,
+                'particulars'   => $item['particulars'],
+                'type'          => $item['type'],
+                'date'          => $item['date'],
+                'amount'        => $item['amount'],
+                'receipt'       => $receiptPath,
             ]);
         }
 

@@ -113,6 +113,12 @@ const addItem = () => {
     return
   }
 
+  // 🔒 Require receipt for liquidation
+  if (newItem.type === 'Liquidation' && !newItem.receipt) {
+    toast.error('Receipt attachment is required for Liquidation items.')
+    return
+  }
+
   form.items.push({ ...newItem })
   newItem.type = ''
   newItem.particulars = ''
@@ -122,7 +128,6 @@ const addItem = () => {
   newItem.receipt = null
   fileKey.value++
 }
-
 
 const removeNewItem = (index: number) => {
   form.items.splice(index, 1)
@@ -160,10 +165,14 @@ const submitForm = async () => {
   })
 
   await router.post(`/petty-cash/${props.pettyCash.id}`, data, {
-    onSuccess: () => toast.success('Petty Cash Voucher updated successfully!'),
+    onSuccess: () => {
+      toast.success('Petty Cash Voucher updated successfully!')
+      window.location.reload() // 🔄 Refresh page
+    },
     onError: () => toast.error('Failed to update voucher.')
   })
 }
+
 
 const editing = reactive<{ index: number | null; field: string | null }>({
   index: null,
@@ -403,7 +412,7 @@ const totalsByType = computed(() => {
       <div>
         <Label>Type</Label>
         <RadioGroup v-model="newItem.type">
-          <div class="flex mt-2 items-center space-x-4">
+          <div  v-if=" props.pettyCash.status != 'for liquidation'" class="flex mt-2 items-center space-x-4">
             <div class="flex items-center space-x-2">
               <RadioGroupItem id="reimbursement" value="Reimbursement" />
               <Label for="reimbursement">Reimbursement</Label>
@@ -413,6 +422,14 @@ const totalsByType = computed(() => {
                 <RadioGroupItem id="cash-advance" value="Cash Advance" />
                 <Label for="cash-advance">Cash Advance</Label>
               </div>
+              <div class="flex items-center space-x-2">
+                <RadioGroupItem id="liquidation" value="Liquidation" />
+                <Label for="liquidation">Liquidation</Label>
+              </div>
+            </div>
+          </div>
+          <div v-else class="flex mt-2 items-center space-x-4">
+            <div class="flex items-center space-x-4" v-if="user.is_cash_advance === 1">
               <div class="flex items-center space-x-2">
                 <RadioGroupItem id="liquidation" value="Liquidation" />
                 <Label for="liquidation">Liquidation</Label>
@@ -456,12 +473,16 @@ const totalsByType = computed(() => {
 
     <!-- Submit -->
     <div class="flex justify-end space-x-2">
-      <Button @click="submitForm" variant="outline">Update Petty Cash</Button>
-      <!-- v-if="user.role == 'department_head'" -->
+      <Button 
+        @click="submitForm"
+        variant="outline"
+        :disabled="props.pettyCash.status =='submitted'"
+        >Update Petty Cash</Button>
       <Button
+        v-if="user.access_id == 3"
         @click="isSubmitDialogOpen = true"
         class="bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        :disabled="!canSubmitVoucher"
+        :disabled="!canSubmitVoucher || props.pettyCash.status =='submitted'"
       >
         Submit Petty Cash
       </Button> 
