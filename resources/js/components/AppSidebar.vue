@@ -261,6 +261,7 @@ const reportItems = ref<DropdownNavItem[]>([
         isOpen: false,
         children: [
         { title: 'Request Summary', href: '/reports/request-summary'},
+        { title: 'Released Request Summary', href: '/request-reports'},
         { title: 'Purchase Order Summary', href: '/reports/po-summary'},
         { title: 'Voucher Summary', href: '/reports/voucher-summary'},
         ],
@@ -375,6 +376,7 @@ const bursarNavItems: NavItem[] = [
           
           <div v-if="user?.role === 'audit'">
             <NavMain :items="accountingAuditNavItems" group-label="Audit"/>
+            <NavMain :items="reportItems" group-label="Reports" />
           </div>
 
           <div v-if="user?.role === 'bursar'">

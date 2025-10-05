@@ -83,7 +83,7 @@ const filteredRequests = computed(() => {
     
     // Department filter (with null check)
     const departmentMatch = selectedDepartment.value === 'all' || 
-                         (request.department && request.department.id.toString() === selectedDepartment.value);
+                        (request.department && request.department.id.toString() === selectedDepartment.value);
     
     // Search filter - more explicit version
     let searchMatch = false;

@@ -156,3 +156,4 @@ require __DIR__.'/settings.php';
 require __DIR__.'/configuration.php';
 require __DIR__.'/auth.php';
 require __DIR__.'/pettycash.php';
+require __DIR__.'/reports.php';
