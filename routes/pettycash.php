@@ -21,6 +21,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/audit/petty-cash', [AuditPettyCashController::class, 'index'])->name('audit.petty-cash.index');
     Route::get('/petty-cash/{pettyCash}/view', [AuditPettyCashController::class, 'view'])->name('petty-cash.view');
+
+    Route::post('/audit/petty-cash/{pettyCash}/distribution', [AuditPettyCashController::class, 'storeDistribution'])->name('audit.petty-cash.distribution');
     
     Route::get('/bursar/petty-cash', [BursarPettycashController::class, 'index'])->name('bursar.petty-cash.index');
     Route::get('/bursar/petty-cash/{pettyCash}/view', [BursarPettycashController::class, 'view'])->name('bursar.petty-cash.view');

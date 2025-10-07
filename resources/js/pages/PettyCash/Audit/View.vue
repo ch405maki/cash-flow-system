@@ -2,7 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Head, router } from '@inertiajs/vue3'
 import { type BreadcrumbItem } from '@/types'
-import PettyCashView from '@/components/pettyCash/audit/PettyCashView.vue'
+import PettyCashView from '@/components/pettyCash/audit/PettyCashDistribution.vue'
 import { History, CheckCircle, } from 'lucide-vue-next'
 import { formatDateTime } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -18,6 +18,7 @@ import {
 
 const props = defineProps<{
   pettyCash: any
+  accounts: any[]
 }>()
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -127,7 +128,7 @@ const printReport = () => {
         </div>
       </div>
       <div class="rounded-xl border p-4">
-        <PettyCashView :petty-cash="props.pettyCash" />
+        <PettyCashView :petty-cash="props.pettyCash" :accounts="props.accounts" />
         <div id="print-section" class="hidden print:block">
           <PettyCashPrint :petty-cash="props.pettyCash" />
         </div>
