@@ -111,6 +111,21 @@ const liquidationTotal = computed(() => {
 })
 
 const grandTotal = computed(() => reimbursementTotal.value + liquidationTotal.value)
+
+// Print action
+const printReport = () => {
+  const printContents = document.getElementById('print-section')?.innerHTML;
+  const originalContents = document.body.innerHTML;
+
+  if (printContents) {
+    document.body.innerHTML = printContents;
+    window.print();
+    document.body.innerHTML = originalContents;
+    location.reload();
+  } else {
+    console.error('Print section not found');
+  }
+}
 </script>
 
 <template>
@@ -265,12 +280,20 @@ const grandTotal = computed(() => reimbursementTotal.value + liquidationTotal.va
             </AlertDialogContent>
           </AlertDialog>
         </div>
+        <Button
+          @click="printReport"
+        >
+          Print
+        </Button>
         </div>
       </div>
 
       <div class="rounded-xl border p-4">
         <PettyCashView :petty-cash="props.pettyCash" />
-        <PettyCashPrint :petty-cash="props.pettyCash" />
+        <!-- class="hidden print:block" -->
+        <div id="print-section" class="hidden print:block">
+          <PettyCashPrint :petty-cash="props.pettyCash" />
+        </div>
       </div>
     </div>
   </AppLayout>

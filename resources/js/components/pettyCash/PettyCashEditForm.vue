@@ -167,7 +167,7 @@ const submitForm = async () => {
   await router.post(`/petty-cash/${props.pettyCash.id}`, data, {
     onSuccess: () => {
       toast.success('Petty Cash Voucher updated successfully!')
-      window.location.reload() // 🔄 Refresh page
+      window.location.reload()
     },
     onError: () => toast.error('Failed to update voucher.')
   })
