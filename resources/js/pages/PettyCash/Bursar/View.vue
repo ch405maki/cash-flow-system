@@ -40,12 +40,15 @@ const props = defineProps<{
 }>()
 
 const confirmChecked = ref(false)
+const releaseRemarks = ref('')
+
 
 const releasePettyCash = () => {
   const data = {
     reimbursement_total: reimbursementTotal.value,
     liquidation_total: liquidationTotal.value,
     grand_total: grandTotal.value,
+    remarks: releaseRemarks.value,
   };
 
   router.put(
@@ -68,6 +71,7 @@ const releaseCashAdvance = () => {
     reimbursement_total: reimbursementTotal.value,
     liquidation_total: liquidationTotal.value,
     grand_total: cashAdvanceTotal.value,
+    remarks: releaseRemarks.value,
   };
 
   router.put(
@@ -225,8 +229,20 @@ const printReport = () => {
                   <b>{{ props.pettyCash.pcv_no }}</b> as <i>to liquidate</i>.
                 </AlertDialogDescription>
               </AlertDialogHeader>
+              <div class="my-2">
+                <label for="release-remarks" class="block text-sm font-medium mb-1">
+                  Remarks (optional)
+                </label>
+                <textarea
+                  id="release-remarks"
+                  v-model="releaseRemarks"
+                  rows="2"
+                  class="w-full border rounded-md p-2 text-sm"
+                  placeholder="Add any remarks for this release..."
+                ></textarea>
+              </div>
 
-              <div class="flex items-center space-x-2 my-4">
+              <div class="flex items-center space-x-2 my-2">
                 <Checkbox v-model:checked="confirmChecked" id="confirm-release" />
                 <label for="confirm-release" class="text-sm">
                   I confirm release of this request.

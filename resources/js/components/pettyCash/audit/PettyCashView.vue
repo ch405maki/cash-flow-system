@@ -10,7 +10,15 @@ import { Rocket } from "lucide-vue-next"
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import Textarea from '@/components/ui/textarea/Textarea.vue';
-
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription
+} from '@/components/ui/dialog'
 
 const user = usePage().props.auth.user;
 const props = defineProps<{
@@ -18,6 +26,10 @@ const props = defineProps<{
 }>()
 
 const toast = useToast()
+
+// Add refs for dialog open states
+const normalApprovalDialogOpen = ref(false)
+const liquidationDialogOpen = ref(false)
 
 const form = reactive({
   paid_to: props.pettyCash.paid_to,
@@ -39,6 +51,17 @@ const totalAmount = computed(() => {
     return sum
   }, 0)
 })
+
+const hasLiquidation = computed(() => {
+  const allItems = [...existingItems.value, ...form.items]
+  return allItems.some(item => item.type === 'Liquidation')
+})
+
+if (hasLiquidation.value) {
+  console.log('Has liquidation item!')
+}else{
+  console.log('No liquidation item!')
+}
 
 const groupedByDate = computed(() => {
   const map: Record<string, { cashAdvance: number; liquidation: number }> = {}
@@ -99,6 +122,25 @@ const approval = reactive({
   remarks: ''
 })
 
+const confirmApproval = ref(false)
+const confirmLiquidation = ref(false)
+
+const handleApproval = async (type: 'normal' | 'liquidation') => {
+  try {
+    if (type === 'normal') {
+      await submitExecutiveApproval()
+      confirmApproval.value = false
+      normalApprovalDialogOpen.value = false // Close the dialog
+    } else {
+      await submitExecutiveApprovalLiquidate()
+      confirmLiquidation.value = false
+      liquidationDialogOpen.value = false // Close the dialog
+    }
+  } catch (error) {
+    toast.error('Approval failed')
+  }
+}
+
 const submitApproval = async () => {
   try {
     await router.post(`/petty-cash/${props.pettyCash.id}/remarks`, {  
@@ -118,8 +160,24 @@ const submitExecutiveApproval = async () => {
     })
     toast.success('Approval submitted!')
     approval.remarks = ''
+    return true // Return success
   } catch (error) {
     toast.error('Failed to submit approval')
+    throw error // Re-throw to be caught in handleApproval
+  }
+}
+
+const submitExecutiveApprovalLiquidate = async () => {
+  try {
+    await router.post(`/petty-cash/${props.pettyCash.id}/approveLiquidate`, {  
+      remarks: approval.remarks
+    })
+    toast.success('Approval submitted!')
+    approval.remarks = ''
+    return true // Return success
+  } catch (error) {
+    toast.error('Failed to submit approval')
+    throw error // Re-throw to be caught in handleApproval
   }
 }
 </script>
@@ -218,13 +276,64 @@ const submitExecutiveApproval = async () => {
           >
             Submit Review
           </Button>
-          <Button
-            v-if="user.role === 'executive_director'"
-            :disabled="!approval.remarks"
-            @click="submitExecutiveApproval"
-          >
-            Confirm Approval
-          </Button>
+
+          <!-- Normal Approval -->
+          <Dialog v-if="user.role === 'executive_director' && !hasLiquidation" v-model:open="normalApprovalDialogOpen">
+            <DialogTrigger as-child>
+              <Button :disabled="!approval.remarks || props.pettyCash.status == 'approved'">
+                Confirm Approval
+              </Button>
+            </DialogTrigger>
+            <DialogContent class="sm:max-w-[400px]">
+              <DialogHeader>
+                <DialogTitle>Confirm Executive Approval</DialogTitle>
+                <DialogDescription>
+                  Please confirm that you've reviewed this petty cash request before approving.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div class="flex items-center space-x-2 mt-4">
+                <input type="checkbox" id="confirmApproval" v-model="confirmApproval" />
+                <Label for="confirmApproval">I confirm the accuracy of this request.</Label>
+              </div>
+
+              <DialogFooter class="mt-4">
+                <Button variant="outline" @click="normalApprovalDialogOpen = false">Cancel</Button>
+                <Button :disabled="!confirmApproval" @click="handleApproval('normal')">
+                  Approve
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <!-- Liquidation Approval -->
+          <Dialog v-if="user.role === 'executive_director' && hasLiquidation" v-model:open="liquidationDialogOpen">
+            <DialogTrigger as-child>
+              <Button :disabled="!approval.remarks">
+                Confirm Liquidation Approval
+              </Button>
+            </DialogTrigger>
+            <DialogContent class="sm:max-w-[400px]">
+              <DialogHeader>
+                <DialogTitle>Confirm Liquidation Approval</DialogTitle>
+                <DialogDescription>
+                  This petty cash request contains liquidation items. Please confirm before final approval.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div class="flex items-center space-x-2 mt-4">
+                <input type="checkbox" id="confirmLiquidation" v-model="confirmLiquidation" />
+                <Label for="confirmLiquidation">I confirm liquidation details are correct.</Label>
+              </div>
+
+              <DialogFooter class="mt-4">
+                <Button variant="outline" @click="liquidationDialogOpen = false">Cancel</Button>
+                <Button :disabled="!confirmLiquidation" @click="handleApproval('liquidation')">
+                  Approve
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>

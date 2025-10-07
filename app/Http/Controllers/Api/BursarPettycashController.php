@@ -76,19 +76,27 @@ class BursarPettycashController extends Controller
     public function releaseCashAdvance(Request $request, PettyCash $pettyCash)
     {
         $grandTotal = $request->input('grand_total', 0);
+        $userRemarks = $request->input('remarks', '');
+
         $pettyCash->status = 'for liquidation';
         $pettyCash->save();
+
+        $autoMessage = 'Cash advance amounting to: ' . number_format($grandTotal, 2) . ' released.';
+        $remarks = $userRemarks 
+            ? $userRemarks . ' — ' . $autoMessage 
+            : $autoMessage;
 
         PettyCashApproval::create([
             'petty_cash_id' => $pettyCash->id,
             'user_id'       => Auth::id(),
             'status'        => 'released',
-            'remarks'       => 'Cash advance amounting to: ' . number_format($grandTotal, 2) . ' released.',
+            'remarks'       => $remarks,
             'approved_at'   => now(),
         ]);
 
         return redirect()->route('petty-cash.index')
             ->with('success', 'Petty Cash released successfully and deducted from fund.');
     }
+
 
 }

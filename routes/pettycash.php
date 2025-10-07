@@ -31,6 +31,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/petty-cash/{pettyCash}/remarks', [PettyCashApprovalController::class, 'auditRemarks'])->name('petty-cash.remarks');
     Route::post('/petty-cash/{pettyCash}/approve', [PettyCashApprovalController::class, 'executiveApproval'])->name('petty-cash.approve');
+    Route::post('/petty-cash/{pettyCash}/approveLiquidate', [PettyCashApprovalController::class, 'executiveApprovalLiquidate'])->name('petty-cash.approveLiquidate');
 
     Route::get('/petty-cash/approval', [PettyCashApprovalController::class, 'executive'])->name('petty-cash.approval.index');
 });

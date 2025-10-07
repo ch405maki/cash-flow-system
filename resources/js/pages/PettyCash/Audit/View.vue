@@ -6,6 +6,7 @@ import PettyCashView from '@/components/pettyCash/audit/PettyCashView.vue'
 import { History, CheckCircle, } from 'lucide-vue-next'
 import { formatDateTime } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import PettyCashPrint from '@/components/pettyCash/printables/PettyCash.vue'
 import {
   Sheet,
   SheetContent,
@@ -24,6 +25,21 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Petty Cash Voucher', href: '#' },
   { title: `Viewing ${props.pettyCash.pcv_no}`, href: '#' }
 ]
+
+// Print action
+const printReport = () => {
+  const printContents = document.getElementById('print-section')?.innerHTML;
+  const originalContents = document.body.innerHTML;
+
+  if (printContents) {
+    document.body.innerHTML = printContents;
+    window.print();
+    document.body.innerHTML = originalContents;
+    location.reload();
+  } else {
+    console.error('Print section not found');
+  }
+}
 </script>
 
 <template>
@@ -32,6 +48,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="flex justify-between">
         <h1 class="text-xl font-bold">Review Petty Cash Voucher</h1>
+        <div class="flex items-center space-x-2">
         <Sheet>
           <SheetTrigger as-child>
             <Button variant="outline">
@@ -102,9 +119,18 @@ const breadcrumbs: BreadcrumbItem[] = [
             </SheetHeader>
           </SheetContent>
         </Sheet>
+        <Button
+          @click="printReport"
+        >
+          Print
+        </Button>
+        </div>
       </div>
       <div class="rounded-xl border p-4">
         <PettyCashView :petty-cash="props.pettyCash" />
+        <div id="print-section" class="hidden print:block">
+          <PettyCashPrint :petty-cash="props.pettyCash" />
+        </div>
       </div>
     </div>
   </AppLayout>

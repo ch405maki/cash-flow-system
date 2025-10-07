@@ -20,7 +20,7 @@ class PettyCashController extends Controller
 
         if ($user->role === 'accounting') {
             // Accounting sees all requested petty cash
-            $query->where('status', 'requested');
+            $query->wherein('status', ['requested' , 'approved liquidation']);
         } else {
             // Other users only see their own department’s
             $query->whereHas('user', function ($q) use ($user) {
