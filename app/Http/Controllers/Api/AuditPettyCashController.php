@@ -25,6 +25,8 @@ class AuditPettyCashController extends Controller
 
     public function view(PettyCash $pettyCash)
     {
+        $user = auth()->user();
+
         $pettyCash->load([
             'items',
             'approvals.user',
@@ -33,10 +35,19 @@ class AuditPettyCashController extends Controller
 
         $accounts = Account::orderBy('account_title')->get();
 
-        return Inertia::render('PettyCash/Audit/View', [
-            'pettyCash' => $pettyCash,
-            'accounts' => $accounts,
-        ]);
+        if ($user->role === 'audit') {
+            // Accounting sees all requested petty cash
+            return Inertia::render('PettyCash/Audit/View', [
+                'pettyCash' => $pettyCash,
+                'accounts' => $accounts,
+            ]);
+        } else {
+            // Other users only see their own department’s
+            return Inertia::render('PettyCash/View', [
+                'pettyCash' => $pettyCash,
+                'accounts' => $accounts,
+            ]);
+        }
     }
 
     public function storeDistribution(Request $request, PettyCash $pettyCash)

@@ -1,5 +1,6 @@
+
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, ref, computed } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import { useToast } from 'vue-toastification'
 import { Input } from '@/components/ui/input'
@@ -9,6 +10,13 @@ import Textarea from '@/components/ui/textarea/Textarea.vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Rocket } from 'lucide-vue-next'
 import { formatDate } from '@/lib/utils'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select'
 
 const user = usePage().props.auth.user
 
@@ -17,13 +25,13 @@ const props = defineProps<{
   accounts: any[]
 }>()
 
+const existingItems = ref(props.pettyCash.items ?? [])
 const toast = useToast()
 
 const approval = reactive({
   remarks: ''
 })
 
-// ✅ Correct naming (amount not ammount)
 const distribution = reactive({
   account_id: '',
   amount: '',
@@ -36,6 +44,7 @@ const submitDistribution = async () => {
     distribution,
     {
       preserveScroll: true,
+      only: ['pettyCash'],
       onSuccess: () => {
         toast.success('Distribution added successfully!')
         distribution.account_id = ''
@@ -58,8 +67,59 @@ const submitApproval = async () => {
     toast.error('Failed to submit approval')
   }
 }
-</script>
 
+// reactive form items (if you’re adding new ones)
+const form = reactive({
+  items: [] as any[], // or proper interface if typed
+})
+
+// compute total amount including both existing + new items
+const totalAmount = computed(() => {
+  const allItems = [...existingItems.value, ...form.items]
+
+  return allItems.reduce((sum, item) => {
+    if (item.type === 'Liquidation' || item.type === 'Reimbursement') {
+      return sum + (Number(item.amount) || 0)
+    }
+    return sum
+  }, 0)
+})
+
+// total per type
+const totalsByType = computed(() => {
+  const totals: Record<string, number> = {}
+  existingItems.value.forEach(item => {
+    totals[item.type] = (totals[item.type] || 0) + Number(item.amount)
+  })
+  return totals
+})
+
+// group by date to color rows
+const groupedByDate = computed(() => {
+  const map: Record<string, { cashAdvance: number; liquidation: number }> = {}
+  existingItems.value.forEach(item => {
+    const key = item.type === 'Liquidation'
+      ? item.liquidation_for_date || item.date
+      : item.date
+    if (!map[key]) map[key] = { cashAdvance: 0, liquidation: 0 }
+    if (item.type === 'Cash Advance') map[key].cashAdvance += Number(item.amount)
+    if (item.type === 'Liquidation') map[key].liquidation += Number(item.amount)
+  })
+  return map
+})
+
+const getRowClass = (item: any) => {
+  const key = item.type === 'Liquidation'
+    ? item.liquidation_for_date || item.date
+    : item.date
+  const totals = groupedByDate.value[key]
+  if (!totals || totals.cashAdvance === 0) return ''
+  if (totals.liquidation >= totals.cashAdvance) return 'bg-green-100'
+  if (totals.liquidation > 0 && totals.liquidation < totals.cashAdvance) return 'bg-yellow-100'
+  if (item.type?.toLowerCase() === 'cash advance') return 'bg-rose-100'
+  return ''
+}
+</script>
 
 <template>
   <div class="space-y-6">
@@ -80,40 +140,114 @@ const submitApproval = async () => {
       </div>
     </div>
     
-    
+    <!-- Existing Items -->
+    <div v-if="existingItems.length" class="border rounded-xl p-4">
+      <h3 class="text-lg font-semibold mb-3">Existing Items</h3>
+      <table class="w-full border-collapse text-sm">
+        <thead class="bg-muted">
+          <tr>
+            <th class="text-left p-2 border-b">Type</th>
+            <th class="text-left p-2 border-b">Particulars</th>
+            <th class="text-left p-2 border-b">Date</th>
+            <th class="text-right p-2 border-b">Amount</th>
+            <th class="text-left p-2 border-b">Receipt</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="item in existingItems"
+            :key="item.id"
+            class="border-b"
+            :class="getRowClass(item)"
+          >
+            <td class="p-2 font-semibold">
+              {{ item.type }}
+              <span v-if="item.liquidation_for_date" class="text-xs text-gray-500">
+                ({{ formatDate(item.liquidation_for_date) }})
+              </span>
+            </td>
+            <td class="p-2">{{ item.particulars }}</td>
+            <td class="p-2">{{ formatDate(item.date) }}</td>
+            <td class="p-2 text-right">₱{{ Number(item.amount).toLocaleString() }}</td>
+            <td class="p-2">
+              <a
+                v-if="item.receipt"
+                :href="`/storage/${item.receipt}`"
+                target="_blank"
+                class="text-blue-600 underline"
+              >
+                View
+              </a>
+              <span v-else class="italic text-gray-400">No file</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="mt-4 flex justify-end">
+        <div class="grid grid-cols-1 gap-2">
+            <h3 class="text-md font-semibold">Running Totals</h3>
+            <div v-for="(amount, type) in totalsByType" :key="type" class="flex space-x-2">
+              <h1 class="font-medium w-48">{{ type }}:</h1>
+              <h1 class="font-bold w-48 text-right">₱{{ amount.toLocaleString() }}</h1>
+            </div>
+            <div class="font-bold flex space-x-2">
+              <h1 class="w-48">
+                Grand Total: 
+              </h1>
+              <h1 class="w-48 text-right">₱{{ totalAmount.toLocaleString() }}</h1>
+            </div>
+          </div>
+        </div>
+      </div>
+
     <!-- Distribution of Expense -->
     <div class="mt-6 border rounded-lg p-4">
       <h3 class="text-lg font-semibold mb-2">Distribution of Expense</h3>
 
-      <form @submit.prevent="submitDistribution">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <Label>Account Name</Label>
-                <select v-model="distribution.account_id" class="w-full border p-2 rounded">
-                <option disabled value="">Select Account</option>
-                <option 
-                    v-for="account in props.accounts" 
-                    :key="account.id" 
-                    :value="account.id"
-                >
-                    {{ account.account_title }}
-                </option>
-                </select>
-          </div>
+      <form @submit.prevent="submitDistribution" class="space-y-4">
+        <div class="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 items-end">
+          <!-- Account Name -->
+              <div>
+                <Label>Account Name</Label>
+                <Select v-model="distribution.account_id">
+                  <SelectTrigger class="w-full">
+                    <SelectValue placeholder="Select Account" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      v-for="account in props.accounts"
+                      :key="account.id"
+                      :value="account.id"
+                    >
+                      {{ account.account_title }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
+          <!-- Amount -->
           <div>
             <Label>Amount</Label>
             <Input v-model="distribution.amount" type="number" step="0.01" class="w-full" />
           </div>
 
+          <!-- Date -->
           <div>
             <Label>Date</Label>
             <Input v-model="distribution.date" type="date" class="w-full" />
           </div>
-        </div>
 
-        <div class="flex justify-end mt-4">
-          <Button type="submit">Save Distribution</Button>
+          <!-- Save Button -->
+          <div class="flex justify-end">
+            <Button
+              type="submit"
+              class="px-4 whitespace-nowrap"
+              :disabled="!distribution.account_id || !distribution.amount || !distribution.date"
+            >
+              Save
+            </Button>
+          </div>
         </div>
       </form>
     </div>

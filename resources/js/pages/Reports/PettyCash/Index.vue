@@ -5,6 +5,7 @@ import { Head } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 import { FileText } from 'lucide-vue-next';
+import { formatDate } from '@/lib/utils'
 import {
   Table,
   TableBody,
@@ -25,9 +26,6 @@ const props = defineProps<{
 }>()
 const hasItem = Object.keys(props.pettyCash).length;
 
-const goToCreate = () => {
-  router.get(route('petty-cash.create'))
-}
 </script>
 
 <template>
@@ -40,37 +38,43 @@ const goToCreate = () => {
               <h1 class="text-xl font-bold">Petty Cash</h1>
               <p class="text-sm font-medium">List of created petty cash.</p>
             </div>
-            <Button v-if="hasItem" @click="goToCreate">Create New Petty Cash</Button>
           </div>
           <Table v-if="hasItem">
             <TableCaption>A list of your petty cash.</TableCaption>
             <TableHeader>
               <TableRow>
-                <TableHead class="w-[300px]">
-                  PCV NO
-                </TableHead>
+                <TableHead class="w-[100px]">PCV NO</TableHead>
+                <TableHead class="w-[100px]">Paid to</TableHead>
+                <TableHead class="w-[150px]">Requested By</TableHead>
+                <TableHead class="w-[100px]">Date</TableHead>
                 <TableHead class="w-[100px]">Status</TableHead>
-                <TableHead class="text-right">
-                  Action
-                </TableHead>
+                <TableHead class="w-[300px]">Remarks</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow v-for="item in pettyCash" :key="item.id">
+              <TableRow 
+                v-for="item in pettyCash" 
+                :key="item.id" 
+                @click="router.get(route('petty-cash.view', item.id))"
+                class="cursor-pointer hover:text-primary"
+                >
                 <TableCell class="font-medium">
                   {{ item.pcv_no }}
                 </TableCell>
-                <TableCell class="capitalize">{{ item.status }}</TableCell>
-                <TableCell class="flex justify-end space-x-2">
-                  <Button v-if="item.status != 'draft' && item.status != 'requested' " @click="router.get(route('petty-cash.view', item.id))">
-                    View
-                  </Button>
-                  <Button v-if="item.status == 'draft'" @click="router.get(route('petty-cash.edit', item.id))">
-                    Review
-                  </Button>
-                  <Button v-if="item.status == 'requested'" @click="router.get(route('petty-cash.view', item.id))">
-                    View Request
-                  </Button>
+                <TableCell class="capitalize">
+                  {{ item.paid_to }}
+                </TableCell>
+                <TableCell class="capitalize">
+                  {{ item.user?.first_name }} {{ item.user?.last_name }}
+                </TableCell>
+                <TableCell class="capitalize">
+                  {{ formatDate(item.date) }}
+                </TableCell>
+                <TableCell class="capitalize">
+                  {{ item.status }}
+                </TableCell>
+                <TableCell class="capitalize">
+                  "{{ item.remarks }}"
                 </TableCell>
               </TableRow>
             </TableBody>
@@ -78,9 +82,8 @@ const goToCreate = () => {
 
           <div v-else class="flex h-48 flex-col items-center justify-center rounded-xl border">
             <FileText class="h-8 w-8 text-muted-foreground" />
-            <p class="mt-2 text-sm text-muted-foreground">No petty cash created found</p>
-            <p class="text-xs text-muted-foreground mb-4">List of your petty cash will appear here</p>
-            <Button @click="goToCreate">Create New Petty Cash</Button>
+            <p class="mt-2 text-sm text-muted-foreground">No petty cash record found</p>
+            <p class="text-xs text-muted-foreground mb-4">List of petty cash will appear here</p>
           </div>
         </div>
     </AppLayout>

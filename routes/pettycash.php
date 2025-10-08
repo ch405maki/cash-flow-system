@@ -16,6 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/petty-cash/{pettyCash}', [PettyCashController::class, 'update'])->name('petty-cash.update');
     Route::delete('/petty-cash-items/{item}', [PettyCashItemController::class, 'destroy']);
     Route::put('/petty-cash/{id}/submit', [PettyCashController::class, 'submit'])->name('petty-cash.submit');
+    Route::get('petty-cash/{pettyCash}/view', [PettyCashController::class, 'view'])->name('petty-cash.view');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -25,7 +26,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/audit/petty-cash/{pettyCash}/distribution', [AuditPettyCashController::class, 'storeDistribution'])->name('audit.petty-cash.distribution');
     
     Route::get('/bursar/petty-cash', [BursarPettycashController::class, 'index'])->name('bursar.petty-cash.index');
-    Route::get('/bursar/petty-cash/{pettyCash}/view', [BursarPettycashController::class, 'view'])->name('bursar.petty-cash.view');
     Route::put('/bursar/petty-cash/{pettyCash}/release', [BursarPettycashController::class, 'release'])->name('bursar.petty-cash.release');
     Route::put('/bursar/cashAdvance/{pettyCash}/release', [BursarPettycashController::class, 'releaseCashAdvance'])->name('bursar.cashAdvance.release');
 });

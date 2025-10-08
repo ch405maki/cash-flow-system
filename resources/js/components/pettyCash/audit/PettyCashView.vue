@@ -254,6 +254,29 @@ const submitExecutiveApprovalLiquidate = async () => {
         </div>
       </div>
 
+      <!-- Existing Distribution Records -->
+    <div v-if="props.pettyCash.distribution_expenses?.length" class="mt-6 border rounded-lg p-4">
+      <h3 class="text-lg font-semibold mb-2">Distribution of Expense</h3>
+      <table class="w-full border-collapse text-sm">
+        <thead class="bg-muted">
+          <tr>
+            <th class="p-2 border-b text-left">Account Name</th>
+            <th class="p-2 border-b text-right">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="record in props.pettyCash.distribution_expenses"
+            :key="record.id"
+            class="border-b"
+          >
+            <td class="p-2">{{ record.account_name }}</td>
+            <td class="p-2 text-right">₱{{ Number(record.amount).toLocaleString() }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
       <div class="mt-6 border rounded-lg p-4">
         <!-- Remarks -->
         <div class="mb-4">

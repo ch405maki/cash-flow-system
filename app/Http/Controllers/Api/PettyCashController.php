@@ -104,6 +104,19 @@ class PettyCashController extends Controller
         ]);
     }
 
+    public function view(PettyCash $pettyCash)
+    {
+        $pettyCash->load([
+            'items',
+            'approvals.user', 
+            'distributionExpenses',
+        ]);
+
+        return Inertia::render('PettyCash/View', [
+            'pettyCash' => $pettyCash,
+        ]);
+    }
+
     public function update(Request $request, PettyCash $pettyCash)
     {
         $validated = $request->validate([

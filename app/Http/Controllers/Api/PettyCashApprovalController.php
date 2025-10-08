@@ -13,7 +13,7 @@ class PettyCashApprovalController extends Controller
 {
     public function executive(){
         $pettyCash = PettyCash::with('items')
-        ->whereIn('status', ['audited', 'submitted'])
+        ->whereIn('status', ['audited'])
         ->orderBy('date', 'desc')
         ->get();
 

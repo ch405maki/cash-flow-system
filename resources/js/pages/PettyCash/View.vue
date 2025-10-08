@@ -130,6 +130,8 @@ const printReport = () => {
     console.error('Print section not found');
   }
 }
+
+console.log(props.pettyCash)
 </script>
 
 <template>

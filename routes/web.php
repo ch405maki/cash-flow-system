@@ -17,7 +17,6 @@ use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\SignatoryController;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\VoucherController;
-use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\CanvasController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\RequestToOrderReleaseController;
@@ -99,17 +98,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/approved-voucher', [ApprovedVoucherController::class, 'index'])->name('approved-voucher.index');
 
     Route::get('/vouchers/{voucher}/download-receipt', [VoucherController::class, 'downloadReceipt'])->name('vouchers.download.receipt');
-});
-
-// Report Route 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::get('/reports/po-summary', [ReportController::class, 'poSummary'])->name('reports.po-summary');
-    Route::get('/reports/request-summary', [ReportController::class, 'requestSummary'])->name('reports.request-summary');
-    Route::get('/reports/voucher-summary', [ReportController::class, 'voucherSummary'])->name('reports.voucher-summary');
-
-    // custodian
-    Route::get('/reports/request', [ReportController::class, 'requestReport'])->name('reports.request');
 });
 
 // Purchase Order Route

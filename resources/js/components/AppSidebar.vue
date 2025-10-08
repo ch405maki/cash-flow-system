@@ -260,8 +260,8 @@ const reportItems = ref<DropdownNavItem[]>([
         icon: BarChart3,
         isOpen: false,
         children: [
-        { title: 'Request Summary', href: '/reports/request-summary'},
-        { title: 'Released Request Summary', href: '/request-reports'},
+        { title: 'Released Request Summary', href: '/reports/request-released'},
+        { title: 'Petty Cash Summary', href: '/reports/petty-cash'},
         { title: 'Purchase Order Summary', href: '/reports/po-summary'},
         { title: 'Voucher Summary', href: '/reports/voucher-summary'},
         ],
