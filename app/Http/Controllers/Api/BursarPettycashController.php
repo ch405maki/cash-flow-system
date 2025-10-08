@@ -21,9 +21,8 @@ class BursarPettycashController extends Controller
             ->orderBy('date', 'desc')
             ->get();
 
-        return Inertia::render('PettyCash/Bursar/Index', [ 'pettyCash' => $pettyCash, 'pettyCashFund' => $pettyCashFund ]);
+        return Inertia::render('PettyCash/Index', [ 'pettyCash' => $pettyCash, 'pettyCashFund' => $pettyCashFund ]);
     }
-
 
     public function release(Request $request, PettyCash $pettyCash)
     {

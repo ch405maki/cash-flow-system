@@ -20,7 +20,7 @@ class AuditPettyCashController extends Controller
             ->orderBy('date', 'desc')
             ->get();
 
-        return Inertia::render('PettyCash/Audit/Index', [ 'pettyCash' => $pettyCash ]);
+        return Inertia::render('PettyCash/Index', [ 'pettyCash' => $pettyCash ]);
     }
 
     public function view(PettyCash $pettyCash)

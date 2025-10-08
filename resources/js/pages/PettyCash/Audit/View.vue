@@ -130,6 +130,7 @@ const printReport = () => {
       </div>
       <div class="rounded-xl border p-4">
         <PettyCashView :petty-cash="props.pettyCash" :accounts="props.accounts" />
+        
         <div id="print-section" class="hidden print:block">
           <PettyCashPrint :petty-cash="props.pettyCash" />
         </div>
