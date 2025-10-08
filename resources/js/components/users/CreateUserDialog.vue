@@ -1,3 +1,113 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useToast } from 'vue-toastification'
+import axios from 'axios'
+import { Loader2, UserRoundPlus } from 'lucide-vue-next'
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
+interface Department {
+  id: number
+  department_name: string
+}
+
+interface AccessLevel {
+  id: number
+  access_level: string
+}
+
+const props = defineProps<{
+  departments: Department[];
+  accessLevels: AccessLevel[];
+  profilePictures: { id: number; file_path: string; file_name: string }[];
+}>()
+
+const emit = defineEmits(['user-created'])
+
+const toast = useToast()
+const isOpen = ref(false)
+const loading = ref(false)
+
+const formData = ref({
+  username: '',
+  first_name: '',
+  middle_name: '',
+  last_name: '',
+  email: '',
+  password: '',
+  role: 'staff',
+  status: 'active',
+  department_id: '',
+  access_id: '',
+  profile_picture_id: null as number | null,
+  is_petty_cash: false,
+  is_cash_advance: false,
+})
+
+const openDialog = () => (isOpen.value = true)
+const closeDialog = () => {
+  isOpen.value = false
+  formData.value = {
+    username: '',
+    first_name: '',
+    middle_name: '',
+    last_name: '',
+    email: '',
+    password: '',
+    role: 'staff',
+    status: 'active',
+    department_id: '',
+    access_id: '',
+    profile_picture_id: null,
+    is_petty_cash: false,
+    is_cash_advance: false,
+  }
+}
+
+const createUser = async () => {
+  loading.value = true
+  try {
+    await axios.post("/api/users", {
+      ...formData.value,
+      profile_picture_id: formData.value.profile_picture_id
+        ? Number(formData.value.profile_picture_id)
+        : null,
+    });
+    toast.success('User created successfully!')
+    closeDialog()
+    emit('user-created')
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.data?.errors) {
+      Object.values(error.response.data.errors).forEach(err => {
+        toast.error(err[0])
+      })
+    } else {
+      toast.error('Failed to create user')
+    }
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
 <template>
   <Dialog v-model:open="isOpen">
     <DialogTrigger as-child>
@@ -76,6 +186,7 @@
                 <SelectItem value="admin">Administrator</SelectItem>
                 <SelectItem value="accounting">Accounting</SelectItem>
                 <SelectItem value="audit">Audit</SelectItem>
+                <SelectItem value="bursar">Bursar</SelectItem>
                 <SelectItem value="department_head">Department Head</SelectItem>
                 <SelectItem value="executive_director">Executive Director</SelectItem>
                 <SelectItem value="property_custodian">Property Custodian</SelectItem>
@@ -83,6 +194,18 @@
                 <SelectItem value="staff">Staff</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <!-- Boolean Checkboxes -->
+          <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2">
+              <Checkbox id="petty-cash" v-model:checked="formData.is_petty_cash" />
+              <label for="petty-cash" class="text-sm font-medium">Reimbursement</label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <Checkbox id="cash-advance" v-model:checked="formData.is_cash_advance" />
+              <label for="cash-advance" class="text-sm font-medium">Cash Advance / Liquidation</label>
+            </div>
           </div>
 
           <div class="space-y-2">
@@ -151,108 +274,3 @@
     </DialogContent>
   </Dialog>
 </template>
-
-<script setup lang="ts">
-import { ref } from 'vue'
-import { useToast } from 'vue-toastification'
-import axios from 'axios'
-import { Loader2, UserRoundPlus } from 'lucide-vue-next'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-
-interface Department {
-  id: number
-  department_name: string
-}
-
-interface AccessLevel {
-  id: number
-  access_level: string
-}
-
-const props = defineProps<{
-  departments: Department[];
-  accessLevels: AccessLevel[];
-  profilePictures: { id: number; file_path: string; file_name: string }[];
-}>()
-
-const emit = defineEmits(['user-created'])
-
-const toast = useToast()
-const isOpen = ref(false)
-const loading = ref(false)
-
-const formData = ref({
-  username: '',
-  first_name: '',
-  middle_name: '',
-  last_name: '',
-  email: '',
-  password: '',
-  role: 'staff',
-  status: 'active',
-  department_id: '',
-  access_id: '',
-  profile_picture_id: null as number | null,
-})
-
-const openDialog = () => (isOpen.value = true)
-const closeDialog = () => {
-  isOpen.value = false
-  formData.value = {
-    username: '',
-    first_name: '',
-    middle_name: '',
-    last_name: '',
-    email: '',
-    password: '',
-    role: 'staff',
-    status: 'active',
-    department_id: '',
-    access_id: '',
-    profile_picture_id: null,
-  }
-}
-
-const createUser = async () => {
-  loading.value = true
-  try {
-    await axios.post("/api/users", {
-      ...formData.value,
-      profile_picture_id: formData.value.profile_picture_id
-        ? Number(formData.value.profile_picture_id)
-        : null,
-    });
-    toast.success('User created successfully!')
-    closeDialog()
-    emit('user-created')
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.data?.errors) {
-      Object.values(error.response.data.errors).forEach(err => {
-        toast.error(err[0])
-      })
-    } else {
-      toast.error('Failed to create user')
-    }
-  } finally {
-    loading.value = false
-  }
-}
-</script>

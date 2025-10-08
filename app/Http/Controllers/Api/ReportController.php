@@ -12,6 +12,8 @@ use App\Models\Signatory;
 use App\Models\VoucherDetail;
 use App\Models\Department;
 use App\Models\PurchaseOrder;
+use App\Models\PettyCash;
+use App\Models\PettyCashItem;;
 use Spatie\Browsershot\Browsershot;
 use App\Models\Request;
 use Illuminate\Http\Request as HttpRequest;
@@ -96,6 +98,16 @@ class ReportController extends Controller
         ]);
     }
 
+    public function pettyCashReport(PettyCash $pettyCash)
+    {
+        $pettyCash = PettyCash::with('items', 'user.department')
+            ->whereIn('status', ['released', 'approved liquidation'])
+            ->orderBy('date', 'desc')
+            ->get();
+
+        return Inertia::render('Reports/PettyCash/Index', [ 'pettyCash' => $pettyCash ]);
+    }
+
     public function preview(Voucher $voucher)
     {
         $signatories = Signatory::where('status', 'active')->get();
@@ -119,7 +131,6 @@ class ReportController extends Controller
             'authUser' => auth()->user()
         ]);
     }
-
 
     public function generateVoucherReports(Voucher $voucher)
     {

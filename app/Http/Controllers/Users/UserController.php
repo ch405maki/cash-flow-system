@@ -39,7 +39,6 @@ class UserController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            // Validate request data
             $validatedData = $request->validate([
                 'username' => 'required|string|max:255|unique:users',
                 'first_name' => 'required|string|max:255',
@@ -52,24 +51,22 @@ class UserController extends Controller
                 'department_id' => 'required|exists:departments,id',
                 'access_id' => 'required|exists:accesses,id',
                 'profile_picture_id' => 'nullable|integer|exists:profile_pictures,id',
+                'is_petty_cash' => 'boolean',
+                'is_cash_advance' => 'boolean',
             ]);
+
+            // Ensure boolean casting
+            $validatedData['is_petty_cash'] = (bool) $request->input('is_petty_cash', false);
+            $validatedData['is_cash_advance'] = (bool) $request->input('is_cash_advance', false);
+
 
             // Store plain password before hashing
             $plainPassword = $validatedData['password'];
 
             // Create user
             $user = User::create([
-                'username' => $validatedData['username'],
-                'first_name' => $validatedData['first_name'],
-                'middle_name' => $validatedData['middle_name'],
-                'last_name' => $validatedData['last_name'],
-                'email' => $validatedData['email'],
+                ...$validatedData,
                 'password' => Hash::make($plainPassword),
-                'role' => $validatedData['role'],
-                'status' => $validatedData['status'],
-                'department_id' => $validatedData['department_id'],
-                'access_id' => $validatedData['access_id'],
-                'profile_picture_id' => $validatedData['profile_picture_id'] ?? null,
             ]);
 
             // Send welcome email with credentials
@@ -178,7 +175,10 @@ class UserController extends Controller
                 'status'        => 'required|in:active,inactive',
             ]);
 
-            // Update user
+            // ✅ Add boolean values manually (convert to true/false)
+            $validated['is_petty_cash'] = (bool) $request->input('is_petty_cash', false);
+            $validated['is_cash_advance'] = (bool) $request->input('is_cash_advance', false);
+
             $user->update($validated);
 
             return response()->json([
@@ -198,6 +198,7 @@ class UserController extends Controller
             ], 500);
         }
     }
+
 
     public function updateStatus(Request $request, User $user)
     {

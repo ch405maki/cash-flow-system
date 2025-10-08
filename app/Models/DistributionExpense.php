@@ -12,7 +12,7 @@ class DistributionExpense extends Model
     protected $fillable = [
         'petty_cash_id',
         'account_name',
-        'ammount',
+        'amount',
         'date',
         'prepared_by',
         'approved_by',
@@ -22,7 +22,7 @@ class DistributionExpense extends Model
 
     protected $casts = [
         'date' => 'date',
-        'ammount' => 'decimal:2',
+        'amount' => 'decimal:2',
     ];
 
     // Relationships

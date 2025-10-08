@@ -61,8 +61,8 @@ const executiveApprovalItems: NavItem[] = [
     icon: ShoppingCart,
   },
   {
-    title: 'Vouchers',
-    href: '/voucher-approval',
+    title: 'Petty Cash',
+    href: '/petty-cash/approval',
     icon: ReceiptText,
   },
 ];
@@ -183,15 +183,6 @@ const staffNavItems: NavItem[] = [
   },
 ];
 
-// Staff
-const pettyCashNavItems: NavItem[] = [
-  {
-    title: 'Petty Cash',
-    href: '/petty-cash',
-    icon: SquarePen,
-  },
-];
-
 const staffRequestItems = ref<DropdownNavItem[]>([
     {
         title: 'Request',
@@ -255,6 +246,11 @@ const accountingAuditNavItems: NavItem[] = [
     href: '/voucher-approval',
     icon: ReceiptText,
   },
+  {
+    title: 'Petty Cash',
+    href: '/audit/petty-cash',
+    icon: ReceiptText,
+  },
 ];
 
 const reportItems = ref<DropdownNavItem[]>([
@@ -264,9 +260,34 @@ const reportItems = ref<DropdownNavItem[]>([
         icon: BarChart3,
         isOpen: false,
         children: [
-        { title: 'Request Summary', href: '/reports/request-summary'},
+        { title: 'Released Request Summary', href: '/reports/request-released'},
+        { title: 'Petty Cash Summary', href: '/reports/petty-cash'},
         { title: 'Purchase Order Summary', href: '/reports/po-summary'},
         { title: 'Voucher Summary', href: '/reports/voucher-summary'},
+        ],
+    },
+  ]);
+
+const bursarReportItems = ref<DropdownNavItem[]>([
+    {
+        title: 'Reports',
+        href: '/reports',
+        icon: BarChart3,
+        isOpen: false,
+        children: [
+        { title: 'Petty Cash Summary', href: '/reports/petty-cash'},
+        ],
+    },
+  ]);
+
+const purchasingReportItems = ref<DropdownNavItem[]>([
+    {
+        title: 'Reports',
+        href: '/reports',
+        icon: BarChart3,
+        isOpen: false,
+        children: [
+        { title: 'Purchase Order Summary', href: '/reports/po-summary'},
         ],
     },
   ]);
@@ -321,6 +342,23 @@ const adminNavItems: NavItem[] = [
     icon: Logs ,
   },
 ];
+
+// Pettycash
+const pettyCashNavItems: NavItem[] = [
+  {
+    title: 'Petty Cash',
+    href: '/petty-cash',
+    icon: SquarePen,
+  },
+];
+
+const bursarNavItems: NavItem[] = [
+  {
+    title: 'Petty Cash',
+    href: '/bursar/petty-cash',
+    icon: SquarePen,
+  },
+];
 </script>
 
 <template>
@@ -345,23 +383,38 @@ const adminNavItems: NavItem[] = [
           <div v-if="user?.role === 'executive_director'">
             <NavMain :items="executiveMainItems" group-label="Navigation"/>
             <NavMain :items="executiveApprovalItems" group-label="For Approval"/>
+            <div v-if="user?.is_petty_cash === 1">
+              <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
+            </div>
             <NavMain :items="reportItems" group-label="Reports" />
           </div>
           
           <div v-if="user?.role === 'accounting'">
             <NavMain :items="accountingNavItems" group-label="Navigation"/>
             <NavMain :items="accountingCheckNavItems" group-label="Check"/>
+            <div v-if="user?.is_petty_cash === 1">
+              <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
+            </div>
             <NavMain :items="reportItems" group-label="Reports" />
           </div>
           
           <div v-if="user?.role === 'audit'">
             <NavMain :items="accountingAuditNavItems" group-label="Audit"/>
+            <NavMain :items="reportItems" group-label="Reports" />
+          </div>
+
+          <div v-if="user?.role === 'bursar'">
+            <NavMain :items="bursarNavItems" group-label="Petty Cash"/>
+            <NavMain :items="bursarReportItems" group-label="Reports"/>
           </div>
 
           <div v-if="user?.role === 'property_custodian'">
             <NavMain :items="custodianNavItems" group-label="Navigation"/>
             <!-- <NavMain :items="staffRequestItems" group-label="Request"/> -->
             <NavMain :items="custodianApprovalItems" group-label="Request for Purchase"/>
+            <div v-if="user?.is_petty_cash === 1">
+              <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
+            </div>
             <NavMain :items="custodianReportItems" group-label="Reports" />
           </div>
 
@@ -369,12 +422,17 @@ const adminNavItems: NavItem[] = [
             <NavMain :items="purchasingNavItems" group-label="Navigation"/>
             <NavMain :items="purchasingCanvasNavItems" group-label="Transaction"/>
             <NavMain :items="purchasingPONavItems"/>
-            <NavMain :items="reportItems" group-label="Reports" />
+            <div v-if="user?.is_petty_cash === 1">
+              <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
+            </div>
+            <NavMain :items="purchasingReportItems" group-label="Reports" />
           </div>
 
           <div v-if="user?.role === 'staff' || user?.role === 'department_head'">
             <NavMain :items="staffNavItems" group-label="Navigation"/>
-            <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
+            <div v-if="user?.is_petty_cash === 1">
+              <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
+            </div>
             <NavMain :items="staffRequestItems" group-label="Request"/>
           </div>
         </SidebarContent>

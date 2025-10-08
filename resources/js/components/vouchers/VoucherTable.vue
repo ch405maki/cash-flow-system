@@ -104,10 +104,4 @@ function formatStatus(status: string): string {
       </TableBody>
     </Table>
   </div>
-
-  <div v-else class="flex h-48 flex-col items-center justify-center rounded-xl border">
-    <FileText class="h-8 w-8 text-muted-foreground" />
-    <p class="mt-2 text-sm text-muted-foreground">No pending vouchers for approval found</p>
-    <p class="text-xs text-muted-foreground">Vouchers for approval from Director of Finance will appear here</p>
-  </div>
 </template>

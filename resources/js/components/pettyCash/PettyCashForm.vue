@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, computed, ref } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { router, usePage } from '@inertiajs/vue3'
 import { useToast } from 'vue-toastification'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,6 +12,7 @@ import {
   RadioGroupItem
 } from '@/components/ui/radio-group'
 
+const user = usePage().props.auth.user;
 const props = defineProps<{
   nextPcvNo: string
 }>()
@@ -29,7 +30,7 @@ const form = reactive({
 
 const newItem = reactive({
   particulars: '',
-  type: '', // <-- will be controlled by radio
+  type: '',
   date: '',
   amount: 0,
   receipt: null as File | null
@@ -121,22 +122,26 @@ const submitForm = async () => {
       <div class="space-y-2">
         <!-- ✅ Type as Radio Group -->
         <div>
-          <Label>Type</Label>
-          <RadioGroup v-model="newItem.type" class="flex mt-2 items-center">
+        <Label>Type</Label>
+        <RadioGroup v-model="newItem.type">
+          <div class="flex mt-2 items-center space-x-4">
             <div class="flex items-center space-x-2">
               <RadioGroupItem id="reimbursement" value="Reimbursement" />
               <Label for="reimbursement">Reimbursement</Label>
             </div>
-            <div class="flex items-center space-x-2">
-              <RadioGroupItem id="cash-advance" value="Cash Advance" />
-              <Label for="cash-advance">Cash Advance</Label>
+            <div class="flex items-center space-x-4" v-if="user.is_cash_advance === 1">
+              <div class="flex items-center space-x-2">
+                <RadioGroupItem id="cash-advance" value="Cash Advance" />
+                <Label for="cash-advance">Cash Advance</Label>
+              </div>
+              <div class="flex items-center space-x-2">
+                <RadioGroupItem id="liquidation" value="Liquidation" />
+                <Label for="liquidation">Liquidation</Label>
+              </div>
             </div>
-            <div class="flex items-center space-x-2">
-              <RadioGroupItem id="liquidation" value="Liquidation" />
-              <Label for="liquidation">Liquidation</Label>
-            </div>
-          </RadioGroup>
-        </div>
+          </div>
+        </RadioGroup>
+      </div>
 
         <div class="flex flex-col md:flex-row md:items-end md:space-x-2">
           <div
@@ -220,7 +225,7 @@ const submitForm = async () => {
 
     <!-- Submit -->
     <div class="flex justify-end">
-      <Button @click="submitForm">Save Voucher</Button>
+      <Button @click="submitForm">Save Petty Cash</Button>
     </div>
   </div>
 </template>

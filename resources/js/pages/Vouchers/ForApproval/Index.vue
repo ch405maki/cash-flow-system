@@ -187,9 +187,6 @@ const props = defineProps({
             <Input type="search" placeholder="Search vouchers..." class="w-[200px] lg:w-[300px] h-8"
               v-model="searchQuery" />
           </div>
-          
-          
-
         </div>
       </div>
 

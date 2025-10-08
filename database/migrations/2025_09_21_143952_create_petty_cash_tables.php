@@ -30,8 +30,9 @@ return new class extends Migration
             $table->string('particulars');
             $table->string('type');
             $table->date('date');
+            $table->date('liquidation_for_date')->nullable();
             $table->decimal('amount', 12, 2);
-            $table->string('receipt')->nullable(); // file path
+            $table->string('receipt')->nullable();
             $table->timestamps();
         });
 
@@ -40,12 +41,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('petty_cash_id')->constrained('petty_cash')->onDelete('cascade');
             $table->string('account_name');
-            $table->decimal('ammount', 12, 2);
+            $table->decimal('amount', 12, 2);
             $table->date('date');
             $table->foreignId('prepared_by')->constrained('users')->onDelete('cascade');
-            $table->foreignId('approved_by')->constrained('users')->onDelete('cascade');
             $table->foreignId('audited_by')->constrained('users')->onDelete('cascade');
-            $table->foreignId('paid_by')->constrained('users')->onDelete('cascade');
+            $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('paid_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
     }

@@ -23,4 +23,10 @@ class Department extends Model
     {
         return $this->hasMany(PurchaseOrder::class);
     }
+
+    public function pettyCashFunds()
+    {
+        return $this->hasMany(PettyCashFund::class);
+    }
+
 }
