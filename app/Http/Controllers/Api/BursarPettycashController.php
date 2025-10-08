@@ -16,7 +16,7 @@ class BursarPettycashController extends Controller
     public function index()
     {
         $pettyCashFund = PettyCashFund::where('user_id', Auth::id())->first();
-        $pettyCash = PettyCash::with('items')
+        $pettyCash = PettyCash::with('items', 'user')
             ->where('status', 'approved')
             ->orderBy('date', 'desc')
             ->get();

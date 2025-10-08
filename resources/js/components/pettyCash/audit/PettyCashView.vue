@@ -3,7 +3,7 @@ import { reactive, ref, computed } from 'vue'
 import { usePage } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3'
 import { useToast } from 'vue-toastification'
-import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { formatDate } from '@/lib/utils';
 import { Rocket } from "lucide-vue-next"
@@ -277,7 +277,7 @@ const submitExecutiveApprovalLiquidate = async () => {
       </table>
     </div>
 
-      <div class="mt-6 border rounded-lg p-4">
+      <div class="mt-6 border rounded-lg p-4" v-if="user.role === 'audit'">
         <!-- Remarks -->
         <div class="mb-4">
           <Label for="approvalRemarks">Remarks</Label>
@@ -293,13 +293,28 @@ const submitExecutiveApprovalLiquidate = async () => {
         <!-- Submit Button -->
         <div class="flex justify-end space-x-2">
           <Button
-            v-if="user.role === 'audit'"
             :disabled="!approval.remarks"
             @click="submitApproval"
           >
             Submit Review
           </Button>
+        </div>
+      </div>
+      <div class="mt-6 border rounded-lg p-4" v-if="user.role === 'executive_director'">
+        <!-- Remarks -->
+        <div class="mb-4">
+          <Label for="approvalRemarks">Remarks</Label>
+          <Textarea
+            id="approvalRemarks"
+            v-model="approval.remarks"
+            rows="3"
+            class="block w-full border rounded-md p-2"
+            placeholder="Add optional remarks for this approval..."
+          ></Textarea>
+        </div>
 
+        <!-- Submit Button -->
+        <div class="flex justify-end space-x-2">
           <!-- Normal Approval -->
           <Dialog v-if="user.role === 'executive_director' && !hasLiquidation" v-model:open="normalApprovalDialogOpen">
             <DialogTrigger as-child>
@@ -307,7 +322,8 @@ const submitExecutiveApprovalLiquidate = async () => {
                 Confirm Approval
               </Button>
             </DialogTrigger>
-            <DialogContent class="sm:max-w-[400px]">
+
+            <DialogContent>
               <DialogHeader>
                 <DialogTitle>Confirm Executive Approval</DialogTitle>
                 <DialogDescription>
@@ -316,7 +332,7 @@ const submitExecutiveApprovalLiquidate = async () => {
               </DialogHeader>
 
               <div class="flex items-center space-x-2 mt-4">
-                <input type="checkbox" id="confirmApproval" v-model="confirmApproval" />
+                <Checkbox id="confirmApproval" v-model:checked="confirmApproval" />
                 <Label for="confirmApproval">I confirm the accuracy of this request.</Label>
               </div>
 
@@ -336,7 +352,8 @@ const submitExecutiveApprovalLiquidate = async () => {
                 Confirm Liquidation Approval
               </Button>
             </DialogTrigger>
-            <DialogContent class="sm:max-w-[400px]">
+
+            <DialogContent>
               <DialogHeader>
                 <DialogTitle>Confirm Liquidation Approval</DialogTitle>
                 <DialogDescription>
@@ -345,7 +362,7 @@ const submitExecutiveApprovalLiquidate = async () => {
               </DialogHeader>
 
               <div class="flex items-center space-x-2 mt-4">
-                <input type="checkbox" id="confirmLiquidation" v-model="confirmLiquidation" />
+                <Checkbox id="confirmLiquidation" v-model:checked="confirmLiquidation" />
                 <Label for="confirmLiquidation">I confirm liquidation details are correct.</Label>
               </div>
 
@@ -357,6 +374,7 @@ const submitExecutiveApprovalLiquidate = async () => {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+
         </div>
       </div>
     </div>

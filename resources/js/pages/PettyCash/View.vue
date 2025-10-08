@@ -139,7 +139,7 @@ console.log(props.pettyCash)
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="flex items-center justify-between">
-        <h1 class="text-xl font-bold">Review Petty Cash Voucher</h1>
+        <h1 class="text-xl font-bold">Review Petty Cash Vouchers</h1>
 
         <div class="flex items-center space-x-2">
           <Button v-if="props.pettyCash.status == 'for liquidation'"  @click="router.get(route('petty-cash.edit', props.pettyCash.id))">

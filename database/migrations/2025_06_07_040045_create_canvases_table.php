@@ -44,7 +44,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('canvas_id')->constrained()->onDelete('cascade');
             $table->foreignId('canvas_file_id')->constrained('canvas_files')->onDelete('cascade');
-            $table->foreignId('approval_id')->constrained('canvas_approvals')->onDelete('cascade');
+            $table->foreignId('approval_id')->nullable();
             $table->text('remarks')->nullable();
             $table->timestamps();
         });

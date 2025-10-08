@@ -2,18 +2,31 @@
 import AppLayout from '@/layouts/AppLayout.vue'
 import { computed, ref } from 'vue'
 import { type BreadcrumbItem } from '@/types'
+import { Printer } from 'lucide-vue-next'
 import { Head } from '@inertiajs/vue3'
 import FormHeader from '@/components/reports/header/formHeder.vue'
-import { formatDate } from '@/lib/utils'
+import Button from '@/components/ui/button/Button.vue'
 
 // Props
 const { releases } = defineProps({
   releases: Array
 })
 
+console.log(releases)
+
 // Date filters
 const startDate = ref<string | null>(null)
 const endDate = ref<string | null>(null)
+
+// Helper: simple date formatter
+const formatDate = (date: string | Date) => {
+  if (!date) return ''
+  return new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
 
 // Grouping releases by request
 const groupedReleases = computed(() => {
@@ -24,7 +37,7 @@ const groupedReleases = computed(() => {
     if (!groups[reqNo]) {
       groups[reqNo] = {
         request_no: reqNo,
-        department: release.request.department?.name,
+        department_name: release.request.department?.department_name,
         release_date: release.release_date,
         details: []
       }
@@ -34,6 +47,7 @@ const groupedReleases = computed(() => {
 
   return Object.values(groups)
 })
+
 
 // Filtered releases by date range
 const filteredReleases = computed(() => {
@@ -52,16 +66,16 @@ const filteredReleases = computed(() => {
 
 // Print action
 const printReport = () => {
-  const printContents = document.getElementById('print-section')?.innerHTML;
-  const originalContents = document.body.innerHTML;
+  const printContents = document.getElementById('print-section')?.innerHTML
+  const originalContents = document.body.innerHTML
 
   if (printContents) {
-    document.body.innerHTML = printContents;
-    window.print();
-    document.body.innerHTML = originalContents;
-    location.reload();
+    document.body.innerHTML = printContents
+    window.print()
+    document.body.innerHTML = originalContents
+    location.reload()
   } else {
-    console.error('Print section not found');
+    console.error('Print section not found')
   }
 }
 
@@ -79,12 +93,10 @@ const breadcrumbs: BreadcrumbItem[] = [
     <div class="p-6">
       <div class="flex justify-between items-center mb-4">
         <h1 class="text-xl font-bold">Released Items Report</h1>
-        <button
-          @click="printReport"
-          class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
+        <Button @click="printReport">
+          <Printer class="mr-2 h-4 w-4" />
           Print
-        </button>
+        </Button>
       </div>
 
       <!-- Filters -->
@@ -109,58 +121,75 @@ const breadcrumbs: BreadcrumbItem[] = [
 
       <!-- Table -->
       <div id="print-section">
-        <div class="hidden print:block">
-            <FormHeader text="Released Items" :bordered="false" />
+        <div class="hidden print:block mb-4">
+          <FormHeader text="Released Items" :bordered="false" />
         </div>
+
         <table class="table-auto border-collapse border w-full text-sm">
-            <thead>
-                <tr class="bg-gray-100">
-                <th class="border px-2 w-[15%]">Release Date</th>
-                <th class="border px-2 w-[15%]">Request No</th>
-                <th class="border px-2 w-[15%]">Department</th>
-                <th class="border px-2 w-[40%]">Item</th>
-                <th class="border px-2 w-[7.5%]">Qty</th>
-                <th class="border px-2 w-[7.5%]">Unit</th>
-                </tr>
-            </thead>
-            <tbody>
-                <template v-for="group in filteredReleases" :key="group.request_no">
-                <tr v-for="(detail, index) in group.details" :key="detail.id">
-                    <!-- Parent info -->
-                    <td
-                    v-if="index === 0"
-                    :rowspan="group.details.length"
-                    class="border px-2"
-                    >
-                    {{ formatDate(group.release_date) }}
-                    </td>
-                    <td
-                    v-if="index === 0"
-                    :rowspan="group.details.length"
-                    class="border px-2"
-                    >
-                    {{ group.request_no }}
-                    </td>
-                    <td
-                    v-if="index === 0"
-                    :rowspan="group.details.length"
-                    class="border px-2"
-                    >
-                    {{ group.department }}
-                    </td>
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="border px-2 h-[35px] w-[15%] text-left">Release Date</th>
+              <th class="border px-2 w-[15%] text-left">Request No</th>
+              <th class="border px-2 w-[15%] text-left">Department</th>
+              <th class="border px-2 w-[40%]">Item</th>
+              <th class="border px-2 w-[7.5%] text-left">Qty</th>
+              <th class="border px-2 w-[7.5%] text-left">Unit</th>
+            </tr>
+          </thead>
+          <tbody v-if="filteredReleases.length > 0">
+            <template v-for="group in filteredReleases" :key="group.request_no">
+              <tr v-for="(detail, index) in group.details" :key="detail.id">
+                <td
+                  v-if="index === 0"
+                  :rowspan="group.details.length"
+                  class="border px-2"
+                >
+                  {{ formatDate(group.release_date) }}
+                </td>
+                <td
+                  v-if="index === 0"
+                  :rowspan="group.details.length"
+                  class="border px-2"
+                >
+                  {{ group.request_no }}
+                </td>
+                <td
+                  v-if="index === 0"
+                  :rowspan="group.details.length"
+                  class="border px-2"
+                >
+                  {{ group.department_name }}
+                </td>
 
-                    <!-- Details -->
-                    <td class="border px-2">
-                    {{ detail.request_detail.item_description }}
-                    </td>
-                    <td class="border px-2">{{ detail.quantity }}</td>
-                    <td class="border px-2">{{ detail.request_detail.unit }}</td>
-                </tr>
-                </template>
-            </tbody>
-            </table>
+                <td class="border px-2">{{ detail.request_detail.item_description }}</td>
+                <td class="border px-2">{{ detail.quantity }}</td>
+                <td class="border px-2">{{ detail.request_detail.unit }}</td>
+              </tr>
+            </template>
+          </tbody>
 
+          <tbody v-else>
+            <tr>
+              <td colspan="6" class="text-center py-4 text-gray-500">
+                No data available for the selected date range
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </AppLayout>
 </template>
+
+<style>
+/* ✅ Force landscape orientation during printing */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 1cm;
+  }
+  table {
+    font-size: 11px !important;
+  }
+}
+</style>

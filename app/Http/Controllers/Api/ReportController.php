@@ -100,7 +100,7 @@ class ReportController extends Controller
 
     public function pettyCashReport(PettyCash $pettyCash)
     {
-        $pettyCash = PettyCash::with('items', 'user')
+        $pettyCash = PettyCash::with('items', 'user.department')
             ->whereIn('status', ['released', 'approved liquidation'])
             ->orderBy('date', 'desc')
             ->get();

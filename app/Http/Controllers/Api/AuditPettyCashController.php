@@ -15,7 +15,7 @@ class AuditPettyCashController extends Controller
 {
     public function index()
     {
-        $pettyCash = PettyCash::with('items')
+        $pettyCash = PettyCash::with('items', 'user')
             ->whereNotIn('status', ['draft', 'for liquidation'])
             ->orderBy('date', 'desc')
             ->get();

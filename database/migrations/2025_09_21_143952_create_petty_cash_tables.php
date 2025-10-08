@@ -45,8 +45,8 @@ return new class extends Migration
             $table->date('date');
             $table->foreignId('prepared_by')->constrained('users')->onDelete('cascade');
             $table->foreignId('audited_by')->constrained('users')->onDelete('cascade');
-            $table->foreignId('approved_by')->constrained('users')->onDelete('cascade')->nullable();
-            $table->foreignId('paid_by')->constrained('users')->onDelete('cascade')->nullable();
+            $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('paid_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
     }

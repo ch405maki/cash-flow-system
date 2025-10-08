@@ -81,7 +81,6 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
-
     public function create(Request $request)
     {
         $canvasId = $request->query('canvas_id');
@@ -173,7 +172,6 @@ class PurchaseOrderController extends Controller
                 CanvasSelectedFile::create([
                     'canvas_id' => $canvas->id,
                     'canvas_file_id' => $canvasFile->id,
-                    'approval_id' => 1,
                 ]);
 
                 $purchaseOrder->update(['canvas_id' => $canvas->id]);

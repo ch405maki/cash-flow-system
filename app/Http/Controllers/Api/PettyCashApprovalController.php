@@ -12,7 +12,7 @@ use Inertia\Inertia;
 class PettyCashApprovalController extends Controller
 {
     public function executive(){
-        $pettyCash = PettyCash::with('items')
+        $pettyCash = PettyCash::with('items','user')
         ->whereIn('status', ['audited'])
         ->orderBy('date', 'desc')
         ->get();

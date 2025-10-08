@@ -5,6 +5,7 @@ import { Head, router, usePage } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 import { computed } from 'vue'
 import { FileText, PhilippinePeso } from 'lucide-vue-next'
+import { formatDate } from '@/lib/utils'
 import {
   Table,
   TableBody,
@@ -78,15 +79,35 @@ const goToCreate = () => {
         <TableCaption>A list of your petty cash.</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead class="w-[300px]">PCV NO</TableHead>
+            <TableHead class="w-[150px]">PCV NO</TableHead>
+            <TableHead class="w-[100px]">Paid to</TableHead>
+            <TableHead class="w-[150px]">Requested By</TableHead>
+            <TableHead class="w-[100px]">Date</TableHead>
             <TableHead class="w-[100px]">Status</TableHead>
-            <TableHead class="text-right">Action</TableHead>
+            <TableHead class="w-[200px]">Remarks</TableHead>
+            <TableHead class="w-[50px] text-right">Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow v-for="item in pettyCash" :key="item.id">
-            <TableCell class="font-medium">{{ item.pcv_no }}</TableCell>
-            <TableCell class="capitalize">{{ item.status }}</TableCell>
+            <TableCell class="font-medium">
+                  {{ item.pcv_no }}
+                </TableCell>
+                <TableCell class="capitalize">
+                  {{ item.paid_to }}
+                </TableCell>
+                <TableCell class="capitalize">
+                  {{ item.user?.first_name }} {{ item.user?.last_name }}
+                </TableCell>
+                <TableCell class="capitalize">
+                  {{ formatDate(item.date) }}
+                </TableCell>
+                <TableCell class="capitalize">
+                  {{ item.status }}
+                </TableCell>
+                <TableCell class="capitalize">
+                  "{{ item.remarks }}"
+                </TableCell>
             <TableCell class="flex justify-end space-x-2">
               <Button
                 v-if="item.status !== 'draft' && item.status !== 'requested'"

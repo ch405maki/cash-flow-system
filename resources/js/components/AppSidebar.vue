@@ -268,6 +268,30 @@ const reportItems = ref<DropdownNavItem[]>([
     },
   ]);
 
+const bursarReportItems = ref<DropdownNavItem[]>([
+    {
+        title: 'Reports',
+        href: '/reports',
+        icon: BarChart3,
+        isOpen: false,
+        children: [
+        { title: 'Petty Cash Summary', href: '/reports/petty-cash'},
+        ],
+    },
+  ]);
+
+const purchasingReportItems = ref<DropdownNavItem[]>([
+    {
+        title: 'Reports',
+        href: '/reports',
+        icon: BarChart3,
+        isOpen: false,
+        children: [
+        { title: 'Purchase Order Summary', href: '/reports/po-summary'},
+        ],
+    },
+  ]);
+
 const footerNavItems: NavItem[] = [
   {
     title: 'Settings',
@@ -381,6 +405,7 @@ const bursarNavItems: NavItem[] = [
 
           <div v-if="user?.role === 'bursar'">
             <NavMain :items="bursarNavItems" group-label="Petty Cash"/>
+            <NavMain :items="bursarReportItems" group-label="Reports"/>
           </div>
 
           <div v-if="user?.role === 'property_custodian'">
@@ -400,7 +425,7 @@ const bursarNavItems: NavItem[] = [
             <div v-if="user?.is_petty_cash === 1">
               <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
             </div>
-            <NavMain :items="reportItems" group-label="Reports" />
+            <NavMain :items="purchasingReportItems" group-label="Reports" />
           </div>
 
           <div v-if="user?.role === 'staff' || user?.role === 'department_head'">
