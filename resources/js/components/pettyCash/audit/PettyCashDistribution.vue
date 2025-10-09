@@ -290,7 +290,7 @@ const getRowClass = (item: any) => {
 
       <div class="flex justify-end space-x-2">
         <Button v-if="user.role === 'audit'" :disabled="!approval.remarks" @click="submitApproval">
-          Submit Review
+          Confirm Approval
         </Button>
       </div>
     </div>
