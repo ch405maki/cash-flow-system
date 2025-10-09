@@ -8,6 +8,15 @@ import RecentRequestsTable from '@/components/dashboard/purchasing/RecentRequest
 import FrequentItemsChart from '@/components/dashboard/purchasing/FrequentItemsChart.vue';
 import { Expand, Minimize } from 'lucide-vue-next';
 import { ref } from 'vue';
+import { router } from '@inertiajs/vue3'
+import { AlertCircle } from "lucide-vue-next"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from '@/components/ui/tooltip'
 
 const props = defineProps<{
     isDepartmentUser: boolean;
@@ -26,6 +35,7 @@ const props = defineProps<{
     }>;
     userRole: string;
     username: string;
+    pettyCash: Record<string, any> | null
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -42,6 +52,11 @@ const toggleChartExpand = () => {
   isChartExpanded.value = !isChartExpanded.value;
   chartRefreshKey.value++; // Increment to force refresh
 };
+
+// Go to petty cash liquidation page
+const goToLiquidations = () => {
+  router.visit('/petty-cash')
+}
 </script>
 
 <template>
@@ -53,6 +68,51 @@ const toggleChartExpand = () => {
                 Purchasing Dashboard
                 <p class="text-sm text-muted-foreground capitalize">Welcome, {{ username }}</p>
             </h1>
+            <div>
+                <!-- Only show alert if there are petty cash records -->
+                <Alert
+                    v-if="pettyCash && pettyCash.length > 0"
+                    variant="warning"
+                    @click="goToLiquidations"
+                    class="
+                        bg-orange-100
+                        border 
+                        border-orange-200
+                        hover:border-orange-300
+                        cursor-pointer
+                        transition-all
+                        duration-200
+                        ease-in-out
+                        hover:shadow-sm
+                    "
+                    title="Visit petty cash page."
+                    >
+                    <div class="flex items-center gap-2">
+                        <AlertCircle class="w-5 h-5 text-orange-600" />
+                        <div>
+                        <AlertTitle class="text-orange-700 font-semibold">
+                            Pending Liquidations
+                        </AlertTitle>
+                        <AlertDescription class="text-sm text-orange-800">
+                            You have <strong>{{ pettyCash.length }}</strong> petty cash
+                            {{ pettyCash.length > 1 ? 'requests' : 'request' }} pending for liquidation.
+                        </AlertDescription>
+                        </div>
+                    </div>
+                </Alert>
+
+                <!-- Optional: message when there’s no data -->
+                <Alert
+                    v-else
+                    variant="default"
+                    class="bg-gray-50 flex items-center gap-2 text-gray-700"
+                    >
+                    <AlertCircle class="w-4 h-4 text-gray-500" />
+                    <AlertDescription>
+                        You have no petty cash for liquidation.
+                    </AlertDescription>
+                </Alert>
+            </div>
             
             <StatsCards :status-counts="statusCounts" />
 

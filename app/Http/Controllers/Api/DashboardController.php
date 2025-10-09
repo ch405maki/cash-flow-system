@@ -3,15 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Request;
-use App\Models\RequestToOrder;
-use App\Models\RequestToOrderDetail;
-use App\Models\PurchaseOrder;
-use App\Models\User;
-use App\Models\Department;
-use App\Models\Access;
-use App\Models\Voucher;
-use App\Models\Canvas;
 use Illuminate\Http\Request as HttpRequest;
 use Inertia\Inertia;
 use Carbon\Carbon;
@@ -21,6 +12,16 @@ use App\Models\CanvasApproval;
 use App\Models\PurchaseOrderApproval;
 use App\Models\RequestToOrderApproval;
 use App\Models\VoucherApproval;
+use App\Models\Request;
+use App\Models\RequestToOrder;
+use App\Models\RequestToOrderDetail;
+use App\Models\PurchaseOrder;
+use App\Models\User;
+use App\Models\Department;
+use App\Models\Access;
+use App\Models\Voucher;
+use App\Models\Canvas;
+use App\Models\PettyCash;
 
 class DashboardController extends Controller
 {
@@ -46,6 +47,12 @@ class DashboardController extends Controller
         }
         elseif ($user->role === 'admin') {
             return $this->adminDashboard();
+        }
+        elseif ($user->role === 'bursar') {
+            return $this->bursarDashboard();
+        }
+        elseif ($user->role === 'audit') {
+            return $this->auditDashboard();
         }
         
         // Default dashboard for other roles
@@ -252,6 +259,30 @@ class DashboardController extends Controller
         ]);
     }
 
+    protected function bursarDashboard()
+    {
+        $user = Auth::user();
+        
+        
+        return Inertia::render('Dashboard/Bursar/Index', [
+            'isDepartmentUser' => true,
+            'userRole' => $user->role,
+            'username' => $user->username,
+        ]);
+    }
+
+    protected function auditDashboard()
+    {
+        $user = Auth::user();
+        
+        
+        return Inertia::render('Dashboard/Audit/Index', [
+            'isDepartmentUser' => true,
+            'userRole' => $user->role,
+            'username' => $user->username,
+        ]);
+    }
+
     protected function purchasingDashboard()
     {
         $user = Auth::user();
@@ -296,6 +327,16 @@ class DashboardController extends Controller
         ->orderByDesc('request_count')
         ->limit(10)
         ->get();
+
+        $query = PettyCash::with(['items', 'user.department'])
+            ->where('status', 'for liquidation');
+
+            // Other users only see their own department’s
+
+        $query->whereHas('user', function ($q) use ($user) {
+                $q->where('department_id', $user->department_id);
+            });
+        $pettyCash = $query->orderBy('date', 'desc')->get();
         
         return Inertia::render('Dashboard/Purchasing/Index', [
             'isDepartmentUser' => true,
@@ -304,6 +345,7 @@ class DashboardController extends Controller
             'frequentItems' => $frequentItems,
             'userRole' => $user->role,
             'username' => $user->username,
+            'pettyCash' => $pettyCash,
         ]);
     }
 

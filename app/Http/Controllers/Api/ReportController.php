@@ -100,13 +100,16 @@ class ReportController extends Controller
 
     public function pettyCashReport(PettyCash $pettyCash)
     {
-        $pettyCash = PettyCash::with('items', 'user.department')
+        $pettyCash = PettyCash::with(['items', 'user.department'])
             ->whereIn('status', ['released', 'approved liquidation'])
-            ->orderBy('date', 'desc')
+            ->orderByDesc('date')
             ->get();
 
-        return Inertia::render('Reports/PettyCash/Index', [ 'pettyCash' => $pettyCash ]);
+        return Inertia::render('Reports/PettyCash/Index', [
+            'pettyCash' => $pettyCash,
+        ]);
     }
+
 
     public function preview(Voucher $voucher)
     {

@@ -354,6 +354,11 @@ const pettyCashNavItems: NavItem[] = [
 
 const bursarNavItems: NavItem[] = [
   {
+    title: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
+  },
+  {
     title: 'Petty Cash',
     href: '/bursar/petty-cash',
     icon: SquarePen,
