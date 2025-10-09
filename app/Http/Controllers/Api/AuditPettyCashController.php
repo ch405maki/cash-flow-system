@@ -15,13 +15,23 @@ class AuditPettyCashController extends Controller
 {
     public function index()
     {
-        $pettyCash = PettyCash::with('items', 'user')
+        $userId = auth()->id();
+
+        $pettyCash = PettyCash::with(['items', 'user', 'approvals'])
             ->whereNotIn('status', ['draft', 'for liquidation'])
+            ->whereDoesntHave('approvals', function ($q) use ($userId) {
+                // Exclude petty cash where the user already has remarks
+                $q->where('user_id', $userId)
+                    ->whereNotNull('remarks');
+            })
             ->orderBy('date', 'desc')
             ->get();
 
-        return Inertia::render('PettyCash/Index', [ 'pettyCash' => $pettyCash ]);
+        return Inertia::render('PettyCash/Index', [
+            'pettyCash' => $pettyCash,
+        ]);
     }
+
 
     public function view(PettyCash $pettyCash)
     {
