@@ -83,9 +83,20 @@ const submitForm = async () => {
     })
 
     await router.post('/petty-cash', data, {
-      onSuccess: () => toast.success('Petty Cash Voucher created successfully!'),
-      onError: () => toast.error('Please check your form fields.')
+      onSuccess: () => toast.success('🎉 Petty Cash Voucher created successfully!'),
+      onError: (errors) => {
+        if (errors.threshold) {
+          toast.error(`🚫 ${errors.threshold}`, {
+            timeout: 5000,
+          })
+        } else {
+          toast.error('❌ Please check your form fields.', {
+            timeout: 4000,
+          })
+        }
+      },
     })
+
   } catch (error) {
     toast.error('Something went wrong.')
   }
@@ -134,10 +145,10 @@ const submitForm = async () => {
                 <RadioGroupItem id="cash-advance" value="Cash Advance" />
                 <Label for="cash-advance">Cash Advance</Label>
               </div>
-              <div class="flex items-center space-x-2">
+              <!-- <div class="flex items-center space-x-2">
                 <RadioGroupItem id="liquidation" value="Liquidation" />
                 <Label for="liquidation">Liquidation</Label>
-              </div>
+              </div> -->
             </div>
           </div>
         </RadioGroup>

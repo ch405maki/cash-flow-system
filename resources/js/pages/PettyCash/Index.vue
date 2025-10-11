@@ -4,7 +4,7 @@ import { type BreadcrumbItem } from '@/types'
 import { Head, router, usePage } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 import { computed } from 'vue'
-import { FileText, PhilippinePeso } from 'lucide-vue-next'
+import { FileText, PhilippinePeso, Info } from 'lucide-vue-next'
 import { formatDate } from '@/lib/utils'
 import {
   Table,
@@ -21,6 +21,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Badge } from '@/components/ui/badge'
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Dashboard', href: '/dashboard' },
@@ -29,11 +35,24 @@ const breadcrumbs: BreadcrumbItem[] = [
 const user = usePage().props.auth.user;
 
 const props = defineProps<{
-  pettyCash: Record<string, any> | null
-  pettyCashFund: { 
-    fund_amount?: number 
-    fund_balance?: number 
+  pettyCash: Record<string, any>[] | null
+  pettyCashFund?: {
+    fund_amount?: number
+    fund_balance?: number
   } | null
+  thresholds: {
+    cash_advance: {
+      limit: number
+      used: number
+      remaining: number
+    }
+    reimbursement: {
+      limit: number
+      used: number
+      remaining: number
+    }
+  }
+  today: string
 }>()
 
 // Check if there are petty cash records
@@ -94,6 +113,111 @@ const fundStatus = computed(() => {
         </div>
 
         <div class="flex items-center gap-3">
+          <Popover>
+            <PopoverTrigger as-child>
+              <Button title="Daily Threshold Status" variant="outline" size="icon" class="h-9 w-9 border-orange-200 bg-orange-50 hover:bg-orange-100">
+                <Info class="h-4 w-4 text-orange-600" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent class="">
+              <div class="space-y-4">
+                <!-- Header -->
+                <div class="flex items-center gap-2">
+                  <div class="flex items-center justify-center">
+                    <Info class="h-3 w-3 text-orange-600" />
+                  </div>
+                  <h3 class="font-medium">Daily Threshold Status</h3>
+                </div>
+
+                <!-- Threshold Cards -->
+                <div class="space-y-3">
+                  <!-- Cash Advance Card -->
+                  <div class="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-sm font-medium text-gray-700">Cash Advance</span>
+                      <Badge 
+                        variant="outline" 
+                        :class="thresholds.cash_advance.used >= thresholds.cash_advance.limit 
+                          ? 'bg-red-50 text-red-700 border-red-200' 
+                          : 'bg-green-50 text-green-700 border-green-200'"
+                      >
+                        {{ thresholds.cash_advance.used >= thresholds.cash_advance.limit ? 'Limit Reached' : 'Available' }}
+                      </Badge>
+                    </div>
+                    
+                    <div class="space-y-2">
+                      <!-- Progress Bar -->
+                      <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          class="h-2 rounded-full transition-all duration-300"
+                          :class="thresholds.cash_advance.used >= thresholds.cash_advance.limit 
+                            ? 'bg-red-500' 
+                            : 'bg-orange-500'"
+                          :style="{ width: `${Math.min((thresholds.cash_advance.used / thresholds.cash_advance.limit) * 100, 100)}%` }"
+                        ></div>
+                      </div>
+                      
+                      <!-- Amounts -->
+                      <div class="flex justify-between text-xs text-gray-600">
+                        <span>Used: ₱{{ thresholds.cash_advance.used.toLocaleString() }}</span>
+                        <span>Limit: ₱{{ thresholds.cash_advance.limit.toLocaleString() }}</span>
+                      </div>
+                      
+                      <!-- Remaining -->
+                      <div class="text-sm font-medium text-center" 
+                          :class="thresholds.cash_advance.remaining <= 0 
+                            ? 'text-red-600' 
+                            : 'text-green-600'">
+                        Remaining: ₱{{ thresholds.cash_advance.remaining.toLocaleString() }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Reimbursement Card -->
+                  <div class="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-sm font-medium text-gray-700">Reimbursement</span>
+                      <Badge 
+                        variant="outline" 
+                        :class="thresholds.reimbursement.used >= thresholds.reimbursement.limit 
+                          ? 'bg-red-50 text-red-700 border-red-200' 
+                          : 'bg-green-50 text-green-700 border-green-200'"
+                      >
+                        {{ thresholds.reimbursement.used >= thresholds.reimbursement.limit ? 'Limit Reached' : 'Available' }}
+                      </Badge>
+                    </div>
+                    
+                    <div class="space-y-2">
+                      <!-- Progress Bar -->
+                      <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          class="h-2 rounded-full transition-all duration-300"
+                          :class="thresholds.reimbursement.used >= thresholds.reimbursement.limit 
+                            ? 'bg-red-500' 
+                            : 'bg-blue-500'"
+                          :style="{ width: `${Math.min((thresholds.reimbursement.used / thresholds.reimbursement.limit) * 100, 100)}%` }"
+                        ></div>
+                      </div>
+                      
+                      <!-- Amounts -->
+                      <div class="flex justify-between text-xs text-gray-600">
+                        <span>Used: ₱{{ thresholds.reimbursement.used.toLocaleString() }}</span>
+                        <span>Limit: ₱{{ thresholds.reimbursement.limit.toLocaleString() }}</span>
+                      </div>
+                      
+                      <!-- Remaining -->
+                      <div class="text-sm font-medium text-center" 
+                          :class="thresholds.reimbursement.remaining <= 0 
+                            ? 'text-red-600' 
+                            : 'text-green-600'">
+                        Remaining: ₱{{ thresholds.reimbursement.remaining.toLocaleString() }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
           <TooltipProvider
             v-if="props.pettyCashFund && props.pettyCashFund.fund_balance !== undefined"
           >
