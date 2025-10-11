@@ -266,7 +266,7 @@ console.log(props.pettyCash)
 
         <div v-if="user.role == 'bursar'">
           <!-- Release button -->
-          <AlertDialog v-if="props.pettyCash.status == 'approved'">
+          <AlertDialog v-if="props.pettyCash.status == 'audited'">
             <AlertDialogTrigger as-child>
               <Button>Release</Button>
             </AlertDialogTrigger>

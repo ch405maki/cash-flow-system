@@ -4,11 +4,15 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\PettyCash;
-use App\Models\PettyCashItem;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Illuminate\Support\Carbon;
+
+use App\Models\PettyCash;
+use App\Models\PettyCashItem;
+use App\Models\PettyCashFund;
+use App\Models\User;
+use App\Models\Department;
 
 class PettyCashController extends Controller
 {
@@ -28,7 +32,7 @@ class PettyCashController extends Controller
             });
         }
 
-        $pettyCash = $query->orderBy('date', 'desc')->get();
+        $pettyCash = $query->orderBy('created_at', 'desc')->get();
 
         return Inertia::render('PettyCash/Index', [
             'pettyCash' => $pettyCash,
@@ -172,6 +176,43 @@ class PettyCashController extends Controller
         return back()->with('success', 'Item deleted successfully.');
     }
 
+    public function pettyCashFund()
+    {
+        $user = auth()->user();
+
+        if (!in_array($user->role, ['admin', 'accounting'])) {
+            return redirect()->back()->with('error', 'Unauthorized access.');
+        }
+
+        $pettyCashFunds = PettyCashFund::with(['user', 'department'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $users = User::select('id', 'first_name', 'last_name')->get();
+        $departments = Department::select('id', 'department_name')->get();
+
+        return Inertia::render('PettyCash/Fund/Index', [
+            'pettyCashFunds' => $pettyCashFunds,
+            'users' => $users,
+            'departments' => $departments,
+        ]);
+    }
+
+    public function storeFund(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'department_id' => 'required|exists:departments,id',
+            'fund_amount' => 'required|numeric|min:1',
+        ]);
+
+        // Assign fund_amount to fund_balance initially
+        $validated['fund_balance'] = $validated['fund_amount'];
+
+        PettyCashFund::create($validated);
+
+        return redirect()->back()->with('success', 'Petty Cash Fund assigned successfully.');
+    }
 
     private function generateNextPcvNo(): string
     {

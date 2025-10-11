@@ -13,6 +13,7 @@ class PettyCashFund extends Model
         'user_id',
         'department_id',
         'fund_amount',
+        'fund_balance',
     ];
 
     /**

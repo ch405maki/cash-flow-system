@@ -57,11 +57,6 @@ const hasLiquidation = computed(() => {
   return allItems.some(item => item.type === 'Liquidation')
 })
 
-if (hasLiquidation.value) {
-  console.log('Has liquidation item!')
-}else{
-  console.log('No liquidation item!')
-}
 
 const groupedByDate = computed(() => {
   const map: Record<string, { cashAdvance: number; liquidation: number }> = {}

@@ -11,16 +11,7 @@ use Inertia\Inertia;
 
 class PettyCashApprovalController extends Controller
 {
-    public function executive(){
-        $pettyCash = PettyCash::with('items','user')
-        ->whereIn('status', ['audited'])
-        ->orderBy('date', 'desc')
-        ->get();
-
-        return Inertia::render('PettyCash/Index', [ 'pettyCash' => $pettyCash ]);
-    }
-
-    public function executiveApproval(Request $request, PettyCash $pettyCash)
+    public function auditApproval(Request $request, PettyCash $pettyCash)
     {
         $validated = $request->validate([
             'remarks' => 'nullable|string|max:500',
@@ -34,7 +25,7 @@ class PettyCashApprovalController extends Controller
         PettyCashApproval::create([
             'petty_cash_id' => $pettyCash->id,
             'user_id'       => Auth::id(),
-            'status'        => 'approved',
+            'status'        => 'audited',
             'remarks'       => $request->input('remarks', ''),
             'approved_at'   => now(),
         ]);
@@ -42,7 +33,7 @@ class PettyCashApprovalController extends Controller
         return back()->with('success', 'Approval saved successfully!');
     }
 
-    public function executiveApprovalLiquidate(Request $request, PettyCash $pettyCash)
+    public function auditApprovalLiquidate(Request $request, PettyCash $pettyCash)
     {
         $validated = $request->validate([
             'remarks' => 'nullable|string|max:500',

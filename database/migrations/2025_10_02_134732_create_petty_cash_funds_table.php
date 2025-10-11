@@ -24,6 +24,7 @@ return new class extends Migration
 
             // The available fund balance
             $table->decimal('fund_amount', 15, 2)->default(0);
+            $table->decimal('fund_balance', 15, 2)->default(0);
 
             $table->timestamps();
         });

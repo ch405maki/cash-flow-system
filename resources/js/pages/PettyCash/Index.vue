@@ -30,7 +30,10 @@ const user = usePage().props.auth.user;
 
 const props = defineProps<{
   pettyCash: Record<string, any> | null
-  pettyCashFund: { fund_amount?: number } | null
+  pettyCashFund: { 
+    fund_amount?: number 
+    fund_balance?: number 
+  } | null
 }>()
 
 // Check if there are petty cash records
@@ -40,6 +43,43 @@ const hasItem = computed(() => props.pettyCash && Object.keys(props.pettyCash).l
 const goToCreate = () => {
   router.get(route('petty-cash.create'))
 }
+
+const fundStatus = computed(() => {
+  const fund = props.pettyCashFund;
+  if (!fund || !fund.fund_amount) return {};
+
+  const balance = Number(fund.fund_balance);
+  const amount = Number(fund.fund_amount);
+  const percentage = (balance / amount) * 100;
+
+  if (percentage <= 20) {
+    return {
+      color: 'border-red-500 bg-red-100 hover:border-red-600 hover:text-red-700 text-red-600',
+      textColor: 'text-red-700',
+      label: 'Needs Replenishment',
+      iconColor: 'text-red-700',
+      iconBackground: 'bg-red-100 border-red-400',
+    };
+  } else if (percentage <= 50) {
+    return {
+      color:
+        'border-yellow-500 bg-yellow-100 hover:border-yellow-600 hover:text-yellow-700 text-yellow-600',
+      textColor: 'text-yellow-700',
+      label: 'Low Balance',
+      iconColor: 'text-yellow-700',
+      iconBackground: 'bg-yellow-100 border-yellow-400',
+    };
+  } else {
+    return {
+      color:
+        'border-purple-500 bg-purple-100 hover:border-purple-600 hover:text-purple-700 text-purple-600',
+      textColor: 'text-purple-700',
+      label: '',
+      iconColor: 'text-purple-700',
+      iconBackground: 'bg-purple-100 border-purple-400',
+    };
+  }
+});
 </script>
 
 <template>
@@ -54,19 +94,62 @@ const goToCreate = () => {
         </div>
 
         <div class="flex items-center gap-3">
-          <TooltipProvider v-if="props.pettyCashFund && props.pettyCashFund.fund_amount">
+          <TooltipProvider
+            v-if="props.pettyCashFund && props.pettyCashFund.fund_balance !== undefined"
+          >
             <Tooltip>
               <TooltipTrigger>
                 <div
-                  class="rounded-lg border p-4 text-purple-600 border-purple-500 bg-purple-100 
-                        hover:border-purple-600 hover:text-purple-700 flex items-center gap-1"
+                  :class="[
+                    'rounded-lg border px-5 py-4 flex items-center justify-between transition-colors cursor-pointer w-full',
+                    fundStatus.color,
+                  ]"
                 >
-                  <PhilippinePeso class="w-4 h-4" />
-                  <span class="text-xl font-medium">{{ props.pettyCashFund.fund_amount }}</span>
+                  <!-- Icon -->
+                  <div
+                    class="flex items-center justify-center w-12 h-12 rounded-full border-2 flex-shrink-0"
+                    :class="fundStatus.iconBackground"
+                  >
+                    <PhilippinePeso class="w-6 h-6" :class="fundStatus.iconColor" />
+                  </div>
+
+                  <!-- Balance Info -->
+                  <div class="text-right ml-4 flex-1">
+                    <h1 class="text-2xl font-semibold leading-tight text-left">
+                      {{ Number(props.pettyCashFund.fund_balance).toLocaleString() }}
+                    </h1>
+                    <p
+                      v-if="fundStatus.label"
+                      class="text-sm font-medium"
+                      :class="fundStatus.textColor"
+                    >
+                      {{ fundStatus.label }}
+                    </p>
+                  </div>
                 </div>
               </TooltipTrigger>
+
               <TooltipContent>
-                <p>Allocated Fund</p>
+                <div class="space-y-1">
+                  <div class="flex justify-between gap-4">
+                    <span class="font-medium">Current Balance:</span>
+                    <span class="font-semibold">
+                      ₱{{ Number(props.pettyCashFund.fund_balance).toLocaleString() }}
+                    </span>    
+                  </div>
+                  <div class="flex justify-between gap-4">
+                    <span class="font-medium">Allocated Fund:</span>
+                    <span class="font-semibold">
+                      ₱{{ Number(props.pettyCashFund.fund_amount).toLocaleString() }}
+                    </span>
+                  </div>
+                  <div class="flex justify-between gap-4 border-t pt-1">
+                    <span class="font-medium">Utilized:</span>
+                    <span class="font-semibold">
+                      ₱{{ Number(props.pettyCashFund.fund_amount - props.pettyCashFund.fund_balance).toLocaleString() }}
+                    </span>
+                  </div>
+                </div>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
