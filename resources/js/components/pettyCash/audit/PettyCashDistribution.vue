@@ -10,6 +10,16 @@ import Textarea from '@/components/ui/textarea/Textarea.vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Rocket } from 'lucide-vue-next'
 import { formatDate } from '@/lib/utils'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectTrigger,
@@ -27,6 +37,13 @@ const props = defineProps<{
 
 const existingItems = ref(props.pettyCash.items ?? [])
 const toast = useToast()
+
+// Add refs for dialog open states
+const normalApprovalDialogOpen = ref(false)
+const liquidationDialogOpen = ref(false)
+
+const confirmApproval = ref(false)
+const confirmLiquidation = ref(false)
 
 const approval = reactive({
   remarks: ''
@@ -58,16 +75,6 @@ const submitDistribution = async () => {
   )
 }
 
-const submitApproval = async () => {
-  try {
-    await router.post(`/petty-cash/${props.pettyCash.id}/remarks`, { remarks: approval.remarks })
-    toast.success('Remarks submitted!')
-    approval.remarks = ''
-  } catch (error) {
-    toast.error('Failed to submit approval')
-  }
-}
-
 // reactive form items (if you’re adding new ones)
 const form = reactive({
   items: [] as any[], // or proper interface if typed
@@ -94,6 +101,12 @@ const totalsByType = computed(() => {
   return totals
 })
 
+const hasLiquidation = computed(() => {
+  const allItems = [...existingItems.value, ...form.items]
+  return allItems.some(item => item.type === 'Liquidation')
+})
+
+
 // group by date to color rows
 const groupedByDate = computed(() => {
   const map: Record<string, { cashAdvance: number; liquidation: number }> = {}
@@ -118,6 +131,50 @@ const getRowClass = (item: any) => {
   if (totals.liquidation > 0 && totals.liquidation < totals.cashAdvance) return 'bg-yellow-100'
   if (item.type?.toLowerCase() === 'cash advance') return 'bg-rose-100'
   return ''
+}
+
+const handleApproval = async (type: 'normal' | 'liquidation') => {
+  try {
+    if (type === 'normal') {
+      await submitApproval()
+      confirmApproval.value = false
+      normalApprovalDialogOpen.value = false // Close the dialog
+    } else {
+      await submitApprovalLiquidate()
+      confirmLiquidation.value = false
+      liquidationDialogOpen.value = false // Close the dialog
+    }
+  } catch (error) {
+    toast.error('Approval failed')
+  }
+}
+
+const submitApproval = async () => {
+  try {
+    await router.post(`/petty-cash/${props.pettyCash.id}/approve`, {  
+      remarks: approval.remarks
+    })
+    toast.success('Approval submitted!')
+    approval.remarks = ''
+    return true // Return success
+  } catch (error) {
+    toast.error('Failed to submit approval')
+    throw error // Re-throw to be caught in handleApproval
+  }
+}
+
+const submitApprovalLiquidate = async () => {
+  try {
+    await router.post(`/petty-cash/${props.pettyCash.id}/approveLiquidate`, {  
+      remarks: approval.remarks
+    })
+    toast.success('Approval submitted!')
+    approval.remarks = ''
+    return true // Return success
+  } catch (error) {
+    toast.error('Failed to submit approval')
+    throw error // Re-throw to be caught in handleApproval
+  }
 }
 </script>
 
@@ -289,9 +346,68 @@ const getRowClass = (item: any) => {
       </div>
 
       <div class="flex justify-end space-x-2">
-        <Button v-if="user.role === 'audit'" :disabled="!approval.remarks" @click="submitApproval">
-          Confirm Approval
-        </Button>
+        <div class="flex justify-end space-x-2">
+          <!-- Normal Approval -->
+          <Dialog v-if="user.role === 'audit' && !hasLiquidation" v-model:open="normalApprovalDialogOpen">
+            <DialogTrigger as-child>
+              <Button :disabled="!approval.remarks">
+                Confirm Approval
+              </Button>
+            </DialogTrigger>
+
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Confirm Approval</DialogTitle>
+                <DialogDescription>
+                  Please confirm that you've reviewed this petty cash request before approving.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div class="flex items-center space-x-2 mt-4">
+                <Checkbox id="confirmApproval" v-model:checked="confirmApproval" />
+                <Label for="confirmApproval">I confirm the accuracy of this request.</Label>
+              </div>
+
+              <DialogFooter class="mt-4">
+                <Button variant="outline" @click="normalApprovalDialogOpen = false">Cancel</Button>
+                <Button :disabled="!confirmApproval" @click="handleApproval('normal')">
+                  Approve
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <!-- Liquidation Approval -->
+          <Dialog v-if="user.role === 'audit' && hasLiquidation" v-model:open="liquidationDialogOpen">
+            <DialogTrigger as-child>
+              <Button :disabled="!approval.remarks">
+                Confirm Liquidation Approval
+              </Button>
+            </DialogTrigger>
+
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Confirm Liquidation Approval</DialogTitle>
+                <DialogDescription>
+                  This petty cash request contains liquidation items. Please confirm before final approval.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div class="flex items-center space-x-2 mt-4">
+                <Checkbox id="confirmLiquidation" v-model:checked="confirmLiquidation" />
+                <Label for="confirmLiquidation">I confirm liquidation details are correct.</Label>
+              </div>
+
+              <DialogFooter class="mt-4">
+                <Button variant="outline" @click="liquidationDialogOpen = false">Cancel</Button>
+                <Button :disabled="!confirmLiquidation" @click="handleApproval('liquidation')">
+                  Approve
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+        </div>
       </div>
     </div>
   </div>

@@ -4,23 +4,28 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\PettyCash;
-use App\Models\PettyCashItem;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Illuminate\Support\Carbon;
+
+use App\Models\PettyCash;
+use App\Models\PettyCashItem;
+use App\Models\PettyCashFund;
+use App\Models\User;
+use App\Models\Department;
 
 class PettyCashController extends Controller
 {
     public function index()
     {
         $user = auth()->user();
+        $today = now()->toDateString();
 
         $query = PettyCash::with(['items', 'user.department']);
 
         if ($user->role === 'accounting') {
             // Accounting sees all requested petty cash
-            $query->wherein('status', ['requested' , 'approved liquidation']);
+            $query->whereIn('status', ['requested', 'approved liquidation']);
         } else {
             // Other users only see their own department’s
             $query->whereHas('user', function ($q) use ($user) {
@@ -28,12 +33,49 @@ class PettyCashController extends Controller
             });
         }
 
-        $pettyCash = $query->orderBy('date', 'desc')->get();
+        $pettyCash = $query->orderBy('created_at', 'desc')->get();
+
+        /**
+         * ✅ Compute today's totals for this user's department
+         */
+        $departmentPettyCashToday = PettyCash::whereHas('user', function ($q) use ($user) {
+                $q->where('department_id', $user->department_id);
+            })
+            ->whereDate('date', $today)
+            ->with('items')
+            ->get();
+
+        $cashAdvanceTotal = $departmentPettyCashToday->flatMap->items
+            ->where('type', 'Cash Advance')
+            ->sum('amount');
+
+        $reimbursementTotal = $departmentPettyCashToday->flatMap->items
+            ->where('type', 'Reimbursement')
+            ->sum('amount');
+
+        /**
+         * ✅ Define thresholds
+         */
+        $thresholds = [
+            'cash_advance' => [
+                'limit' => 150000,
+                'used' => $cashAdvanceTotal,
+                'remaining' => max(0, 150000 - $cashAdvanceTotal),
+            ],
+            'reimbursement' => [
+                'limit' => 5000,
+                'used' => $reimbursementTotal,
+                'remaining' => max(0, 5000 - $reimbursementTotal),
+            ],
+        ];
 
         return Inertia::render('PettyCash/Index', [
             'pettyCash' => $pettyCash,
+            'thresholds' => $thresholds,
+            'today' => $today,
         ]);
     }
+
 
     public function create()
     {
@@ -61,39 +103,83 @@ class PettyCashController extends Controller
             'items.*.receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
-        // 👇 Override status if type is "Cash Advance"
+        $user = Auth::user();
+        $departmentId = $user->department_id;
+        $date = $validated['date'];
+
+        // Load department's petty cash records for the day
+        $pettyCashToday = PettyCash::whereHas('user', function ($q) use ($departmentId) {
+                $q->where('department_id', $departmentId);
+            })
+            ->whereDate('date', $date)
+            ->with('items')
+            ->get();
+
+        // Calculate totals for each type separately
+        $totalCashAdvance = $pettyCashToday->flatMap->items
+            ->where('type', 'Cash Advance')
+            ->sum('amount');
+
+        $totalReimbursement = $pettyCashToday->flatMap->items
+            ->where('type', 'Reimbursement')
+            ->sum('amount');
+
+        // New totals (include submitted items)
+        $newCashAdvanceTotal = $totalCashAdvance + collect($validated['items'])
+            ->where('type', 'Cash Advance')
+            ->sum('amount');
+
+        $newReimbursementTotal = $totalReimbursement + collect($validated['items'])
+            ->where('type', 'Reimbursement')
+            ->sum('amount');
+
+        // Threshold validation per type
+        if ($newCashAdvanceTotal > 150000) {
+            return back()->withErrors([
+                'threshold' => 'Department daily Cash Advance threshold of ₱150,000 exceeded.'
+            ]);
+        }
+
+        if ($newReimbursementTotal > 5000) {
+            return back()->withErrors([
+                'threshold' => 'Department daily Reimbursement threshold of ₱5,000 exceeded.'
+            ]);
+        }
+
+        // Determine if this request contains any cash advance
         $hasCashAdvance = collect($validated['items'])
             ->contains(fn($item) => strtolower($item['type']) === 'cash advance');
 
         $status = $hasCashAdvance ? 'requested' : $validated['status'];
 
+        // Create petty cash record
         $pettyCash = PettyCash::create([
             'pcv_no'   => $validated['pcv_no'],
-            'user_id'  => Auth::id(),
+            'user_id'  => $user->id,
             'paid_to'  => $validated['paid_to'],
             'status'   => $status,
             'date'     => $validated['date'],
             'remarks'  => $validated['remarks'] ?? null,
         ]);
 
+        // Save each item
         foreach ($validated['items'] as $item) {
-            $receiptPath = null;
-            if (isset($item['receipt'])) {
-                $receiptPath = $item['receipt']->store('petty_cash_receipts', 'public');
-            }
+            $receiptPath = isset($item['receipt'])
+                ? $item['receipt']->store('petty_cash_receipts', 'public')
+                : null;
 
-            PettyCashItem::create([
-                'petty_cash_id' => $pettyCash->id,
-                'particulars'   => $item['particulars'],
-                'type'          => $item['type'],
-                'date'          => $item['date'],
-                'amount'        => $item['amount'],
-                'receipt'       => $receiptPath,
+            $pettyCash->items()->create([
+                'particulars' => $item['particulars'],
+                'type' => $item['type'],
+                'date' => $item['date'],
+                'amount' => $item['amount'],
+                'receipt' => $receiptPath,
             ]);
         }
 
         return back()->with('success', 'Petty cash voucher created successfully.');
     }
+
 
     public function edit(PettyCash $pettyCash)
     {
@@ -172,6 +258,43 @@ class PettyCashController extends Controller
         return back()->with('success', 'Item deleted successfully.');
     }
 
+    public function pettyCashFund()
+    {
+        $user = auth()->user();
+
+        if (!in_array($user->role, ['admin', 'accounting'])) {
+            return redirect()->back()->with('error', 'Unauthorized access.');
+        }
+
+        $pettyCashFunds = PettyCashFund::with(['user', 'department'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $users = User::select('id', 'first_name', 'last_name')->get();
+        $departments = Department::select('id', 'department_name')->get();
+
+        return Inertia::render('PettyCash/Fund/Index', [
+            'pettyCashFunds' => $pettyCashFunds,
+            'users' => $users,
+            'departments' => $departments,
+        ]);
+    }
+
+    public function storeFund(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'department_id' => 'required|exists:departments,id',
+            'fund_amount' => 'required|numeric|min:1',
+        ]);
+
+        // Assign fund_amount to fund_balance initially
+        $validated['fund_balance'] = $validated['fund_amount'];
+
+        PettyCashFund::create($validated);
+
+        return redirect()->back()->with('success', 'Petty Cash Fund assigned successfully.');
+    }
 
     private function generateNextPcvNo(): string
     {

@@ -17,8 +17,8 @@ class BursarPettycashController extends Controller
     {
         $pettyCashFund = PettyCashFund::where('user_id', Auth::id())->first();
         $pettyCash = PettyCash::with('items', 'user')
-            ->where('status', 'approved')
-            ->orderBy('date', 'desc')
+            ->where('status', 'audited')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         return Inertia::render('PettyCash/Index', [ 'pettyCash' => $pettyCash, 'pettyCashFund' => $pettyCashFund ]);
@@ -26,7 +26,7 @@ class BursarPettycashController extends Controller
 
     public function release(Request $request, PettyCash $pettyCash)
     {
-        if ($pettyCash->status !== 'approved') {
+        if ($pettyCash->status !== 'audited') {
             return back()->withErrors(['status' => 'Only approved petty cash can be released.']);
         }
 

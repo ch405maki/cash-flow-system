@@ -17,9 +17,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/petty-cash-items/{item}', [PettyCashItemController::class, 'destroy']);
     Route::put('/petty-cash/{id}/submit', [PettyCashController::class, 'submit'])->name('petty-cash.submit');
     Route::get('petty-cash/{pettyCash}/view', [PettyCashController::class, 'view'])->name('petty-cash.view');
-});
 
-Route::middleware(['auth', 'verified'])->group(function () {
+
     Route::get('/audit/petty-cash', [AuditPettyCashController::class, 'index'])->name('audit.petty-cash.index');
     Route::get('/petty-cash/{pettyCash}/view', [AuditPettyCashController::class, 'view'])->name('petty-cash.view');
 
@@ -28,14 +27,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/bursar/petty-cash', [BursarPettycashController::class, 'index'])->name('bursar.petty-cash.index');
     Route::put('/bursar/petty-cash/{pettyCash}/release', [BursarPettycashController::class, 'release'])->name('bursar.petty-cash.release');
     Route::put('/bursar/cashAdvance/{pettyCash}/release', [BursarPettycashController::class, 'releaseCashAdvance'])->name('bursar.cashAdvance.release');
-});
 
-Route::middleware(['auth', 'verified'])->group(function () {
+
     Route::post('/petty-cash/{pettyCash}/remarks', [PettyCashApprovalController::class, 'auditRemarks'])->name('petty-cash.remarks');
-    Route::post('/petty-cash/{pettyCash}/approve', [PettyCashApprovalController::class, 'executiveApproval'])->name('petty-cash.approve');
-    Route::post('/petty-cash/{pettyCash}/approveLiquidate', [PettyCashApprovalController::class, 'executiveApprovalLiquidate'])->name('petty-cash.approveLiquidate');
+    Route::post('/petty-cash/{pettyCash}/approve', [PettyCashApprovalController::class, 'auditApproval'])->name('petty-cash.approve');
+    Route::post('/petty-cash/{pettyCash}/approveLiquidate', [PettyCashApprovalController::class, 'auditApprovalLiquidate'])->name('petty-cash.approveLiquidate');
+    
+    // Petty Cash Fund
+    Route::get('/petty-cash/fund', [PettyCashController::class, 'pettyCashFund'])->name('petty-cash.fund.index');
 
-    Route::get('/petty-cash/approval', [PettyCashApprovalController::class, 'executive'])->name('petty-cash.approval.index');
+    Route::post('/petty-cash/fund', [PettyCashController::class, 'storeFund'])->name('petty-cash.fund.store');
 });
 
 

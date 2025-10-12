@@ -60,11 +60,6 @@ const executiveApprovalItems: NavItem[] = [
     href: '/purchase-orders',
     icon: ShoppingCart,
   },
-  {
-    title: 'Petty Cash',
-    href: '/petty-cash/approval',
-    icon: ReceiptText,
-  },
 ];
 
 // Purchasing Nav
@@ -334,6 +329,11 @@ const adminNavItems: NavItem[] = [
   {
     title: 'Accounts',
     href: '/configuration/account',
+    icon: FileText,
+  },
+  {
+    title: 'Petty Cash Fund',
+    href: '/petty-cash/fund',
     icon: FileText,
   },
   {
