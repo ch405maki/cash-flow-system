@@ -13,14 +13,11 @@ import {
 } from '@/components/ui/radio-group'
 
 const user = usePage().props.auth.user;
-const props = defineProps<{
-  nextPcvNo: string
-}>()
+
 
 const toast = useToast()
 
 const form = reactive({
-  pcv_no: props.nextPcvNo,
   paid_to: '',
   status: 'draft',
   date: '',
@@ -66,7 +63,6 @@ const removeItem = (index: number) => {
 const submitForm = async () => {
   try {
     const data = new FormData()
-    data.append('pcv_no', form.pcv_no)
     data.append('paid_to', form.paid_to)
     data.append('status', form.status)
     data.append('date', form.date)
@@ -116,10 +112,6 @@ const submitForm = async () => {
         <Label>Date</Label>
         <Input v-model="form.date" type="date" />
       </div>
-      <div>
-        <Label>PCV No</Label>
-        <Input v-model="form.pcv_no" disabled />
-      </div>
     </div>
     <div>
       <Label>Remarks</Label>
@@ -131,7 +123,7 @@ const submitForm = async () => {
     <div class="border rounded-xl p-4 space-y-3">
       <h3 class="text-lg font-semibold">Add Item</h3>
       <div class="space-y-2">
-        <!-- ✅ Type as Radio Group -->
+        <!-- Type as Radio Group -->
         <div>
         <Label>Type</Label>
         <RadioGroup v-model="newItem.type">

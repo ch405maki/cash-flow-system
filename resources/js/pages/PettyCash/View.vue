@@ -4,6 +4,7 @@ import { Head, router } from '@inertiajs/vue3'
 import { type BreadcrumbItem } from '@/types'
 import PettyCashView from '@/components/pettyCash/audit/PettyCashView.vue'
 import PettyCashPrint from '@/components/pettyCash/printables/PettyCash.vue'
+import PettyCashDistribution from '@/components/pettyCash/audit/PettyCashDistribution.vue'
 import { Button } from '@/components/ui/button'
 import { History, CheckCircle, } from 'lucide-vue-next'
 import { formatDateTime } from '@/lib/utils'
@@ -37,6 +38,7 @@ const user = usePage().props.auth.user;
 const props = defineProps<{
     pettyCash: any,
     pettyCashFund: Number,
+    accounts: any[]
 }>()
 
 const confirmChecked = ref(false)
@@ -307,7 +309,12 @@ console.log(props.pettyCash)
       </div>
 
       <div class="rounded-xl border p-4">
-        <PettyCashView :petty-cash="props.pettyCash" />
+        <div v-if="user.role == 'accounting'">
+          <PettyCashDistribution :petty-cash="props.pettyCash" :accounts="props.accounts" />
+        </div>
+        <div v-else>
+          <PettyCashView :petty-cash="props.pettyCash" />
+        </div>
         <!-- class="hidden print:block" -->
         <div id="print-section" class="hidden print:block">
           <PettyCashPrint :petty-cash="props.pettyCash" />

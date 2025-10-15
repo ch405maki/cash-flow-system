@@ -79,18 +79,12 @@ class PettyCashController extends Controller
 
     public function create()
     {
-        // Generate next PCV number
-        $nextPcvNo = $this->generateNextPcvNo();
-
-        return Inertia::render('PettyCash/Create', [
-            'nextPcvNo' => $nextPcvNo,
-        ]);
+        return Inertia::render('PettyCash/Create');
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'pcv_no' => 'required|string|unique:petty_cash,pcv_no',
             'paid_to' => 'required|string',
             'status' => 'required|string',
             'date' => 'required|date',
@@ -150,11 +144,15 @@ class PettyCashController extends Controller
         $hasCashAdvance = collect($validated['items'])
             ->contains(fn($item) => strtolower($item['type']) === 'cash advance');
 
+        // Generate next voucher number (CAV or PCV)
+        $pcvNo = $this->generateNextPcvNo($hasCashAdvance);
+
+        // Determine status
         $status = $hasCashAdvance ? 'requested' : $validated['status'];
 
         // Create petty cash record
         $pettyCash = PettyCash::create([
-            'pcv_no'   => $validated['pcv_no'],
+            'pcv_no'   => $pcvNo,
             'user_id'  => $user->id,
             'paid_to'  => $validated['paid_to'],
             'status'   => $status,
@@ -180,7 +178,6 @@ class PettyCashController extends Controller
         return back()->with('success', 'Petty cash voucher created successfully.');
     }
 
-
     public function edit(PettyCash $pettyCash)
     {
         $pettyCash->load('items');
@@ -198,8 +195,11 @@ class PettyCashController extends Controller
             'distributionExpenses',
         ]);
 
+        $accounts = Account::orderBy('account_title')->get();
+
         return Inertia::render('PettyCash/View', [
             'pettyCash' => $pettyCash,
+            'accounts' => $accounts,
         ]);
     }
 
@@ -296,25 +296,27 @@ class PettyCashController extends Controller
         return redirect()->back()->with('success', 'Petty Cash Fund assigned successfully.');
     }
 
-    private function generateNextPcvNo(): string
+    private function generateNextPcvNo(bool $isCashAdvance): string
     {
         $now = Carbon::now();
-        $yearMonth = $now->format('Ym'); // e.g. 202509
+        $yearMonth = $now->format('Ym');
+        $prefix = $isCashAdvance ? 'CAV' : 'PCV';
 
-        // Get last PCV number for this month
+        // Get latest record for this prefix in the current month
         $latest = PettyCash::whereYear('date', $now->year)
             ->whereMonth('date', $now->month)
+            ->where('pcv_no', 'like', "{$prefix}-%")
             ->orderByDesc('pcv_no')
             ->first();
 
         $nextCounter = 1;
 
-        if ($latest && preg_match('/PCV-\d{6}-(\d{4})$/', $latest->pcv_no, $matches)) {
+        if ($latest && preg_match("/{$prefix}-\d{6}-(\d{4})$/", $latest->pcv_no, $matches)) {
             $lastCounter = (int) $matches[1];
             $nextCounter = $lastCounter + 1;
         }
 
-        return 'PCV-' . $yearMonth . '-' . str_pad($nextCounter, 4, '0', STR_PAD_LEFT);
+        return "{$prefix}-{$yearMonth}-" . str_pad($nextCounter, 4, '0', STR_PAD_LEFT);
     }
 
     public function submit(Request $request, $id)

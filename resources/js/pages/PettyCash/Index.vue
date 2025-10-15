@@ -113,7 +113,7 @@ const fundStatus = computed(() => {
         </div>
 
         <div class="flex items-center gap-3">
-          <Popover>
+          <Popover v-if="user.role != 'bursar'">
             <PopoverTrigger as-child>
               <Button title="Daily Threshold Status" variant="outline" size="icon" class="h-9 w-9 border-orange-200 bg-orange-50 hover:bg-orange-100">
                 <Info class="h-4 w-4 text-orange-600" />
