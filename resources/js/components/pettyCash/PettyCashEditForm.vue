@@ -52,12 +52,19 @@ const fileKey = ref(0)
 const totalAmount = computed(() => {
   const allItems = [...existingItems.value, ...form.items]
 
-  return allItems.reduce((sum, item) => {
+  let total = allItems.reduce((sum, item) => {
     if (item.type === 'Liquidation' || item.type === 'Reimbursement') {
       return sum + (Number(item.amount) || 0)
     }
     return sum
   }, 0)
+
+  // Include all changes
+  for (const change of Object.values(changeByDate.value)) {
+    total += change
+  }
+
+  return total
 })
 
 
@@ -82,6 +89,31 @@ const groupedByDate = computed(() => {
 
   return map
 })
+
+const changeByDate = computed(() => {
+  const map: Record<string, number> = {}
+  const allItems = [...existingItems.value, ...form.items]
+
+  allItems.forEach(item => {
+    const key =
+      item.type === 'Liquidation'
+        ? item.liquidation_for_date || item.date
+        : item.date
+
+    if (!map[key]) map[key] = 0
+  })
+
+  Object.entries(groupedByDate.value).forEach(([date, totals]) => {
+    if (totals.cashAdvance > 0 && totals.liquidation < totals.cashAdvance) {
+      map[date] = totals.cashAdvance - totals.liquidation
+    } else {
+      map[date] = 0
+    }
+  })
+
+  return map
+})
+
 
 /**
  * Returns background class for any item based on date totals
@@ -295,6 +327,12 @@ const totalsByType = computed(() => {
           <div v-for="(amount, type) in totalsByType" :key="type" class="flex space-x-2">
             <h1 class="font-medium w-48">{{ type }}:</h1>
             <h1 class="font-bold w-48 text-right">₱{{ amount.toLocaleString() }}</h1>
+          </div>
+
+          <!-- Show change per date -->
+          <div v-for="(change, date) in changeByDate" :key="date" class="flex space-x-2 text-rose-600">
+            <h1 class="font-medium w-48">Change ({{ formatDate(date) }}):</h1>
+            <h1 class="font-bold w-48 text-right">₱{{ change.toLocaleString() }}</h1>
           </div>
           <div class="font-bold flex space-x-2">
             <h1 class="w-48">
@@ -515,6 +553,5 @@ const totalsByType = computed(() => {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-
   </div>
 </template>
