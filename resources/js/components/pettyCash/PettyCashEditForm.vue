@@ -50,21 +50,9 @@ const newItem = reactive({
 const fileKey = ref(0)
 
 const totalAmount = computed(() => {
-  const allItems = [...existingItems.value, ...form.items]
-
-  let total = allItems.reduce((sum, item) => {
-    if (item.type === 'Liquidation' || item.type === 'Reimbursement') {
-      return sum + (Number(item.amount) || 0)
-    }
-    return sum
-  }, 0)
-
-  // Include all changes
-  for (const change of Object.values(changeByDate.value)) {
-    total += change
-  }
-
-  return total
+  return existingItems.value
+    .filter(item => ['Liquidation', 'Reimbursement'].includes(item.type))
+    .reduce((sum, item) => sum + Number(item.amount || 0), 0)
 })
 
 
@@ -72,27 +60,31 @@ const totalAmount = computed(() => {
  * Compute totals per date (cash advance + liquidation combined)
  */
 const groupedByDate = computed(() => {
-  const map: Record<string, { cashAdvance: number; liquidation: number }> = {}
-  const allItems = [...existingItems.value, ...form.items]
+  const grouped: Record<string, { cashAdvance: number; liquidation: number }> = {}
 
-  allItems.forEach(item => {
-    // Group by *cash advance date* (or liquidation_for_date if type is liquidation)
-    const key = item.type === 'Liquidation'
-      ? item.liquidation_for_date || item.date
-      : item.date
+  // ✅ Only include saved items
+  existingItems.value.forEach(item => {
+    const date = item.liquidation_for_date || item.date
+    if (!grouped[date]) {
+      grouped[date] = { cashAdvance: 0, liquidation: 0 }
+    }
 
-    if (!map[key]) map[key] = { cashAdvance: 0, liquidation: 0 }
+    if (item.type === 'Cash Advance') {
+      grouped[date].cashAdvance += Number(item.amount) || 0
+    }
 
-    if (item.type === 'Cash Advance') map[key].cashAdvance += Number(item.amount)
-    if (item.type === 'Liquidation') map[key].liquidation += Number(item.amount)
+    if (item.type === 'Liquidation' || item.type === 'Reimbursement') {
+      grouped[date].liquidation += Number(item.amount) || 0
+    }
   })
 
-  return map
+  return grouped
 })
+
 
 const changeByDate = computed(() => {
   const map: Record<string, number> = {}
-  const allItems = [...existingItems.value, ...form.items]
+  const allItems = existingItems.value
 
   allItems.forEach(item => {
     const key =
@@ -145,7 +137,7 @@ const addItem = () => {
     return
   }
 
-  // 🔒 Require receipt for liquidation
+  // Require receipt for liquidation
   if (newItem.type === 'Liquidation' && !newItem.receipt) {
     toast.error('Receipt attachment is required for Liquidation items.')
     return
@@ -259,7 +251,7 @@ const canSubmitVoucher = computed(() => {
 })
 
 const totalsByType = computed(() => {
-  const allItems = [...existingItems.value, ...form.items]
+  const allItems = existingItems.value
   return allItems.reduce(
     (totals, item) => {
       const type = item.type || 'Unknown'
@@ -269,6 +261,7 @@ const totalsByType = computed(() => {
     {} as Record<string, number>
   )
 })
+
 </script>
 
 <template>
