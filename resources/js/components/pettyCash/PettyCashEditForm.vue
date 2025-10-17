@@ -137,12 +137,55 @@ const addItem = () => {
     return
   }
 
-  // Require receipt for liquidation
+  // 🔒 Require receipt for liquidation
   if (newItem.type === 'Liquidation' && !newItem.receipt) {
     toast.error('Receipt attachment is required for Liquidation items.')
     return
   }
 
+  // 🧠 Prevent adding Liquidation if no matching Cash Advance exists
+  if (newItem.type === 'Liquidation') {
+    if (!newItem.liquidation_for_date) {
+      toast.warning('Please select a Liquidation Dated value.')
+      return
+    }
+
+    // Normalize to local YYYY-MM-DD in Asia/Manila
+    const normalizeToManilaDate = (dateStr: string | null | undefined) => {
+      if (!dateStr) return null
+      try {
+        // If it's already a plain date like '2025-10-14', Date will parse it as local.
+        // If it's an ISO UTC string like '2025-10-13T16:00:00.000000Z', this will convert it to Manila date.
+        const d = new Date(dateStr)
+        // 'en-CA' gives YYYY-MM-DD format
+        return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' })
+      } catch (e) {
+        return null
+      }
+    }
+
+    const incomingNorm = normalizeToManilaDate(newItem.liquidation_for_date)
+
+    const hasMatchingCashAdvance = existingItems.value.some((item) => {
+      if (item.type !== 'Cash Advance') return false
+
+      // check both item.date and item.liquidation_for_date (if needed)
+      const itemDateNorm = normalizeToManilaDate(item.date)
+      const itemLiquidationForDateNorm = normalizeToManilaDate(item.liquidation_for_date)
+
+      // Compare incoming against the field where cash advance date is stored (likely item.date)
+      return itemDateNorm === incomingNorm
+    })
+
+    if (!hasMatchingCashAdvance) {
+      toast.error(
+        `No Cash Advance found for ${newItem.liquidation_for_date} (Manila). You cannot add a Liquidation for this date.`
+      )
+      return
+    }
+  }
+
+  // ✅ All validations passed
   form.items.push({ ...newItem })
   newItem.type = ''
   newItem.particulars = ''
@@ -152,6 +195,7 @@ const addItem = () => {
   newItem.receipt = null
   fileKey.value++
 }
+
 
 const removeNewItem = (index: number) => {
   form.items.splice(index, 1)
@@ -508,7 +552,8 @@ const totalsByType = computed(() => {
         @click="submitForm"
         variant="outline"
         :disabled="props.pettyCash.status =='submitted'"
-        >Update Petty Cash</Button>
+        >Update Petty Cash
+      </Button>
       <Button
         v-if="user.access_id == 3"
         @click="isSubmitDialogOpen = true"
@@ -519,7 +564,7 @@ const totalsByType = computed(() => {
       </Button> 
     </div>
 
-    <!-- ✅ Confirmation Dialog -->
+    <!-- Confirmation Dialog -->
     <Dialog v-model:open="isSubmitDialogOpen">
       <DialogContent>
         <DialogHeader>
