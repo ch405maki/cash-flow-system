@@ -25,6 +25,12 @@ const changeAmount = computed(() => {
   // only show positive values
   return diff > 0 ? diff : null
 })
+
+const cashAdvanceDate = computed(() => {
+  const caItem = props.pettyCash.items.find(i => i.type === 'Cash Advance')
+  return caItem ? formatDate(caItem.date) : ''
+})
+
 </script>
 
 
@@ -75,9 +81,14 @@ const changeAmount = computed(() => {
                     <span>CASH ADVANCE (CA)</span>
                 </label>
                 <label class="flex items-center space-x-1 border-r border-black p-1">
-                    <input type="checkbox" disabled :checked="props.pettyCash.items.some(i => i.type === 'Liquidation')" />
-                    <span>LIQUIDATION OF CA DATED ________</span>
+                  <input type="checkbox" disabled :checked="props.pettyCash.items.some(i => i.type === 'Liquidation')" />
+                  <span>
+                    LIQUIDATION OF CA DATED: 
+                    <span v-if="cashAdvanceDate" class="underline px-1 uppercase font-medium">{{ cashAdvanceDate }}</span>
+                    <span v-else>________</span>
+                  </span>
                 </label>
+
             </div>
         </div>
         <div class="col-span-2">
@@ -104,25 +115,40 @@ const changeAmount = computed(() => {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="item in props.pettyCash.items" :key="item.id">
+                  <!-- Actual item rows -->
+                  <tr v-for="item in props.pettyCash.items.slice(0, 9)" :key="item.id">
                     <td class="border border-black text-center p-1">{{ formatDate(item.date) }}</td>
-                    <td class="border border-black p-1">{{ item.particulars }}</td>
+                    <td class="border border-black p-1 capitalize">{{ item.particulars }} <span class="text-xs italic">- ({{ item.type }})</span></td>
                     <td class="border border-black text-right p-1">₱ {{ Number(item.amount).toFixed(2) }}</td>
-                    </tr>
-                    <!-- Filler rows -->
-                    <tr v-for="n in 6" :key="'empty-'+n">
+                  </tr>
+
+                  <!-- Filler rows (if less than 9 items) -->
+                  <tr
+                    v-for="n in Math.max(0, 9 - props.pettyCash.items.length)"
+                    :key="'empty-' + n"
+                  >
                     <td class="border border-black p-3"></td>
                     <td class="border border-black"></td>
                     <td class="border border-black"></td>
-                    </tr>
+                  </tr>
                 </tbody>
             </table>
             <div class="grid grid-cols-1  border-x border-black">
               <div class="border-b border-black">
                 <!-- Received from -->
                 <div class="p-1">
-                  <p>Received from the amount of <span class="underline px-2 font-">{{ amountToWords(changeAmount) }}</span></p>
-                  <p><span class="underline px-2">(₱ {{ changeAmount.toLocaleString() }})</span> in full/partial payment of the items listed above.</p>
+                  <p>
+                    Received from the amount of
+                    <span class="underline px-2 font-medium tracking-wider">
+                      {{ changeAmount ? amountToWords(changeAmount) : '' }}
+                    </span>
+                  </p>
+                  <p>
+                    <span class="underline px-2 font-medium tracking-wider">
+                      (₱ {{ changeAmount ? changeAmount.toLocaleString() : '' }})
+                    </span>
+                    in full/partial payment of the items listed above.
+                  </p>
                 </div>
               </div>
               <div class="border-b border-black">
@@ -131,7 +157,7 @@ const changeAmount = computed(() => {
                   <p><b>NOTE:</b> CASH ADVANCE SHALL BE LIQUIDATED WITHIN 72 HOURS; OTHERWISE, I HEREBY AUTHORIZE THE COMPANY TO DEDUCT THE FULL AMOUNT FROM MY NEAREST SUCCEEDING PAYROLL.</p>
                 </div>
               </div>
-              <div class="border-b border-black">
+              <div class="border-b border-black py-[.5px]">
                 <div class="grid grid-cols-2">
                   <p class="border-r border-black p-1">Signature: ____________________</p>
                   <p class="p-1">Date: ____________________</p>
@@ -143,12 +169,17 @@ const changeAmount = computed(() => {
         <div class="col-span-2">
           <table class="w-full table-fixed border-collapse">
             <tbody>
-              <tr v-for="item in props.pettyCash.items" :key="item.id">
+              <!-- Actual item rows (limit to 7 max) -->
+              <tr v-for="item in props.pettyCash.items.slice(0, 8)" :key="item.id">
                 <td class="border-t border-black text-center p-3"></td>
                 <td class="border border-black p-1"></td>
               </tr>
-              <!-- Filler rows -->
-              <tr v-for="n in 5" :key="'empty-'+n">
+
+              <!-- Filler rows if less than 7 -->
+              <tr
+                v-for="n in Math.max(0, 8 - props.pettyCash.items.length)"
+                :key="'empty-'+n"
+              >
                 <td class="border-y border-black p-3"></td>
                 <td class="border border-black"></td>
               </tr>
