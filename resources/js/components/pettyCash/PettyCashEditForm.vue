@@ -207,13 +207,9 @@ const submitForm = async () => {
     if (totals.cashAdvance > 0 && totals.liquidation < totals.cashAdvance) {
       hasUnderLiquidation = true
       toast.warning(
-        `⚠️ Liquidation for ${date} is less than cash advance (₱${totals.liquidation.toLocaleString()} / ₱${totals.cashAdvance.toLocaleString()}).`
+        `Liquidation for ${date} is less than cash advance (₱${totals.liquidation.toLocaleString()} / ₱${totals.cashAdvance.toLocaleString()}).`
       )
     }
-  }
-
-  if (hasUnderLiquidation) {
-    if (!confirm('Some dates are under-liquidated. Do you still want to proceed?')) return
   }
 
   const data = new FormData()
@@ -240,7 +236,6 @@ const submitForm = async () => {
     onError: () => toast.error('Failed to update voucher.')
   })
 }
-
 
 const editing = reactive<{ index: number | null; field: string | null }>({
   index: null,
@@ -305,6 +300,20 @@ const totalsByType = computed(() => {
     {} as Record<string, number>
   )
 })
+
+const isUpdateDialogOpen = ref(false)
+const updateConfirmChecked = ref(false)
+
+const handleUpdateConfirm = async () => {
+  if (!updateConfirmChecked.value) {
+    toast.warning('Please confirm before updating.')
+    return
+  }
+
+  isUpdateDialogOpen.value = false
+  updateConfirmChecked.value = false
+  await submitForm()
+}
 
 </script>
 
@@ -548,20 +557,22 @@ const totalsByType = computed(() => {
 
     <!-- Submit -->
     <div class="flex justify-end space-x-2">
-      <Button 
-        @click="submitForm"
+      <Button
+        @click="isUpdateDialogOpen = true"
         variant="outline"
-        :disabled="props.pettyCash.status =='submitted'"
-        >Update Petty Cash
+        :disabled="props.pettyCash.status == 'submitted' || form.items.length === 0"
+      >
+        Update Petty Cash
       </Button>
+
       <Button
         v-if="user.access_id == 3"
         @click="isSubmitDialogOpen = true"
         class="bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        :disabled="!canSubmitVoucher || props.pettyCash.status =='submitted'"
+        :disabled="props.pettyCash.status === 'submitted' || form.items.some(item => !item.id)"
       >
         Submit Petty Cash
-      </Button> 
+      </Button>
     </div>
 
     <!-- Confirmation Dialog -->
@@ -582,7 +593,7 @@ const totalsByType = computed(() => {
         <DialogFooter class="mt-4 flex justify-end space-x-2">
           <Button variant="outline" @click="isSubmitDialogOpen = false">Cancel</Button>
           <Button 
-            class="bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed" 
+            class="disabled:opacity-50 disabled:cursor-not-allowed" 
             :disabled="!confirmChecked" 
             @click="confirmAndSubmit"
             >
@@ -591,5 +602,39 @@ const totalsByType = computed(() => {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <!-- Update Confirmation Dialog -->
+    <Dialog v-model:open="isUpdateDialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Confirm Update</DialogTitle>
+          <DialogDescription>
+            You are about to update this Petty Cash Voucher.  
+            Please review your entries before confirming.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="flex items-center space-x-2 mt-4">
+          <Checkbox id="update-confirm" v-model:checked="updateConfirmChecked" />
+          <Label for="update-confirm">
+            I have reviewed all details and wish to proceed with the update.
+          </Label>
+        </div>
+
+        <DialogFooter class="mt-4 flex justify-end space-x-2">
+          <Button variant="outline" @click="isUpdateDialogOpen = false">
+            Cancel
+          </Button>
+          <Button
+            class="disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="!updateConfirmChecked"
+            @click="handleUpdateConfirm"
+          >
+            Confirm & Update
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
   </div>
 </template>
