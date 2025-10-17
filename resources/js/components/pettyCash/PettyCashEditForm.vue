@@ -264,6 +264,9 @@ const saveEdit = (index: number, field: string) => {
 const isSubmitDialogOpen = ref(false)
 const confirmChecked = ref(false)
 
+const isUpdateDialogOpen = ref(false)
+const updateConfirmChecked = ref(false)
+
 const confirmAndSubmit = async () => {
   if (!confirmChecked.value) {
     toast.warning('Please confirm before submitting.')
@@ -273,21 +276,20 @@ const confirmAndSubmit = async () => {
   await router.put(`/petty-cash/${props.pettyCash.id}/submit`, {}, {
     onSuccess: () => {
       toast.success('Petty Cash submitted for audit!')
+
+      // Close dialog and reset checkbox
       isSubmitDialogOpen.value = false
       confirmChecked.value = false
+
+      // Redirect after 2 seconds
+      setTimeout(() => {
+        router.visit(route('petty-cash.index'))
+      }, 2000)
     },
     onError: () => toast.error('Failed to submit petty cash.')
   })
 }
 
-const canSubmitVoucher = computed(() => {
-  return Object.values(groupedByDate.value).every(totals => {
-    // If there is no cash advance, it's fine to submit
-    if (totals.cashAdvance === 0) return true
-    // Allow submit only if liquidation >= cash advance
-    return totals.liquidation >= totals.cashAdvance
-  })
-})
 
 const totalsByType = computed(() => {
   const allItems = existingItems.value
@@ -301,8 +303,6 @@ const totalsByType = computed(() => {
   )
 })
 
-const isUpdateDialogOpen = ref(false)
-const updateConfirmChecked = ref(false)
 
 const handleUpdateConfirm = async () => {
   if (!updateConfirmChecked.value) {
@@ -389,7 +389,6 @@ const handleUpdateConfirm = async () => {
         </div>
       </div>
     </div>
-
 
     <!-- New Items Table -->
     <div v-if="form.items.length" class="border rounded-xl p-4">
@@ -484,7 +483,6 @@ const handleUpdateConfirm = async () => {
           </td>
         </tr>
       </tbody>
-
       </table>
     </div>
 

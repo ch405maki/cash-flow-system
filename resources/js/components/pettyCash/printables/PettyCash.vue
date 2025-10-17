@@ -1,9 +1,32 @@
 <script setup lang="ts">
 import { formatDate } from '@/lib/utils'
+import { computed } from 'vue';
+import { amountToWords } from '@/lib/utils'
+
 const props = defineProps<{
   pettyCash: any
 }>()
+
+// compute total by type
+const totalsByType = computed(() => {
+  return props.pettyCash.items.reduce((totals: Record<string, number>, item: any) => {
+    const type = item.type || 'Unknown'
+    totals[type] = (totals[type] || 0) + Number(item.amount || 0)
+    return totals
+  }, {})
+})
+
+// compute change amount (Cash Advance - Liquidation)
+const changeAmount = computed(() => {
+  const cashAdvance = totalsByType.value['Cash Advance'] || 0
+  const liquidation = totalsByType.value['Liquidation'] || 0
+  const diff = cashAdvance - liquidation
+
+  // only show positive values
+  return diff > 0 ? diff : null
+})
 </script>
+
 
 <template>
   <div class="p-4 text-black bg-white w-[900px] mx-auto text-xs font-sans">
@@ -12,7 +35,6 @@ const props = defineProps<{
       <h2 class="font-bold uppercase">ARELLANO LAW FOUNDATION INC.</h2>
       <p>Taft Avenue Corner Menlo Street, Pasay City</p>
     </div>
-
     <!-- Paid to + Date / PCV No -->
     <div class="grid grid-cols-5 border-x border-t border-black">
       <div class="col-span-3 border-r border-black flex justify-center p-1">
@@ -99,8 +121,8 @@ const props = defineProps<{
               <div class="border-b border-black">
                 <!-- Received from -->
                 <div class="p-1">
-                  <p>Received from the amount of ______________________________</p>
-                  <p>(P __________ ) in full/partial payment of the items listed above.</p>
+                  <p>Received from the amount of <span class="underline px-2 font-">{{ amountToWords(changeAmount) }}</span></p>
+                  <p><span class="underline px-2">(₱ {{ changeAmount.toLocaleString() }})</span> in full/partial payment of the items listed above.</p>
                 </div>
               </div>
               <div class="border-b border-black">
