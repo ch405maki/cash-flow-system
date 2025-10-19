@@ -4,6 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
 import StatsCards from '@/components/dashboard/department/StatsCards.vue';
 import RecentRequestsTable from '@/components/dashboard/department/RecentRequestsTable.vue';
+import PageHeader from '@/components/PageHeader.vue';
 
 const props = defineProps<{
     isDepartmentUser: boolean;
@@ -32,14 +33,13 @@ const breadcrumbs: BreadcrumbItem[] = [
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-            <h1 class="text-lg font-medium">
-                Department Dashboard
-                <p class="text-sm text-muted-foreground capitalize">Welcome, {{ username }}</p>
-            </h1>
+            <PageHeader 
+                class="capitalize"
+                :title="`Welcome, ${username}`" 
+                subtitle="Department Dashboard"
+            />
             
             <StatsCards :status-counts="statusCounts" />
-            
-            <h1 class="text-lg font-medium">Recent Requests</h1>
             
             <RecentRequestsTable 
                 :is-department-user="isDepartmentUser" 

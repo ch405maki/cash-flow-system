@@ -2,7 +2,7 @@
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { CreditCard, Hash, CalendarCheck } from 'lucide-vue-next'
-
+import PageHeader from '@/components/PageHeader.vue';
 
 defineProps<{
   form: any,
@@ -12,20 +12,12 @@ defineProps<{
 </script>
 
 <template>
-    <div class="flex flex-col sm:flex-row justify-between items-start gap-4 py-4">
-        <!-- Left side - Title and description -->
-        <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2">
-            <h1 class="text-2xl font-semibold leading-none tracking-tight truncate">
-                Voucher: {{ voucherNo }}
-            </h1>
-            </div>
-            <p class="text-sm text-muted-foreground mt-1 flex items-center gap-1">
-            <span>Update voucher details</span>
-            </p>
-        </div>
+    <div class="py-4">
+        <PageHeader 
+            :title="`Voucher # ${ voucherNo }`" 
+            subtitle="Update voucher details"
+        />
     </div>
-
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <!-- Column 1 -->
@@ -82,7 +74,7 @@ defineProps<{
                 <Label for="check_date" class="flex items-center gap-1.5 text-red-600">
                     <CalendarCheck class="h-4 w-4" /><span>Check Date *</span></Label>
                 <Input id="check_date" type="date" 
-                v-model="form.check_date" required />
+                v-model="form.check_date" />
             </div>
         </div>
     </div>

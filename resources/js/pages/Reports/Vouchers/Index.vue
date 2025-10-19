@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Eraser, Printer, Rocket, X, FileDown } from 'lucide-vue-next';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { formatCurrency } from '@/lib/utils';
+import { Label } from '@/components/ui/label'
 import {
   Table,
   TableBody,
@@ -205,15 +206,15 @@ function goToVoucher(id: number) {
       <!-- Filters -->
       <div class="grid grid-cols-1 gap-4 md:grid-cols-12">
         <div class="col-span-3">
-          <label class="block text-sm font-medium mb-1">Start Date</label>
+          <Label class="block text-sm font-medium mb-1">Start Date</Label>
           <Input type="date" v-model="startDate" class="h-8" />
         </div>
         <div class="col-span-3">
-          <label class="block text-sm font-medium mb-1">End Date</label>
+          <Label class="block text-sm font-medium mb-1">End Date</Label>
           <Input type="date" v-model="endDate" class="h-8" />
         </div>
-        <div class="col-span-5">
-          <label class="block text-sm font-medium mb-1">Voucher Type</label>
+        <div class="col-span-4">
+          <Label class="block text-sm font-medium mb-1">Voucher Type</Label>
           <Select v-model="selectedType" class="h-8">
             <SelectTrigger class="h-8 w-full">
               <SelectValue placeholder="All Voucher Types" />
@@ -224,7 +225,7 @@ function goToVoucher(id: number) {
             </SelectContent>
           </Select>
         </div>
-        <div class="col-span-1 flex items-end">
+        <div class="col-span-2 flex items-end">
           <Button variant="destructive" class="h-8" @click="() => { startDate=''; endDate=''; selectedType='all'; }">
             <Eraser class="mr-1 h-4 w-4"/>Clear
           </Button>
@@ -232,47 +233,45 @@ function goToVoucher(id: number) {
       </div>
 
       <!-- Table -->
-      <div class="relative border border-sidebar-border/70 dark:border-sidebar-border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead class="w-32">Voucher Date</TableHead>
-              <TableHead class="w-32">Voucher No</TableHead>
-              <TableHead class="w-32 text-right">Check Amount</TableHead>
-              <TableHead class="w-48">Payee</TableHead>
-              <TableHead class="w-64">Purpose</TableHead>
-              <TableHead class="w-48">Account</TableHead>
-              <TableHead class="w-32 text-right">Amount (₱)</TableHead>
-              <TableHead class="w-40">Charging Tag</TableHead>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead class="w-32">Voucher Date</TableHead>
+            <TableHead class="w-32">Voucher No</TableHead>
+            <TableHead class="w-32 text-right">Check Amount</TableHead>
+            <TableHead class="w-48">Payee</TableHead>
+            <TableHead class="w-64">Purpose</TableHead>
+            <TableHead class="w-48">Account</TableHead>
+            <TableHead class="w-32 text-right">Amount (₱)</TableHead>
+            <TableHead class="w-40">Charging Tag</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <template v-for="v in filteredVouchers" :key="v.id">
+            <TableRow class="bg-muted/50 hover:bg-muted/70">
+              <TableCell>{{ formatDate(v.voucher_date) }}</TableCell>
+              <TableCell>
+                <button class="hover:text-purple-700 hover:underline font-medium" @click.stop="goToVoucher(v.id)">
+                  {{ v.voucher_no }}
+                </button>
+              </TableCell>
+              <TableCell class="text-right font-medium">{{ formatCurrency(v.check_amount) }}</TableCell>
+              <TableCell class="truncate" :title="v.payee">{{ v.payee }}</TableCell>
+              <TableCell class="truncate" :title="v.purpose">{{ v.purpose }}</TableCell>
+              <TableCell colspan="3" class="text-muted-foreground text-sm">
+                {{ v.details.length }} account{{ v.details.length > 1 ? 's' : '' }}
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            <template v-for="v in filteredVouchers" :key="v.id">
-              <TableRow class="bg-muted/50 hover:bg-muted/70">
-                <TableCell>{{ formatDate(v.voucher_date) }}</TableCell>
-                <TableCell>
-                  <button class="hover:text-purple-700 hover:underline font-medium" @click.stop="goToVoucher(v.id)">
-                    {{ v.voucher_no }}
-                  </button>
-                </TableCell>
-                <TableCell class="text-right font-medium">{{ formatCurrency(v.check_amount) }}</TableCell>
-                <TableCell class="truncate" :title="v.payee">{{ v.payee }}</TableCell>
-                <TableCell class="truncate" :title="v.purpose">{{ v.purpose }}</TableCell>
-                <TableCell colspan="3" class="text-muted-foreground text-sm">
-                  {{ v.details.length }} account{{ v.details.length > 1 ? 's' : '' }}
-                </TableCell>
-              </TableRow>
-              <TableRow v-for="detail in v.details" :key="detail.id" class="bg-muted/20">
-                <TableCell></TableCell>
-                <TableCell colspan="4"></TableCell>
-                <TableCell class="text-sm">{{ detail.account?.account_title || 'Unspecified' }}</TableCell>
-                <TableCell class="text-right text-sm font-medium">{{ formatCurrency(detail.amount || 0) }}</TableCell>
-                <TableCell class="text-sm">{{ detail.charging_tag }}</TableCell>
-              </TableRow>
-            </template>
-          </TableBody>
-        </Table>
-      </div>
+            <TableRow v-for="detail in v.details" :key="detail.id" class="bg-muted/20">
+              <TableCell></TableCell>
+              <TableCell colspan="4"></TableCell>
+              <TableCell class="text-sm">{{ detail.account?.account_title || 'Unspecified' }}</TableCell>
+              <TableCell class="text-right text-sm font-medium">{{ formatCurrency(detail.amount || 0) }}</TableCell>
+              <TableCell class="text-sm">{{ detail.charging_tag }}</TableCell>
+            </TableRow>
+          </template>
+        </TableBody>
+      </Table>
 
       <!-- Empty -->
       <div v-if="filteredVouchers.length === 0" class="text-center py-12 text-muted-foreground">

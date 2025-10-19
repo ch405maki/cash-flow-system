@@ -4,6 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
 import PurchaseOrderTable from '@/components/purchaseOrder/PurchaseOrderTable.vue';
 import { Button } from '@/components/ui/button';
+import PageHeader from '@/components/PageHeader.vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {

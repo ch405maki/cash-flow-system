@@ -11,6 +11,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { CirclePlus, Trash, Send, ChevronLeft } from 'lucide-vue-next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from '@/components/ui/table';
+import PageHeader from '@/components/PageHeader.vue';
+
 
 const toast = useToast();
 
@@ -185,11 +187,14 @@ const capitalizeWords = (str: string): string => {
 </script>
 
 <template>
-  <div>
+  <div class="space-y-4">
+    <PageHeader 
+      title="New Request" 
+      subtitle="Create a new request with items and details"
+    />
     <form @submit.prevent="showConfirmation" class="space-y-6">
       <!-- Purpose -->
       <div>
-        <h2 class="text-xl font-semibold">New Request</h2>
         <Label for="purpose">Purpose</Label>
         <Textarea
           id="purpose"
@@ -201,10 +206,10 @@ const capitalizeWords = (str: string): string => {
       </div>
 
       <!-- Items Section -->
-      <div class="space-y-2">
-        <div class="flex items-center justify-between">
-          <h3 class="text-xl font-semibold">Request Items</h3>
-        </div>
+      <div>
+        <PageHeader 
+          title="Request Items" 
+        />
 
         <!-- New Item Form -->
         <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
@@ -265,7 +270,7 @@ const capitalizeWords = (str: string): string => {
         </div>
 
         <!-- Items Table -->
-        <div class="max-h-64 overflow-y-auto border rounded-lg mt-4">
+        <div class="max-h-64 overflow-y-auto mt-4">
           <Table>
             <TableHeader class="sticky top-0">
               <TableRow>
@@ -417,7 +422,7 @@ const capitalizeWords = (str: string): string => {
           <div class="space-y-2">
             <Label class="text-sm sm:text-base text-muted-foreground">Items</Label>
             <!-- In the Preview Dialog section -->
-            <div class="border rounded-lg overflow-hidden">
+            <div class="overflow-hidden">
               <div class="max-h-[60vh] overflow-y-auto">
                 <Table>
                   <TableHeader class="sticky top-0">

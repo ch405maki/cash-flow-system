@@ -27,7 +27,7 @@ defineProps({
 <template>
     <div class="space-y-2">
         <h3 class="font-medium capitalize">{{ voucher.type }} Details</h3>
-        <Table class="w-full text-sm border border-border rounded-md">
+        <Table>
             <TableHeader>
                 <TableRow>
                     <TableHead class="border-r">Charged</TableHead>

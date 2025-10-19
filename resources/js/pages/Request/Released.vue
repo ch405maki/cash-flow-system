@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import RejectedRequestTable from '@/components/requests/RejectedRequestTable.vue';
 import { type BreadcrumbItem } from '@/types';
+import PageHeader from '@/components/PageHeader.vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -36,9 +37,10 @@ const props = defineProps({
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
-      <div class="flex justify-between items-center">
-        <h1 class="text-xl font-bold">Released Requests</h1>
-      </div>
+      <PageHeader 
+        title="Released Requests" 
+        subtitle="Active requests currently being processed"
+      />
 
       <RejectedRequestTable :requests="requests" />
     </div>

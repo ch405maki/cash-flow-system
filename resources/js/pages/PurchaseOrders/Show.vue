@@ -46,6 +46,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useForm } from '@inertiajs/vue3'
 import { BellRing, X, ReceiptText,  Send , AlertCircle,Ticket ,Printer, ArrowLeft, Check, History, CheckCircle, BadgeCheck  } from 'lucide-vue-next';
 import { router } from '@inertiajs/vue3';
+import PageHeader from '@/components/PageHeader.vue';
 
 const toast = useToast()
 
@@ -222,7 +223,10 @@ function openPreview(file: any) {
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold">Purchase Order: {{ purchaseOrder.po_no }}</h1>
+        <PageHeader 
+          :title="`Purchase Order: # ${ purchaseOrder.po_no }`" 
+          subtitle="Purchase order details"
+        />
         <div class="space-x-2 flex space-x-2">
           <Button 
               v-if="authUser.role === 'accounting'"
@@ -416,8 +420,6 @@ function openPreview(file: any) {
                   </div>
                 </div>
               </PopoverContent>
-
-
             </Popover>
           </div>
 
@@ -555,8 +557,101 @@ function openPreview(file: any) {
         </button>
       </Alert>
 
-      <div id="print-section">
-      <div class="hidden print:block">
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-1">
+          <Table>
+            <TableBody>
+              <TableRow class="border-b">
+                <TableCell class="p-2 font-medium text-muted-foreground border-r w-48">
+                  COMPANY NAME:
+                </TableCell>
+                <TableCell class="p-2 uppercase border-r w-xl">
+                  {{ purchaseOrder.payee }}
+                </TableCell>
+                <TableCell class="p-2 font-medium text-muted-foreground border-r w-40">
+                  P.O. NUMBER:
+                </TableCell>
+                <TableCell class="p-2 w-40 border-r">
+                  {{ purchaseOrder.po_no }}
+                </TableCell>
+                <TableCell class="p-2 w-40 font-medium text-muted-foreground border-r">
+                  P.O. DATE:
+                </TableCell>
+                <TableCell class="p-2 w-40">
+                  {{ formatDate(purchaseOrder.date) }}
+                </TableCell>
+              </TableRow>
+              <TableRow class="border-b">
+                <TableCell class="p-2 font-medium text-muted-foreground border-r">
+                  CHECK PAYABLE TO:
+                </TableCell>
+                <TableCell class="p-2 uppercase border-r">
+                  {{ purchaseOrder.check_payable_to }}
+                </TableCell>
+                <TableCell class="p-2 font-medium text-muted-foreground border-r">
+                  TIN:
+                </TableCell>
+                <TableCell class="p-2">
+                  {{ purchaseOrder.tin_no }}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+
+        <!-- Items Table -->
+        <Table>
+          <TableCaption>      
+            Nothing Follows
+          </TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Quantity</TableHead>
+              <TableHead>Unit/S</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead class="text-right">Unit Price</TableHead>
+              <TableHead class="text-right">Amount</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow v-for="item in purchaseOrder.details" :key="item.id">
+              <TableCell>{{ item.quantity }}</TableCell>
+              <TableCell> {{ item.unit }}</TableCell>
+              <TableCell>{{ item.item_description }}</TableCell>
+              <TableCell class="text-right">{{ formatCurrency(item.unit_price) }}</TableCell>
+              <TableCell class="text-right font-medium">{{ formatCurrency(item.amount) }}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell colspan="4" class="text-right font-medium">Total</TableCell>
+              <TableCell class="text-right font-bold">
+                {{ formatCurrency(purchaseOrder.amount) }}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+    <!-- Dialog selected file -->
+    <!-- Preview Dialog -->
+    <Dialog v-model:open="previewOpen">
+      <DialogContent class="max-w-4xl h-[80vh]">
+        <div class="h-full py-4">
+          <iframe
+            v-if="previewFile?.type === 'application/pdf'"
+            :src="previewFile?.path"
+            class="w-full h-full border rounded"
+          ></iframe>
+          <p v-else class="text-center text-muted-foreground">
+            Preview not available for this file type
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
+  </AppLayout>
+
+    <!-- Print section -->
+    <div id="print-section" class="hidden print:block">
+      <div>
         <FormHeader text="Purchase Order" :bordered="false"  />
       </div>
       <div class="grid grid-cols-1 md:grid-cols-1">
@@ -582,39 +677,41 @@ function openPreview(file: any) {
       </div>
 
       <!-- Items Table -->
-      <Table class="w-full text-sm border border-border rounded-md mt-2">
-        <TableCaption>      
-          <h3 class="flex items-center w-full mt-2">
-            <span class="flex-grow border-t border-dashed border-gray-300"></span>
-            <span class="mx-3 text-xs font-medium">Nothing Follows</span>
-            <span class="flex-grow border-t border-dashed border-gray-300"></span>
-          </h3>
-        </TableCaption>
-        <TableBody>
-          <TableRow>
-            <TableCell>Quantity</TableCell>
-            <TableCell>Unit/S</TableCell>
-            <TableCell>Description</TableCell>
-            <TableCell class="text-right">Unit Price</TableCell>
-            <TableCell class="text-right font-medium">Amount</TableCell>
-          </TableRow>
-          <TableRow v-for="item in purchaseOrder.details" :key="item.id">
-            <TableCell>{{ item.quantity }}</TableCell>
-            <TableCell> {{ item.unit }}</TableCell>
-            <TableCell>{{ item.item_description }}</TableCell>
-            <TableCell class="text-right">{{ formatCurrency(item.unit_price) }}</TableCell>
-            <TableCell class="text-right font-medium">{{ formatCurrency(item.amount) }}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell colspan="4" class="text-right font-medium">Total</TableCell>
-            <TableCell class="text-right font-bold">
+      <table class="border border-gray-200 w-full">
+        <thead>
+          <tr class="border-b border-gray-200">
+            <th class="text-left p-2 font-medium">Quantity</th>
+            <th class="text-left p-2 font-medium">Unit/S</th>
+            <th class="text-left p-2 font-medium">Description</th>
+            <th class="text-right p-2 font-medium">Unit Price</th>
+            <th class="text-right p-2 font-medium">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in purchaseOrder.details" :key="item.id" class="border-b border-gray-100">
+            <td class="p-2">{{ item.quantity }}</td>
+            <td class="p-2">{{ item.unit }}</td>
+            <td class="p-2">{{ item.item_description }}</td>
+            <td class="p-2 text-right">{{ formatCurrency(item.unit_price) }}</td>
+            <td class="p-2 text-right font-medium">{{ formatCurrency(item.amount) }}</td>
+          </tr>
+          <tr class="border-t border-gray-200">
+            <td colspan="4" class="p-2 text-right font-medium">Total</td>
+            <td class="p-2 text-right font-bold">
               {{ formatCurrency(purchaseOrder.amount) }}
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <caption>
+        <div class="flex items-center w-full mt-2 px-4">
+          <span class="flex-grow border-t border-dashed border-gray-300"></span>
+          <span class="mx-3 text-xs font-medium">Nothing Follows</span>
+          <span class="flex-grow border-t border-dashed border-gray-300"></span>
+        </div>
+      </caption>
 
-      <div class="hidden print:block" >
+      <div>
         <div class="flex justify-between mt-12 items-center">
             <div class="text-left w-1/2">
               <div class="flex  items-center text-sm  space-x-[55px]">
@@ -670,25 +767,7 @@ function openPreview(file: any) {
           </div>
           <p class="italic text-zinc-400 text-sm">{{ authUser.name }}</p>
         </div>
-      </div>
     </div>
-    <!-- Dialog selected file -->
-    <!-- Preview Dialog -->
-    <Dialog v-model:open="previewOpen">
-      <DialogContent class="max-w-4xl h-[80vh]">
-        <div class="h-full py-4">
-          <iframe
-            v-if="previewFile?.type === 'application/pdf'"
-            :src="previewFile?.path"
-            class="w-full h-full border rounded"
-          ></iframe>
-          <p v-else class="text-center text-muted-foreground">
-            Preview not available for this file type
-          </p>
-        </div>
-      </DialogContent>
-    </Dialog>
-  </AppLayout>
 </template>
 
 <style scoped>

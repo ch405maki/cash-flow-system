@@ -50,14 +50,9 @@ const newItem = reactive({
 const fileKey = ref(0)
 
 const totalAmount = computed(() => {
-  const allItems = [...existingItems.value, ...form.items]
-
-  return allItems.reduce((sum, item) => {
-    if (item.type === 'Liquidation' || item.type === 'Reimbursement') {
-      return sum + (Number(item.amount) || 0)
-    }
-    return sum
-  }, 0)
+  return existingItems.value
+    .filter(item => ['Liquidation', 'Reimbursement'].includes(item.type))
+    .reduce((sum, item) => sum + Number(item.amount || 0), 0)
 })
 
 
@@ -65,23 +60,52 @@ const totalAmount = computed(() => {
  * Compute totals per date (cash advance + liquidation combined)
  */
 const groupedByDate = computed(() => {
-  const map: Record<string, { cashAdvance: number; liquidation: number }> = {}
-  const allItems = [...existingItems.value, ...form.items]
+  const grouped: Record<string, { cashAdvance: number; liquidation: number }> = {}
+
+  // ✅ Only include saved items
+  existingItems.value.forEach(item => {
+    const date = item.liquidation_for_date || item.date
+    if (!grouped[date]) {
+      grouped[date] = { cashAdvance: 0, liquidation: 0 }
+    }
+
+    if (item.type === 'Cash Advance') {
+      grouped[date].cashAdvance += Number(item.amount) || 0
+    }
+
+    if (item.type === 'Liquidation' || item.type === 'Reimbursement') {
+      grouped[date].liquidation += Number(item.amount) || 0
+    }
+  })
+
+  return grouped
+})
+
+
+const changeByDate = computed(() => {
+  const map: Record<string, number> = {}
+  const allItems = existingItems.value
 
   allItems.forEach(item => {
-    // Group by *cash advance date* (or liquidation_for_date if type is liquidation)
-    const key = item.type === 'Liquidation'
-      ? item.liquidation_for_date || item.date
-      : item.date
+    const key =
+      item.type === 'Liquidation'
+        ? item.liquidation_for_date || item.date
+        : item.date
 
-    if (!map[key]) map[key] = { cashAdvance: 0, liquidation: 0 }
+    if (!map[key]) map[key] = 0
+  })
 
-    if (item.type === 'Cash Advance') map[key].cashAdvance += Number(item.amount)
-    if (item.type === 'Liquidation') map[key].liquidation += Number(item.amount)
+  Object.entries(groupedByDate.value).forEach(([date, totals]) => {
+    if (totals.cashAdvance > 0 && totals.liquidation < totals.cashAdvance) {
+      map[date] = totals.cashAdvance - totals.liquidation
+    } else {
+      map[date] = 0
+    }
   })
 
   return map
 })
+
 
 /**
  * Returns background class for any item based on date totals
@@ -119,6 +143,49 @@ const addItem = () => {
     return
   }
 
+  // 🧠 Prevent adding Liquidation if no matching Cash Advance exists
+  if (newItem.type === 'Liquidation') {
+    if (!newItem.liquidation_for_date) {
+      toast.warning('Please select a Liquidation Dated value.')
+      return
+    }
+
+    // Normalize to local YYYY-MM-DD in Asia/Manila
+    const normalizeToManilaDate = (dateStr: string | null | undefined) => {
+      if (!dateStr) return null
+      try {
+        // If it's already a plain date like '2025-10-14', Date will parse it as local.
+        // If it's an ISO UTC string like '2025-10-13T16:00:00.000000Z', this will convert it to Manila date.
+        const d = new Date(dateStr)
+        // 'en-CA' gives YYYY-MM-DD format
+        return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' })
+      } catch (e) {
+        return null
+      }
+    }
+
+    const incomingNorm = normalizeToManilaDate(newItem.liquidation_for_date)
+
+    const hasMatchingCashAdvance = existingItems.value.some((item) => {
+      if (item.type !== 'Cash Advance') return false
+
+      // check both item.date and item.liquidation_for_date (if needed)
+      const itemDateNorm = normalizeToManilaDate(item.date)
+      const itemLiquidationForDateNorm = normalizeToManilaDate(item.liquidation_for_date)
+
+      // Compare incoming against the field where cash advance date is stored (likely item.date)
+      return itemDateNorm === incomingNorm
+    })
+
+    if (!hasMatchingCashAdvance) {
+      toast.error(
+        `No Cash Advance found for ${newItem.liquidation_for_date} (Manila). You cannot add a Liquidation for this date.`
+      )
+      return
+    }
+  }
+
+  // ✅ All validations passed
   form.items.push({ ...newItem })
   newItem.type = ''
   newItem.particulars = ''
@@ -128,6 +195,7 @@ const addItem = () => {
   newItem.receipt = null
   fileKey.value++
 }
+
 
 const removeNewItem = (index: number) => {
   form.items.splice(index, 1)
@@ -139,13 +207,9 @@ const submitForm = async () => {
     if (totals.cashAdvance > 0 && totals.liquidation < totals.cashAdvance) {
       hasUnderLiquidation = true
       toast.warning(
-        `⚠️ Liquidation for ${date} is less than cash advance (₱${totals.liquidation.toLocaleString()} / ₱${totals.cashAdvance.toLocaleString()}).`
+        `Liquidation for ${date} is less than cash advance (₱${totals.liquidation.toLocaleString()} / ₱${totals.cashAdvance.toLocaleString()}).`
       )
     }
-  }
-
-  if (hasUnderLiquidation) {
-    if (!confirm('Some dates are under-liquidated. Do you still want to proceed?')) return
   }
 
   const data = new FormData()
@@ -172,7 +236,6 @@ const submitForm = async () => {
     onError: () => toast.error('Failed to update voucher.')
   })
 }
-
 
 const editing = reactive<{ index: number | null; field: string | null }>({
   index: null,
@@ -201,6 +264,9 @@ const saveEdit = (index: number, field: string) => {
 const isSubmitDialogOpen = ref(false)
 const confirmChecked = ref(false)
 
+const isUpdateDialogOpen = ref(false)
+const updateConfirmChecked = ref(false)
+
 const confirmAndSubmit = async () => {
   if (!confirmChecked.value) {
     toast.warning('Please confirm before submitting.')
@@ -210,24 +276,23 @@ const confirmAndSubmit = async () => {
   await router.put(`/petty-cash/${props.pettyCash.id}/submit`, {}, {
     onSuccess: () => {
       toast.success('Petty Cash submitted for audit!')
+
+      // Close dialog and reset checkbox
       isSubmitDialogOpen.value = false
       confirmChecked.value = false
+
+      // Redirect after 2 seconds
+      setTimeout(() => {
+        router.visit(route('petty-cash.index'))
+      }, 2000)
     },
     onError: () => toast.error('Failed to submit petty cash.')
   })
 }
 
-const canSubmitVoucher = computed(() => {
-  return Object.values(groupedByDate.value).every(totals => {
-    // If there is no cash advance, it's fine to submit
-    if (totals.cashAdvance === 0) return true
-    // Allow submit only if liquidation >= cash advance
-    return totals.liquidation >= totals.cashAdvance
-  })
-})
 
 const totalsByType = computed(() => {
-  const allItems = [...existingItems.value, ...form.items]
+  const allItems = existingItems.value
   return allItems.reduce(
     (totals, item) => {
       const type = item.type || 'Unknown'
@@ -237,6 +302,19 @@ const totalsByType = computed(() => {
     {} as Record<string, number>
   )
 })
+
+
+const handleUpdateConfirm = async () => {
+  if (!updateConfirmChecked.value) {
+    toast.warning('Please confirm before updating.')
+    return
+  }
+
+  isUpdateDialogOpen.value = false
+  updateConfirmChecked.value = false
+  await submitForm()
+}
+
 </script>
 
 <template>
@@ -296,6 +374,12 @@ const totalsByType = computed(() => {
             <h1 class="font-medium w-48">{{ type }}:</h1>
             <h1 class="font-bold w-48 text-right">₱{{ amount.toLocaleString() }}</h1>
           </div>
+
+          <!-- Show change per date -->
+          <div v-for="(change, date) in changeByDate" :key="date" class="flex space-x-2 text-rose-600">
+            <h1 class="font-medium w-48">Change ({{ formatDate(date) }}):</h1>
+            <h1 class="font-bold w-48 text-right">₱{{ change.toLocaleString() }}</h1>
+          </div>
           <div class="font-bold flex space-x-2">
             <h1 class="w-48">
               Grand Total: 
@@ -305,7 +389,6 @@ const totalsByType = computed(() => {
         </div>
       </div>
     </div>
-
 
     <!-- New Items Table -->
     <div v-if="form.items.length" class="border rounded-xl p-4">
@@ -400,7 +483,6 @@ const totalsByType = computed(() => {
           </td>
         </tr>
       </tbody>
-
       </table>
     </div>
 
@@ -473,22 +555,25 @@ const totalsByType = computed(() => {
 
     <!-- Submit -->
     <div class="flex justify-end space-x-2">
-      <Button 
-        @click="submitForm"
+      <Button
+        @click="isUpdateDialogOpen = true"
         variant="outline"
-        :disabled="props.pettyCash.status =='submitted'"
-        >Update Petty Cash</Button>
+        :disabled="props.pettyCash.status == 'submitted' || form.items.length === 0"
+      >
+        Update Petty Cash
+      </Button>
+
       <Button
         v-if="user.access_id == 3"
         @click="isSubmitDialogOpen = true"
         class="bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        :disabled="!canSubmitVoucher || props.pettyCash.status =='submitted'"
+        :disabled="props.pettyCash.status === 'submitted' || form.items.some(item => !item.id)"
       >
         Submit Petty Cash
-      </Button> 
+      </Button>
     </div>
 
-    <!-- ✅ Confirmation Dialog -->
+    <!-- Confirmation Dialog -->
     <Dialog v-model:open="isSubmitDialogOpen">
       <DialogContent>
         <DialogHeader>
@@ -506,11 +591,44 @@ const totalsByType = computed(() => {
         <DialogFooter class="mt-4 flex justify-end space-x-2">
           <Button variant="outline" @click="isSubmitDialogOpen = false">Cancel</Button>
           <Button 
-            class="bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed" 
+            class="disabled:opacity-50 disabled:cursor-not-allowed" 
             :disabled="!confirmChecked" 
             @click="confirmAndSubmit"
             >
             Confirm & Submit
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <!-- Update Confirmation Dialog -->
+    <Dialog v-model:open="isUpdateDialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Confirm Update</DialogTitle>
+          <DialogDescription>
+            You are about to update this Petty Cash Voucher.  
+            Please review your entries before confirming.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="flex items-center space-x-2 mt-4">
+          <Checkbox id="update-confirm" v-model:checked="updateConfirmChecked" />
+          <Label for="update-confirm">
+            I have reviewed all details and wish to proceed with the update.
+          </Label>
+        </div>
+
+        <DialogFooter class="mt-4 flex justify-end space-x-2">
+          <Button variant="outline" @click="isUpdateDialogOpen = false">
+            Cancel
+          </Button>
+          <Button
+            class="disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="!updateConfirmChecked"
+            @click="handleUpdateConfirm"
+          >
+            Confirm & Update
           </Button>
         </DialogFooter>
       </DialogContent>

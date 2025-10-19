@@ -11,16 +11,12 @@ import {
   RadioGroup,
   RadioGroupItem
 } from '@/components/ui/radio-group'
+import { Save } from 'lucide-vue-next';
 
 const user = usePage().props.auth.user;
-const props = defineProps<{
-  nextPcvNo: string
-}>()
-
 const toast = useToast()
 
 const form = reactive({
-  pcv_no: props.nextPcvNo,
   paid_to: '',
   status: 'draft',
   date: '',
@@ -42,6 +38,27 @@ const totalAmount = computed(() => {
   return form.items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
 })
 
+// Reset form function
+const resetForm = () => {
+  form.paid_to = ''
+  form.status = 'draft'
+  form.date = ''
+  form.remarks = ''
+  form.items = []
+  
+  resetNewItem()
+}
+
+// Reset new item function
+const resetNewItem = () => {
+  newItem.type = ''
+  newItem.particulars = ''
+  newItem.date = ''
+  newItem.amount = 0
+  newItem.receipt = null
+  fileKey.value++
+}
+
 const addItem = () => {
   if (!newItem.type || !newItem.particulars || !newItem.date || !newItem.amount) {
     toast.warning('Please fill in all item fields before adding.')
@@ -49,14 +66,7 @@ const addItem = () => {
   }
 
   form.items.push({ ...newItem })
-
-  // reset
-  newItem.type = ''
-  newItem.particulars = ''
-  newItem.date = ''
-  newItem.amount = 0
-  newItem.receipt = null
-  fileKey.value++
+  resetNewItem()
 }
 
 const removeItem = (index: number) => {
@@ -66,7 +76,6 @@ const removeItem = (index: number) => {
 const submitForm = async () => {
   try {
     const data = new FormData()
-    data.append('pcv_no', form.pcv_no)
     data.append('paid_to', form.paid_to)
     data.append('status', form.status)
     data.append('date', form.date)
@@ -83,14 +92,17 @@ const submitForm = async () => {
     })
 
     await router.post('/petty-cash', data, {
-      onSuccess: () => toast.success('🎉 Petty Cash Voucher created successfully!'),
+      onSuccess: () => {
+        toast.success('Petty Cash Voucher created successfully!')
+        resetForm() // Reset the form after successful submission
+      },
       onError: (errors) => {
         if (errors.threshold) {
-          toast.error(`🚫 ${errors.threshold}`, {
+          toast.error(`${errors.threshold}`, {
             timeout: 5000,
           })
         } else {
-          toast.error('❌ Please check your form fields.', {
+          toast.error('Please check your form fields.', {
             timeout: 4000,
           })
         }
@@ -116,10 +128,6 @@ const submitForm = async () => {
         <Label>Date</Label>
         <Input v-model="form.date" type="date" />
       </div>
-      <div>
-        <Label>PCV No</Label>
-        <Input v-model="form.pcv_no" disabled />
-      </div>
     </div>
     <div>
       <Label>Remarks</Label>
@@ -131,7 +139,7 @@ const submitForm = async () => {
     <div class="border rounded-xl p-4 space-y-3">
       <h3 class="text-lg font-semibold">Add Item</h3>
       <div class="space-y-2">
-        <!-- ✅ Type as Radio Group -->
+        <!-- Type as Radio Group -->
         <div>
         <Label>Type</Label>
         <RadioGroup v-model="newItem.type">
@@ -145,10 +153,6 @@ const submitForm = async () => {
                 <RadioGroupItem id="cash-advance" value="Cash Advance" />
                 <Label for="cash-advance">Cash Advance</Label>
               </div>
-              <!-- <div class="flex items-center space-x-2">
-                <RadioGroupItem id="liquidation" value="Liquidation" />
-                <Label for="liquidation">Liquidation</Label>
-              </div> -->
             </div>
           </div>
         </RadioGroup>
@@ -196,47 +200,48 @@ const submitForm = async () => {
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Item List Table -->
-    <div v-if="form.items.length > 0" class="border rounded-xl p-4">
-      <h3 class="text-lg font-semibold mb-3">Item List</h3>
-      <table class="w-full border-collapse">
-        <thead class="bg-muted">
-          <tr>
-            <th class="text-left p-2 border-b">Type</th>
-            <th class="text-left p-2 border-b">Particulars</th>
-            <th class="text-left p-2 border-b">Date</th>
-            <th class="text-right p-2 border-b">Amount</th>
-            <th class="text-left p-2 border-b">Receipt</th>
-            <th class="p-2 border-b text-center">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(item, index) in form.items" :key="index" class="border-b">
-            <td class="p-2">{{ item.type }}</td>
-            <td class="p-2">{{ item.particulars }}</td>
-            <td class="p-2">{{ item.date }}</td>
-            <td class="p-2 text-right">{{ item.amount.toLocaleString() }}</td>
-            <td class="p-2">
-              <span v-if="item.receipt">{{ item.receipt.name }}</span>
-              <span v-else class="text-muted-foreground italic">No file</span>
-            </td>
-            <td class="p-2 text-center">
-              <Button variant="destructive" size="sm" @click="removeItem(index)">Remove</Button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <!-- Item List Table -->
+      <div v-if="form.items.length > 0" class="">
+        <h3 class="text-lg font-semibold mb-3">Item List</h3>
+        <table class="w-full border-collapse">
+          <thead class="bg-muted">
+            <tr>
+              <th class="text-left p-2 border-b">Type</th>
+              <th class="text-left p-2 border-b">Particulars</th>
+              <th class="text-left p-2 border-b">Date</th>
+              <th class="text-right p-2 border-b">Amount</th>
+              <th class="text-left p-2 border-b">Receipt</th>
+              <th class="p-2 border-b text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(item, index) in form.items" :key="index" class="border-b">
+              <td class="p-2">{{ item.type }}</td>
+              <td class="p-2">{{ item.particulars }}</td>
+              <td class="p-2">{{ item.date }}</td>
+              <td class="p-2 text-right">{{ item.amount.toLocaleString() }}</td>
+              <td class="p-2">
+                <span v-if="item.receipt">{{ item.receipt.name }}</span>
+                <span v-else class="text-muted-foreground italic">No file</span>
+              </td>
+              <td class="p-2 text-right">
+                <Button variant="destructive" size="sm" @click="removeItem(index)">Remove</Button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
-      <div class="flex justify-end mt-3 font-semibold">
-        Total: {{ totalAmount.toLocaleString() }}
+        <div class="flex justify-end mt-3 font-semibold">
+          Total: ₱ {{ totalAmount.toLocaleString() }}
+        </div>
       </div>
     </div>
 
     <!-- Submit -->
-    <div class="flex justify-end">
-      <Button @click="submitForm">Save Petty Cash</Button>
+    <div class="flex justify-end space-x-2">
+      <Button variant="outline" @click="resetForm">Reset Form</Button>
+      <Button @click="submitForm"><Save class="mr-2 h-4 w-4" />Save Petty Cash</Button>
     </div>
   </div>
 </template>

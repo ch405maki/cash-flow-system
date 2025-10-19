@@ -113,6 +113,17 @@ const totalsByType = computed(() => {
   )
 })
 
+const changeAmount = computed(() => {
+  const cashAdvance = totalsByType.value['Cash Advance'] || 0
+  const liquidation = totalsByType.value['Liquidation'] || 0
+  const difference = cashAdvance - liquidation
+
+  // Only show if positive
+  return difference > 0 ? difference : null
+})
+
+
+
 const approval = reactive({
   remarks: ''
 })
@@ -221,7 +232,7 @@ const submitExecutiveApprovalLiquidate = async () => {
             <td class="p-2 font-semibold">{{ item.type }} <span v-if="item?.liquidation_for_date != null" class="text-sm font-normal">({{ formatDate(item.liquidation_for_date) }})</span></td>
             <td class="p-2">{{ item.particulars }}</td>
             <td class="p-2">{{ formatDate(item.date) }}</td>
-            <td class="p-2 text-right">{{ item.amount.toLocaleString() }}</td>
+            <td class="p-2 text-right">{{ item.amount.toLocaleString() }}</td> 
             <td class="p-2">
               <a v-if="item.receipt" :href="`/storage/${item.receipt}`" target="_blank" class="text-blue-600 underline">
                 View
@@ -234,19 +245,28 @@ const submitExecutiveApprovalLiquidate = async () => {
       <!-- Running Totals per Type -->
       <div class="mt-4 flex justify-end">
         <div class="grid grid-cols-1 gap-2">
-            <h3 class="text-md font-semibold">Running Totals</h3>
-            <div v-for="(amount, type) in totalsByType" :key="type" class="flex space-x-2">
-              <h1 class="font-medium w-48">{{ type }}:</h1>
-              <h1 class="font-bold w-48 text-right">₱{{ amount.toLocaleString() }}</h1>
-            </div>
-            <div class="font-bold flex space-x-2">
-              <h1 class="w-48">
-                Grand Total: 
-              </h1>
-              <h1 class="w-48 text-right">₱{{ totalAmount.toLocaleString() }}</h1>
-            </div>
+          <h3 class="text-md font-semibold">Running Totals</h3>
+
+          <div v-for="(amount, type) in totalsByType" :key="type" class="flex space-x-2">
+            <h1 class="font-medium w-48">{{ type }}:</h1>
+            <h1 class="font-bold w-48 text-right">₱{{ amount.toLocaleString() }}</h1>
+          </div>
+
+          <div
+            v-if="changeAmount"
+            class="font-bold flex space-x-2 text-red-600"
+          >
+            <h1 class="w-48">
+              Change Amount:
+            </h1>
+            <h1 class="w-48 text-right">₱{{ changeAmount.toLocaleString() }}</h1>
+          </div>
+          <div class="font-bold flex space-x-2">
+            <h1 class="w-48">Grand Total:</h1>
+            <h1 class="w-48 text-right">₱{{ totalAmount.toLocaleString() }}</h1>
           </div>
         </div>
+      </div>
       </div>
 
       <!-- Existing Distribution Records -->
@@ -369,7 +389,6 @@ const submitExecutiveApprovalLiquidate = async () => {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-
         </div>
       </div>
     </div>

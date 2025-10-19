@@ -47,7 +47,7 @@ function formatDate(dateStr: string): string {
 </script>
 
 <template>
-  <div v-if="requests.length > 0" class="rounded-lg border">
+  <div v-if="requests.length > 0">
     <Table>
       <TableHeader>
         <TableRow>

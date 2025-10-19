@@ -4,9 +4,11 @@ import { Head, router } from '@inertiajs/vue3'
 import { type BreadcrumbItem } from '@/types'
 import PettyCashView from '@/components/pettyCash/audit/PettyCashView.vue'
 import PettyCashPrint from '@/components/pettyCash/printables/PettyCash.vue'
+import PettyCashDistribution from '@/components/pettyCash/audit/PettyCashDistribution.vue'
 import { Button } from '@/components/ui/button'
 import { History, CheckCircle, } from 'lucide-vue-next'
 import { formatDateTime } from '@/lib/utils'
+import PageHeader from '@/components/PageHeader.vue';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -37,6 +39,7 @@ const user = usePage().props.auth.user;
 const props = defineProps<{
     pettyCash: any,
     pettyCashFund: Number,
+    accounts: any[]
 }>()
 
 const confirmChecked = ref(false)
@@ -139,7 +142,10 @@ console.log(props.pettyCash)
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="flex items-center justify-between">
-        <h1 class="text-xl font-bold">Review Petty Cash Vouchers</h1>
+        <PageHeader 
+          :title="`Viewing ${props.pettyCash.pcv_no}`" 
+          subtitle="Review Petty Cash Voucher"
+        />
 
         <div class="flex items-center space-x-2">
           <Button v-if="props.pettyCash.status == 'for liquidation'"  @click="router.get(route('petty-cash.edit', props.pettyCash.id))">
@@ -149,7 +155,7 @@ console.log(props.pettyCash)
             <Sheet>
               <SheetTrigger as-child>
                 <Button variant="outline">
-                  <History class="mr-2 h-4 w-4" /> Time Stamp
+                  <History class="h-4 w-4" /> Time Stamp
                 </Button>
               </SheetTrigger>
               <SheetContent class="w-[400px] sm:w-[540px]">
@@ -306,8 +312,13 @@ console.log(props.pettyCash)
         </div>
       </div>
 
-      <div class="rounded-xl border p-4">
-        <PettyCashView :petty-cash="props.pettyCash" />
+      <div class="">
+        <div v-if="user.role == 'accounting'">
+          <PettyCashDistribution :petty-cash="props.pettyCash" :accounts="props.accounts" />
+        </div>
+        <div v-else>
+          <PettyCashView :petty-cash="props.pettyCash" />
+        </div>
         <!-- class="hidden print:block" -->
         <div id="print-section" class="hidden print:block">
           <PettyCashPrint :petty-cash="props.pettyCash" />

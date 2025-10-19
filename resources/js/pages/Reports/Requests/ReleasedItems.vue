@@ -6,6 +6,7 @@ import { Printer } from 'lucide-vue-next'
 import { Head } from '@inertiajs/vue3'
 import FormHeader from '@/components/reports/header/formHeder.vue'
 import Button from '@/components/ui/button/Button.vue'
+import { Label } from '@/components/ui/label'
 
 // Props
 const { releases } = defineProps({
@@ -102,7 +103,7 @@ const breadcrumbs: BreadcrumbItem[] = [
       <!-- Filters -->
       <div class="flex gap-4 mb-6">
         <div>
-          <label class="block text-xs font-medium">Start Date</label>
+          <Label class="block text-xs font-medium">Start Date</Label>
           <input
             type="date"
             v-model="startDate"
@@ -110,7 +111,7 @@ const breadcrumbs: BreadcrumbItem[] = [
           />
         </div>
         <div>
-          <label class="block text-xs font-medium">End Date</label>
+          <Label class="block text-xs font-medium">End Date</Label>
           <input
             type="date"
             v-model="endDate"

@@ -11,6 +11,7 @@ import { Upload } from 'lucide-vue-next';
 import AddCheckDialog from '@/components/vouchers/edit/AddCheckDialog.vue';
 import { useToast } from 'vue-toastification'
 import { formatDateTime } from '@/lib/utils'
+import PageHeader from '@/components/PageHeader.vue';
 import {
   Sheet,
   SheetContent,
@@ -42,9 +43,10 @@ function goToEditVoucher(voucherId, e) {
 
 <template>
     <div class="flex justify-between items-center">
-        <div>
-            <h2 class="text-2xl font-bold tracking-tight">Voucher # {{ voucher.voucher_no }}</h2>
-        </div>
+        <PageHeader 
+            :title="`Voucher # ${ voucher.voucher_no }`" 
+            subtitle="Review and approve voucher"
+        />
         <div class="flex space-x-2">
             <template v-if="authUser.role == 'accounting' && voucher.status !== 'draft' && voucher.status !== 'completed' && voucher.status !== 'forAudit'">
                 <ReceiptUploadDialog 

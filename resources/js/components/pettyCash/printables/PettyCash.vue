@@ -1,9 +1,38 @@
 <script setup lang="ts">
 import { formatDate } from '@/lib/utils'
+import { computed } from 'vue';
+import { amountToWords } from '@/lib/utils'
+
 const props = defineProps<{
   pettyCash: any
 }>()
+
+// compute total by type
+const totalsByType = computed(() => {
+  return props.pettyCash.items.reduce((totals: Record<string, number>, item: any) => {
+    const type = item.type || 'Unknown'
+    totals[type] = (totals[type] || 0) + Number(item.amount || 0)
+    return totals
+  }, {})
+})
+
+// compute change amount (Cash Advance - Liquidation)
+const changeAmount = computed(() => {
+  const cashAdvance = totalsByType.value['Cash Advance'] || 0
+  const liquidation = totalsByType.value['Liquidation'] || 0
+  const diff = cashAdvance - liquidation
+
+  // only show positive values
+  return diff > 0 ? diff : null
+})
+
+const cashAdvanceDate = computed(() => {
+  const caItem = props.pettyCash.items.find(i => i.type === 'Cash Advance')
+  return caItem ? formatDate(caItem.date) : ''
+})
+
 </script>
+
 
 <template>
   <div class="p-4 text-black bg-white w-[900px] mx-auto text-xs font-sans">
@@ -12,7 +41,6 @@ const props = defineProps<{
       <h2 class="font-bold uppercase">ARELLANO LAW FOUNDATION INC.</h2>
       <p>Taft Avenue Corner Menlo Street, Pasay City</p>
     </div>
-
     <!-- Paid to + Date / PCV No -->
     <div class="grid grid-cols-5 border-x border-t border-black">
       <div class="col-span-3 border-r border-black flex justify-center p-1">
@@ -53,9 +81,14 @@ const props = defineProps<{
                     <span>CASH ADVANCE (CA)</span>
                 </label>
                 <label class="flex items-center space-x-1 border-r border-black p-1">
-                    <input type="checkbox" disabled :checked="props.pettyCash.items.some(i => i.type === 'Liquidation')" />
-                    <span>LIQUIDATION OF CA DATED ________</span>
+                  <input type="checkbox" disabled :checked="props.pettyCash.items.some(i => i.type === 'Liquidation')" />
+                  <span>
+                    LIQUIDATION OF CA DATED: 
+                    <span v-if="cashAdvanceDate" class="underline px-1 uppercase font-medium">{{ cashAdvanceDate }}</span>
+                    <span v-else>________</span>
+                  </span>
                 </label>
+
             </div>
         </div>
         <div class="col-span-2">
@@ -82,25 +115,40 @@ const props = defineProps<{
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="item in props.pettyCash.items" :key="item.id">
+                  <!-- Actual item rows -->
+                  <tr v-for="item in props.pettyCash.items.slice(0, 9)" :key="item.id">
                     <td class="border border-black text-center p-1">{{ formatDate(item.date) }}</td>
-                    <td class="border border-black p-1">{{ item.particulars }}</td>
+                    <td class="border border-black p-1 capitalize">{{ item.particulars }} <span class="text-xs italic">- ({{ item.type }})</span></td>
                     <td class="border border-black text-right p-1">₱ {{ Number(item.amount).toFixed(2) }}</td>
-                    </tr>
-                    <!-- Filler rows -->
-                    <tr v-for="n in 6" :key="'empty-'+n">
+                  </tr>
+
+                  <!-- Filler rows (if less than 9 items) -->
+                  <tr
+                    v-for="n in Math.max(0, 9 - props.pettyCash.items.length)"
+                    :key="'empty-' + n"
+                  >
                     <td class="border border-black p-3"></td>
                     <td class="border border-black"></td>
                     <td class="border border-black"></td>
-                    </tr>
+                  </tr>
                 </tbody>
             </table>
             <div class="grid grid-cols-1  border-x border-black">
               <div class="border-b border-black">
                 <!-- Received from -->
                 <div class="p-1">
-                  <p>Received from the amount of ______________________________</p>
-                  <p>(P __________ ) in full/partial payment of the items listed above.</p>
+                  <p>
+                    Received from the amount of
+                    <span class="underline px-2 font-medium tracking-wider">
+                      {{ changeAmount ? amountToWords(changeAmount) : '' }}
+                    </span>
+                  </p>
+                  <p>
+                    <span class="underline px-2 font-medium tracking-wider">
+                      (₱ {{ changeAmount ? changeAmount.toLocaleString() : '' }})
+                    </span>
+                    in full/partial payment of the items listed above.
+                  </p>
                 </div>
               </div>
               <div class="border-b border-black">
@@ -109,7 +157,7 @@ const props = defineProps<{
                   <p><b>NOTE:</b> CASH ADVANCE SHALL BE LIQUIDATED WITHIN 72 HOURS; OTHERWISE, I HEREBY AUTHORIZE THE COMPANY TO DEDUCT THE FULL AMOUNT FROM MY NEAREST SUCCEEDING PAYROLL.</p>
                 </div>
               </div>
-              <div class="border-b border-black">
+              <div class="border-b border-black py-[.5px]">
                 <div class="grid grid-cols-2">
                   <p class="border-r border-black p-1">Signature: ____________________</p>
                   <p class="p-1">Date: ____________________</p>
@@ -121,12 +169,17 @@ const props = defineProps<{
         <div class="col-span-2">
           <table class="w-full table-fixed border-collapse">
             <tbody>
-              <tr v-for="item in props.pettyCash.items" :key="item.id">
+              <!-- Actual item rows (limit to 7 max) -->
+              <tr v-for="item in props.pettyCash.items.slice(0, 8)" :key="item.id">
                 <td class="border-t border-black text-center p-3"></td>
                 <td class="border border-black p-1"></td>
               </tr>
-              <!-- Filler rows -->
-              <tr v-for="n in 5" :key="'empty-'+n">
+
+              <!-- Filler rows if less than 7 -->
+              <tr
+                v-for="n in Math.max(0, 8 - props.pettyCash.items.length)"
+                :key="'empty-'+n"
+              >
                 <td class="border-y border-black p-3"></td>
                 <td class="border border-black"></td>
               </tr>

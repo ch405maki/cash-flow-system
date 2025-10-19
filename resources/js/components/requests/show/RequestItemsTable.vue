@@ -6,23 +6,23 @@ const props = defineProps<{ details: any[] }>()
 
 <template>
   <Table>
-    <TableHeader class="bg-muted">
+    <TableHeader>
       <TableRow>
-        <TableHead class="border p-2 w-10">#</TableHead>
-        <TableHead class="border p-2">Quantity</TableHead>
-        <TableHead class="border p-2">Unit</TableHead>
-        <TableHead class="border p-2">Item Description</TableHead>
+        <TableHead class="border-r w-10">#</TableHead>
+        <TableHead class="border-r">Quantity</TableHead>
+        <TableHead class="border-r">Unit</TableHead>
+        <TableHead>Item Description</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>
       <TableRow v-for="(detail, index) in details" :key="detail.id">
-        <TableCell class="border p-2">{{ index + 1 }}</TableCell>
-        <TableCell class="border p-2">
+        <TableCell class="border-r">{{ index + 1 }}</TableCell>
+        <TableCell class="border-r">
           <span class="text-zinc-600">{{ +detail.quantity + +detail.released_quantity }} Request</span>
           (Released: {{ detail.released_quantity }})
         </TableCell>
-        <TableCell class="border p-2">{{ detail.unit }}</TableCell>
-        <TableCell class="border p-2">{{ detail.item_description }}</TableCell>
+        <TableCell class="border-r">{{ detail.unit }}</TableCell>
+        <TableCell>{{ detail.item_description }}</TableCell>
       </TableRow>
     </TableBody>
   </Table>
