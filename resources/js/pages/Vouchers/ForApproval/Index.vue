@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { PlusCircle, Filter, Search } from 'lucide-vue-next'
 import { Input } from '@/components/ui/input'
 import { ref, computed, watch } from 'vue'
+import PageHeader from '@/components/PageHeader.vue';
 import {
   Select,
   SelectContent,
@@ -166,7 +167,10 @@ const props = defineProps({
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-3.5 rounded-xl p-4">
       <div class="flex justify-between items-center">
-        <h1 class="text-xl font-bold">Vouchers</h1>
+        <PageHeader 
+          title="Vouchers" 
+          subtitle="Review and approve pending vouchers"
+        />
         <div class="flex gap-2">
           <!-- Date Filter Select -->
           <Select v-model="timeFilter">

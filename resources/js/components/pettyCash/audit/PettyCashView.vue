@@ -232,7 +232,7 @@ const submitExecutiveApprovalLiquidate = async () => {
             <td class="p-2 font-semibold">{{ item.type }} <span v-if="item?.liquidation_for_date != null" class="text-sm font-normal">({{ formatDate(item.liquidation_for_date) }})</span></td>
             <td class="p-2">{{ item.particulars }}</td>
             <td class="p-2">{{ formatDate(item.date) }}</td>
-            <td class="p-2 text-right">{{ item.amount.toLocaleString() }}</td>
+            <td class="p-2 text-right">{{ item.amount.toLocaleString() }}</td> 
             <td class="p-2">
               <a v-if="item.receipt" :href="`/storage/${item.receipt}`" target="_blank" class="text-blue-600 underline">
                 View

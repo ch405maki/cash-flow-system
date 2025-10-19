@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Eraser, Printer, Rocket, X   } from 'lucide-vue-next';
 import { router } from '@inertiajs/vue3'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Label } from '@/components/ui/label'
 import {
   Table,
   TableBody,
@@ -141,19 +142,19 @@ function goToPO(id: number) {
     <div class="grid grid-cols-1 gap-4 md:grid-cols-12">
         <!-- Start Date -->
         <div class="flex flex-col col-span-3 h-full">
-            <label class="block text-sm font-medium mb-1">Start Date</label>
+            <Label class="block text-sm font-medium mb-1">Start Date</Label>
             <Input type="date" v-model="startDate" class="h-8" />
         </div>
 
         <!-- End Date -->
         <div class="flex flex-col col-span-3 h-full">
-            <label class="block text-sm font-medium mb-1">End Date</label>
+            <Label class="block text-sm font-medium mb-1">End Date</Label>
             <Input type="date" v-model="endDate" class="h-8" />
         </div>
 
         <!-- Department Dropdown (Wider) -->
         <div class="flex flex-col col-span-5 h-full">
-            <label class="block text-sm font-medium mb-1">Department</label>
+            <Label class="block text-sm font-medium mb-1">Department</Label>
             <Select v-model="selectedDepartment" class="w-[250px] h-8">
                 <SelectTrigger class="h-8 w-full">
                     <SelectValue placeholder="All Departments" />
@@ -197,35 +198,33 @@ function goToPO(id: number) {
     <div class="hidden print:block">
         <FormHeader text="Purchase Order Summary" :bordered="false" />
     </div>
-    <div class="relative flex-1 border border-sidebar-border/70 dark:border-sidebar-border md:min-h-min">
-      <Table>
-          <TableBody>
-            <TableRow>
-              <TableCell>PO No</TableCell>
-              <TableCell>Date</TableCell>
-              <TableCell>Department</TableCell>
-              <TableCell>Payee</TableCell>
-              <TableCell class="text-right">Amount (₱)</TableCell>
-            </TableRow>
-            <TableRow v-for="po in filteredPurchaseOrders" :key="po.id">
-              <TableCell><button class="hover:text-purple-700 hover:underline" @click="goToPO(po.id)">{{ po.po_no }}</button></TableCell>
-              <TableCell>{{ formatDate(po.date) }}</TableCell>
-              <TableCell>{{ po.department.department_name }}</TableCell>
-              <TableCell>{{ po.payee }}</TableCell>
-              <TableCell class="text-right">₱{{ Number(po.amount || 0).toFixed(2) }}</TableCell>
-            </TableRow>
+    <Table>
+      <TableBody>
+        <TableRow>
+          <TableCell>PO No</TableCell>
+          <TableCell>Date</TableCell>
+          <TableCell>Department</TableCell>
+          <TableCell>Payee</TableCell>
+          <TableCell class="text-right">Amount (₱)</TableCell>
+        </TableRow>
+        <TableRow v-for="po in filteredPurchaseOrders" :key="po.id">
+          <TableCell><button class="hover:text-purple-700 hover:underline" @click="goToPO(po.id)">{{ po.po_no }}</button></TableCell>
+          <TableCell>{{ formatDate(po.date) }}</TableCell>
+          <TableCell>{{ po.department.department_name }}</TableCell>
+          <TableCell>{{ po.payee }}</TableCell>
+          <TableCell class="text-right">₱{{ Number(po.amount || 0).toFixed(2) }}</TableCell>
+        </TableRow>
 
-            <!-- Total Row -->
-            <TableRow>
-              <TableCell colspan="4" class="text-right font-semibold">Total:</TableCell>
-              <TableCell class="text-right font-bold text-foreground">
-                <div v-if="totalAmount === 0" class="text-warning">Warning: Total is zero</div>
-                ₱{{ totalAmount.toFixed(2) }}
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
+        <!-- Total Row -->
+        <TableRow>
+          <TableCell colspan="4" class="text-right font-semibold">Total:</TableCell>
+          <TableCell class="text-right font-bold text-foreground">
+            <div v-if="totalAmount === 0" class="text-warning">Warning: Total is zero</div>
+            ₱{{ totalAmount.toFixed(2) }}
+          </TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
     </div>
     </div>
   </AppLayout>

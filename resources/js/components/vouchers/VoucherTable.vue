@@ -51,22 +51,11 @@ function formatDisplayDate(dateString: string): string {
     day: 'numeric'
   });
 }
-
-function formatStatus(status: string): string {
-  switch (status) {
-    case 'forEOD':
-      return 'For EOD Approval';
-    case 'forCheck':
-      return 'For Check Releasing';
-    default:
-      return status; 
-  }
-}
 </script>
 
 <template>
-  <div v-if="vouchers.length > 0" class="rounded-lg border">
-    <Table class="w-full table-auto text-left text-sm">
+  <div v-if="vouchers.length > 0" >
+    <Table>
       <TableHeader>
         <TableRow>
           <TableHead class="px-4 py-2">Voucher No</TableHead>
@@ -96,6 +85,7 @@ function formatStatus(status: string): string {
               'bg-green-100 text-green-800': voucher.status === 'forCheck',
               'bg-red-100 text-red-800': voucher.status === 'rejected',
               'bg-blue-100 text-blue-800': voucher.status === 'forEOD',
+              'bg-orange-100 text-orange-800': voucher.status === 'forAudit',
             }">
               {{ voucher.status }}
             </span>

@@ -7,6 +7,7 @@ import StatsCards from '@/components/dashboard/accounting/StatsCards.vue';
 import RecentRequestsTable from '@/components/dashboard/accounting/RecentRequestsTable.vue';
 import VoucherStats from '@/components/dashboard/accounting/VoucherStats.vue';
 import { ChartArea } from 'lucide-vue-next';
+import PageHeader from '@/components/PageHeader.vue';
 import { ref } from 'vue';
 
 const showVoucherStats = ref(true);
@@ -56,11 +57,12 @@ const toggleVoucherStats = () => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-            <div class="flex justify-between">
-                <h1 class="text-lg font-medium">
-                    Accounting Dashboard
-                    <p class="text-sm text-muted-foreground capitalize">Welcome, {{ username }}</p>
-                </h1>
+            <div class="flex justify-between items-center">
+                <PageHeader 
+                    class="capitalize"
+                    :title="`Welcome, ${username}`" 
+                    subtitle="Accounting Dashboard"
+                />
                 <Button @click="toggleVoucherStats">
                     <ChartArea /> {{ showVoucherStats ? 'Hide' : 'Show' }} Monthly Voucher Graph
                 </Button>
@@ -68,16 +70,24 @@ const toggleVoucherStats = () => {
             
             <StatsCards :status-counts="statusCounts" />
 
-            <div v-if="showVoucherStats">
-                <h1 class="text-lg font-medium mb-4">Monthly Voucher Trends</h1>
+            <div v-if="showVoucherStats" class="space-y-4">
+                <PageHeader 
+                    title="Monthly Voucher Trends" 
+                    subtitle="Analytics and insights for voucher processing"
+                />
                 <VoucherStats :stats="voucherStats" />
             </div>
             
-            <h1 class="text-lg font-medium">Recent Requests P. O. For Voucher</h1>
-            <RecentRequestsTable
-                :is-department-user="isDepartmentUser"
-                :recent-requests="purchaseOrders"
-            />
+            <div class="space-y-4">
+                <PageHeader 
+                    title="Recent Requests P.O. For Voucher" 
+                    subtitle="Latest purchase orders awaiting voucher creation"
+                />
+                <RecentRequestsTable
+                    :is-department-user="isDepartmentUser"
+                    :recent-requests="purchaseOrders"
+                />
+            </div>
         </div>
     </AppLayout>
 </template>

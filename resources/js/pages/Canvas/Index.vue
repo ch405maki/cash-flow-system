@@ -16,7 +16,7 @@ import {
   ChevronLeft,
   Upload
 } from 'lucide-vue-next';
-import axios from 'axios';
+import PageHeader from '@/components/PageHeader.vue';
 import {
   Table,
   TableBody,
@@ -111,15 +111,12 @@ const breadcrumbs = [
   <Head title="My Canvases" />
   
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="p-4">
-      <div class="flex flex-row items-center justify-between mb-4">
-        <CardTitle class="text-2xl font-bold">Canvas</CardTitle>
-        <div v-if="authUserRole === 'purchasing'">
-          <CanvasUploadDialog />
-        </div>
-      </div>
-    
-    <div v-if="canvases.length > 0" class="w-full text-sm border border-border rounded-md">
+    <div class="p-4 space-y-4">
+    <PageHeader 
+      title="Canvas" 
+      subtitle="Monitoring submitted canvas requests"
+    />
+    <div v-if="canvases.length > 0">
       <Table>
         <TableHeader>
           <TableRow>

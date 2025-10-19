@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
+import PageHeader from '@/components/PageHeader.vue';
 import { type BreadcrumbItem } from '@/types'
 import { Head, router, usePage } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
@@ -107,10 +108,10 @@ const fundStatus = computed(() => {
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="flex justify-between items-center">
-        <div>
-          <h1 class="text-xl font-bold">Petty Cash</h1>
-          <p class="text-sm font-medium">List of created petty cash.</p>
-        </div>
+        <PageHeader 
+          title="Petty Cash" 
+          subtitle="List of created petty cash."
+        />
 
         <div class="flex items-center gap-3">
           <Popover v-if="user.role != 'bursar'">

@@ -275,11 +275,43 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         
+        // Get counts for dashboard stats
+        $pendingCanvasses = Canvas::where('status', 'submitted')->count();
+        $pendingVouchers = Voucher::where('status', 'forAudit')->count();
+        $pendingPettyCash = PettyCash::where('status', 'submitted')->count();
+        
+        // Get recent pending items
+        $recentCanvasses = Canvas::with('creator')
+            ->where('status', 'submitted')
+            ->latest()
+            ->limit(5)
+            ->get();
+            
+        $recentVouchers = Voucher::where('status', 'forAudit')
+            ->latest()
+            ->limit(5)
+            ->get();
+            
+        $recentPettyCash = PettyCash::where('status', 'submitted')
+            ->latest()
+            ->limit(5)
+            ->get();
         
         return Inertia::render('Dashboard/Audit/Index', [
             'isDepartmentUser' => true,
             'userRole' => $user->role,
             'username' => $user->username,
+            'dashboardStats' => [
+                'pendingCanvasses' => $pendingCanvasses,
+                'pendingVouchers' => $pendingVouchers,
+                'pendingPettyCash' => $pendingPettyCash,
+                'totalPending' => $pendingCanvasses + $pendingVouchers + $pendingPettyCash,
+            ],
+            'recentPendingItems' => [
+                'canvasses' => $recentCanvasses,
+                'vouchers' => $recentVouchers,
+                'pettyCash' => $recentPettyCash,
+            ],
         ]);
     }
 
