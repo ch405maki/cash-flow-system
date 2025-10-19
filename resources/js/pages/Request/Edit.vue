@@ -4,10 +4,6 @@ import { type BreadcrumbItem } from '@/types'
 import { Head, Link } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/toast';
 import axios from 'axios';
 import { ref } from 'vue';
@@ -213,8 +209,8 @@ const toggleSelectAll = (checked: boolean) => {
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-4 space-y-4">
-      <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold">Request Information</h1>
+      <div class="flex justify-between items-center">
+        <h1 class="text-xl font-bold">Request Information</h1>
         <Link :href="route('request.index')">
           <Button variant="outline"> Back to Requests </Button>
         </Link>
@@ -223,10 +219,10 @@ const toggleSelectAll = (checked: boolean) => {
         <Table>
         <TableBody>
             <TableRow>
-                <TableCell class="border p-2  w-10">Request No:</TableCell>
-                <TableCell class="border p-2">{{ request.request_no }}</TableCell>
-                <TableCell class="border p-2  w-32">Status: </TableCell>
-                <TableCell class="border p-2 capitalize">
+                <TableCell class="border-r p-2  w-10">Request No:</TableCell>
+                <TableCell class="border-r p-2">{{ request.request_no }}</TableCell>
+                <TableCell class="border-r p-2  w-32">Status: </TableCell>
+                <TableCell class="p-2 capitalize">
                 <span 
                 class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize"
                 :class="{
@@ -242,14 +238,14 @@ const toggleSelectAll = (checked: boolean) => {
                 </TableCell>
             </TableRow>
             <TableRow>
-                <TableCell class="border p-2">Department:</TableCell>
-                <TableCell class="border p-2">{{ request.department.department_name || 'N/A' }}</TableCell>
-                <TableCell class="border p-2">Requested By:</TableCell>
-                <TableCell class="border p-2">{{ request.user.first_name }} {{ request.user.last_name }}</TableCell>
+                <TableCell class="border-r p-2">Department:</TableCell>
+                <TableCell class="border-r p-2">{{ request.department.department_name || 'N/A' }}</TableCell>
+                <TableCell class="border-r p-2">Requested By:</TableCell>
+                <TableCell class="p-2">{{ request.user.first_name }} {{ request.user.last_name }}</TableCell>
             </TableRow>
             <TableRow>
-                <TableCell class="border p-2">Purpose:</TableCell>
-                <TableCell colspan="3" class="border p-2">{{ request.purpose || 'N/A'}}</TableCell>
+                <TableCell class="border-r p-2">Purpose:</TableCell>
+                <TableCell colspan="3" class="p-2">{{ request.purpose || 'N/A'}}</TableCell>
             </TableRow>
         </TableBody>
         </Table>
@@ -264,9 +260,9 @@ const toggleSelectAll = (checked: boolean) => {
           </Button>
         </div>
         <form @submit.prevent="submit" class="space-y-4">
-          <div class="border overflow-hidden">
+          <div class="overflow-hidden">
             <Table>
-              <TableHeader class="bg-gray-100 dark:bg-gray-800">
+              <TableHeader>
                 <TableRow>
                   <TableHead class="w-[100px] border-r text-xs">Quantity</TableHead>
                   <TableHead class="w-[150px] border-r text-xs">Unit</TableHead>

@@ -19,7 +19,7 @@ const breadcrumbs: BreadcrumbItem[] = [
         title="Create Petty Cash Voucher" 
         subtitle="Fill out petty cash voucher details and items"
       />
-      <div class="rounded-xl border p-4">
+      <div>
         <PettyCashForm />
       </div>
     </div>

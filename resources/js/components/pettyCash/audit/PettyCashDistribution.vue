@@ -12,6 +12,15 @@ import { Rocket } from 'lucide-vue-next'
 import { formatDate } from '@/lib/utils'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
   Dialog,
   DialogTrigger,
   DialogContent,
@@ -179,15 +188,39 @@ const submitApprovalLiquidate = async () => {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4">
     <!-- Voucher Header -->
+    <Table>
+      <TableBody>
+        <TableRow>
+          <TableCell class="font-medium w-[20%] border-r">
+            <div>
+              <div class="text-xs text-muted-foreground mb-1">PCV No</div>
+              <div>{{ props.pettyCash.pcv_no }}</div>
+            </div>
+          </TableCell>
+          <TableCell class="w-[20%] border-r">
+            <div>
+              <div class="text-xs text-muted-foreground mb-1">Status</div>
+              <div class="capitalize">{{ props.pettyCash.status }}</div>
+            </div>
+          </TableCell>
+          <TableCell class="w-[40%] border-r">
+            <div>
+              <div class="text-xs text-muted-foreground mb-1">Paid To</div>
+              <div>{{ props.pettyCash.paid_to }}</div>
+            </div>
+          </TableCell>
+          <TableCell class="w-[20%]">
+            <div>
+              <div class="text-xs text-muted-foreground mb-1">Date</div>
+              <div>{{ formatDate(props.pettyCash.date) }}</div>
+            </div>
+          </TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="space-y-2">
-        <Label>PCV No: {{ props.pettyCash.pcv_no }}</Label><br />
-        <Label>Paid To: {{ props.pettyCash.paid_to }}</Label><br />
-        <Label>Status: <span class="capitalize">{{ props.pettyCash.status }}</span></Label><br />
-        <Label>Date: {{ props.pettyCash.date }}</Label>
-      </div>
       <div class="md:col-span-2">
         <Alert>
           <Rocket class="h-4 w-4" />
@@ -199,47 +232,48 @@ const submitApprovalLiquidate = async () => {
     
     <!-- Existing Items -->
     <div v-if="existingItems.length" class="border rounded-xl p-4">
-      <h3 class="text-lg font-semibold mb-3">Existing Items</h3>
-      <table class="w-full border-collapse text-sm">
-        <thead class="bg-muted">
-          <tr>
-            <th class="text-left p-2 border-b">Type</th>
-            <th class="text-left p-2 border-b">Particulars</th>
-            <th class="text-left p-2 border-b">Date</th>
-            <th class="text-right p-2 border-b">Amount</th>
-            <th class="text-left p-2 border-b">Receipt</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
+      <h3 class="text-lg font-semibold mb-2">Existing Items</h3>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead class="w-[20%]">Type</TableHead>
+            <TableHead class="w-[25%]">Particulars</TableHead>
+            <TableHead class="w-[15%]">Date</TableHead>
+            <TableHead class="w-[15%] text-right">Amount</TableHead>
+            <TableHead class="w-[15%]">Receipt</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow
             v-for="item in existingItems"
             :key="item.id"
-            class="border-b"
             :class="getRowClass(item)"
           >
-            <td class="p-2 font-semibold">
+            <TableCell class="font-semibold">
               {{ item.type }}
-              <span v-if="item.liquidation_for_date" class="text-xs text-gray-500">
+              <span v-if="item.liquidation_for_date" class="text-xs text-muted-foreground block">
                 ({{ formatDate(item.liquidation_for_date) }})
               </span>
-            </td>
-            <td class="p-2">{{ item.particulars }}</td>
-            <td class="p-2">{{ formatDate(item.date) }}</td>
-            <td class="p-2 text-right">₱{{ Number(item.amount).toLocaleString() }}</td>
-            <td class="p-2">
+            </TableCell>
+            <TableCell>{{ item.particulars }}</TableCell>
+            <TableCell>{{ formatDate(item.date) }}</TableCell>
+            <TableCell class="text-right font-medium">
+              ₱{{ Number(item.amount).toLocaleString() }}
+            </TableCell>
+            <TableCell>
               <a
                 v-if="item.receipt"
                 :href="`/storage/${item.receipt}`"
                 target="_blank"
-                class="text-blue-600 underline"
+                class="text-blue-600 hover:text-blue-800 underline text-sm"
               >
                 View
               </a>
-              <span v-else class="italic text-gray-400">No file</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              <span v-else class="italic text-muted-foreground text-sm">No file</span>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
 
       <div class="mt-4 flex justify-end">
         <div class="grid grid-cols-1 gap-2">

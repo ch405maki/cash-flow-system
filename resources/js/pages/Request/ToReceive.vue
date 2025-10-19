@@ -5,7 +5,7 @@ import RequestForm from '@/components/requests/RequestForm.vue';
 import RequestTable from '@/components/requests/RequestTable.vue';
 import { type BreadcrumbItem } from '@/types';
 import { router } from '@inertiajs/vue3'
-import { Button } from '@/components/ui/button'
+import PageHeader from '@/components/PageHeader.vue';
 import { ref, watch } from 'vue'
 import {
   Select,
@@ -72,10 +72,10 @@ watch([departmentFilter, statusFilter], () => {
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="flex justify-between items-center">
-        <h1 class="text-xl font-bold">
-          Requests On Process
-          <p class="text-sm font-medium text-muted-foreground capitalize"></p>
-        </h1>
+        <PageHeader 
+          title="Requests On Process" 
+          subtitle="Active requests currently being processed"
+        />
         <div class="flex gap-4 items-center">
           <!-- Department Filter -->
           <div class="w-[180px]" v-if="authUser.role !== 'staff' && authUser.role !== 'department_head'">
