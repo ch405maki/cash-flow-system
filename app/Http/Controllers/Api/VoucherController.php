@@ -253,7 +253,7 @@ class VoucherController extends Controller
                 ],
                 'issue_date' => 'nullable|date',
                 'payment_date' => 'nullable|date',
-                'check_date' => 'required|date',
+                'check_date' => 'nullable|date',
                 'delivery_date' => 'nullable|date',
                 'voucher_date' => 'required|date',
                 'purpose' => 'required|string|max:500',

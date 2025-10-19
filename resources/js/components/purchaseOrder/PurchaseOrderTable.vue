@@ -35,7 +35,7 @@ function goToPO(id: number) {
 </script>
 
 <template>
-  <div v-if="purchaseOrders.data.length > 0" class="rounded-md border">
+  <div v-if="purchaseOrders.data.length > 0">
     <Table>
       <TableHeader>
         <TableRow>

@@ -51,7 +51,7 @@ const filteredAccounts = computed(() => {
         <div v-if="voucher.status !== 'forCheck'">
         <div class="flex justify-between items-center mb-4">
             <h3 class="font-medium">Update Accounts</h3>
-            <Button type="button" variant="outline" size="sm" @click="emit('add-detail')">
+            <Button variant="secondary" size="sm" @click="emit('add-detail')">
                 <Plus class="h-4 w-4 mr-2" />
                 Add Account
             </Button>

@@ -4,6 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
 import ApprovedPurchaseOrderTable from '@/components/vouchers/ApprovedPurchaseOrderTable.vue';
 import { Button } from '@/components/ui/button';
+import PageHeader from '@/components/PageHeader.vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -27,9 +28,10 @@ defineProps({
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
       <div class="flex justify-between items-center">
-        <h1 class="text-xl font-bold">Purchase Orders</h1>
-        <div class="flex gap-2">
-        </div>
+        <PageHeader 
+          title="Purchase Orders" 
+          subtitle="Pending purchase orders awaiting voucher creation"
+        />
       </div>
       
       <ApprovedPurchaseOrderTable :purchase-orders="purchaseOrders" />

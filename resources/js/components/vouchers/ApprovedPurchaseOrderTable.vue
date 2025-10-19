@@ -48,7 +48,7 @@ function goToCreate(poId?: number) {
 </script>
 
 <template>
-  <div v-if="purchaseOrders.data.length > 0" class="rounded-md border">
+  <div v-if="purchaseOrders.data.length > 0">
     <Table>
       <TableHeader>
         <TableRow>
@@ -58,7 +58,6 @@ function goToCreate(poId?: number) {
           <TableHead>Department</TableHead>
           <TableHead>Amount</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead class="text-right">Action</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -77,15 +76,6 @@ function goToCreate(poId?: number) {
             <Badge>
               {{ po?.status || 'N/A' }}
             </Badge>
-          </TableCell>
-          <TableCell class="text-right">
-            <Button
-              variant="outline"
-              size="sm"
-              @click.stop="goToCreate(po.id)"
-            >
-              <Ticket />Create Voucher
-            </Button>
           </TableCell>
         </TableRow>
       </TableBody>

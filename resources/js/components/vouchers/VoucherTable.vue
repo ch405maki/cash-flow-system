@@ -94,4 +94,10 @@ function formatDisplayDate(dateString: string): string {
       </TableBody>
     </Table>
   </div>
+
+  <div v-else class="flex h-48 flex-col items-center justify-center rounded-xl border">
+    <FileText class="h-8 w-8 text-muted-foreground" />
+    <p class="mt-2 text-sm text-muted-foreground">No voucher found</p>
+    <p class="text-xs text-muted-foreground">Approved voucher for cheque will appear here.</p>
+</div>
 </template>
