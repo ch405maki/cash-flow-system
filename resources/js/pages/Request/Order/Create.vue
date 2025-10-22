@@ -220,7 +220,7 @@ watch(
           </div>
 
           <!-- Items Table -->
-          <div class="rounded-md border">
+          <div>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -331,9 +331,6 @@ watch(
         <div class="flex justify-end gap-4">
           <Button variant="outline" type="button" @click="$inertia.visit(route('request-to-order.index'))">
             Cancel
-          </Button>
-          <Button variant="outline" type="button" @click="$inertia.visit(route('request-to-order.index'))">
-            Save Draft
           </Button>
           <Button
             type="submit"

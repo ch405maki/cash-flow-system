@@ -28,7 +28,7 @@ function goToCreatePO(requestId: number) {
 </script>
 
 <template>
-  <div class="rounded-lg border">
+  <div>
     <Table>
       <TableHeader>
         <TableRow>

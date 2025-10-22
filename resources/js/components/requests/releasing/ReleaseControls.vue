@@ -22,6 +22,10 @@ const emit = defineEmits([
   'toggleSelectAll',
   'releaseItems'
 ])
+
+const toggleSelectAll = (checked: boolean) => {
+  emit('toggleSelectAll', { checked, shouldAutoFill: true })
+}
 </script>
 
 <template>
@@ -30,7 +34,7 @@ const emit = defineEmits([
       <Checkbox 
         id="select-all"
         :checked="selectedItems.length === details.length"
-        @update:checked="(checked) => $emit('toggleSelectAll', checked)"
+        @update:checked="toggleSelectAll"
         class="h-4 w-4"
       />
       <Label>Select All</Label>

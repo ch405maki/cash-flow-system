@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Trash2 } from 'lucide-vue-next'
 import { Checkbox } from '@/components/ui/checkbox'
 
-
 const props = defineProps({
   details: {
     type: Array,
@@ -17,16 +16,22 @@ const props = defineProps({
   }
 })
 
-
 const emit = defineEmits([
   'update:selectedItems',
   'update:releasedQuantity',
   'removeDetail'
 ])
 
-const toggleItemSelection = (id: number, checked: boolean) => {
+const toggleItemSelection = (id: number, checked: boolean, index: number) => {
   if (checked) {
     emit('update:selectedItems', [...props.selectedItems, id])
+    
+    // Auto-fill release quantity with remaining quantity when selected
+    const detail = props.details[index]
+    const remainingQuantity = detail.quantity - detail.released_quantity
+    if (remainingQuantity > 0) {
+      emit('update:releasedQuantity', { index, value: remainingQuantity })
+    }
   } else {
     emit('update:selectedItems', props.selectedItems.filter(itemId => itemId !== id))
   }
@@ -34,7 +39,7 @@ const toggleItemSelection = (id: number, checked: boolean) => {
 </script>
 
 <template>
-  <div class="border overflow-hidden">
+  <div class="overflow-hidden">
     <Table>
       <TableHeader class="bg-gray-100 dark:bg-gray-800">
         <TableRow>
@@ -42,7 +47,7 @@ const toggleItemSelection = (id: number, checked: boolean) => {
           <TableHead class="w-[100px] border-r text-xs">Release Qty</TableHead>
           <TableHead class="w-[100px] border-r text-xs">Quantity</TableHead>
           <TableHead class="w-[100px] border-r text-xs">Unit</TableHead>
-          <TableHead class="border-r text-xs">Description</TableHead>
+          <TableHead class="text-xs">Description</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -56,8 +61,8 @@ const toggleItemSelection = (id: number, checked: boolean) => {
               <Checkbox 
                 :id="'select-' + index"
                 :checked="selectedItems.includes(detail.id)"
-                @update:checked="(checked) => toggleItemSelection(detail.id, checked)"
-                class="h-4 mr-4 w-4 border-zinc-600"
+                @update:checked="(checked) => toggleItemSelection(detail.id, checked, index)"
+                class="h-4 mr-4 w-4"
               />
             </div>
           </TableCell>
@@ -83,7 +88,7 @@ const toggleItemSelection = (id: number, checked: boolean) => {
             <p>{{ detail.unit }}</p>
           </TableCell>
 
-          <TableCell class="border-r p-2">
+          <TableCell class="p-2">
             <p>{{ detail.item_description }}</p>
           </TableCell>
         </TableRow>

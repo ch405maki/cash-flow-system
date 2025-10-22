@@ -22,6 +22,7 @@ import {
     DialogTitle,
     DialogTrigger,
     } from '@/components/ui/dialog'
+import PageHeader from '@/components/PageHeader.vue';
 import {
   Table,
   TableCaption,
@@ -132,7 +133,10 @@ const breadcrumbs: BreadcrumbItem[] = [
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-4 space-y-4">
       <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold">Request To Order Details</h1>
+        <PageHeader 
+          title="Request To Order Details" 
+          subtitle="View order information, status, and item specifications"
+        />
         <div class="space-x-2 flex items-center">
           <!-- Approve Button with Dialog -->
           <div v-if="authUser.role == 'executive_director'" class="space-x-2 flex items-center">
@@ -286,62 +290,65 @@ const breadcrumbs: BreadcrumbItem[] = [
       </div>
 
       <div class="grid grid-cols-1 gap-4 md:grid-cols-1">
-        <table class="w-full text-sm border border-border rounded-md">
-          <tbody>
-            <tr class="border-b">
-              <td class="p-2 font-medium text-muted-foreground border-r w-48 uppercase">Order No:</td>
-              <td class="p-2 uppercase border-r w-xl">{{ requestOrder.order_no }}</td>
-              <td class="p-2 font-medium text-muted-foreground border-r w-40 uppercase">Order Date:</td>
-              <td class="p-2 w-40">
+        <Table>
+          <TableBody>
+            <TableRow>
+              <TableCell class="p-2 font-medium text-muted-foreground border-r w-48 uppercase">
+                Order No:
+              </TableCell>
+              <TableCell class="p-2 uppercase border-r w-xl">
+                {{ requestOrder.order_no }}
+              </TableCell>
+              <TableCell class="p-2 font-medium text-muted-foreground border-r w-40 uppercase">
+                Order Date:
+              </TableCell>
+              <TableCell class="p-2 w-40">
                 {{ formatDate(requestOrder.order_date) }}
-              </td>
-            </tr>
-            <tr class="border-b">
-              <td class="p-2 font-medium text-muted-foreground border-r w-48 uppercase">Notes:</td>
-              <td class="p-2 uppercase border-r w-xl">{{ requestOrder.notes }}</td>
-              <td class="p-2 font-medium text-muted-foreground border-r w-40 uppercase">Status:</td>
-              <td class="p-2 w-40">
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell class="p-2 font-medium text-muted-foreground border-r w-48 uppercase">
+                Notes:
+              </TableCell>
+              <TableCell class="p-2 uppercase border-r w-xl">
+                {{ requestOrder.notes }}
+              </TableCell>
+              <TableCell class="p-2 font-medium text-muted-foreground border-r w-40 uppercase">
+                Status:
+              </TableCell>
+              <TableCell class="p-2 w-40">
                 <Badge :variant="getStatusVariant(requestOrder.status)" class="capitalize">
                   {{ requestOrder.status }}
                 </Badge>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
 
-        <div>
-          <div class="hidden print:block">
-              <FormHeader text="Requisition Form" :bordered="false" />
-          </div>
-          <h2 class="text-xl font-semibold my-4">Order Details</h2>
-          <div>
-          <Table>
-            <TableCaption>      
-              <h3 class="flex items-center w-full mt-2">
-                <span class="flex-grow border-t border-dashed border-zinc-300"></span>
-                <span class="mx-3 text-xs font-medium">Items to purchase</span>
-                <span class="flex-grow border-t border-dashed border-zinc-300"></span>
-              </h3>
-            </TableCaption>
-              <TableHeader class="bg-muted">
-              <TableRow>
-                  <TableHead class="border p-2 w-10">#</TableHead>
-                  <TableHead class="border p-2">Item Description</TableHead>
-                  <TableHead class="border p-2">Quantity</TableHead>
-                  <TableHead class="border p-2">Unit</TableHead>
-              </TableRow>
-              </TableHeader>
-              <TableBody>
-              <TableRow v-for="(detail, index) in requestOrder.details" :key="detail.id">
-                  <TableCell class="border p-2">{{ index + 1 }}</TableCell>
-                  <TableCell class="border p-2">{{ detail.item_description }}</TableCell>
-                  <TableCell class="border p-2">{{ detail.quantity }}</TableCell>
-                  <TableCell class="border p-2">{{ detail.unit }}</TableCell> 
-              </TableRow>
-              </TableBody>
-          </Table>
-          </div>
-        </div>
+        <PageHeader 
+          title="Order Items Details" 
+        />
+        <Table>
+          <TableCaption>      
+              Items to purchase
+          </TableCaption>
+            <TableHeader class="bg-muted">
+            <TableRow>
+                <TableHead class="border-r p-2 w-10">#</TableHead>
+                <TableHead class="border-r p-2">Item Description</TableHead>
+                <TableHead class="border-r p-2">Quantity</TableHead>
+                <TableHead class="p-2">Unit</TableHead>
+            </TableRow>
+            </TableHeader>
+            <TableBody>
+            <TableRow v-for="(detail, index) in requestOrder.details" :key="detail.id">
+                <TableCell class="border-b p-2">{{ index + 1 }}</TableCell>
+                <TableCell class="border p-2">{{ detail.item_description }}</TableCell>
+                <TableCell class="border p-2">{{ detail.quantity }}</TableCell>
+                <TableCell class="border-b p-2">{{ detail.unit }}</TableCell> 
+            </TableRow>
+            </TableBody>
+        </Table>
 
         <div v-if="requestOrder.details.some(d => d.releases.length > 0)" class="mt-8">
           <h2 class="text-xl font-semibold mb-4">Release History</h2>

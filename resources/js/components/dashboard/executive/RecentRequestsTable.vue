@@ -4,6 +4,7 @@ import {
   ClipboardList
 } from 'lucide-vue-next'
 import { router } from '@inertiajs/vue3'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 
 defineProps<{
   isDepartmentUser: boolean;
@@ -41,34 +42,50 @@ function formatDate(dateStr: string): string {
 </script>
 
 <template>
-  <div v-if="isDepartmentUser && recentRequests.length > 0" class="rounded-xl border mt-4">
-    <h2 class="p-4 text-base font-semibold">Recent Request from departments</h2>
+  <div v-if="isDepartmentUser && recentRequests.length > 0" class="overflow-auto">
     <div class="relative w-full overflow-auto">
-      <table class="w-full caption-bottom text-sm">
-        <thead class="[&_tr]:border-b">
-          <tr class="border-b transition-colors hover:bg-muted/50">
-            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Request #</th>
-            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Date</th>
-            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Requested By</th>
-            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Purpose</th>
-            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Status</th>
-          </tr>
-        </thead>
-        <tbody class="[&_tr:last-child]:border-0">
-          <tr v-for="request in recentRequests" :key="request.id" class="border-b transition-colors hover:bg-muted/50">
-            <td class="p-4 align-middle font-medium cursor-pointer hover:underline hover:text-purple-700 text-purple-800"  @click="goToShowRequest(request.id)">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+              Request #
+            </TableHead>
+            <TableHead class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+              Date
+            </TableHead>
+            <TableHead class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+              Requested By
+            </TableHead>
+            <TableHead class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+              Purpose
+            </TableHead>
+            <TableHead class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+              Status
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow 
+            v-for="request in recentRequests" 
+            :key="request.id" 
+            class="border-b transition-colors hover:bg-muted/50"
+          >
+            <TableCell 
+              class="p-4 align-middle font-medium cursor-pointer hover:underline hover:text-purple-700 text-purple-800" 
+              @click="goToShowRequest(request.id)"
+            >
               {{ request.request_no }}
-            </td>
-            <td class="p-4 align-middle">
+            </TableCell>
+            <TableCell class="p-4 align-middle">
               {{ formatDate(request.request_date) }}
-            </td>
-            <td class="p-4 align-middle">
+            </TableCell>
+            <TableCell class="p-4 align-middle">
               {{ request.user?.first_name }} {{ request.user?.last_name }}
-            </td>
-            <td class="p-4 align-middle">
+            </TableCell>
+            <TableCell class="p-4 align-middle">
               {{ request.purpose }}
-            </td>
-            <td class="p-4 align-middle">
+            </TableCell>
+            <TableCell class="p-4 align-middle">
               <span :class="{
                 'text-yellow-500': request.status === 'pending',
                 'text-green-500': request.status === 'approved',
@@ -77,10 +94,10 @@ function formatDate(dateStr: string): string {
               }">
                 {{ request.status }}
               </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
   </div>
   

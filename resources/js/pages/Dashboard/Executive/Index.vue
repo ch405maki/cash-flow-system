@@ -9,6 +9,7 @@ import RecentPurchaseOrdersTable from '@/components/dashboard/executive/RecentPu
 import RecentVoucherTable from '@/components/dashboard/executive/RecentVoucherTable.vue';
 import ApprovalTimeTrendsChart from '@/components/dashboard/executive/ApprovalTimeTrendsChart.vue';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import PageHeader from '@/components/PageHeader.vue';
 
 const props = defineProps<{
   isDepartmentUser: boolean;
@@ -50,10 +51,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-      <h1 class="text-lg font-medium">
-        Executive Director Dashboard
-        <p class="text-sm text-muted-foreground capitalize">Welcome, {{ username }}</p>
-      </h1>
+      <PageHeader 
+          class="capitalize"
+          :title="`Welcome, ${username}`"
+          subtitle="Executive Director Dashboard"
+      />
 
       <StatsCards :status-counts="statusCounts" />
 
@@ -62,7 +64,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 
       <Tabs default-value="requestToOrders" class="mt-4 w-full">
         <div class="flex items-center justify-between">
-          <h2 class="text-lg font-medium">Recent Data</h2>
+          <PageHeader 
+            title="Recent Data" 
+            subtitle="Recently added records and updates"
+          />
           <TabsList class="grid w-full max-w-xl grid-cols-4">
             <TabsTrigger value="requests">Requests</TabsTrigger>
             <TabsTrigger value="requestToOrders">Request to Orders</TabsTrigger>
