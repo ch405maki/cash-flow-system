@@ -4,6 +4,8 @@ import {
   ClipboardList
 } from 'lucide-vue-next'
 import { router } from '@inertiajs/vue3'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 
 defineProps<{
   isDepartmentUser: boolean;
@@ -38,48 +40,73 @@ function formatDate(dateStr: string): string {
     day: '2-digit'
   })
 }
+
+const getStatusVariant = (status: string) => {
+  const variantMap: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
+    propertyCustodian: 'secondary',
+    pending: 'outline',
+    approved: 'default',
+    to_order: 'secondary',
+    rejected: 'destructive'
+  };
+  
+  return variantMap[status] || 'outline';
+};
 </script>
 
 <template>
-  <div v-if="isDepartmentUser && recentRequests.length > 0" class="rounded-xl border">
+  <div v-if="isDepartmentUser && recentRequests.length > 0">
     <div class="relative w-full overflow-auto">
-      <table class="w-full caption-bottom text-sm">
-        <thead class="[&_tr]:border-b">
-          <tr class="border-b transition-colors hover:bg-muted/50">
-            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Request #</th>
-            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Date</th>
-            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Requested By</th>
-            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Purpose</th>
-            <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Status</th>
-          </tr>
-        </thead>
-        <tbody class="[&_tr:last-child]:border-0">
-          <tr v-for="request in recentRequests" :key="request.id" class="border-b transition-colors hover:bg-muted/50 hover:underline cursor-pointer" @click="goToShowRequest(request.id)">
-            <td class="p-4 align-middle font-medium text-purple-800 hover:text-purple-700" >
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>
+              Request #
+            </TableHead>
+            <TableHead>
+              Date
+            </TableHead>
+            <TableHead>
+              Requested By
+            </TableHead>
+            <TableHead>
+              Purpose
+            </TableHead>
+            <TableHead>
+              Status
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow 
+            v-for="request in recentRequests" 
+            :key="request.id" 
+            class="border-b transition-colors hover:bg-muted/50 cursor-pointer" 
+            @click="goToShowRequest(request.id)"
+          >
+            <TableCell>
               {{ request.request_no }}
-            </td>
-            <td class="p-4 align-middle">
+            </TableCell>
+            <TableCell>
               {{ formatDate(request.request_date) }}
-            </td>
-            <td class="p-4 align-middle">
+            </TableCell>
+            <TableCell>
               {{ request.user?.first_name }} {{ request.user?.last_name }}
-            </td>
-            <td class="p-4 align-middle">
+            </TableCell>
+            <TableCell>
               {{ request.purpose }}
-            </td>
-            <td class="p-4 align-middle">
-              <span :class="{
-                'text-yellow-500': request.status === 'pending',
-                'text-green-500': request.status === 'approved',
-                'text-blue-500': request.status === 'to_order',
-                'text-red-500': request.status === 'rejected'
-              }">
-                {{ request.status }}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </TableCell>
+            <TableCell>
+                <Badge 
+                  :variant="getStatusVariant(request.status)"
+                  class="capitalize"
+                >
+                  {{ request.status }}
+                </Badge>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
   </div>
   

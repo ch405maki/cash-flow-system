@@ -5,6 +5,7 @@ import { Head } from '@inertiajs/vue3';
 import StatsCards from '@/components/dashboard/custodian/StatsCards.vue';
 import RecentRequestsTable from '@/components/dashboard/custodian/RecentRequestsTable.vue';
 import FrequentItemsChart from '@/components/dashboard/purchasing/FrequentItemsChart.vue';
+import PageHeader from '@/components/PageHeader.vue';
 
 const props = defineProps<{
     isDepartmentUser: boolean;
@@ -37,28 +38,28 @@ const breadcrumbs: BreadcrumbItem[] = [
     <Head title="Dashboard" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 space-y-4">
-            <div>
-                <h1 class="text-lg font-medium mb-2">
-                    Property Custodian Dashboard
-                    <p class="text-sm text-muted-foreground capitalize">Welcome, {{ username }}</p>
-                </h1>
-                <StatsCards :status-counts="statusCounts" />
-            </div>
-            
-            <div>
-                <h1 class="text-lg font-medium">Recent Requests</h1>
-                <RecentRequestsTable 
-                    :is-department-user="isDepartmentUser" 
-                    :recent-requests="recentRequests" 
-                />
-            </div>
+        <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+            <PageHeader 
+                class="capitalize"
+                :title="`Welcome, ${username}`"
+                subtitle="Property Custodian Dashboard"
+            />
 
-            <div>
-                <h1 class="text-lg font-medium">Most Requested Items</h1>
-                <p class="text-sm text-gray-500">Chart for most number of request</p>
-                <FrequentItemsChart :items="frequentItems" />
-            </div>
+            <StatsCards :status-counts="statusCounts" />
+            
+            <PageHeader 
+                title="Recent Requests"
+            />
+            <RecentRequestsTable 
+                :is-department-user="isDepartmentUser" 
+                :recent-requests="recentRequests" 
+            />
+
+            <PageHeader 
+                title="Most Requested Items"
+                subtitle="Chart for most number of request"
+            />
+            <FrequentItemsChart :items="frequentItems" />
         </div>
     </AppLayout>
 </template>

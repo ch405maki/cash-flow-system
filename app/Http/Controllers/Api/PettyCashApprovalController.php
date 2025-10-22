@@ -19,7 +19,7 @@ class PettyCashApprovalController extends Controller
 
         // Update petty cash status
         $pettyCash->update([
-            'status' => 'approved',
+            'status' => 'audited',
         ]);
 
         PettyCashApproval::create([

@@ -5,6 +5,7 @@ import { router } from '@inertiajs/vue3'
 import { CirclePlus , ListChecks } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
 import { FileText } from 'lucide-vue-next'
+import PageHeader from '@/components/PageHeader.vue';
 import {
   Table,
   TableCaption,
@@ -77,10 +78,10 @@ function formatDate(dateStr: string): string {
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="flex justify-between items-center">
-        <div>
-          <h1 class="text-xl font-bold">Purchase Request List</h1>
-          <p class="text-sm">Created Purchase List</p>
-        </div>
+        <PageHeader 
+          title="Purchase Request List" 
+          subtitle="View Request information and status"
+        />
         <div class="space-x-2 items-center">
           <Button variant="outline" @click="goToList" class="h-8"><ListChecks /> List to Purchase</Button>
           <Button @click="goToCreate" class="h-8"><CirclePlus />Create New Purchase</Button>
@@ -88,7 +89,7 @@ function formatDate(dateStr: string): string {
       </div>
 
       <!-- Table -->
-      <div v-if="requests.length > 0" class="rounded-lg border">
+      <div v-if="requests.length > 0">
         <Table>
           <TableHeader>
             <TableRow>

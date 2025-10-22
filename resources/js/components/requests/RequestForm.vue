@@ -28,8 +28,8 @@ interface RequestItem {
   quantity: number;
   unit: string;
   item_description: string;
-  editing?: boolean; // Add this line
-  original?: RequestItem; // To store original values when editing
+  editing?: boolean;
+  original?: RequestItem;
 }
 
 const editItem = (index: number) => {

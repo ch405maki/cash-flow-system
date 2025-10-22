@@ -33,11 +33,7 @@ function viewVoucher(id: number) {
 </script>
 
 <template>
-  <div v-if="vouchers.length > 0"  class="border rounded-xl mt-4 overflow-auto">
-    <div class="px-4 py-3 bg-muted/40">
-      <h2 class="text-base font-semibold">Recent Voucher For Approval</h2>
-    </div>
-
+  <div v-if="vouchers.length > 0"  class="overflow-auto">
     <Table>
         <TableHeader>
             <TableRow>

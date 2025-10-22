@@ -117,16 +117,16 @@ function printList() {
         @click="navigateToEdit"
         :disabled="request.status == 'rejected' || request.status == 'released'"
       >
-        <Rocket /> Partial Release
+        <Rocket /> Release Item
       </Button>
 
-      <Button
+      <!-- <Button
         size="sm"
         :disabled="request.status === 'released' || form.processing"
         @click="showReleaseModal = true"
       >
         <Rocket /> Release All
-      </Button>
+      </Button> -->
       <PasswordDialog
         v-model="showReleaseModal"
         title="Password Verification"

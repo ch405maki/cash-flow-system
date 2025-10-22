@@ -74,7 +74,7 @@ function getStatusVariant(status: string) {
         </div>    
       </div>
 
-      <div v-if="requests.length > 0"  class="w-full text-sm border border-border rounded-md">
+      <div v-if="requests.length > 0">
         <Table>
         <TableHeader>
           <TableRow>

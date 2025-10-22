@@ -8,6 +8,11 @@ import { ref, computed, onMounted } from 'vue';
 import FormHeader from '@/components/reports/header/formHeder.vue'
 import { Printer, Rocket } from 'lucide-vue-next';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import PageHeader from '@/components/PageHeader.vue';
+import { Send } from 'lucide-vue-next';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
   TableBody,
@@ -78,17 +83,15 @@ onMounted(() => {
   });
 });
 
-const toggleSelectAll = (event: Event) => {
-  const isChecked = (event.target as HTMLInputElement).checked;
-  form.selectedItems = isChecked ? allRequestDetails.value.map(d => d.id) : [];
-  form.request_ids = isChecked 
+const toggleSelectAll = (checked: boolean) => {
+  form.selectedItems = checked ? allRequestDetails.value.map(d => d.id) : [];
+  form.request_ids = checked 
     ? [...new Set(allRequestDetails.value.map(d => d.request_id))] 
     : [];
-  form.department_ids = isChecked
+  form.department_ids = checked
     ? [...new Set(allRequestDetails.value.map(d => d.department_id))]
     : [];
 };
-
 const submit = () => {
   if (form.selectedItems.length === 0) {
     alert('Please select at least one item');
@@ -129,6 +132,14 @@ const printArea = () =>{
     console.error('Print section not found');
   }
 }
+
+const toggleItemSelection = (id: number, checked: boolean) => {
+  if (checked) {
+    form.selectedItems.push(id);
+  } else {
+    form.selectedItems = form.selectedItems.filter(itemId => itemId !== id);
+  }
+};
 </script>
 
 <template>
@@ -137,7 +148,10 @@ const printArea = () =>{
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold mb-4">Create Purchase Request</h1>
+        <PageHeader 
+          title="Create Purchase Request" 
+          subtitle="Fill out request details and specify required items"
+        />
         <Button size="sm" @click="printArea"> <Printer />Print List</Button>
       </div>
       <div v-if="Object.keys(form.errors).length > 0" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -148,67 +162,66 @@ const printArea = () =>{
       
       <div v-if="allRequestDetails.length > 0">
         <div class="mb-4">
-          <label for="order-notes" class="block font-medium">Notes</label>
-          <textarea
+          <Label for="order-notes" class="block font-medium">Notes</Label>
+          <Textarea
             id="order-notes"
             v-model="form.notes"
-            class="w-full border rounded p-2"
+            class="w-full"
             rows="3"
-          ></textarea>
+            placeholder="Add any notes for this order..."
+          />
         </div>
         
         <div class="mb-2">
-          <label class="flex items-center">
-            <input 
-              type="checkbox" 
+          <div class="flex items-center space-x-2">
+            <Checkbox
               :checked="form.selectedItems.length === allRequestDetails.length"
               :indeterminate="form.selectedItems.length > 0 && form.selectedItems.length < allRequestDetails.length"
-              @change="toggleSelectAll"
-              class="mr-2"
-            >
-            Select All Items
-          </label>
+              @update:checked="toggleSelectAll"
+            />
+            <Label class="text-sm font-medium">
+              Select All Items
+            </Label>
+          </div>
         </div>
         
-        <div class="overflow-x-auto rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead class="w-[40px]">
-                  Select
-                </TableHead>
-                <TableHead>Item Description</TableHead>
-                <TableHead class="text-right w-[40px]">Unit</TableHead>
-                <TableHead class="text-right w-[40px]">
-                  Quantity
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow v-for="detail in allRequestDetails" :key="detail.id">
-                <TableCell class="font-medium">
-                  <input
-                    type="checkbox"
-                    v-model="form.selectedItems"
-                    :value="detail.id"
-                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  >
-                </TableCell>
-                <TableCell>{{ detail.item_description }}</TableCell>
-                <TableCell class="text-right">{{ detail.unit }}</TableCell>
-                <TableCell class="text-right">
-                  {{ detail.quantity }}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead class="w-[40px]">
+                Select
+              </TableHead>
+              <TableHead>Item Description</TableHead>
+              <TableHead class="text-right w-[40px]">Unit</TableHead>
+              <TableHead class="text-right w-[40px]">
+                Quantity
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow v-for="detail in allRequestDetails" :key="detail.id">
+              <TableCell class="font-medium">
+                <Checkbox
+                  :checked="form.selectedItems.includes(detail.id)"
+                  @update:checked="(checked) => toggleItemSelection(detail.id, checked)"
+                  class="h-4 w-4"
+                />
+              </TableCell>
+              <TableCell>{{ detail.item_description }}</TableCell>
+              <TableCell class="text-right">{{ detail.unit }}</TableCell>
+              <TableCell class="text-right">
+                {{ detail.quantity }}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
         
         <div class="mt-6 flex space-x-2">
           <Button
             @click="submit"
             :disabled="form.processing || form.selectedItems.length === 0"
           >
+            <Send />
             <span v-if="form.processing">Processing...</span>
             <span v-else>Submit Request</span>
           </Button>

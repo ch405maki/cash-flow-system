@@ -13,6 +13,7 @@ import {
   BarController,
   LineController
 } from 'chart.js';
+import PageHeader from '@/components/PageHeader.vue';
 
 // Register Chart.js components
 Chart.register(
@@ -132,11 +133,11 @@ watch(() => props.approvalTimeTrends, () => {
 </script>
 
 <template>
-  <div class="rounded-lg">
-    <h3 class="text-lg font-semibold">Approval Trends</h3>
-    <p class="text-sm text-gray-600 mb-4">
-        Tracking approval and volume trends over the last 6 months
-    </p>
+  <PageHeader 
+      title="Approval Trends"
+      subtitle="Tracking approval and volume trends over the last 6 months"
+  />
+  <div class="p-2">
     <div class="h-80">
       <canvas ref="chartRef"></canvas>
     </div>

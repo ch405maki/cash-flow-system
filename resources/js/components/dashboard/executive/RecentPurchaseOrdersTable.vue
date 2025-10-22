@@ -27,11 +27,7 @@ function goToPO(id: number) {
 </script>
 
 <template>
-  <div class="border rounded-xl mt-4 overflow-auto">
-    <div class="px-4 py-3 bg-muted/40">
-      <h2 class="text-base font-semibold">Recent Purchase Orders</h2>
-    </div>
-
+  <div class="overflow-auto">
     <Table>
       <TableHeader>
         <TableRow>

@@ -114,7 +114,27 @@ const releaseItems = async () => {
     isReleasing.value = false;
   }
 };
-const toggleSelectAll = (checked: boolean) => { /* ... */ }
+
+const toggleSelectAll = ({ checked, shouldAutoFill }: { checked: boolean, shouldAutoFill?: boolean }) => {
+  if (checked) {
+    // Select all item IDs
+    selectedItems.value = form.value.details.map(detail => detail.id)
+    
+    // Auto-fill all release quantities with remaining quantities
+    if (shouldAutoFill) {
+      form.value.details.forEach((detail, index) => {
+        const remainingQuantity = detail.quantity - detail.released_quantity
+        if (remainingQuantity > 0) {
+          form.value.details[index].released_quantity = remainingQuantity
+        }
+      })
+    }
+  } else {
+    // Deselect all
+    selectedItems.value = []
+  }
+}
+
 
 const updateReleasedQuantity = ({ index, value }: { index: number, value: number }) => {
   form.value.details[index].released_quantity = value
