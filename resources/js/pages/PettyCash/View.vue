@@ -140,7 +140,7 @@ console.log(props.pettyCash)
 <template>
   <Head :title="`Edit Petty Cash - ${props.pettyCash.pcv_no}`" />
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+    <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
       <div class="flex items-center justify-between">
         <PageHeader 
           :title="`Viewing ${props.pettyCash.pcv_no}`" 
@@ -152,125 +152,125 @@ console.log(props.pettyCash)
             Liquidate
           </Button>
           <!-- Approval History Button -->
-            <Sheet>
-              <SheetTrigger as-child>
-                <Button variant="outline">
-                  <History class="h-4 w-4" /> Time Stamp
-                </Button>
-              </SheetTrigger>
-              <SheetContent class="w-[400px] sm:w-[540px]">
-                <SheetHeader>
-                  <SheetTitle>Approval History</SheetTitle>
-                  <SheetDescription>
-                    <h3 class="text-sm font-medium text-muted-foreground mb-2">
-                      Petty Cash Voucher
-                    </h3>
-                    <div class="mb-3">
-                      <h4 class="text-muted-foreground">{{ props.pettyCash.pcv_no }}</h4>
-                      <p>Created At: {{ formatDateTime(props.pettyCash.created_at) }}</p>
-                    </div>
+          <Sheet>
+            <SheetTrigger as-child>
+              <Button variant="outline">
+                <History class="h-4 w-4" /> Time Stamp
+              </Button>
+            </SheetTrigger>
+            <SheetContent class="w-[400px] sm:w-[540px]">
+              <SheetHeader>
+                <SheetTitle>Approval History</SheetTitle>
+                <SheetDescription>
+                  <h3 class="text-sm font-medium text-muted-foreground mb-2">
+                    Petty Cash Voucher
+                  </h3>
+                  <div class="mb-3">
+                    <h4 class="text-muted-foreground">{{ props.pettyCash.pcv_no }}</h4>
+                    <p>Created At: {{ formatDateTime(props.pettyCash.created_at) }}</p>
+                  </div>
 
-                    <div v-if="props.pettyCash.approvals?.length">
-                      <div class="relative pl-6">
-                        <!-- Timeline line -->
-                        <div class="absolute left-0 top-0 h-full w-0.5 bg-gray-200 ml-4"></div>
+                  <div v-if="props.pettyCash.approvals?.length">
+                    <div class="relative pl-6">
+                      <!-- Timeline line -->
+                      <div class="absolute left-0 top-0 h-full w-0.5 bg-gray-200 ml-4"></div>
 
+                      <div
+                        v-for="(approval, index) in props.pettyCash.approvals"
+                        :key="approval.id"
+                        class="relative mb-6 last:mb-0"
+                      >
+                        <!-- Circle icon -->
                         <div
-                          v-for="(approval, index) in props.pettyCash.approvals"
-                          :key="approval.id"
-                          class="relative mb-6 last:mb-0"
+                          class="bg-green-500 border-2 border-green-500 absolute -left-6 top-0 h-8 w-8 rounded-full flex items-center justify-center z-10"
                         >
-                          <!-- Circle icon -->
-                          <div
-                            class="bg-green-500 border-2 border-green-500 absolute -left-6 top-0 h-8 w-8 rounded-full flex items-center justify-center z-10"
-                          >
-                            <CheckCircle class="h-5 w-5 text-white" />
-                          </div>
+                          <CheckCircle class="h-5 w-5 text-white" />
+                        </div>
 
-                          <!-- Connector line -->
-                          <div
-                            v-if="index < props.pettyCash.approvals.length - 1"
-                            class="absolute -left-6 top-8 h-full w-0.5 ml-4 bg-green-500 z-0"
-                          ></div>
+                        <!-- Connector line -->
+                        <div
+                          v-if="index < props.pettyCash.approvals.length - 1"
+                          class="absolute -left-6 top-8 h-full w-0.5 ml-4 bg-green-500 z-0"
+                        ></div>
 
-                          <!-- Content -->
-                          <div class="pl-4">
-                            <div class="flex items-center justify-between">
-                              <div class="flex items-center gap-2">
-                                <span class="capitalize">
-                                  {{ approval.user?.username || 'Unknown' }}
-                                </span>
-                                <span class="text-xs px-2 py-0.5 rounded bg-gray-100">
-                                  {{ approval.status }}
-                                </span>
-                              </div>
-                              <span class="text-xs text-muted-foreground">
-                                {{ formatDateTime(approval.created_at) }}
+                        <!-- Content -->
+                        <div class="pl-4">
+                          <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                              <span class="capitalize">
+                                {{ approval.user?.username || 'Unknown' }}
+                              </span>
+                              <span class="text-xs px-2 py-0.5 rounded bg-gray-100">
+                                {{ approval.status }}
                               </span>
                             </div>
+                            <span class="text-xs text-muted-foreground">
+                              {{ formatDateTime(approval.created_at) }}
+                            </span>
+                          </div>
 
-                            <div class="mt-1 flex items-start gap-2">
-                              <p class="text-xs text-muted-foreground">
-                                "{{ approval.remarks || 'No remarks' }}"
-                              </p>
-                            </div>
+                          <div class="mt-1 flex items-start gap-2">
+                            <p class="text-xs text-muted-foreground">
+                              "{{ approval.remarks || 'No remarks' }}"
+                            </p>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </SheetDescription>
-                </SheetHeader>
-              </SheetContent>
-            </Sheet>
+                  </div>
+                </SheetDescription>
+              </SheetHeader>
+            </SheetContent>
+          </Sheet>
 
-        <div v-if="user.role == 'accounting'">
-          <!-- Release button -->
-          <AlertDialog v-if="props.pettyCash.status == 'requested'">
-            <AlertDialogTrigger as-child>
-              <Button>Tag Release</Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Release Cash Advance?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action will mark the request
-                  <b>{{ props.pettyCash.pcv_no }}</b> as <i>to liquidate</i>.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <div class="my-2">
-                <label for="release-remarks" class="block text-sm font-medium mb-1">
-                  Remarks (optional)
-                </label>
-                <textarea
-                  id="release-remarks"
-                  v-model="releaseRemarks"
-                  rows="2"
-                  class="w-full border rounded-md p-2 text-sm"
-                  placeholder="Add any remarks for this release..."
-                ></textarea>
-              </div>
+          <div v-if="user.role == 'accounting'">
+            <!-- Release button -->
+            <AlertDialog v-if="props.pettyCash.status == 'requested'">
+              <AlertDialogTrigger as-child>
+                <Button>Tag Release</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Release Cash Advance?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action will mark the request
+                    <b>{{ props.pettyCash.pcv_no }}</b> as <i>to liquidate</i>.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div class="my-2">
+                  <label for="release-remarks" class="block text-sm font-medium mb-1">
+                    Remarks (optional)
+                  </label>
+                  <textarea
+                    id="release-remarks"
+                    v-model="releaseRemarks"
+                    rows="2"
+                    class="w-full border rounded-md p-2 text-sm"
+                    placeholder="Add any remarks for this release..."
+                  ></textarea>
+                </div>
 
-              <div class="flex items-center space-x-2 my-2">
-                <Checkbox v-model:checked="confirmChecked" id="confirm-release" />
-                <label for="confirm-release" class="text-sm">
-                  I confirm release of this request.
-                </label>
-              </div>
+                <div class="flex items-center space-x-2 my-2">
+                  <Checkbox v-model:checked="confirmChecked" id="confirm-release" />
+                  <label for="confirm-release" class="text-sm">
+                    I confirm release of this request.
+                  </label>
+                </div>
 
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  :disabled="!confirmChecked"
-                  @click="releaseCashAdvance"
-                >
-                  Confirm Release
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    :disabled="!confirmChecked"
+                    @click="releaseCashAdvance"
+                  >
+                    Confirm Release
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
 
-        <div v-if="user.role == 'bursar'">
+          <div v-if="user.role == 'bursar'">
           <!-- Release button -->
           <AlertDialog v-if="props.pettyCash.status == 'audited'">
             <AlertDialogTrigger as-child>
@@ -304,11 +304,11 @@ console.log(props.pettyCash)
             </AlertDialogContent>
           </AlertDialog>
         </div>
-        <Button
-          @click="printReport"
-        >
-          Print
-        </Button>
+          <Button
+            @click="printReport"
+          >
+            Print
+          </Button>
         </div>
       </div>
 

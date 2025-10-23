@@ -45,7 +45,7 @@ function getDisplayFileName(canvas) {
 </script>
 
 <template>
-  <div v-if="canvases.length > 0" class="w-full text-sm border border-border rounded-md">
+  <div v-if="canvases.length > 0">
     <Table>
       <TableHeader>
         <TableRow>

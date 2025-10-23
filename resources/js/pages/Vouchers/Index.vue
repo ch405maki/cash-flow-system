@@ -163,7 +163,7 @@ const props = defineProps({
 <template>
   <Head title="Vouchers" />
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="flex h-full flex-1 flex-col gap-3.5 rounded-xl p-4">
+    <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
       <div class="flex justify-between items-center">
         <PageHeader 
           title="Vouchers" 

@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { Head, router } from '@inertiajs/vue3'
 import { type BreadcrumbItem } from '@/types'
 import PettyCashEditForm from '@/components/pettyCash/PettyCashEditForm.vue'
+import PageHeader from '@/components/PageHeader.vue';
 
 const props = defineProps<{
   pettyCash: any
@@ -18,11 +19,12 @@ const breadcrumbs: BreadcrumbItem[] = [
 <template>
   <Head :title="`Edit Petty Cash - ${props.pettyCash.pcv_no}`" />
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-      <h1 class="text-xl font-bold">Edit Petty Cash Voucher</h1>
-      <div class="rounded-xl border p-4">
-        <PettyCashEditForm :petty-cash="props.pettyCash" />
-      </div>
+    <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+      <PageHeader 
+        title="Edit Petty Cash Voucher" 
+        :subtitle="`Update details for PCV ${props.pettyCash.pcv_no}`"
+      />
+      <PettyCashEditForm :petty-cash="props.pettyCash" />
     </div>
   </AppLayout>
 </template>

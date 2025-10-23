@@ -30,13 +30,10 @@ const props = defineProps<{
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
-      <h1 class="text-xl font-bold">
-        <span v-if="filters.status == 'draft'">Draft</span>
-        <span v-if="filters.status == 'forEOD'">For Approval</span>
-        <span v-if="filters.status == 'approved'">Approved</span>
-        <span v-if="filters.status == 'rejected'">Rejected</span>
-        Purchase Orders 
-      </h1>
+      <PageHeader 
+        title="Purchase Orders" 
+        subtitle="Monitoring submitted purchase orders"
+      />
 
       <PurchaseOrderTable :purchase-orders="purchaseOrders" />
 

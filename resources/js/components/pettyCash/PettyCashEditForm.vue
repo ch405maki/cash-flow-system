@@ -20,6 +20,18 @@ import {
   DialogFooter
 } from '@/components/ui/dialog'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Separator } from '@/components/ui/separator'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Rocket } from 'lucide-vue-next'
 
 const user = usePage().props.auth.user;
 const props = defineProps<{
@@ -62,7 +74,7 @@ const totalAmount = computed(() => {
 const groupedByDate = computed(() => {
   const grouped: Record<string, { cashAdvance: number; liquidation: number }> = {}
 
-  // ✅ Only include saved items
+  // Only include saved items
   existingItems.value.forEach(item => {
     const date = item.liquidation_for_date || item.date
     if (!grouped[date]) {
@@ -137,13 +149,13 @@ const addItem = () => {
     return
   }
 
-  // 🔒 Require receipt for liquidation
+  // Require receipt for liquidation
   if (newItem.type === 'Liquidation' && !newItem.receipt) {
     toast.error('Receipt attachment is required for Liquidation items.')
     return
   }
 
-  // 🧠 Prevent adding Liquidation if no matching Cash Advance exists
+  // Prevent adding Liquidation if no matching Cash Advance exists
   if (newItem.type === 'Liquidation') {
     if (!newItem.liquidation_for_date) {
       toast.warning('Please select a Liquidation Dated value.')
@@ -185,7 +197,7 @@ const addItem = () => {
     }
   }
 
-  // ✅ All validations passed
+  // All validations passed
   form.items.push({ ...newItem })
   newItem.type = ''
   newItem.particulars = ''
@@ -320,174 +332,220 @@ const handleUpdateConfirm = async () => {
 <template>
   <div class="space-y-6">
     <!-- Voucher Header -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="space-y-2">
-        <Label>PCV No: {{ props.pettyCash.pcv_no }}</Label><br />
-        <Label>Paid To: {{ props.pettyCash.paid_to }}</Label><br />
-        <Label>Status: {{ props.pettyCash.status }}</Label><br />
-        <Label>Date: {{ props.pettyCash.date }}</Label>
+      <Table>
+        <TableBody>
+          <TableRow>
+            <TableCell class="font-medium w-[20%] border-r">
+              <div>
+                <div class="text-xs text-muted-foreground mb-1">PCV No</div>
+                <div>{{ props.pettyCash.pcv_no }}</div>
+              </div>
+            </TableCell>
+            <TableCell class="w-[20%] border-r">
+              <div>
+                <div class="text-xs text-muted-foreground mb-1">Status</div>
+                <div class="capitalize">{{ props.pettyCash.status }}</div>
+              </div>
+            </TableCell>
+            <TableCell class="w-[40%] border-r">
+              <div>
+                <div class="text-xs text-muted-foreground mb-1">Paid To</div>
+                <div>{{ props.pettyCash.paid_to }}</div>
+              </div>
+            </TableCell>
+            <TableCell class="w-[20%]">
+              <div>
+                <div class="text-xs text-muted-foreground mb-1">Date</div>
+                <div>{{ formatDate(props.pettyCash.date) }}</div>
+              </div>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="md:col-span-2">
+          <Alert>
+            <Rocket class="h-4 w-4" />
+            <AlertTitle>Remarks!</AlertTitle>
+            <AlertDescription>{{ props.pettyCash.remarks || 'No remarks yet.' }}</AlertDescription>
+          </Alert>
+        </div>
       </div>
-      <div class="md:col-span-2">
-        <Label>Remarks</Label>
-        <Input v-model="form.remarks" />
-      </div>
-    </div>
 
     <!-- Existing Items Table -->
     <div v-if="existingItems.length" class="border rounded-xl p-4">
-      <h3 class="text-lg font-semibold mb-3">Existing Items</h3>
-      <table class="w-full border-collapse">
-        <thead class="bg-muted">
-          <tr>
-            <th class="text-left p-2 border-b">Type</th>
-            <th class="text-left p-2 border-b">Particulars</th>
-            <th class="text-left p-2 border-b">Date</th>
-            <th class="text-right p-2 border-b">Amount</th>
-            <th class="text-left p-2 border-b">Receipt</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
+      <h3 class="text-lg font-semibold mb-2">Existing Items</h3>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead class="w-[20%]">Type</TableHead>
+            <TableHead class="w-[30%]">Particulars</TableHead>
+            <TableHead class="w-[15%]">Date</TableHead>
+            <TableHead class="w-[15%] text-right">Amount</TableHead>
+            <TableHead class="w-[20%]">Receipt</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow
             v-for="item in existingItems"
             :key="item.id"
-            class="border-b"
             :class="getRowClass(item)"
           >
-            <td class="p-2 font-semibold">{{ item.type }} <span v-if="item?.liquidation_for_date != null" class="text-sm font-normal">({{ formatDate(item.liquidation_for_date) }})</span></td>
-            <td class="p-2">{{ item.particulars }}</td>
-            <td class="p-2">{{ formatDate(item.date) }}</td>
-            <td class="p-2 text-right">{{ item.amount.toLocaleString() }}</td>
-            <td class="p-2">
-              <a v-if="item.receipt" :href="`/storage/${item.receipt}`" target="_blank" class="text-blue-600 underline">
+            <TableCell class="font-semibold">
+              {{ item.type }}
+              <span 
+                v-if="item?.liquidation_for_date != null" 
+                class="text-sm font-normal text-muted-foreground block"
+              >
+                ({{ formatDate(item.liquidation_for_date) }})
+              </span>
+            </TableCell>
+            <TableCell>{{ item.particulars }}</TableCell>
+            <TableCell>{{ formatDate(item.date) }}</TableCell>
+            <TableCell class="text-right font-medium">
+              {{ item.amount.toLocaleString() }}
+            </TableCell>
+            <TableCell>
+              <a 
+                v-if="item.receipt" 
+                :href="`/storage/${item.receipt}`" 
+                target="_blank" 
+                class="text-blue-600 hover:text-blue-800 underline text-sm"
+              >
                 View
               </a>
-              <span v-else class="text-muted-foreground italic">No file</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              <span v-else class="text-muted-foreground italic text-sm">No file</span>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+      
       <!-- Running Totals per Type -->
-    <div class="mt-4 flex justify-end">
-      <div class="grid grid-cols-1 gap-2">
-          <h3 class="text-md font-semibold">Running Totals</h3>
-          <div v-for="(amount, type) in totalsByType" :key="type" class="flex space-x-2">
-            <h1 class="font-medium w-48">{{ type }}:</h1>
-            <h1 class="font-bold w-48 text-right">₱{{ amount.toLocaleString() }}</h1>
-          </div>
+        <div class="mt-4 flex justify-end">
+          <div class="grid grid-cols-1">
+            <h3 class="text-md font-semibold">Running Totals</h3>
+            <div v-for="(amount, type) in totalsByType" :key="type" class="flex space-x-2">
+              <h1 class="font-medium w-48">{{ type }}:</h1>
+              <h1 class="font-bold w-48 text-right">₱{{ amount.toLocaleString() }}</h1>
+            </div>
 
-          <!-- Show change per date -->
-          <div v-for="(change, date) in changeByDate" :key="date" class="flex space-x-2 text-rose-600">
-            <h1 class="font-medium w-48">Change ({{ formatDate(date) }}):</h1>
-            <h1 class="font-bold w-48 text-right">₱{{ change.toLocaleString() }}</h1>
-          </div>
-          <div class="font-bold flex space-x-2">
-            <h1 class="w-48">
-              Grand Total: 
-            </h1>
-            <h1 class="w-48 text-right">₱{{ totalAmount.toLocaleString() }}</h1>
+            <!-- Show change per date - Only if there are liquidation items -->
+            <div 
+              v-for="(change, date) in changeByDate" 
+              :key="date" 
+              class="flex space-x-2 text-rose-600"
+              v-if="existingItems.some(item => item.type === 'Liquidation')"
+            >
+              <h1 class="font-medium w-48">Change ({{ formatDate(date) }}):</h1>
+              <h1 class="font-bold w-48 text-right">₱{{ change.toLocaleString() }}</h1>
+            </div>
+            <div class="flex items-center justify-between mt-2 border-t border-gray-400 pt-2 font-bold">
+              <h1>Grand Total</h1>
+              <h1 class="text-right">₱{{ totalAmount.toLocaleString() }}</h1>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
+    <Separator />
     <!-- New Items Table -->
-    <div v-if="form.items.length" class="border rounded-xl p-4">
+    <div v-if="form.items.length">
       <h3 class="text-lg font-semibold mb-3">New Items (Unsubmitted)</h3>
-      <table class="w-full border-collapse">
-        <thead class="bg-muted">
-          <tr>
-            <th class="text-left p-2 border-b">Type</th>
-            <th class="text-left p-2 border-b">Particulars</th>
-            <th class="text-left p-2 border-b">Date</th>
-            <th class="text-left p-2 border-b">Liquidation Dated</th>
-            <th class="text-right p-2 border-b">Amount</th>
-            <th class="text-left p-2 border-b">Receipt</th>
-            <th class="p-2 border-b text-center">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-        <tr
-          v-for="(item, index) in form.items"
-          :key="index"
-          class="border-b"
-          :class="getRowClass(item)"
-        >
-          <!-- Type (read-only) -->
-          <td class="p-2">{{ item.type }}</td>
-
-          <!-- Particulars (inline editable) -->
-          <td class="p-2" @dblclick="startEditing(index, 'particulars')">
-            <template v-if="isEditing(index, 'particulars')">
-              <Input
-                v-model="editValue"
-                @blur="saveEdit(index, 'particulars')"
-                @keyup.enter="saveEdit(index, 'particulars')"
-                class="w-full"
-              />
-            </template>
-            <template v-else>{{ item.particulars }}</template>
-          </td>
-
-          <!-- Date (inline editable) -->
-          <td class="p-2" @dblclick="startEditing(index, 'date')">
-            <template v-if="isEditing(index, 'date')">
-              <Input
-                v-model="editValue"
-                type="date"
-                @blur="saveEdit(index, 'date')"
-                @keyup.enter="saveEdit(index, 'date')"
-                class="w-full"
-              />
-            </template>
-            <template v-else>{{ formatDate(item.date) }}</template>
-          </td>
-
-          <!-- Date (inline editable) -->
-          <td class="p-2" @dblclick="startEditing(index, 'liquidation_for_date')">
-            <template v-if="isEditing(index, 'liquidation_for_date')">
-              <Input
-                v-model="editValue"
-                type="date"
-                @blur="saveEdit(index, 'liquidation_for_date')"
-                @keyup.enter="saveEdit(index, 'liquidation_for_date')"
-                class="w-full"
-              />
-            </template>
-            <template v-else>{{ formatDate(item.liquidation_for_date) }}</template>
-          </td>
-
-          <!-- Amount (inline editable) -->
-          <td class="p-2 text-right" @dblclick="startEditing(index, 'amount')">
-            <template v-if="isEditing(index, 'amount')">
-              <Input
-                v-model.number="editValue"
-                type="number"
-                min="0"
-                @blur="saveEdit(index, 'amount')"
-                @keyup.enter="saveEdit(index, 'amount')"
-                class="w-full text-right"
-              />
-            </template>
-            <template v-else>{{ item.amount.toLocaleString() }}</template>
-          </td>
-
-          <!-- Receipt (read-only for now) -->
-          <td class="p-2">
-            <span v-if="item.receipt">{{ item.receipt.name }}</span>
-            <span v-else class="text-muted-foreground italic">No file</span>
-          </td>
-
-          <!-- Action -->
-          <td class="p-2 text-center">
-            <Button variant="destructive" size="sm" @click="removeNewItem(index)">Remove</Button>
-          </td>
-        </tr>
-      </tbody>
-      </table>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Type</TableHead>
+            <TableHead>Particulars</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Liquidation Dated</TableHead>
+            <TableHead class="text-right">Amount</TableHead>
+            <TableHead>Receipt</TableHead>
+            <TableHead class="text-center">Action</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow
+            v-for="(item, index) in form.items"
+            :key="index"
+            :class="getRowClass(item)"
+          >
+            <TableCell class="py-3">{{ item.type }}</TableCell>
+            <TableCell 
+              @dblclick="startEditing(index, 'particulars')"
+              class="cursor-pointer py-3"
+            >
+              <template v-if="isEditing(index, 'particulars')">
+                <Input
+                  v-model="editValue"
+                  @blur="saveEdit(index, 'particulars')"
+                  @keyup.enter="saveEdit(index, 'particulars')"
+                  class="w-full"
+                />
+              </template>
+              <template v-else>{{ item.particulars }}</template>
+            </TableCell>
+            <TableCell 
+              @dblclick="startEditing(index, 'date')"
+              class="cursor-pointer py-3"
+            >
+              <template v-if="isEditing(index, 'date')">
+                <Input
+                  v-model="editValue"
+                  type="date"
+                  @blur="saveEdit(index, 'date')"
+                  @keyup.enter="saveEdit(index, 'date')"
+                  class="w-full"
+                />
+              </template>
+              <template v-else>{{ formatDate(item.date) }}</template>
+            </TableCell>
+            <TableCell 
+              @dblclick="startEditing(index, 'liquidation_for_date')"
+              class="cursor-pointer py-3"
+            >
+              <template v-if="isEditing(index, 'liquidation_for_date')">
+                <Input
+                  v-model="editValue"
+                  type="date"
+                  @blur="saveEdit(index, 'liquidation_for_date')"
+                  @keyup.enter="saveEdit(index, 'liquidation_for_date')"
+                  class="w-full"
+                />
+              </template>
+              <template v-else>{{ formatDate(item.liquidation_for_date) }}</template>
+            </TableCell>
+            <TableCell 
+              @dblclick="startEditing(index, 'amount')"
+              class="text-right cursor-pointer py-3"
+            >
+              <template v-if="isEditing(index, 'amount')">
+                <Input
+                  v-model.number="editValue"
+                  type="number"
+                  min="0"
+                  @blur="saveEdit(index, 'amount')"
+                  @keyup.enter="saveEdit(index, 'amount')"
+                  class="w-full text-right"
+                />
+              </template>
+              <template v-else class="font-medium">{{ item.amount.toLocaleString() }}</template>
+            </TableCell>
+            <TableCell class="py-3">
+              <span v-if="item.receipt" class="text-sm">{{ item.receipt.name }}</span>
+              <span v-else class="text-muted-foreground italic text-sm">No file</span>
+            </TableCell>
+            <TableCell class="text-center py-3">
+              <Button variant="destructive" size="sm" @click="removeNewItem(index)">
+                Remove
+              </Button>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
 
     <!-- Add New Item Form -->
-    <div class="border rounded-xl p-4 space-y-3">
+    <div class="space-y-3">
       <h3 class="text-lg font-semibold">Add New Item</h3>
 
       <!-- Radio buttons for Type -->

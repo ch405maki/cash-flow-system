@@ -106,7 +106,7 @@ const fundStatus = computed(() => {
   <Head title="Petty Cash" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+    <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
       <div class="flex justify-between items-center">
         <PageHeader 
           title="Petty Cash" 

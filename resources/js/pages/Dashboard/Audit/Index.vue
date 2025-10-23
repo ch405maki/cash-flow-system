@@ -35,15 +35,15 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 // Functions to navigate to different audit sections
 const navigateToCanvasses = () => {
-    router.get('/canvasses?status=submitted');
+    router.get('/canvas');
 };
 
 const navigateToVouchers = () => {
-    router.get('/vouchers?status=forAudit');
+    router.get('/voucher-approval');
 };
 
 const navigateToPettyCash = () => {
-    router.get('/petty-cash?status=submitted');
+    router.get('/audit/petty-cash');
 };
 </script>
 
