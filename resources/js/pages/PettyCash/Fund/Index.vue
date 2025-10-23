@@ -7,6 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import { useToast } from 'vue-toastification';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 const toast = useToast();
 
@@ -54,36 +63,43 @@ watch(() => form.recentlySuccessful, (val) => {
 
       <div class="grid md:grid-cols-2 gap-6">
         <!-- LEFT COLUMN: Table -->
-        <div class="border rounded-xl p-4 bg-white shadow-sm">
+        <div class="border rounded-xl p-4 shadow-sm">
           <h2 class="font-semibold mb-3">Existing Funds</h2>
-
-          <table class="w-full text-sm border-collapse border border-gray-300">
-            <thead class="bg-gray-100">
-              <tr>
-                <th class="border px-3 py-2 text-left">Custodian</th>
-                <th class="border px-3 py-2 text-left">Department</th>
-                <th class="border px-3 py-2 text-right">Fund Amount</th>
-                <th class="border px-3 py-2 text-right">Fund Balance</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
+          <Table>
+            <TableHeader class="bg-muted">
+              <TableRow>
+                <TableHead class="border-r">User</TableHead>
+                <TableHead class="border-r">Department</TableHead>
+                <TableHead class="border-r text-right">Fund Amount</TableHead>
+                <TableHead class="text-right">Fund Balance</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow
                 v-for="fund in props.pettyCashFunds"
                 :key="fund.id"
-                class="hover:bg-gray-50 transition cursor-pointer"
+                class="hover:bg-muted/50 cursor-pointer border-b"
               >
-                <td class="border px-3 py-2">{{ fund.user?.first_name || '' }} {{ fund.user?.last_name || '' }}</td>
-                <td class="border px-3 py-2">{{ fund.department?.department_name || '—' }}</td>
-                <td class="border px-3 py-2 text-right">₱ {{ fund.fund_amount.toLocaleString() }}</td>
-                <td class="border px-3 py-2 text-right">₱ {{ fund.fund_balance.toLocaleString() }}</td>
-              </tr>
-              <tr v-if="!props.pettyCashFunds.length">
-                <td colspan="3" class="text-center py-4 text-gray-500">
+                <TableCell class="border-r py-3">
+                  {{ fund.user?.first_name || '' }} {{ fund.user?.last_name || '' }}
+                </TableCell>
+                <TableCell class="border-r py-3">
+                  {{ fund.department?.department_name || '—' }}
+                </TableCell>
+                <TableCell class="border-r text-right font-medium py-3">
+                  ₱{{ fund.fund_amount.toLocaleString() }}
+                </TableCell>
+                <TableCell class="text-right font-medium py-3">
+                  ₱{{ fund.fund_balance.toLocaleString() }}
+                </TableCell>
+              </TableRow>
+              <TableRow v-if="!props.pettyCashFunds.length">
+                <TableCell colspan="4" class="text-center py-6 text-muted-foreground">
                   No petty cash funds found.
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </div>
 
         <!-- RIGHT COLUMN: Form -->
@@ -93,10 +109,10 @@ watch(() => form.recentlySuccessful, (val) => {
           <form @submit.prevent="handleSubmit" class="space-y-4">
             <!-- User -->
             <div>
-              <Label for="user">Custodian</Label>
+              <Label for="user">User</Label>
               <Select v-model="form.user_id">
                 <SelectTrigger>
-                  <SelectValue placeholder="Select custodian" />
+                  <SelectValue placeholder="Select User" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem

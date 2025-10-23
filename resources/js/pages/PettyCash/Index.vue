@@ -226,13 +226,13 @@ const fundStatus = computed(() => {
               <TooltipTrigger>
                 <div
                   :class="[
-                    'rounded-lg border px-5 py-4 flex items-center justify-between transition-colors cursor-pointer w-full',
+                    'rounded-lg border px-5 py-2 flex items-center justify-between transition-colors cursor-pointer w-full',
                     fundStatus.color,
                   ]"
                 >
                   <!-- Icon -->
                   <div
-                    class="flex items-center justify-center w-12 h-12 rounded-full border-2 flex-shrink-0"
+                    class="flex items-center justify-center w-10 h-10 rounded-full border-2 flex-shrink-0"
                     :class="fundStatus.iconBackground"
                   >
                     <PhilippinePeso class="w-6 h-6" :class="fundStatus.iconColor" />
@@ -278,7 +278,6 @@ const fundStatus = computed(() => {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-
           <Button v-if="hasItem && user.is_petty_cash == 1" @click="goToCreate">Create New Petty Cash</Button>
         </div>
       </div>
