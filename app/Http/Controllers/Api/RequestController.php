@@ -131,6 +131,7 @@ class RequestController extends Controller
             'user' => [
                 'id' => $user->id,
                 'role' => $user->role,
+                'access' => $user->access_id,
                 'department_id' => $user->department_id,
             ],
         ]);

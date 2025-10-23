@@ -400,6 +400,7 @@ const bursarNavItems: NavItem[] = [
             <div v-if="user?.is_petty_cash === 1">
               <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
             </div>
+            <NavMain :items="staffRequestItems" group-label="Request"/>
             <NavMain :items="reportItems" group-label="Reports" />
           </div>
           
@@ -410,12 +411,12 @@ const bursarNavItems: NavItem[] = [
 
           <div v-if="user?.role === 'bursar'">
             <NavMain :items="bursarNavItems" group-label="Petty Cash"/>
+            <NavMain :items="staffRequestItems" group-label="Request"/>
             <NavMain :items="bursarReportItems" group-label="Reports"/>
           </div>
 
           <div v-if="user?.role === 'property_custodian'">
             <NavMain :items="custodianNavItems" group-label="Navigation"/>
-            <!-- <NavMain :items="staffRequestItems" group-label="Request"/> -->
             <NavMain :items="custodianApprovalItems" group-label="Request for Purchase"/>
             <div v-if="user?.is_petty_cash === 1">
               <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
