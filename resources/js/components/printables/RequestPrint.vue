@@ -98,8 +98,8 @@ defineExpose({
             </div>
             <div v-if="index < 10" class="col-span-1 p-0.5 border-b border-r border-zinc-500 truncate px-1 hover:bg-zinc-50 h-5 leading-tight capitalize">
               {{ detail.item_description }} 
-              <span v-if="request.status === 'released'" class="text-green-600">( Released: {{ Number(detail.quantity) + Number(detail.released_quantity) }})</span>
-              <span v-else class="text-purple-600">( Released: {{ detail.released_quantity }})</span>
+              <!-- <span v-if="request.status === 'released'" class="text-green-600">( Released: {{ Number(detail.quantity) + Number(detail.released_quantity) }})</span>
+              <span v-else class="text-purple-600">( Released: {{ detail.released_quantity }})</span> -->
             </div>
             <div v-if="index < 10" class="col-span-1 p-0.5 border-b border-r border-zinc-500 text-right pr-1 hover:bg-zinc-50 h-5 leading-tight">
               -

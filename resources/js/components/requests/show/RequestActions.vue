@@ -158,7 +158,7 @@ function printList() {
     </div>
 
     <!-- Department Head -->
-    <div v-if="user.role === 'department_head'" class="flex gap-2">
+    <div v-if="user.access == 3" class="flex gap-2">
       <Button
         size="sm"
         v-if="request.status === 'pending'"

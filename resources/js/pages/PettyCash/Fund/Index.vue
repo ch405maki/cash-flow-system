@@ -103,9 +103,8 @@ watch(() => form.recentlySuccessful, (val) => {
         </div>
 
         <!-- RIGHT COLUMN: Form -->
-        <div class="border rounded-xl p-4 bg-white shadow-sm">
+        <div class="border rounded-xl p-4">
           <h2 class="font-semibold mb-3">Assign New Fund</h2>
-
           <form @submit.prevent="handleSubmit" class="space-y-4">
             <!-- User -->
             <div>
