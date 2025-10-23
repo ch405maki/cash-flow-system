@@ -4,7 +4,7 @@ import { useToast } from 'vue-toastification'
 import { useForm, router } from '@inertiajs/vue3'
 import PasswordDialog from './PasswordDialog.vue'
 import { Button } from '@/components/ui/button'
-import { Printer, FilePenLine, BadgeCheck, History, Rocket , Clock, CheckCircle, } from 'lucide-vue-next'
+import { Printer, FilePenLine, BadgeCheck, History, Rocket, Clock, CheckCircle, XCircle } from 'lucide-vue-next'
 import { formatDateTime } from '@/lib/utils'
 import {
   Sheet,
@@ -38,6 +38,7 @@ const showApproveModal = ref(false)
 const showReleaseModal = ref(false)
 const showOrderModal = ref(false)
 const showForRequestModal = ref(false)
+const showRejectModal = ref(false) // Add reject modal
 
 const form = useForm({
   status: '',
@@ -79,6 +80,7 @@ function closeAllDialogs() {
   showReleaseModal.value = false
   showForRequestModal.value = false
   showOrderModal.value = false
+  showRejectModal.value = false // Close reject modal too
 }
 
 const emit = defineEmits(['print-list'])
@@ -91,7 +93,7 @@ function printList() {
 <template>
   <div class="flex items-center gap-2">
     <!-- Executive Director -->
-    <div v-if="user.role === 'executive_director'">
+    <div v-if="user.role === 'executive_director'" class="flex gap-2">
       <Button
         size="sm"
         :disabled="request.status === 'approved' || form.processing"
@@ -107,6 +109,24 @@ function printList() {
         :loading="form.processing"
         @confirm="(password) => submitStatusUpdate('approved', password)"
       />
+      
+      <!-- Reject Button for Executive Director -->
+      <Button
+        variant="destructive"
+        size="sm"
+        :disabled="request.status === 'rejected' || form.processing"
+        @click="showRejectModal = true"
+      >
+        <XCircle />Reject
+      </Button>
+      <PasswordDialog
+        v-model="showRejectModal"
+        title="Password Verification"
+        description="Please enter your password to reject this request"
+        confirm-label="Confirm Rejection"
+        :loading="form.processing"
+        @confirm="(password) => submitStatusUpdate('rejected', password)"
+      />
     </div>
 
     <!-- Property Custodian -->
@@ -119,22 +139,6 @@ function printList() {
       >
         <Rocket /> Release Item
       </Button>
-
-      <!-- <Button
-        size="sm"
-        :disabled="request.status === 'released' || form.processing"
-        @click="showReleaseModal = true"
-      >
-        <Rocket /> Release All
-      </Button> -->
-      <PasswordDialog
-        v-model="showReleaseModal"
-        title="Password Verification"
-        description="Please enter your password to release this request"
-        confirm-label="Confirm Release"
-        :loading="form.processing"
-        @confirm="(password) => submitStatusUpdate('released', password)"
-      />
 
       <Button
         size="sm"
@@ -154,7 +158,7 @@ function printList() {
     </div>
 
     <!-- Department Head -->
-    <div v-if="user.role === 'department_head'">
+    <div v-if="user.role === 'department_head'" class="flex gap-2">
       <Button
         size="sm"
         v-if="request.status === 'pending'"
@@ -169,6 +173,24 @@ function printList() {
         confirm-label="Confirm Approval"
         :loading="form.processing"
         @confirm="(password) => submitStatusUpdate('propertyCustodian', password)"
+      />
+      
+      <!-- Reject Button for Department Head -->
+      <Button
+        variant="destructive"
+        size="sm"
+        v-if="request.status === 'pending'"
+        @click="showRejectModal = true"
+      >
+        <XCircle />Reject
+      </Button>
+      <PasswordDialog
+        v-model="showRejectModal"
+        title="Password Verification"
+        description="Please enter your password to reject this request"
+        confirm-label="Confirm Rejection"
+        :loading="form.processing"
+        @confirm="(password) => submitStatusUpdate('rejected', password)"
       />
     </div>
 
