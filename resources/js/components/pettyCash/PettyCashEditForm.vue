@@ -11,6 +11,7 @@ import {
   RadioGroupItem
 } from '@/components/ui/radio-group'
 import { formatDate } from '@/lib/utils';
+import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
   DialogContent,
@@ -31,7 +32,7 @@ import {
 } from "@/components/ui/table"
 import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Rocket } from 'lucide-vue-next'
+import { Rocket, Send, Forward  } from 'lucide-vue-next'
 
 const user = usePage().props.auth.user;
 const props = defineProps<{
@@ -545,7 +546,7 @@ const handleUpdateConfirm = async () => {
     </div>
 
     <!-- Add New Item Form -->
-    <div class="space-y-3">
+    <div class="space-y-3  border rounded-xl p-4">
       <h3 class="text-lg font-semibold">Add New Item</h3>
 
       <!-- Radio buttons for Type -->
@@ -562,10 +563,6 @@ const handleUpdateConfirm = async () => {
                 <RadioGroupItem id="cash-advance" value="Cash Advance" />
                 <Label for="cash-advance">Cash Advance</Label>
               </div>
-              <div class="flex items-center space-x-2">
-                <RadioGroupItem id="liquidation" value="Liquidation" />
-                <Label for="liquidation">Liquidation</Label>
-              </div>
             </div>
           </div>
           <div v-else class="flex mt-2 items-center space-x-4">
@@ -580,16 +577,18 @@ const handleUpdateConfirm = async () => {
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div>
+        <div class="col-span-4">
           <Label>Particulars</Label>
-          <Input v-model="newItem.particulars" />
+          <Textarea v-model="newItem.particulars" />
         </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <Label>Date</Label>
           <Input v-model="newItem.date" type="date" />
         </div>
         <div v-if="newItem.type === 'Liquidation'">
-          <Label>Liquidation Dated</Label>
+          <Label class="text-rose-600">Liquidation Dated</Label>
           <Input v-model="newItem.liquidation_for_date" type="date" />
         </div>
         <div>
@@ -607,7 +606,7 @@ const handleUpdateConfirm = async () => {
         </div>
       </div>
       <div class="flex justify-end">
-        <Button variant="secondary" @click="addItem">Accept Item</Button>
+        <Button variant="secondary" @click="addItem"><Send /> Accept Item</Button>
       </div>
     </div>
 
@@ -627,7 +626,7 @@ const handleUpdateConfirm = async () => {
         class="bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
         :disabled="props.pettyCash.status === 'submitted' || form.items.some(item => !item.id)"
       >
-        Submit Petty Cash
+        <Forward /> Submit Petty Cash
       </Button>
     </div>
 

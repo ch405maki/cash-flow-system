@@ -36,11 +36,11 @@ class BursarPettycashController extends Controller
         $fund = PettyCashFund::where('user_id', Auth::id())->first();
 
         if ($fund) {
-            if ($fund->fund_amount < $grandTotal) {
+            if ($fund->fund_balance < $grandTotal) {
                 return back()->withErrors(['fund' => 'Insufficient petty cash fund balance.']);
             }
 
-            $fund->fund_amount -= $grandTotal;
+            $fund->fund_balance -= $grandTotal;
             $fund->save();
         }
 
