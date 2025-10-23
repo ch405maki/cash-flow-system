@@ -38,7 +38,7 @@ const showApproveModal = ref(false)
 const showReleaseModal = ref(false)
 const showOrderModal = ref(false)
 const showForRequestModal = ref(false)
-const showRejectModal = ref(false) // Add reject modal
+const showRejectModal = ref(false)
 
 const form = useForm({
   status: '',
@@ -80,7 +80,7 @@ function closeAllDialogs() {
   showReleaseModal.value = false
   showForRequestModal.value = false
   showOrderModal.value = false
-  showRejectModal.value = false // Close reject modal too
+  showRejectModal.value = false 
 }
 
 const emit = defineEmits(['print-list'])
@@ -176,7 +176,7 @@ function printList() {
       />
       
       <!-- Reject Button for Department Head -->
-      <Button
+      <!-- <Button
         variant="destructive"
         size="sm"
         v-if="request.status === 'pending'"
@@ -191,7 +191,7 @@ function printList() {
         confirm-label="Confirm Rejection"
         :loading="form.processing"
         @confirm="(password) => submitStatusUpdate('rejected', password)"
-      />
+      /> -->
     </div>
 
     <!-- Staff or Department Head - Edit -->
