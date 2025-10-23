@@ -22,7 +22,7 @@ declare module 'vite/client' {
     }
 }
 
-const appName = 'Cash Flow';
+const appName = 'Disbursement System';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
