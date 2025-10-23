@@ -27,7 +27,7 @@ import type { SharedData } from '@/types';
 
     const page = usePage<SharedData>()
 
-    // ✅ make a local reactive copy so Collapsible can toggle it
+    // make a local reactive copy so Collapsible can toggle it
     const localItems = ref<DropdownNavItem[]>([])
 
     watchEffect(() => {
