@@ -19,6 +19,15 @@ import {
   DialogTitle,
   DialogDescription
 } from '@/components/ui/dialog'
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
 const user = usePage().props.auth.user;
 const props = defineProps<{
@@ -191,13 +200,37 @@ const submitExecutiveApprovalLiquidate = async () => {
 <template>
   <div class="space-y-6">
     <!-- Voucher Header -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="space-y-2">
-        <Label>PCV No: {{ props.pettyCash.pcv_no }}</Label><br />
-        <Label>Paid To: {{ props.pettyCash.paid_to }}</Label><br />
-        <Label>Status: <span class="capitalize">{{ props.pettyCash.status }}</span></Label><br />
-        <Label>Date: {{ props.pettyCash.date }}</Label>
-      </div>
+      <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
+      <Table>
+        <TableBody>
+          <TableRow>
+            <TableCell class="font-medium w-[20%] border-r">
+              <div>
+                <div class="text-xs text-muted-foreground mb-1">PCV No</div>
+                <div>{{ props.pettyCash.pcv_no }}</div>
+              </div>
+            </TableCell>
+            <TableCell class="w-[20%] border-r">
+              <div>
+                <div class="text-xs text-muted-foreground mb-1">Status</div>
+                <div class="capitalize">{{ props.pettyCash.status }}</div>
+              </div>
+            </TableCell>
+            <TableCell class="w-[40%] border-r">
+              <div>
+                <div class="text-xs text-muted-foreground mb-1">Paid To</div>
+                <div>{{ props.pettyCash.paid_to }}</div>
+              </div>
+            </TableCell>
+            <TableCell class="w-[20%]">
+              <div>
+                <div class="text-xs text-muted-foreground mb-1">Date</div>
+                <div>{{ formatDate(props.pettyCash.date) }}</div>
+              </div>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
       <div class="md:col-span-2">
         <Alert>
             <Rocket class="h-4 w-4" />
@@ -212,36 +245,50 @@ const submitExecutiveApprovalLiquidate = async () => {
     <!-- Existing Items Table -->
     <div v-if="existingItems.length" class="border rounded-xl p-4">
       <h3 class="text-lg font-semibold mb-3">Existing Items</h3>
-      <table class="w-full border-collapse">
-        <thead class="bg-muted">
-          <tr>
-            <th class="text-left p-2 border-b">Type</th>
-            <th class="text-left p-2 border-b">Particulars</th>
-            <th class="text-left p-2 border-b">Date</th>
-            <th class="text-right p-2 border-b">Amount</th>
-            <th class="text-left p-2 border-b">Receipt</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead class="w-[20%]">Type</TableHead>
+            <TableHead class="w-[30%]">Particulars</TableHead>
+            <TableHead class="w-[15%]">Date</TableHead>
+            <TableHead class="w-[15%] text-right">Amount</TableHead>
+            <TableHead class="w-[20%]">Receipt</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow
             v-for="item in existingItems"
             :key="item.id"
-            class="border-b"
             :class="getRowClass(item)"
           >
-            <td class="p-2 font-semibold">{{ item.type }} <span v-if="item?.liquidation_for_date != null" class="text-sm font-normal">({{ formatDate(item.liquidation_for_date) }})</span></td>
-            <td class="p-2">{{ item.particulars }}</td>
-            <td class="p-2">{{ formatDate(item.date) }}</td>
-            <td class="p-2 text-right">{{ item.amount.toLocaleString() }}</td> 
-            <td class="p-2">
-              <a v-if="item.receipt" :href="`/storage/${item.receipt}`" target="_blank" class="text-blue-600 underline">
+            <TableCell class="font-semibold">
+              {{ item.type }}
+              <span 
+                v-if="item?.liquidation_for_date != null" 
+                class="text-sm font-normal text-muted-foreground block"
+              >
+                ({{ formatDate(item.liquidation_for_date) }})
+              </span>
+            </TableCell>
+            <TableCell>{{ item.particulars }}</TableCell>
+            <TableCell>{{ formatDate(item.date) }}</TableCell>
+            <TableCell class="text-right font-medium">
+              {{ item.amount.toLocaleString() }}
+            </TableCell>
+            <TableCell>
+              <a 
+                v-if="item.receipt" 
+                :href="`/storage/${item.receipt}`" 
+                target="_blank" 
+                class="text-blue-600 hover:text-blue-800 underline text-sm"
+              >
                 View
               </a>
-              <span v-else class="text-muted-foreground italic">No file</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              <span v-else class="text-muted-foreground italic text-sm">No file</span>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
       <!-- Running Totals per Type -->
       <div class="mt-4 flex justify-end">
         <div class="grid grid-cols-1 gap-2">
@@ -261,18 +308,18 @@ const submitExecutiveApprovalLiquidate = async () => {
             </h1>
             <h1 class="w-48 text-right">₱{{ changeAmount.toLocaleString() }}</h1>
           </div>
-          <div class="font-bold flex space-x-2">
-            <h1 class="w-48">Grand Total:</h1>
-            <h1 class="w-48 text-right">₱{{ totalAmount.toLocaleString() }}</h1>
+          <div class="flex items-center justify-between mt-2 border-t border-gray-400 pt-2 font-bold">
+            <h1>Grand Total</h1>
+            <h1 class="text-right">₱{{ totalAmount.toLocaleString() }}</h1>
           </div>
         </div>
       </div>
       </div>
 
       <!-- Existing Distribution Records -->
-    <div v-if="props.pettyCash.distribution_expenses?.length" class="mt-6 border rounded-lg p-4">
+    <div v-if="props.pettyCash.distribution_expenses?.length" class="border rounded-lg p-4">
       <h3 class="text-lg font-semibold mb-2">Distribution of Expense</h3>
-      <table class="w-full border-collapse text-sm">
+      <Table class="w-full border-collapse text-sm">
         <thead class="bg-muted">
           <tr>
             <th class="p-2 border-b text-left">Account Name</th>
@@ -289,107 +336,107 @@ const submitExecutiveApprovalLiquidate = async () => {
             <td class="p-2 text-right">₱{{ Number(record.amount).toLocaleString() }}</td>
           </tr>
         </tbody>
-      </table>
+      </Table>
     </div>
 
-      <div class="mt-6 border rounded-lg p-4" v-if="user.role === 'audit'">
-        <!-- Remarks -->
-        <div class="mb-4">
-          <Label for="approvalRemarks">Remarks</Label>
-          <Textarea
-            id="approvalRemarks"
-            v-model="approval.remarks"
-            rows="3"
-            class="block w-full border rounded-md p-2"
-            placeholder="Add optional remarks for this approval..."
-          ></Textarea>
-        </div>
-
-        <!-- Submit Button -->
-        <div class="flex justify-end space-x-2">
-          <Button
-            :disabled="!approval.remarks"
-            @click="submitApproval"
-          >
-            Submit Review
-          </Button>
-        </div>
+    <div class="mt-6 border rounded-lg p-4" v-if="user.role === 'audit'">
+      <!-- Remarks -->
+      <div class="mb-4">
+        <Label for="approvalRemarks">Remarks</Label>
+        <Textarea
+          id="approvalRemarks"
+          v-model="approval.remarks"
+          rows="3"
+          class="block w-full border rounded-md p-2"
+          placeholder="Add optional remarks for this approval..."
+        ></Textarea>
       </div>
-      <div class="mt-6 border rounded-lg p-4" v-if="user.role === 'executive_director'">
-        <!-- Remarks -->
-        <div class="mb-4">
-          <Label for="approvalRemarks">Remarks</Label>
-          <Textarea
-            id="approvalRemarks"
-            v-model="approval.remarks"
-            rows="3"
-            class="block w-full border rounded-md p-2"
-            placeholder="Add optional remarks for this approval..."
-          ></Textarea>
-        </div>
 
-        <!-- Submit Button -->
-        <div class="flex justify-end space-x-2">
-          <!-- Normal Approval -->
-          <Dialog v-if="user.role === 'executive_director' && !hasLiquidation" v-model:open="normalApprovalDialogOpen">
-            <DialogTrigger as-child>
-              <Button :disabled="!approval.remarks || props.pettyCash.status == 'approved'">
-                Confirm Approval
-              </Button>
-            </DialogTrigger>
-
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Confirm Executive Approval</DialogTitle>
-                <DialogDescription>
-                  Please confirm that you've reviewed this petty cash request before approving.
-                </DialogDescription>
-              </DialogHeader>
-
-              <div class="flex items-center space-x-2 mt-4">
-                <Checkbox id="confirmApproval" v-model:checked="confirmApproval" />
-                <Label for="confirmApproval">I confirm the accuracy of this request.</Label>
-              </div>
-
-              <DialogFooter class="mt-4">
-                <Button variant="outline" @click="normalApprovalDialogOpen = false">Cancel</Button>
-                <Button :disabled="!confirmApproval" @click="handleApproval('normal')">
-                  Approve
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          <!-- Liquidation Approval -->
-          <Dialog v-if="user.role === 'executive_director' && hasLiquidation" v-model:open="liquidationDialogOpen">
-            <DialogTrigger as-child>
-              <Button :disabled="!approval.remarks">
-                Confirm Liquidation Approval
-              </Button>
-            </DialogTrigger>
-
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Confirm Liquidation Approval</DialogTitle>
-                <DialogDescription>
-                  This petty cash request contains liquidation items. Please confirm before final approval.
-                </DialogDescription>
-              </DialogHeader>
-
-              <div class="flex items-center space-x-2 mt-4">
-                <Checkbox id="confirmLiquidation" v-model:checked="confirmLiquidation" />
-                <Label for="confirmLiquidation">I confirm liquidation details are correct.</Label>
-              </div>
-
-              <DialogFooter class="mt-4">
-                <Button variant="outline" @click="liquidationDialogOpen = false">Cancel</Button>
-                <Button :disabled="!confirmLiquidation" @click="handleApproval('liquidation')">
-                  Approve
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
+      <!-- Submit Button -->
+      <div class="flex justify-end space-x-2">
+        <Button
+          :disabled="!approval.remarks"
+          @click="submitApproval"
+        >
+          Submit Review
+        </Button>
       </div>
     </div>
+    <div class="mt-6 border rounded-lg p-4" v-if="user.role === 'executive_director'">
+      <!-- Remarks -->
+      <div class="mb-4">
+        <Label for="approvalRemarks">Remarks</Label>
+        <Textarea
+          id="approvalRemarks"
+          v-model="approval.remarks"
+          rows="3"
+          class="block w-full border rounded-md p-2"
+          placeholder="Add optional remarks for this approval..."
+        ></Textarea>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="flex justify-end space-x-2">
+        <!-- Normal Approval -->
+        <Dialog v-if="user.role === 'executive_director' && !hasLiquidation" v-model:open="normalApprovalDialogOpen">
+          <DialogTrigger as-child>
+            <Button :disabled="!approval.remarks || props.pettyCash.status == 'approved'">
+              Confirm Approval
+            </Button>
+          </DialogTrigger>
+
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm Executive Approval</DialogTitle>
+              <DialogDescription>
+                Please confirm that you've reviewed this petty cash request before approving.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div class="flex items-center space-x-2 mt-4">
+              <Checkbox id="confirmApproval" v-model:checked="confirmApproval" />
+              <Label for="confirmApproval">I confirm the accuracy of this request.</Label>
+            </div>
+
+            <DialogFooter class="mt-4">
+              <Button variant="outline" @click="normalApprovalDialogOpen = false">Cancel</Button>
+              <Button :disabled="!confirmApproval" @click="handleApproval('normal')">
+                Approve
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <!-- Liquidation Approval -->
+        <Dialog v-if="user.role === 'executive_director' && hasLiquidation" v-model:open="liquidationDialogOpen">
+          <DialogTrigger as-child>
+            <Button :disabled="!approval.remarks">
+              Confirm Liquidation Approval
+            </Button>
+          </DialogTrigger>
+
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm Liquidation Approval</DialogTitle>
+              <DialogDescription>
+                This petty cash request contains liquidation items. Please confirm before final approval.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div class="flex items-center space-x-2 mt-4">
+              <Checkbox id="confirmLiquidation" v-model:checked="confirmLiquidation" />
+              <Label for="confirmLiquidation">I confirm liquidation details are correct.</Label>
+            </div>
+
+            <DialogFooter class="mt-4">
+              <Button variant="outline" @click="liquidationDialogOpen = false">Cancel</Button>
+              <Button :disabled="!confirmLiquidation" @click="handleApproval('liquidation')">
+                Approve
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  </div>
 </template>

@@ -141,12 +141,12 @@ defineExpose({
             <div class="font-semibold text-xs">Requested By:</div>
             <div class="flex-1 flex flex-col justify-end">
               <div class="relative mt-4 inline-block text-sm">
-                <img
+                <!-- <img
                   v-if="request.status != 'pending'"
                   src="/images/signatures/sample_signature.png"
                   alt="Signature"
                   class="w-[100px] absolute -top-6 left-1/2 -translate-x-1/2 pointer-events-none"
-                />
+                /> -->
                 <div class="text-xs text-center text-zinc-600 mt-1 uppercase" >
                   <p v-if="request.status != 'pending'">
                     {{ request.user.first_name }} {{ request.user.last_name }}

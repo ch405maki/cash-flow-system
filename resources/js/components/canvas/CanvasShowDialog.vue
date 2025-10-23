@@ -11,6 +11,7 @@ import axios from 'axios';
 import { useToast } from 'vue-toastification';
 import { formatDateTime } from '@/lib/utils';
 import { router } from '@inertiajs/vue3';
+import PageHeader from '@/components/PageHeader.vue';
 
 const toast = useToast();
 
@@ -131,8 +132,8 @@ const getPreviewUrl = (file) => {
 
 const isPdfFile = (file) => {
   return file?.mimetype?.includes('pdf') || 
-         file?.original_filename?.toLowerCase().endsWith('.pdf') ||
-         file?.type?.includes('pdf');
+    file?.original_filename?.toLowerCase().endsWith('.pdf') ||
+    file?.type?.includes('pdf');
 };
 
 // File download
@@ -227,7 +228,9 @@ function viewRequest(id: number) {
       ]">
       <DialogHeader>
         <DialogTitle class="flex items-center gap-2">
-          <span class="truncate max-w-[400px] capitalize">{{ canvas.title || 'Untitled Canvas' }}</span>
+          <PageHeader 
+            :title="`${canvas.title || 'Untitled Canvas'}`" 
+          />
         </DialogTitle>
         <DialogDescription v-if="hasLinkedOrder" class="hover:underline hover:cursor-pointer hover:text-violet-800" @click="viewRequest(canvas.request_to_order.id)">
           Linked to Order # {{ canvas.request_to_order.order_no }} | {{ formatDateTime(canvas.request_to_order.order_date) }}
@@ -348,7 +351,7 @@ function viewRequest(id: number) {
                     </div>
 
                     <div class="mt-1 flex items-start gap-2">
-                      <p class="text-sm text-gray-700">
+                      <p class="text-sm">
                         "{{ approval.comments || 'No comments' }}"
                       </p>
                     </div>

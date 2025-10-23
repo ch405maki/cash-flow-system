@@ -14,6 +14,7 @@ import {
 import CanvasShowDialog from '@/components/canvas/CanvasShowDialog.vue'
 import CanvasTable from '@/components/canvas/CanvasTable.vue'
 import { ref, computed, watch } from 'vue';
+import PageHeader from '@/components/PageHeader.vue';
 
 const props = defineProps<{
   canvases: Array<any>;
@@ -112,10 +113,13 @@ const breadcrumbs = [
   <Head title="My Canvases" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="p-4 space-y-4">
+    <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
       <Tabs :model-value="activeTab" @update:model-value="handleTabChange" class="w-full">
         <div class="flex items-center justify-between pb-2">
-          <h1 class="text-xl font-bold">Canvas</h1>
+          <PageHeader 
+            title="Canvas" 
+            subtitle="Monitoring submitted canvas requests"
+          />
 
           <TabsList class="flex gap-2">
             <TabsTrigger value="submitted" class="px-3 py-1.5 text-sm leading-none">
