@@ -171,7 +171,7 @@ class UserController extends Controller
                 'middle_name'   => 'nullable|string|max:255',
                 'last_name'     => 'required|string|max:255',
                 'email'         => 'required|email|max:255|unique:users,email,' . $id,
-                'role'          => 'required|in:admin,executive_director,department_head,accounting,audit,property_custodian,purchasing,staff',
+                'role'          => 'required|string',
                 'status'        => 'required|in:active,inactive',
             ]);
 

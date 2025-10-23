@@ -163,6 +163,7 @@
                 <option value="department_head">Department Head</option>
                 <option value="accounting">Accounting</option>
                 <option value="audit">Audit</option>
+                <option value="bursar">bursar</option>
                 <option value="property_custodian">Property Custodian</option>
                 <option value="purchasing">Purchasing</option>
                 <option value="staff">Staff</option>
