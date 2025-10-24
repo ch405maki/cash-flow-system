@@ -317,13 +317,13 @@ const fundStatus = computed(() => {
                 </TableCell>
             <TableCell class="flex justify-end space-x-2">
               <Button
-                v-if="item.status !== 'draft' && item.status !== 'requested'"
+                v-if="item.status !== 'draft' && item.status !== 'requested' && item.status !== 'returned'"
                 @click="router.get(route('petty-cash.view', item.id))"
               >
                 View
               </Button>
               <Button
-                v-if="item.status === 'draft'"
+                v-if="item.status === 'draft' || item.status == 'returned'"
                 @click="router.get(route('petty-cash.edit', item.id))"
               >
                 Review

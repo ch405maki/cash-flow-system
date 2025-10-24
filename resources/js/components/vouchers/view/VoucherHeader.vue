@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ArrowLeft, SquarePen, Printer, Check, X, BadgeCheck, History, Clock, CheckCircle, } from 'lucide-vue-next';
+import { Undo2, SquarePen, Printer, Check, X, BadgeCheck, History, Clock, CheckCircle, } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
 import AuditVerificationDialog from '@/components/vouchers/AuditVerificationDialog.vue';
 import DirectorVerificationDialog from '@/components/vouchers/DirectorVerificationDialog.vue';
+import AuditForReview from '@/components/vouchers/AuditForReview.vue';
 import { router } from '@inertiajs/vue3';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ref } from 'vue'
@@ -48,7 +49,7 @@ function goToEditVoucher(voucherId, e) {
             subtitle="Review and approve voucher"
         />
         <div class="flex space-x-2">
-            <template v-if="authUser.role == 'accounting' && voucher.status !== 'draft' && voucher.status !== 'completed' && voucher.status !== 'forAudit'">
+            <template v-if="authUser.role == 'accounting' && voucher.status !== 'draft' && voucher.status !== 'completed' && voucher.status !== 'forAudit' && voucher.status !== 'return'">
                 <ReceiptUploadDialog 
                 :voucher-id="voucher.id"
                 :current-issue-date="voucher.issue_date"
@@ -75,6 +76,21 @@ function goToEditVoucher(voucherId, e) {
                     </template>
                 </AuditVerificationDialog>
             </template>
+            <template v-if="authUser.role == 'audit' && authUser.access_id == '2' && voucher.status == 'forAudit'">
+                <AuditForReview :voucher-id="voucher.id" action="return">
+                    <template #trigger>
+                        <Button 
+                            size="sm"
+                            :variant="voucher.status === 'forAudit' ? 'secondary' : 'default'"
+                            :class="voucher.status === 'forCheck' ? 'cursor-not-allowed' : ''"
+                            :disabled="voucher.status === 'forCheck'"
+                        >
+                            <Undo2 ck class="h-4 w-4" />
+                            <span>Return For Review</span>
+                        </Button>
+                    </template>
+                </AuditForReview>
+            </template>
 
             <!-- Accounting Actions -->
             <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'forCheck'">
@@ -87,10 +103,10 @@ function goToEditVoucher(voucherId, e) {
                     />
             </template>
 
-            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'draft'">
+            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && (voucher.status == 'draft' || voucher.status == 'forAudit' || voucher.status == 'return')">
                 <Button
                     size="sm"
-                    v-if="authUser.role === 'accounting' && voucher.status == 'draft'"
+                    v-if="authUser.role === 'accounting' && (voucher.status == 'draft' || voucher.status == 'forAudit' || voucher.status == 'return')"
                     variant="default"
                     @click.stop="goToEditVoucher(voucher.id, $event)" 
                     >
@@ -99,7 +115,7 @@ function goToEditVoucher(voucherId, e) {
                 </Button>
             </template>
 
-            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && voucher.status == 'draft'">
+            <template v-if="authUser.role == 'accounting' && authUser.access_id == '3' && (voucher.status == 'draft' || voucher.status == 'return')">
                 <DirectorVerificationDialog :voucher-id="voucher.id" action="forAudit">
                     <template #trigger>
                         <Button 

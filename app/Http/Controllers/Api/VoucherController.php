@@ -31,7 +31,7 @@ class VoucherController extends Controller
         $user = Auth::user();
         return Inertia::render('Vouchers/Index', [
             'vouchers' => Voucher::with(['user', 'details'])
-                                ->whereIn('status', ['draft', 'rejected', 'unreleased', 'released', 'completed'])
+                                ->whereIn('status', ['draft', 'return', 'rejected', 'unreleased', 'released', 'completed'])
                                 ->get(),
             'accounts' => Account::all(),
             'authUser' => [
@@ -259,6 +259,7 @@ class VoucherController extends Controller
                 'purpose' => 'required|string|max:500',
                 'payee' => 'required|string|max:255',
                 'check_no' => 'nullable|string|max:500',
+                'tin_no' => 'nullable|string|max:500',
                 'remarks' => 'nullable|string|max:500',
                 'check_payable_to' => 'required|string|max:500',
                 'check_amount' => 'required|numeric|min:0',
@@ -274,7 +275,7 @@ class VoucherController extends Controller
             ]);
 
             // Lock the voucher number to the existing value
-            $validated['voucher_no'] = $voucher->voucher_no;
+            // $validated['voucher_no'] = $voucher->voucher_no;
 
             // ✅ Automatically update status if check number is present
             if (!empty($validated['check_no'])) {

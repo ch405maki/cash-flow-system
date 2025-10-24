@@ -11,6 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Rocket } from 'lucide-vue-next'
 import { formatDate } from '@/lib/utils'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Undo2 } from 'lucide-vue-next';
 import {
   Table,
   TableBody,
@@ -49,6 +50,7 @@ const toast = useToast()
 
 // Add refs for dialog open states
 const normalApprovalDialogOpen = ref(false)
+const returnApprovalDialogOpen = ref(false)
 const liquidationDialogOpen = ref(false)
 
 const confirmApproval = ref(false)
@@ -142,25 +144,44 @@ const getRowClass = (item: any) => {
   return ''
 }
 
-const handleApproval = async (type: 'normal' | 'liquidation') => {
+const handleApproval = async (type: 'normal' | 'liquidation' | 'return') => {
   try {
     if (type === 'normal') {
       await submitApproval()
       confirmApproval.value = false
       normalApprovalDialogOpen.value = false // Close the dialog
-    } else {
+    } else if (type === 'liquidation') {
       await submitApprovalLiquidate()
       confirmLiquidation.value = false
       liquidationDialogOpen.value = false // Close the dialog
+    } else {
+      await submitReturn()
+      confirmLiquidation.value = false
+      returnApprovalDialogOpen.value = false // Close the dialog
     }
   } catch (error) {
     toast.error('Approval failed')
   }
 }
 
+
 const submitApproval = async () => {
   try {
     await router.post(`/petty-cash/${props.pettyCash.id}/approve`, {  
+      remarks: approval.remarks
+    })
+    toast.success('Approval submitted!')
+    approval.remarks = ''
+    return true // Return success
+  } catch (error) {
+    toast.error('Failed to submit approval')
+    throw error // Re-throw to be caught in handleApproval
+  }
+}
+
+const submitReturn = async () => {
+  try {
+    await router.post(`/petty-cash/${props.pettyCash.id}/return`, {  
       remarks: approval.remarks
     })
     toast.success('Approval submitted!')
@@ -411,6 +432,42 @@ const submitApprovalLiquidate = async () => {
             </DialogContent>
           </Dialog>
 
+          <Dialog 
+            v-if="user.role === 'audit' && !hasLiquidation" 
+            v-model:open="returnApprovalDialogOpen"
+          >
+            <DialogTrigger as-child>
+              <Button :disabled="!approval.remarks" variant="secondary">
+                <Undo2 />Return For Review
+              </Button>
+            </DialogTrigger>
+
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Return Voucher for Review</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to return this petty cash voucher for further review?  
+                  This action will notify the respective department to revise the details.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div class="flex items-center space-x-2 mt-4">
+                <Checkbox id="confirmReturn" v-model:checked="confirmApproval" />
+                <Label for="confirmReturn">
+                  I confirm I’ve reviewed this voucher and it needs revision.
+                </Label>
+              </div>
+
+              <DialogFooter class="mt-4">
+                <Button variant="outline" @click="returnApprovalDialogOpen = false">Cancel</Button>
+                <Button :disabled="!confirmApproval" @click="handleApproval('return')">
+                  Confirm Return
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+
           <!-- Liquidation Approval -->
           <Dialog v-if="user.role === 'audit' && hasLiquidation" v-model:open="liquidationDialogOpen">
             <DialogTrigger as-child>
@@ -440,7 +497,6 @@ const submitApprovalLiquidate = async () => {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-
         </div>
       </div>
     </div>
