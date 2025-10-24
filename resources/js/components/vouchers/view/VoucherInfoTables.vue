@@ -87,24 +87,28 @@ const downloadReceipt = () => {
         </TableHeader>
         <TableBody>
             <TableRow class="border-b">
-            <TableCell class="p-2 font-medium text-muted-foreground border-r w-48">PAYEE:</TableCell>
-            <TableCell class="p-2 uppercase border-r">{{ voucher.payee }}</TableCell>
-            <TableCell class="p-2 font-medium text-muted-foreground border-r w-40">CHECK DATE:</TableCell>
-            <TableCell class="p-2">{{ voucher.check_date ? formatDate(voucher.check_date) : '' }}</TableCell>
+                <TableCell class="p-2 font-medium text-muted-foreground border-r w-48">PAYEE:</TableCell>
+                <TableCell class="p-2 uppercase border-r">{{ voucher.payee }}</TableCell>
+                <TableCell class="p-2 font-medium text-muted-foreground border-r w-40">CHECK DATE:</TableCell>
+                <TableCell class="p-2">{{ voucher.check_date ? formatDate(voucher.check_date) : '' }}</TableCell>
             </TableRow>
             <TableRow class="border-b">
-            <TableCell class="p-2 font-medium text-muted-foreground border-r">CHECK PAYABLE TO:</TableCell>
-            <TableCell class="p-2 uppercase border-r">{{ voucher.check_payable_to }}</TableCell>
-            <TableCell class="p-2 font-medium text-muted-foreground border-r">CHECK NUMBER:</TableCell>
-            <TableCell class="p-2">
-                <span>{{ voucher.check_no || '' }}</span>
-            </TableCell>
+                <TableCell class="p-2 font-medium text-muted-foreground border-r">CHECK PAYABLE TO:</TableCell>
+                <TableCell class="p-2 uppercase border-r">{{ voucher.check_payable_to }}</TableCell>
+                <TableCell class="p-2 font-medium text-muted-foreground border-r">CHECK NUMBER:</TableCell>
+                <TableCell class="p-2">
+                    <span>{{ voucher.check_no || '' }}</span>
+                </TableCell>
             </TableRow>
             <TableRow class="border-b">
-            <TableCell class="p-2 font-medium text-muted-foreground border-r">PURPOSE:</TableCell>
-            <TableCell class="p-2 uppercase border-r">{{ voucher.purpose }}</TableCell>
-            <TableCell class="p-2 font-medium text-muted-foreground border-r">CHECK AMOUNT:</TableCell>
-            <TableCell class="p-2">{{ formatCurrency(voucher.check_amount) }}</TableCell>
+                <TableCell class="p-2 font-medium text-muted-foreground border-r">TIN:</TableCell>
+                <TableCell class="p-2 uppercase border-r">{{ voucher.tin_no }}</TableCell>
+                <TableCell class="p-2 font-medium text-muted-foreground border-r">CHECK AMOUNT:</TableCell>
+                <TableCell class="p-2">{{ formatCurrency(voucher.check_amount) }}</TableCell>
+            </TableRow>
+            <TableRow class="border-b">
+                <TableCell class="p-2 font-medium text-muted-foreground border-r">PURPOSE:</TableCell>
+                <TableCell class="p-2 uppercase border-r">{{ voucher.purpose }}</TableCell>
             </TableRow>
         </TableBody>
         </Table>

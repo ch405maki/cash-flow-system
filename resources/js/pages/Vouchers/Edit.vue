@@ -11,7 +11,7 @@ import VoucherAccountsForm from '@/components/vouchers/edit/VoucherAccountsForm.
 import VoucherDatesForm from '@/components/vouchers/edit/VoucherDatesForm.vue';
 import { Button } from '@/components/ui/button'
 import { CardFooter } from '@/components/ui/card'
-
+import PageHeader from '@/components/PageHeader.vue';
 
 const { props } = usePage();
 const toast = useToast();
@@ -26,13 +26,14 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const form = useForm({
     id: voucher.id,
+    voucher_no: voucher.voucher_no,
     issue_date: voucher.issue_date,
     payment_date: voucher.payment_date,
-    check_date: voucher.check_date,
     delivery_date: voucher.delivery_date,
     voucher_date: voucher.voucher_date,
     purpose: voucher.purpose,
     payee: voucher.payee,
+    tin_no: voucher.tin_no,
     check_no: voucher.check_no,
     remarks: voucher.remarks,
     check_payable_to: voucher.check_payable_to,
@@ -40,7 +41,6 @@ const form = useForm({
     status: voucher.status,
     type: voucher.type,
     user_id: voucher.user_id,
-    voucher_no: voucher.voucher_no,
     check: voucher.details.map(detail => ({
         id: detail.id,
         amount: detail.amount,
@@ -55,10 +55,19 @@ const form = useForm({
 const isCashVoucher = computed(() => form.type === 'cash');
 
 const calculateTotalAmount = () => {
-    form.check_amount = form.check.reduce((sum, item) => {
-        return sum + (parseFloat(item.amount) || 0);
-    }, 0);
+    // Sum all 'C' and 'D' amounts separately
+    const totalC = form.check
+        .filter(item => item.charging_tag === 'C')
+        .reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+
+    const totalD = form.check
+        .filter(item => item.charging_tag === 'D')
+        .reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+
+    // Check amount = C - D
+    form.check_amount = totalC - totalD;
 };
+
 
 const addDetailItem = () => {
     if (form.check.length > 0) {
@@ -79,22 +88,14 @@ const addDetailItem = () => {
     });
 };
 
-const removeDetailItem = async (index) => {
-    if (form.check.length > 1) {
-        const detail = form.check[index];
-
-        if (detail.id) {
-            try {
-                await axios.delete(`/api/vouchers/details/${detail.id}`);
-                toast.success('Account detail removed successfully');
-            } catch (error) {
-                toast.error('Failed to remove account detail');
-                return;
-            }
-        }
-        form.check.splice(index, 1);
-        calculateTotalAmount();
-    }
+const removeDetailItem = (index) => {
+  if (form.check.length > 1) {
+    // Just remove locally, no axios call
+    form.check.splice(index, 1);
+    calculateTotalAmount();
+  } else {
+    toast.warning('At least one account is required');
+  }
 };
 
 const calculateAmountFromRate = (index) => {
@@ -162,7 +163,11 @@ async function updateVoucher() {
 <template>
     <Head :title="`Voucher Details - ${voucher.voucher_no}`" />
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="mx-auto w-full px-4 pb-10">
+        <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+            <PageHeader 
+                :title="`Voucher # ${ voucher.voucher_no }`" 
+                subtitle="Update voucher details"
+            />
             <div>
                 <form @submit.prevent="updateVoucher">
                     <VoucherHeaderForm 
@@ -181,11 +186,6 @@ async function updateVoucher() {
                         @calculate-amount="calculateAmountFromRate"
                         @calculate-total="calculateTotalAmount"
                     />
-                    
-                    <!-- <VoucherDatesForm 
-                        :form="form" 
-                        @file-selected="handleFileSelected"
-                    /> -->
                     
                     <CardFooter class="flex justify-end gap-4 px-0 pb-0">
                         <Button variant="outline" type="button" @click="router.visit('/vouchers')">

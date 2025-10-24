@@ -31,6 +31,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/petty-cash/{pettyCash}/remarks', [PettyCashApprovalController::class, 'auditRemarks'])->name('petty-cash.remarks');
     Route::post('/petty-cash/{pettyCash}/approve', [PettyCashApprovalController::class, 'auditApproval'])->name('petty-cash.approve');
+    Route::post('/petty-cash/{pettyCash}/return', [PettyCashApprovalController::class, 'auditReturn'])->name('petty-cash.return');
     Route::post('/petty-cash/{pettyCash}/approveLiquidate', [PettyCashApprovalController::class, 'auditApprovalLiquidate'])->name('petty-cash.approveLiquidate');
     
     // Petty Cash Fund

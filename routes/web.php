@@ -92,6 +92,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     Route::patch('/vouchers/{voucher}/forDirector', [VoucherController::class, 'forDirector'])->name('vouchers.director');
     Route::patch('/vouchers/{voucher}/auditreview', [VoucherApprovalController::class, 'auditreview'])->name('vouchers.eod');
+    Route::patch('/vouchers/{voucher}/auditreturn', [VoucherApprovalController::class, 'auditreturn'])->name('vouchers.return');
 
     Route::get('/for-voucher', [ApprovedPurchaseOrderController::class, 'forVoucher'])->name('for-voucher.index');
     Route::get('/voucher-approval', [VoucherApprovalController::class, 'index'])->name('voucher-approval.index');
