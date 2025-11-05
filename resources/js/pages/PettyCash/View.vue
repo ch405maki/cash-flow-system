@@ -320,7 +320,7 @@ console.log(props.pettyCash)
           <PettyCashView :petty-cash="props.pettyCash" />
         </div>
         <!-- class="hidden print:block" -->
-        <div id="print-section" class="hidden print:block">
+        <div id="print-section">
           <PettyCashPrint :petty-cash="props.pettyCash" />
         </div>
       </div>

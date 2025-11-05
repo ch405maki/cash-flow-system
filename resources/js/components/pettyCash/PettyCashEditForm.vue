@@ -606,7 +606,7 @@ const handleUpdateConfirm = async () => {
         </div>
       </div>
       <div class="flex justify-end">
-        <Button variant="secondary" @click="addItem"><Send /> Accept Item</Button>
+        <Button variant="secondary" @click="addItem"><Send />Accept</Button>
       </div>
     </div>
 
