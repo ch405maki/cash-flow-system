@@ -4,7 +4,6 @@ import { type BreadcrumbItem } from '@/types'
 import { Head, Link } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { toast } from '@/components/ui/toast';
 import axios from 'axios';
 import { ref } from 'vue';
 import { Trash2 } from 'lucide-vue-next';
@@ -17,6 +16,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { useToast } from "vue-toastification";
+
+const toast = useToast();
 
 const props = defineProps({
   request: {
@@ -72,10 +74,7 @@ const submit = async () => {
 
     console.log('Response:', response.data);
     
-    toast({
-      title: 'Success',
-      description: 'Request items updated successfully',
-    });
+    toast.success(response.data.message || 'Request items updated successfully');
 
   } catch (error) {
     console.error('Error:', error.response ? error.response.data : error.message);
