@@ -8,11 +8,11 @@ import { formatDate, formatDateTime } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { CirclePlus, Trash, Send, ChevronLeft } from 'lucide-vue-next';
+import { CirclePlus, Trash, Send, ChevronLeft, Check, ChevronsUpDown } from 'lucide-vue-next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from '@/components/ui/table';
 import PageHeader from '@/components/PageHeader.vue';
-
+import { Combobox, ComboboxAnchor, ComboboxEmpty, ComboboxGroup, ComboboxInput, ComboboxItem, ComboboxItemIndicator, ComboboxList, ComboboxTrigger } from "@/components/ui/combobox"
 
 const toast = useToast();
 
@@ -234,25 +234,48 @@ const capitalizeWords = (str: string): string => {
             />
           </div>
 
-          <!-- Unit -->
+          <!-- Unit (Combobox: Dropdown + Manual Input) -->
           <div class="md:col-span-2 space-y-2">
             <Label for="unit">Unit</Label>
-            <Select v-model="newItem.unit">
-              <SelectTrigger class="w-full">
-                <SelectValue placeholder="Select unit" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem 
+
+            <Combobox v-model="newItem.unit">
+              <ComboboxAnchor>
+                <div class="relative w-full items-center">
+                  <ComboboxInput
+                    placeholder="Select or type a unit..."
+                    :display-value="(val) => val || ''"
+                    @update:model-value="(val) => newItem.unit = val"
+                    @change="(e) => newItem.unit = e.target.value"
+                  />
+                  <ComboboxTrigger
+                    class="absolute end-0 inset-y-0 flex items-center justify-center px-3"
+                  >
+                    <ChevronsUpDown class="size-4 text-muted-foreground" />
+                  </ComboboxTrigger>
+                </div>
+              </ComboboxAnchor>
+
+              <ComboboxList>
+                <ComboboxEmpty>
+                  <span class="text-sm text-muted-foreground px-2 py-1">
+                    No match found — type to add custom unit.
+                  </span>
+                </ComboboxEmpty>
+
+                <ComboboxGroup>
+                  <ComboboxItem
                     v-for="unit in unitOptions"
-                    :key="unit.value" 
+                    :key="unit.value"
                     :value="unit.value"
                   >
                     {{ unit.label }}
-                  </SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+                    <ComboboxItemIndicator>
+                      <Check class="ml-auto h-4 w-4" />
+                    </ComboboxItemIndicator>
+                  </ComboboxItem>
+                </ComboboxGroup>
+              </ComboboxList>
+            </Combobox>
           </div>
 
           <!-- Add Button -->
@@ -353,7 +376,7 @@ const capitalizeWords = (str: string): string => {
                   v-if="item.editing"
                   class="flex justify-end space-x-2"
                 >
-                  <Button
+                  <Button 
                     variant="outline"
                     size="sm"
                     @click.stop="saveEdit(index)"

@@ -195,7 +195,7 @@ const submitForm = async () => {
           <!-- Button (takes minimal space, sits on right in desktop) -->
           <div class="flex justify-end mb-[4px]">
             <Button variant="secondary" @click="addItem">
-              <PencilLine class="mr-2 h-4" /> Accept Item
+              <PencilLine class="mr-2 h-4" /> Accept
             </Button>
           </div>
         </div>

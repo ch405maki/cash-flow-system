@@ -738,10 +738,10 @@ function openPreview(file: any) {
                 <h1>DEPARTMENT:</h1>
                 <h1>{{ purchaseOrder.department.department_name }}</h1>
               </div>
-              <div class="flex  items-center text-sm uppercase space-x-[10px]">
+              <!-- <div class="flex  items-center text-sm uppercase space-x-[10px]">
                 <h1>ACCOUNT CHARGES:</h1>
                 <h1>{{ purchaseOrder.account?.account_title || 'N/A' }}</h1>
-              </div>
+              </div> -->
             </div>
 
           <div class="text-right w-1/2">
@@ -765,7 +765,7 @@ function openPreview(file: any) {
               </div>
             </div>
           </div>
-          <p class="italic text-zinc-400 text-sm">{{ authUser.name }}</p>
+          <p class="italic text-zinc-400 text-sm">Prepared By: {{ authUser.name }}</p>
         </div>
     </div>
 </template>

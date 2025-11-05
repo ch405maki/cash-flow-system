@@ -36,4 +36,9 @@ class Request extends Model
         return $this->hasMany(RequestApproval::class);
     }
 
+    public function releases(): HasMany
+    {
+        return $this->hasMany(Release::class);
+    }
+
 }
