@@ -23,8 +23,23 @@
   }
   
   // Define props
-  const props = defineProps<{ users: User[] }>();
+  const props = defineProps<{ 
+    users: User[];
+    departments: Array<{
+      id: number;
+      department_name: string;
+    }>;
+    accessLevels: Array<{
+      id: number;
+      program_name: string;
+      access_level: string;
+    }>;
+  }>();
   
+  // Add console logs to check the data
+console.log('Departments:', props.departments);
+console.log('Access Levels:', props.accessLevels);
+
   const breadcrumbs = [{ title: "Users Management", href: "/users" }];
   const fileInput = ref<HTMLInputElement | null>(null);
   const toast = useToast();
@@ -69,7 +84,7 @@
         });
   
         toast.success(response.data.message);
-        setTimeout(() => location.reload(), 2000); // Reload to reflect changes
+        setTimeout(() => location.reload(), 2000);
       } catch (err: unknown) {
         const error = err as AxiosError;
         if (error.response && error.response.data) {
@@ -135,7 +150,11 @@
   
         <!-- Users Table -->
         <div class="relative min-h-[100vh] flex-1 rounded-xl border">
-          <UsersTable :users="filteredUsers" />
+          <UsersTable 
+          :users="filteredUsers" 
+          :departments="departments"
+          :accessLevels="accessLevels"
+        />
         </div>
       </div>
     </AppLayout>
