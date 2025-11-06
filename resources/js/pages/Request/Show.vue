@@ -8,8 +8,6 @@ import RequestActions from '@/components/requests/show/RequestActions.vue'
 import ReleasedItemsPrint from '@/components/printables/ReleasedItemsPrint.vue'
 import { ref } from 'vue'
 import type { BreadcrumbItem } from '@/types'
-import { Button } from '@/components/ui/button'
-import { Printer } from 'lucide-vue-next'
 
 const props = defineProps<{ 
     request: any, 
@@ -23,7 +21,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ]
 
 const printableComponent = ref<InstanceType<typeof PrintableSection>>()
-  const releasedItemsPrintable = ref<InstanceType<typeof ReleasedItemsPrint>>()
+const releasedItemsPrintable = ref<InstanceType<typeof ReleasedItemsPrint>>()
 
 function printArea() {
   printableComponent.value?.printArea()
@@ -41,15 +39,12 @@ function printReleasedItems() {
       <div class="flex justify-between items-center">
         <h1 class="text-lg font-semibold">Request Details</h1>
         <div class="flex items-center space-x-2">
-          <Button @click="printReleasedItems" variant="outline" size="sm">
-            <Printer class="h-4 w-4 mr-2" />
-            Print Released Items
-          </Button>
           <RequestActions
-                :request="request"
-                :user="user"
-                @print-list="printArea"
-            />
+            :request="request"
+            :user="user"
+            @print-list="printArea"
+            @print-released-items="printReleasedItems"
+          />
         </div>
       </div>
 
@@ -58,8 +53,6 @@ function printReleasedItems() {
       <RequestItemsTable :details="request.details" />
 
       <PrintableSection ref="printableComponent" :request="request" :user="user" />
-
-      <!-- New released items printable component -->
       <ReleasedItemsPrint ref="releasedItemsPrintable" :request="request" :user="user" />
     </div>
   </AppLayout>

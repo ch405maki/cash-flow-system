@@ -6,30 +6,49 @@ use App\Http\Controllers\Controller;
 use App\Models\RequestToOrder;
 use App\Models\RequestToOrderDetail;
 use App\Models\RequestToOrderRelease;
-use Illuminate\Http\Request;
 use App\Models\Request as RequestData;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\RequestToOrderApproval;
 use Inertia\Inertia;
+use App\Models\Department;
+use App\Models\RequestDetail;
+use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderDetail;
+use App\Models\Account;
+use App\Models\Release;
+use App\Models\User;
+use App\Models\RequestApproval;
+use App\Models\ReleaseDetail;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request as HttpRequest;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use App\Notifications\NewRequestNotification;
+use App\Models\Request;
 
 class RequestToOrderReleaseController extends Controller
 {
-    public function index() 
+    public function index()
     {
         $user = Auth::user();
 
-        $requests = RequestToOrder::with('details')
-            ->whereIn('status', ['completed'])
-            ->get();
+        if (in_array($user->role, ['admin', 'executive_director', 'property_custodian'])) {
+            $requests = Request::with(['department', 'user', 'details'])
+                ->whereIn('status', ['partially_released', 'to_order'])
+                ->get();
+        } else {
+            $requests = Request::with(['department', 'user', 'details'])
+                ->where('status', 'pending')
+                ->where('department_id', $user->department_id)
+                ->get();
+        }
 
-        $forOrders = RequestData::with(['department', 'user', 'details'])
-            ->whereIn('status', [ 'to_order'])
-            ->get();
-
-        return Inertia::render('Request/Order/Release/Index', [
+        return Inertia::render('Request/Index', [
             'requests' => $requests,
-            'forOrders' => $forOrders,
+            'departments' => Department::all(),
             'authUser' => [
                 'id' => $user->id,
                 'role' => $user->role,

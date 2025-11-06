@@ -83,10 +83,14 @@ function closeAllDialogs() {
   showRejectModal.value = false 
 }
 
-const emit = defineEmits(['print-list'])
+const emit = defineEmits(['print-list', 'print-released-items'])
 
 function printList() {
   emit('print-list')
+}
+
+function printReleasedItems() {
+  emit('print-released-items')
 }
 </script>
 
@@ -176,13 +180,13 @@ function printList() {
       />
       
       <!-- Reject Button for Department Head -->
-      <!-- <Button
+      <Button
         variant="destructive"
         size="sm"
         v-if="request.status === 'pending'"
         @click="showRejectModal = true"
       >
-        <XCircle />Reject
+        <XCircle />Deny
       </Button>
       <PasswordDialog
         v-model="showRejectModal"
@@ -191,7 +195,7 @@ function printList() {
         confirm-label="Confirm Rejection"
         :loading="form.processing"
         @confirm="(password) => submitStatusUpdate('rejected', password)"
-      /> -->
+      />
     </div>
 
     <!-- Staff or Department Head - Edit -->
@@ -265,6 +269,16 @@ function printList() {
     <!-- Print List -->
     <Button size="sm" @click="printList">
       <Printer class="h-4" /> Print List
+    </Button>
+
+    <!-- Print Released Items - Show only if there are releases -->
+    <Button 
+      size="sm" 
+      variant="outline" 
+      @click="printReleasedItems"
+      v-if="request.releases && request.releases.length > 0"
+    >
+      <Printer class="h-4" /> Print Released Items
     </Button>
   </div>
 </template>
