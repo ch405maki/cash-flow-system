@@ -127,7 +127,7 @@ const custodianNavItems: NavItem[] = [
     icon: FileText,
   },
   {
-    title: 'Released Orders',
+    title: 'On Process Orders',
     href: '/released-order',
     icon: Package,
   },
@@ -189,6 +189,7 @@ const staffRequestItems = ref<DropdownNavItem[]>([
         { title: 'Pending', href: '/request'},
         { title: 'On Process', href: '/request/to-receive'},
         { title: 'Completed', href: '/request/released'},
+        { title: 'Rejected', href: '/request/rejected'},
         ],
     },
   ]);

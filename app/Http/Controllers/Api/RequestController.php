@@ -34,9 +34,8 @@ class RequestController extends Controller
         $user = Auth::user();
 
         if (in_array($user->role, ['admin', 'executive_director', 'property_custodian'])) {
-            // Admin-level users: See all non-pending requests
             $requests = Request::with(['department', 'user', 'details'])
-                ->whereIn('status', ['propertyCustodian', 'partially_released', 'to_order'])
+                ->whereIn('status', ['propertyCustodian'])
                 ->get();
         } else {
             $requests = Request::with(['department', 'user', 'details'])

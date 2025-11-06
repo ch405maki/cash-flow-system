@@ -79,35 +79,36 @@ function formatDate(dateStr: string): string {
       <div class="flex justify-between items-center">
         <div>
           <h1 class="text-xl font-bold">Request To Order List</h1>
-          <p class="text-sm">Created Order List</p>
+          <p class="text-sm">On Process Order List</p>
         </div>
         <div class="space-x-2 items-center">
           <Button variant="outline" @click="goToList" class="h-8"><ListChecks /> List to Order</Button>
           <Button @click="goToCreate" class="h-8"><CirclePlus />Create New Order</Button>
         </div>
       </div>
-
       <!-- Table -->
-      <div v-if="requests.length > 0" class="rounded-lg border">
+      <div v-if="requests.length > 0">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Order No</TableHead>
+              <!-- Use actual field names from your data -->
+              <TableHead>Request No</TableHead>
               <TableHead>Date Request</TableHead>
-              <TableHead>Notes</TableHead>
+              <TableHead>Purpose</TableHead>
               <TableHead class="w-[100px]">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow 
-              v-for="request in props.requests" 
+              v-for="request in requests" 
               :key="request.id" 
               @click="viewRequest(request.id)"
               class="cursor-pointer hover:underline"
             >
-              <TableCell class="font-medium">{{ request.order_no }}</TableCell>
-              <TableCell>{{ formatDate(request.order_date) }}</TableCell>
-              <TableCell>{{ request.notes }}</TableCell>
+              <!-- Use the actual field names from your Request model -->
+              <TableCell class="font-medium">{{ request.request_no || request.order_no || 'N/A' }}</TableCell>
+              <TableCell>{{ formatDate(request.request_date || request.order_date) }}</TableCell>
+              <TableCell>{{ request.purpose || request.notes || 'N/A' }}</TableCell>
               <TableCell>
                 <Badge
                   :variant="getStatusVariant(request.status)"

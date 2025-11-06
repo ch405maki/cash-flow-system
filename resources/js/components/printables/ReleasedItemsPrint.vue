@@ -46,7 +46,7 @@
                     {{ getItemDescription(detail) }}
                     </td>
                 <td class="border border-gray-300 px-3 py-2">
-                    {{ getItemTagging(detail) }}
+                    
                 </td>
                 </tr>
             </template>
@@ -80,6 +80,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import Header from '@/components/reports/header/formHeder.vue'
+import { formatDate } from '@/lib/utils'
 
 interface ReleaseDetail {
   id: number
@@ -152,11 +153,6 @@ function printArea() {
   window.print()
   document.body.innerHTML = originalContents
   window.location.reload()
-}
-
-function formatDate(dateString: string) {
-  if (!dateString) return 'N/A'
-  return new Date(dateString).toLocaleDateString()
 }
 
 function getAllReleasedItems() {
