@@ -20,6 +20,7 @@ return new class extends Migration
             $table->text('item_description');
             $table->string('tagging')->nullable();
             $table->dateTime('released_at')->nullable();
+            $table->string('tracking_status')->nullable()->after('tagging');
             $table->timestamps();
         });
     }
