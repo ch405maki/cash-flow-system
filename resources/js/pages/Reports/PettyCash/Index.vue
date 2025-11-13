@@ -8,6 +8,7 @@ import { FileText, Download, Search, Filter, RotateCcw } from 'lucide-vue-next';
 import { formatDate } from '@/lib/utils'
 import { exportToExcel, exportToCSV } from '@/lib/pettycashExport'
 import { ref, computed, reactive } from 'vue'
+import PageHeader from '@/components/PageHeader.vue';
 import {
   Table,
   TableBody,
@@ -126,10 +127,10 @@ const exportData = (format: 'excel' | 'csv') => {
         <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
           <!-- Header -->
           <div class="flex justify-between items-center">
-            <div>
-              <h1 class="text-xl font-bold">Petty Cash</h1>
-              <p class="text-sm font-medium">List of created petty cash.</p>
-            </div>
+            <PageHeader 
+              title="Petty Cash" 
+              subtitle="List of created petty cash."
+            />
             
             <!-- Export Buttons -->
             <div class="flex gap-2" v-if="hasItem">
