@@ -99,16 +99,21 @@ class RequestToOrderController extends Controller
                 'status' => 'pending',
             ]);
 
-            // 2. Create each order detail
+            // 2. Create each order detail WITH request_detail_id
             foreach ($validated['items'] as $item) {
                 $order->details()->create([
                     'quantity' => $item['quantity'],
                     'unit' => $item['unit'] ?? null,
                     'item_description' => $item['item_description'] ?? null,
+                    'request_detail_id' => $item['detail_id'], // ← ADD THIS LINE
                 ]);
 
+                // Update both tagging AND tracking_status
                 RequestDetail::where('id', $item['detail_id'])
-                    ->update(['tagging' => 'forPurchase']);
+                    ->update([
+                        'tagging' => 'forPurchase',
+                        'tracking_status' => 'ordered' // ← UPDATE STATUS TO 'ordered'
+                    ]);
             }
 
             // 3. Automatically create approval record by creator
@@ -217,6 +222,7 @@ class RequestToOrderController extends Controller
         $user = Auth::user();
 
         $requestOrder = RequestToOrder::with([
+            'details.requestDetail.request.department',
             'details.releases.releasedBy',
             'details.request.department',
             'approvals.user',

@@ -26,6 +26,10 @@ const props = defineProps<{
 }>()
 const hasItem = Object.keys(props.pettyCash).length;
 
+
+const totalAmount = (items: any[]) => {
+    return items.reduce((sum, item) => sum + parseFloat(item.amount), 0).toFixed(2);
+};
 </script>
 
 <template>
@@ -43,17 +47,18 @@ const hasItem = Object.keys(props.pettyCash).length;
             <TableCaption>A list of your petty cash.</TableCaption>
             <TableHeader>
               <TableRow>
-                <TableHead class="w-[100px]">PCV NO</TableHead>
+                <TableHead class="w-[200px]">PCV NO</TableHead>
                 <TableHead class="w-[100px]">Paid to</TableHead>
                 <TableHead class="w-[150px]">Requested By</TableHead>
                 <TableHead class="w-[100px]">Date</TableHead>
                 <TableHead class="w-[100px]">Status</TableHead>
                 <TableHead class="w-[300px]">Remarks</TableHead>
+                <TableHead class="w-[100px]">Amount</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               <TableRow 
-                v-for="item in pettyCash" 
+                v-for="item in pettyCash"  
                 :key="item.id" 
                 @click="router.get(route('petty-cash.view', item.id))"
                 class="cursor-pointer hover:text-primary"
@@ -75,6 +80,9 @@ const hasItem = Object.keys(props.pettyCash).length;
                 </TableCell>
                 <TableCell class="capitalize">
                   "{{ item.remarks }}"
+                </TableCell>
+                <TableCell class="capitalize">
+                  {{ totalAmount(item.items) }}
                 </TableCell>
               </TableRow>
             </TableBody>
