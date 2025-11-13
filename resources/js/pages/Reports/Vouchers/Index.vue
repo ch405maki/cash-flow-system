@@ -6,9 +6,9 @@ import { Head, router } from '@inertiajs/vue3';
 import FormHeader from '@/components/reports/header/formHeder.vue'
 import { Button } from '@/components/ui/button'
 import { Eraser, Printer, Rocket, X, FileDown } from 'lucide-vue-next';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { formatCurrency } from '@/lib/utils';
 import { Label } from '@/components/ui/label'
+import PageHeader from '@/components/PageHeader.vue';
 import {
   Table,
   TableBody,
@@ -181,22 +181,13 @@ function goToVoucher(id: number) {
   <Head title="Voucher Summary" />
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-
-      <!-- Notice -->
-      <Alert v-if="showAlert" variant="success" class="relative pr-10">
-        <Rocket class="h-4 w-4 text-green-500" />
-        <AlertTitle>Notice</AlertTitle>
-        <AlertDescription>
-          This is a collection of all Vouchers. Export data or click a voucher to view its details.
-        </AlertDescription>
-        <button class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground" @click="showAlert = false">
-          <X class="h-4 w-4 text-purple-700" />
-        </button>
-      </Alert>
-
       <!-- Page Header -->
       <div class="flex items-center justify-between">
-        <h1 class="text-xl font-bold">Voucher Summary</h1>
+        <PageHeader 
+          title="Voucher Summary" 
+          subtitle="This is a collection of all Vouchers. Export data or click a voucher to view its details."
+        />
+        
         <div class="flex gap-2">
           <Button size="sm" variant="default" @click="exportExcel"><FileDown class="mr-1 h-4 w-4"/>Excel</Button>
           <Button size="sm" variant="secondary" @click="exportPdf"><FileDown class="mr-1 h-4 w-4"/>PDF</Button>
