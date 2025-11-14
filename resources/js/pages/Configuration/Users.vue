@@ -165,9 +165,11 @@
                 </div>
         
                 <!-- Users Table -->
-                <div class="rounded-lg border">
-                <UsersTable :users="filteredUsers" />
-                </div>
+                <UsersTable 
+                  :users="filteredUsers" 
+                  :departments="departments"
+                  :accessLevels="accessLevels"
+                />
             </div>
     </AppLayout>
 </template>

@@ -10,6 +10,7 @@ class RequestToOrderDetail extends Model
 {
     protected $fillable = [
         'request_to_order_id',
+        'request_detail_id',
         'quantity',
         'unit',
         'item_description',
@@ -50,8 +51,12 @@ class RequestToOrderDetail extends Model
     }
 
     public function getRemainingQuantityAttribute()
-{
-    // Use the sum from the database rather than calculating from collection
-    return $this->quantity - ($this->releases_sum_quantity_released ?? $this->releases()->sum('quantity_released'));
-}
+    {
+        return $this->quantity - ($this->releases_sum_quantity_released ?? $this->releases()->sum('quantity_released'));
+    }
+
+    public function requestDetail(): BelongsTo
+    {
+        return $this->belongsTo(RequestDetail::class, 'request_detail_id');
+    }
 }

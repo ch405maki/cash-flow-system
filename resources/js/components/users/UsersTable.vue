@@ -28,7 +28,18 @@ import { KeyRound } from 'lucide-vue-next';
   }
 
 // Define props
-const props = defineProps<{ users: User[] }>();
+const props = defineProps<{ 
+  users: User[];
+  departments?: Array<{
+    id: number;
+    department_name: string;
+  }>;
+  accessLevels?: Array<{
+    id: number;
+    program_name: string;
+    access_level: string;
+  }>;
+}>();
 
 // Toast
 const toast = useToast();
@@ -115,7 +126,11 @@ const handleToggle = async (user: User, checked: boolean) => {
             <KeyRound  />
           </Button>
           <!-- Edit User -->
-          <EditUserDialog :user="user" />
+          <EditUserDialog 
+            :user="user" 
+            :departments="departments"
+            :accessLevels="accessLevels"
+          />
           <!-- Delete User -->
           <DeleteUserDialog :user="user" />
         </TableCell>

@@ -173,6 +173,8 @@ class UserController extends Controller
                 'email'         => 'required|email|max:255|unique:users,email,' . $id,
                 'role'          => 'required|string',
                 'status'        => 'required|in:active,inactive',
+                'department_id' => 'nullable|exists:departments,id', // Add department validation
+                'access_id'     => 'nullable|exists:accesses,id',    // Add access validation
             ]);
 
             // ✅ Add boolean values manually (convert to true/false)
@@ -183,7 +185,7 @@ class UserController extends Controller
 
             return response()->json([
                 'message' => 'User updated successfully!',
-                'user' => $user
+                'user' => $user->load('department', 'access') // Load relationships
             ], 200);
 
         } catch (ValidationException $e) {

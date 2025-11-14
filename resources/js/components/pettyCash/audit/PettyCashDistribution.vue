@@ -206,6 +206,15 @@ const submitApprovalLiquidate = async () => {
     throw error // Re-throw to be caught in handleApproval
   }
 }
+
+const totalDistribution = computed(() => {
+  if (!props.pettyCash.distribution_expenses) return 0
+  return props.pettyCash.distribution_expenses.reduce(
+    (sum, record) => sum + Number(record.amount || 0),
+    0
+  )
+})
+
 </script>
 
 <template>
@@ -303,11 +312,9 @@ const submitApprovalLiquidate = async () => {
               <h1 class="font-medium w-48">{{ type }}:</h1>
               <h1 class="font-bold w-48 text-right">₱{{ amount.toLocaleString() }}</h1>
             </div>
-            <div class="font-bold flex space-x-2">
-              <h1 class="w-48">
-                Grand Total: 
-              </h1>
-              <h1 class="w-48 text-right">₱{{ totalAmount.toLocaleString() }}</h1>
+            <div class="flex space-x-2">
+              <h1 class="font-medium w-48">Total Distribution:</h1>
+              <h1 class="font-bold w-48 text-right">₱{{ totalDistribution.toLocaleString() }}</h1>
             </div>
           </div>
         </div>
@@ -384,6 +391,12 @@ const submitApprovalLiquidate = async () => {
             <td class="p-2 text-right">₱{{ Number(record.amount).toLocaleString() }}</td>
           </tr>
         </tbody>
+        <tfoot>
+          <tr class="font-bold border-t">
+            <td class="p-2 text-right pl-[80%]">Total:</td>
+            <td class="p-2 text-right">₱{{ totalDistribution.toLocaleString() }}</td>
+          </tr>
+        </tfoot>
       </table>
     </div>
 
