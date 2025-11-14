@@ -29,13 +29,6 @@ onMounted(() => {
     }
 });
 
-// onMounted(() => {
-//     const user = page.props.auth.user;
-//     if (user && !user.terms_accepted_at) {
-//         showTermsDialog.value = true;
-//     }
-// });
-
 const acceptTerms = async () => {
     try {
         const userId = page.props.auth.user?.id;

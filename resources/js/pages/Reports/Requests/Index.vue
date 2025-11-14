@@ -9,7 +9,7 @@ import { Eraser, Printer, Rocket, X, Download } from 'lucide-vue-next';
 import { router } from '@inertiajs/vue3'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { exportToExcel, exportToCSV, type ExportColumn } from '@/lib/exportHelper'
+import { exportToExcel, exportToCSV, type ExportColumn } from '@/lib/requestExport'
 import {
   Table,
   TableBody,
