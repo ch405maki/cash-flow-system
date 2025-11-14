@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ref, onMounted } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3'
 import axios from 'axios';
 import type { BreadcrumbItemType } from '@/types';
 
@@ -28,6 +29,13 @@ onMounted(() => {
     }
 });
 
+// onMounted(() => {
+//     const user = page.props.auth.user;
+//     if (user && !user.terms_accepted_at) {
+//         showTermsDialog.value = true;
+//     }
+// });
+
 const acceptTerms = async () => {
     try {
         const userId = page.props.auth.user?.id;
@@ -39,17 +47,20 @@ const acceptTerms = async () => {
             accepted: true,
             user_id: userId
         });
-        
-        // Update the local user object to prevent the dialog from showing again
-        if (page.props.auth.user) {
-            page.props.auth.user.terms_accepted_at = new Date().toISOString();
-        }
+
+        // Update local user object
+        page.props.auth.user.terms_accepted_at = new Date().toISOString();
+
         showTermsDialog.value = false;
+
+        // ✅ Redirect after success
+        router.visit('/settings/password');
+
     } catch (error) {
         console.error('Error accepting terms:', error);
-        // Optionally show an error message to the user
     }
 };
+
 </script>
 
 <template>

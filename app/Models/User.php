@@ -54,7 +54,7 @@ class User extends Authenticatable
         'terms_accepted_at' => 'datetime',
     ];
 
-   public function needsToAcceptTerms(): bool
+    public function needsToAcceptTerms(): bool
     {
         return is_null($this->terms_accepted_at);
     }
@@ -153,5 +153,4 @@ class User extends Authenticatable
     {
         return $this->hasOne(PettyCashFund::class);
     }
-
 }
