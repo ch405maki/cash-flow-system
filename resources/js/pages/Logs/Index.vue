@@ -177,56 +177,54 @@ const breadcrumbs: BreadcrumbItem[] = [
             </div>
 
             <!-- Logs Table -->
-            <div class="rounded-md border">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead class="w-[220px]">Event</TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead class="w-[200px]">User</TableHead>
-                            <TableHead class="w-[180px]">Date</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        <template v-if="filteredLogs.length > 0">
-                            <TableRow v-for="log in filteredLogs" :key="log.id">
-                                <TableCell class="font-medium capitalize">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                                        {{ log.log_name || log.properties.action || 'system' }}
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead class="w-[220px]">Event</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead class="w-[200px]">User</TableHead>
+                        <TableHead class="w-[180px]">Date</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    <template v-if="filteredLogs.length > 0">
+                        <TableRow v-for="log in filteredLogs" :key="log.id">
+                            <TableCell class="font-medium capitalize">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                                    {{ log.log_name || log.properties.action || 'system' }}
+                                </span>
+                            </TableCell>
+                            <TableCell @click="selectedLog = log" class="max-w-[300px] truncate cursor-pointer hover:underline" title="View Details">
+                                {{ log.description }}
+                            </TableCell>
+                            <TableCell>
+                                <div class="flex items-center space-x-2">
+                                    <span class="font-medium">{{ log.causer?.username || 'System' }}</span>
+                                    <span v-if="log.causer?.email" class="text-xs text-muted-foreground">
+                                        ({{ log.causer.email }})
                                     </span>
-                                </TableCell>
-                                <TableCell @click="selectedLog = log" class="max-w-[300px] truncate cursor-pointer hover:underline" title="View Details">
-                                    {{ log.description }}
-                                </TableCell>
-                                <TableCell>
-                                    <div class="flex items-center space-x-2">
-                                        <span class="font-medium">{{ log.causer?.username || 'System' }}</span>
-                                        <span v-if="log.causer?.email" class="text-xs text-muted-foreground">
-                                            ({{ log.causer.email }})
-                                        </span>
-                                    </div>
-                                </TableCell>
-                                <TableCell class="text-muted-foreground">
-                                    {{ formatDateTime(log.created_at) }}
-                                </TableCell>
-                            </TableRow>
-                        </template>
-                        <template v-else>
-                            <TableRow>
-                                <TableCell colspan="5" class="text-center py-8 text-muted-foreground">
-                                    <div class="flex flex-col items-center justify-center space-y-2">
-                                        <Search class="h-8 w-8" />
-                                        <p>No logs found matching your criteria</p>
-                                        <Button variant="ghost" size="sm" @click="[clearSearch(), clearDateFilter()]">
-                                            Clear all filters
-                                        </Button>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        </template>
-                    </TableBody>
-                </Table>
-            </div>
+                                </div>
+                            </TableCell>
+                            <TableCell class="text-muted-foreground">
+                                {{ formatDateTime(log.created_at) }}
+                            </TableCell>
+                        </TableRow>
+                    </template>
+                    <template v-else>
+                        <TableRow>
+                            <TableCell colspan="5" class="text-center py-8 text-muted-foreground">
+                                <div class="flex flex-col items-center justify-center space-y-2">
+                                    <Search class="h-8 w-8" />
+                                    <p>No logs found matching your criteria</p>
+                                    <Button variant="ghost" size="sm" @click="[clearSearch(), clearDateFilter()]">
+                                        Clear all filters
+                                    </Button>
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    </template>
+                </TableBody>
+            </Table>
 
             <!-- Pagination -->
             <div class="mr-2">

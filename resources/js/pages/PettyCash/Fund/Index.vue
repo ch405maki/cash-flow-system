@@ -5,6 +5,7 @@ import { ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { type BreadcrumbItem } from '@/types';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import { useToast } from 'vue-toastification';
 import {
@@ -52,12 +53,17 @@ const handleSubmit = () => {
 watch(() => form.recentlySuccessful, (val) => {
   if (val) toast.success('Petty Cash Fund added successfully.');
 });
+
+const breadcrumbs: BreadcrumbItem[] = [
+  { title: 'Dashboard', href: '/dashboard' },
+  { title: 'Petty Cash', href: '#' },
+];
 </script>
 
 <template>
   <Head title="Petty Cash Fund" />
 
-  <AppLayout>
+  <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-6 space-y-6">
       <h1 class="text-xl font-bold">Petty Cash Fund Management</h1>
 

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import ConfigurationLayout from '@/layouts/configuration/Layout.vue';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
+import { type BreadcrumbItem } from '@/types';
 import {
     Dialog,
     DialogContent,
@@ -83,11 +83,17 @@ const openEditDialog = (access: Access) => {
     editingAccessId.value = access.id;
 };
 
+
+
+const breadcrumbs: BreadcrumbItem[] = [
+  { title: 'Dashboard', href: '/dashboard' },
+  { title: 'Access Management', href: '#' },
+];
 </script>
 
 <template>
-    <AppLayout>
-        <Head title="User Access" />
+    <Head title="User Access" />
+    <AppLayout :breadcrumbs="breadcrumbs">
             <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div class="flex items-center justify-between">
                     <h2 class="text-xl font-semibold">Access Management</h2>
@@ -127,71 +133,69 @@ const openEditDialog = (access: Access) => {
                     </Dialog>
                 </div>
 
-                <div class="rounded-md border">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>ID</TableHead>
-                                <TableHead>Access Level</TableHead>
-                                <TableHead class="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow v-for="access in accesses" :key="access.id">
-                                <TableCell>{{ access.id }}</TableCell>
-                                <TableCell>{{ access.access_level }}</TableCell>
-                                <TableCell class="text-right">
-                                    <div class="flex gap-2 justify-end">
-                                        <Dialog :open="editingAccessId === access.id" @update:open="val => { if (!val) editingAccessId = null }">
-                                            <DialogTrigger as-child>
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm" 
-                                                    @click="openEditDialog(access)"
-                                                >
-                                                    Edit
-                                                </Button>
-                                            </DialogTrigger>
-                                            <DialogContent v-if="editingAccess">
-                                                <DialogHeader>
-                                                    <DialogTitle>Edit Access Level</DialogTitle>
-                                                </DialogHeader>
-                                                <div class="grid gap-4 py-4">
-                                                    <div class="grid grid-cols-4 items-center gap-4">
-                                                        <label for="edit-program_name" class="text-right">Program Name</label>
-                                                        <Input 
-                                                            id="edit-program_name" 
-                                                            v-model="editingAccess.program_name" 
-                                                            class="col-span-3" 
-                                                        />
-                                                    </div>
-                                                    <div class="grid grid-cols-4 items-center gap-4">
-                                                        <label for="edit-access_level" class="text-right">Access Level</label>
-                                                        <Input 
-                                                            id="edit-access_level" 
-                                                            v-model="editingAccess.access_level" 
-                                                            class="col-span-3" 
-                                                        />
-                                                    </div>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>ID</TableHead>
+                            <TableHead>Access Level</TableHead>
+                            <TableHead class="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <TableRow v-for="access in accesses" :key="access.id">
+                            <TableCell>{{ access.id }}</TableCell>
+                            <TableCell>{{ access.access_level }}</TableCell>
+                            <TableCell class="text-right">
+                                <div class="flex gap-2 justify-end">
+                                    <Dialog :open="editingAccessId === access.id" @update:open="val => { if (!val) editingAccessId = null }">
+                                        <DialogTrigger as-child>
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm" 
+                                                @click="openEditDialog(access)"
+                                            >
+                                                Edit
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent v-if="editingAccess">
+                                            <DialogHeader>
+                                                <DialogTitle>Edit Access Level</DialogTitle>
+                                            </DialogHeader>
+                                            <div class="grid gap-4 py-4">
+                                                <div class="grid grid-cols-4 items-center gap-4">
+                                                    <label for="edit-program_name" class="text-right">Program Name</label>
+                                                    <Input 
+                                                        id="edit-program_name" 
+                                                        v-model="editingAccess.program_name" 
+                                                        class="col-span-3" 
+                                                    />
                                                 </div>
-                                                <DialogFooter>
-                                                    <Button type="submit" @click="updateAccess">Save Changes</Button>
-                                                </DialogFooter>
-                                            </DialogContent>
-                                        </Dialog>
-                                        <Button 
-                                            variant="destructive" 
-                                            size="sm" 
-                                            @click="deleteAccess(access.id)"
-                                        >
-                                            Delete
-                                        </Button>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </div>
+                                                <div class="grid grid-cols-4 items-center gap-4">
+                                                    <label for="edit-access_level" class="text-right">Access Level</label>
+                                                    <Input 
+                                                        id="edit-access_level" 
+                                                        v-model="editingAccess.access_level" 
+                                                        class="col-span-3" 
+                                                    />
+                                                </div>
+                                            </div>
+                                            <DialogFooter>
+                                                <Button type="submit" @click="updateAccess">Save Changes</Button>
+                                            </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
+                                    <Button 
+                                        variant="destructive" 
+                                        size="sm" 
+                                        @click="deleteAccess(access.id)"
+                                    >
+                                        Delete
+                                    </Button>
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
             </div>
     </AppLayout>
 </template>
