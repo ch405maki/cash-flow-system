@@ -49,6 +49,7 @@ Route::patch('/vouchers/{voucher}/check', [VoucherController::class, 'addCheckDe
 Route::post('/requests', [RequestController::class, 'store']);
 Route::put('/requests/{request}/items', [RequestController::class, 'updateItems']);
 Route::post('/requests/{request}/release', [RequestController::class, 'releaseItems']);
+Route::put('/requests/{id}/purpose', [RequestController::class, 'updatePurpose']);
 
 Route::patch('/requests/{request}/tagging', [ApprovedRequestController::class, 'updateTagging']);
 

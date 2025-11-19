@@ -289,18 +289,31 @@ class DashboardController extends Controller
         });
 
         $pettyCashFund = PettyCashFund::where('user_id', Auth::id())->first();
+
         $pettyCash = PettyCash::with('items', 'user')
             ->where('status', 'audited')
+            ->where('pcv_no', 'LIKE', 'PCV-%')
             ->orderBy('created_at', 'desc')
             ->get();
+
+        $pettyCashRequest = PettyCash::with('items', 'user')
+            ->where('status', 'audited')
+            ->where('pcv_no', 'LIKE', 'PCV-%')
+            ->count();
+
+        $released = PettyCash::with('items', 'user')
+            ->where('status', 'released')
+            ->count();
         
         
         return Inertia::render('Dashboard/Bursar/Index', [
             'isDepartmentUser' => true,
             'userRole' => $user->role,
             'username' => $user->username,
+            'pettyCashRequest' => $pettyCashRequest, 
             'pettyCash' => $pettyCash, 
             'pettyCashFund' => $pettyCashFund,
+            'totalreleased' => $released,
             'totalRequests' => Request::where('department_id', $user->department_id)->count(),
         ]);
     }
