@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import ConfigurationLayout from '@/layouts/configuration/Layout.vue';
+import { type BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
@@ -94,11 +94,16 @@ const openEditDialog = (department: Department) => {
     editingDepartment.value = { ...department };
     isEditDialogOpen.value = true;
 };
+
+const breadcrumbs: BreadcrumbItem[] = [
+  { title: 'Dashboard', href: '/dashboard' },
+  { title: 'Department Management', href: '#' },
+];
 </script>
 
 <template>
-    <AppLayout>
-        <Head title="Departments" />
+    <Head title="Departments" />
+    <AppLayout :breadcrumbs="breadcrumbs">
             <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div class="flex items-center justify-between">
                     <h2 class="text-xl font-semibold">Department Management</h2>
@@ -142,73 +147,71 @@ const openEditDialog = (department: Department) => {
                     </Dialog>
                 </div>
 
-                <div class="rounded-md border">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>ID</TableHead>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Description</TableHead>
-                                <TableHead class="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow v-for="department in departments" :key="department.id">
-                                <TableCell>{{ department.id }}</TableCell>
-                                <TableCell>{{ department.department_name }}</TableCell>
-                                <TableCell>{{ department.department_description || '-' }}</TableCell>
-                                <TableCell class="text-right">
-                                    <div class="flex gap-2 justify-end">
-                                        <Dialog v-model:open="isEditDialogOpen">
-                                            <DialogTrigger as-child>
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm" 
-                                                    @click="openEditDialog(department)"
-                                                >
-                                                    Edit
-                                                </Button>
-                                            </DialogTrigger>
-                                            <DialogContent>
-                                                <DialogHeader>
-                                                    <DialogTitle>Edit Department</DialogTitle>
-                                                </DialogHeader>
-                                                <div class="grid gap-4 py-4">
-                                                    <div class="grid grid-cols-4 items-center gap-4">
-                                                        <label for="edit-department_name" class="text-right">Name</label>
-                                                        <Input 
-                                                            id="edit-department_name" 
-                                                            v-model="editingDepartment.department_name" 
-                                                            class="col-span-3" 
-                                                        />
-                                                    </div>
-                                                    <div class="grid grid-cols-4 items-center gap-4">
-                                                        <label for="edit-department_description" class="text-right">Description</label>
-                                                        <Textarea 
-                                                            id="edit-department_description" 
-                                                            v-model="editingDepartment.department_description" 
-                                                            class="col-span-3" 
-                                                        />
-                                                    </div>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>ID</TableHead>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Description</TableHead>
+                            <TableHead class="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <TableRow v-for="department in departments" :key="department.id">
+                            <TableCell>{{ department.id }}</TableCell>
+                            <TableCell>{{ department.department_name }}</TableCell>
+                            <TableCell>{{ department.department_description || '-' }}</TableCell>
+                            <TableCell class="text-right">
+                                <div class="flex gap-2 justify-end">
+                                    <Dialog v-model:open="isEditDialogOpen">
+                                        <DialogTrigger as-child>
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm" 
+                                                @click="openEditDialog(department)"
+                                            >
+                                                Edit
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                            <DialogHeader>
+                                                <DialogTitle>Edit Department</DialogTitle>
+                                            </DialogHeader>
+                                            <div class="grid gap-4 py-4">
+                                                <div class="grid grid-cols-4 items-center gap-4">
+                                                    <label for="edit-department_name" class="text-right">Name</label>
+                                                    <Input 
+                                                        id="edit-department_name" 
+                                                        v-model="editingDepartment.department_name" 
+                                                        class="col-span-3" 
+                                                    />
                                                 </div>
-                                                <DialogFooter>
-                                                    <Button type="submit" @click="updateDepartment">Save Changes</Button>
-                                                </DialogFooter>
-                                            </DialogContent>
-                                        </Dialog>
-                                        <Button 
-                                            variant="destructive" 
-                                            size="sm" 
-                                            @click="deleteDepartment(department.id)"
-                                        >
-                                            Delete
-                                        </Button>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </div>
+                                                <div class="grid grid-cols-4 items-center gap-4">
+                                                    <label for="edit-department_description" class="text-right">Description</label>
+                                                    <Textarea 
+                                                        id="edit-department_description" 
+                                                        v-model="editingDepartment.department_description" 
+                                                        class="col-span-3" 
+                                                    />
+                                                </div>
+                                            </div>
+                                            <DialogFooter>
+                                                <Button type="submit" @click="updateDepartment">Save Changes</Button>
+                                            </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
+                                    <Button 
+                                        variant="destructive" 
+                                        size="sm" 
+                                        @click="deleteDepartment(department.id)"
+                                    >
+                                        Delete
+                                    </Button>
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
             </div>
     </AppLayout>
 </template>

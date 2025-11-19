@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import ConfigurationLayout from '@/layouts/configuration/Layout.vue';
+import { type BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
@@ -92,11 +92,16 @@ const openEditDialog = (account: Account) => {
     editingAccount.value = { ...account };
     isEditDialogOpen.value = true;
 };
+
+const breadcrumbs: BreadcrumbItem[] = [
+  { title: 'Dashboard', href: '/dashboard' },
+  { title: 'Account Management', href: '#' },
+];
 </script>
 
 <template>
-    <AppLayout>
-        <Head title="Accounts" />
+    <Head title="Accounts" />
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
             <div class="flex items-center justify-between">
                 <h2 class="text-xl font-semibold">Account Management</h2>
@@ -132,65 +137,63 @@ const openEditDialog = (account: Account) => {
                 </Dialog>
             </div>
 
-            <div class="rounded-md border">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>ID</TableHead>
-                            <TableHead>Account Title</TableHead>
-                            <TableHead class="text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        <TableRow v-for="account in accounts" :key="account.id">
-                            <TableCell>{{ account.id }}</TableCell>
-                            <TableCell>{{ account.account_title }}</TableCell>
-                            <TableCell class="text-right">
-                                <div class="flex gap-2 justify-end">
-                                    <Dialog v-model:open="isEditDialogOpen">
-                                        <DialogTrigger as-child>
-                                            <Button 
-                                                variant="outline" 
-                                                size="sm" 
-                                                @click="openEditDialog(account)"
-                                            >
-                                                <PencilIcon class="mr-2 h-3 w-3" />
-                                                Edit
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent>
-                                            <DialogHeader>
-                                                <DialogTitle>Edit Account</DialogTitle>
-                                            </DialogHeader>
-                                            <div class="grid gap-4 py-4">
-                                                <div class="grid grid-cols-4 items-center gap-4">
-                                                    <label for="edit-account_title" class="text-right">Account Title</label>
-                                                    <Input 
-                                                        id="edit-account_title" 
-                                                        v-model="editingAccount.account_title" 
-                                                        class="col-span-3" 
-                                                    />
-                                                </div>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Account Title</TableHead>
+                        <TableHead class="text-right">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    <TableRow v-for="account in accounts" :key="account.id">
+                        <TableCell>{{ account.id }}</TableCell>
+                        <TableCell>{{ account.account_title }}</TableCell>
+                        <TableCell class="text-right">
+                            <div class="flex gap-2 justify-end">
+                                <Dialog v-model:open="isEditDialogOpen">
+                                    <DialogTrigger as-child>
+                                        <Button 
+                                            variant="outline" 
+                                            size="sm" 
+                                            @click="openEditDialog(account)"
+                                        >
+                                            <PencilIcon class="mr-2 h-3 w-3" />
+                                            Edit
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Edit Account</DialogTitle>
+                                        </DialogHeader>
+                                        <div class="grid gap-4 py-4">
+                                            <div class="grid grid-cols-4 items-center gap-4">
+                                                <label for="edit-account_title" class="text-right">Account Title</label>
+                                                <Input 
+                                                    id="edit-account_title" 
+                                                    v-model="editingAccount.account_title" 
+                                                    class="col-span-3" 
+                                                />
                                             </div>
-                                            <DialogFooter>
-                                                <Button type="submit" @click="updateAccount">Save Changes</Button>
-                                            </DialogFooter>
-                                        </DialogContent>
-                                    </Dialog>
-                                    <Button 
-                                        variant="destructive" 
-                                        size="sm" 
-                                        @click="deleteAccount(account.id)"
-                                    >
-                                        <Trash2Icon class="mr-2 h-3 w-3" />
-                                        Delete
-                                    </Button>
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
-            </div>
+                                        </div>
+                                        <DialogFooter>
+                                            <Button type="submit" @click="updateAccount">Save Changes</Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                                <Button 
+                                    variant="destructive" 
+                                    size="sm" 
+                                    @click="deleteAccount(account.id)"
+                                >
+                                    <Trash2Icon class="mr-2 h-3 w-3" />
+                                    Delete
+                                </Button>
+                            </div>
+                        </TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
         </div>
     </AppLayout>
 </template>

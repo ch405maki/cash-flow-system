@@ -82,7 +82,7 @@ const filteredRequests = computed(() => {
     const statusMatch = selectedStatus.value === 'all' || request.status === selectedStatus.value;
     
     // Department filter (with null check)
-    const departmentMatch = selectedDepartment.value === 'all' || 
+    const departmentMatch = selectedDepartment.value === 'all' ||
                         (request.department && request.department.id.toString() === selectedDepartment.value);
     
     // Search filter

@@ -8,6 +8,12 @@ const props = defineProps<{
     isDepartmentUser: boolean;
     userRole: string;
     username: string;
+    totalRequests: number;
+    pettyCash: Record<string, any>[] | null
+    pettyCashFund?: {
+        fund_amount?: number
+        fund_balance?: number
+    } | null
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -41,7 +47,12 @@ const breadcrumbs: BreadcrumbItem[] = [
                 </div>
             </div>
             <div class="relative min-h-[100vh] flex-1 rounded-xl border border-sidebar-border/70 dark:border-sidebar-border md:min-h-min">
-                <PlaceholderPattern />
+                Request
+                {{ pettyCash }}
+                Fund
+                {{ pettyCashFund }}
+                Request count
+                {{ recentRequests }}
             </div>
         </div>
     </AppLayout>

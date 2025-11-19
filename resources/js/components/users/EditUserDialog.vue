@@ -9,10 +9,12 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { UserRoundPen } from "lucide-vue-next";
+import { UserRoundPen, Eye, EyeOff } from "lucide-vue-next";
 import axios from "axios";
 import { useToast } from "vue-toastification";
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 // Props
 const props = defineProps<{
@@ -68,6 +70,19 @@ const userData = ref({
   access_id: props.user.access_id || null,
 });
 
+// Password Data
+const passwordData = ref({
+  password: '',
+  password_confirmation: '',
+});
+
+// Password visibility
+const showPassword = ref(false);
+const showPasswordConfirmation = ref(false);
+
+// Active tab
+const activeTab = ref('profile');
+
 // Open Dialog
 const openDialog = () => {
   userData.value = {
@@ -84,6 +99,15 @@ const openDialog = () => {
     department_id: props.user.department_id || null,
     access_id: props.user.access_id || null,
   };
+  
+  // Reset password fields
+  passwordData.value = {
+    password: '',
+    password_confirmation: '',
+  };
+  
+  // Reset to profile tab
+  activeTab.value = 'profile';
 };
 
 // Update User
@@ -96,6 +120,33 @@ const updateUser = async () => {
     }, 1500);
   } catch (error) {
     toast.error(error.response?.data?.message || "Failed to update user.");
+  }
+};
+
+// Update Password
+const updatePassword = async () => {
+  if (passwordData.value.password !== passwordData.value.password_confirmation) {
+    toast.error("Passwords do not match!");
+    return;
+  }
+  
+  if (passwordData.value.password.length < 8) {
+    toast.error("Password must be at least 8 characters long!");
+    return;
+  }
+
+  try {
+    const response = await axios.put(`/api/users/${userData.value.id}/password`, {
+      password: passwordData.value.password,
+      password_confirmation: passwordData.value.password_confirmation,
+    });
+    toast.success("Password updated successfully!");
+    passwordData.value = {
+      password: '',
+      password_confirmation: '',
+    };
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Failed to update password.");
   }
 };
 </script>
@@ -117,66 +168,98 @@ const updateUser = async () => {
     <SheetContent class="text-gray-900 dark:text-gray-200 overflow-y-auto">
       <SheetHeader>
         <SheetTitle>Edit User</SheetTitle>
-        <SheetDescription>Modify user details and save changes.</SheetDescription>
+        <SheetDescription>Modify user details and password.</SheetDescription>
       </SheetHeader>
 
-      <!-- Edit User Form -->
-      <form @submit.prevent="updateUser" class="mt-6">
-        <div class="space-y-4">
+      <!-- Tabs -->
+      <div class="mt-6 border-b border-gray-200 dark:border-gray-700">
+        <nav class="-mb-px flex space-x-8">
+          <button
+            @click="activeTab = 'profile'"
+            :class="[
+              'py-2 px-1 border-b-2 font-medium text-sm',
+              activeTab === 'profile'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+            ]"
+          >
+            Profile
+          </button>
+          <button
+            @click="activeTab = 'password'"
+            :class="[
+              'py-2 px-1 border-b-2 font-medium text-sm',
+              activeTab === 'password'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+            ]"
+          >
+            Password
+          </button>
+        </nav>
+      </div>
+
+      <!-- Profile Tab -->
+      <div v-if="activeTab === 'profile'" class="mt-6">
+        <form @submit.prevent="updateUser" class="space-y-4">
           <!-- Name Fields -->
-          <label class="block">
-            <span class="text-gray-700 dark:text-gray-300">Username</span>
-            <input
+          <div class="space-y-2">
+            <Label for="username">Username</Label>
+            <Input
               v-model="userData.username"
+              id="username"
               type="text"
-              class="input dark:bg-gray-700 dark:text-white"
               required
             />
-          </label>
-          <label class="block">
-            <span class="text-gray-700 dark:text-gray-300">First Name</span>
-            <input
-              v-model="userData.first_name"
-              type="text"
-              class="input dark:bg-gray-700 dark:text-white"
-              required
-            />
-          </label>
-          <label class="block">
-            <span class="text-gray-700 dark:text-gray-300">Middle Name</span>
-            <input
-              v-model="userData.middle_name"
-              type="text"
-              class="input dark:bg-gray-700 dark:text-white"
-            />
-          </label>
-          <label class="block">
-            <span class="text-gray-700 dark:text-gray-300">Last Name</span>
-            <input
-              v-model="userData.last_name"
-              type="text"
-              class="input dark:bg-gray-700 dark:text-white"
-              required
-            />
-          </label>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="space-y-2">
+              <Label for="first_name">First Name</Label>
+              <Input
+                v-model="userData.first_name"
+                id="first_name"
+                type="text"
+                required
+              />
+            </div>
+            <div class="space-y-2">
+              <Label for="middle_name">Middle Name</Label>
+              <Input
+                v-model="userData.middle_name"
+                id="middle_name"
+                type="text"
+              />
+            </div>
+            <div class="space-y-2">
+              <Label for="last_name">Last Name</Label>
+              <Input
+                v-model="userData.last_name"
+                id="last_name"
+                type="text"
+                required
+              />
+            </div>
+          </div>
 
           <!-- Email Field -->
-          <label class="block">
-            <span class="text-gray-700 dark:text-gray-300">Email</span>
-            <input
+          <div class="space-y-2">
+            <Label for="email">Email</Label>
+            <Input
               v-model="userData.email"
+              id="email"
               type="email"
-              class="input dark:bg-gray-700 dark:text-white"
               required
             />
-          </label>
+          </div>
 
           <!-- Department Field -->
-          <label class="block">
-            <span class="text-gray-700 dark:text-gray-300">Department</span>
+          <div class="space-y-2">
+            <Label for="department">Department</Label>
             <select
               v-model="userData.department_id"
-              class="input dark:bg-gray-700 dark:text-white"
+              id="department"
+              class="w-full p-2 border rounded-md bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-200"
             >
               <option :value="null">No Department</option>
               <option 
@@ -187,14 +270,15 @@ const updateUser = async () => {
                 {{ department.department_name }}
               </option>
             </select>
-          </label>
+          </div>
 
           <!-- Access Level Field -->
-          <label class="block">
-            <span class="text-gray-700 dark:text-gray-300">Access Level</span>
+          <div class="space-y-2">
+            <Label for="access">Access Level</Label>
             <select
               v-model="userData.access_id"
-              class="input dark:bg-gray-700 dark:text-white"
+              id="access"
+              class="w-full p-2 border rounded-md bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-200"
             >
               <option :value="null">No Access Level</option>
               <option 
@@ -205,14 +289,15 @@ const updateUser = async () => {
                 {{ access.program_name }} ({{ access.access_level }})
               </option>
             </select>
-          </label>
+          </div>
 
           <!-- Role Field -->
-          <label class="block">
-            <span class="text-gray-700 dark:text-gray-300">Role</span>
+          <div class="space-y-2">
+            <Label for="role">Role</Label>
             <select
               v-model="userData.role"
-              class="input dark:bg-gray-700 dark:text-white"
+              id="role"
+              class="w-full p-2 border rounded-md bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-200"
             >
               <option value="admin">Admin</option>
               <option value="executive_director">Executive Director</option>
@@ -224,42 +309,91 @@ const updateUser = async () => {
               <option value="purchasing">Purchasing</option>
               <option value="staff">Staff</option>
             </select>
-          </label>
+          </div>
 
           <!-- Boolean Checkboxes -->
           <div class="flex items-center space-x-4">
             <div class="flex items-center space-x-2">
               <Checkbox id="petty-cash" v-model:checked="userData.is_petty_cash" />
-              <label for="petty-cash" class="text-sm font-medium">Reimbursement</label>
+              <Label for="petty-cash" class="text-sm font-medium">Reimbursement</Label>
             </div>
             <div class="flex items-center space-x-2">
               <Checkbox id="cash-advance" v-model:checked="userData.is_cash_advance" />
-              <label for="cash-advance" class="text-sm font-medium">Cash Advance / Liquidation</label>
+              <Label for="cash-advance" class="text-sm font-medium">Cash Advance / Liquidation</Label>
             </div>
           </div>
 
           <!-- Status Field -->
-          <label class="block">
-            <span class="text-gray-700 dark:text-gray-300">Status</span>
+          <div class="space-y-2">
+            <Label for="status">Status</Label>
             <select
               v-model="userData.status"
-              class="input dark:bg-gray-700 dark:text-white"
+              id="status"
+              class="w-full p-2 border rounded-md bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-200"
             >
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
-          </label>
+          </div>
 
           <!-- Save Changes Button -->
-          <Button type="submit" class="w-full">Save Changes</Button>
-        </div>
-      </form>
+          <Button type="submit" class="w-full">Save Profile Changes</Button>
+        </form>
+      </div>
+
+      <!-- Password Tab -->
+      <div v-if="activeTab === 'password'" class="mt-6">
+        <form @submit.prevent="updatePassword" class="space-y-4">
+          <div class="space-y-2">
+            <Label for="password">New Password</Label>
+            <div class="relative">
+              <Input
+                v-model="passwordData.password"
+                id="password"
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="Enter new password"
+                required
+              />
+              <button
+                type="button"
+                @click="showPassword = !showPassword"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+              >
+                <Eye v-if="!showPassword" class="h-4 w-4" />
+                <EyeOff v-else class="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <Label for="password_confirmation">Confirm New Password</Label>
+            <div class="relative">
+              <Input
+                v-model="passwordData.password_confirmation"
+                id="password_confirmation"
+                :type="showPasswordConfirmation ? 'text' : 'password'"
+                placeholder="Confirm new password"
+                required
+              />
+              <button
+                type="button"
+                @click="showPasswordConfirmation = !showPasswordConfirmation"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+              >
+                <Eye v-if="!showPasswordConfirmation" class="h-4 w-4" />
+                <EyeOff v-else class="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div class="text-sm text-gray-500 dark:text-gray-400">
+            <p>• Password must be at least 8 characters long</p>
+            <p>• Make sure both passwords match</p>
+          </div>
+
+          <Button type="submit" class="w-full">Update Password</Button>
+        </form>
+      </div>
     </SheetContent>
   </Sheet>
 </template>
-
-<style scoped>
-.input {
-  @apply w-full p-2 border rounded-md bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-200;
-}
-</style>

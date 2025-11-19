@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import ConfigurationLayout from '@/layouts/configuration/Layout.vue';
+import { type BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
@@ -104,11 +104,16 @@ const openEditDialog = (signatory: Signatory) => {
     editingSignatory.value = { ...signatory };
     isEditDialogOpen.value = true;
 };
+
+const breadcrumbs: BreadcrumbItem[] = [
+  { title: 'Dashboard', href: '/dashboard' },
+  { title: 'Signatory Management', href: '#' },
+];
 </script>
 
 <template>
-    <AppLayout>
-        <Head title="Signatories" />
+    <Head title="Signatories" />
+    <AppLayout :breadcrumbs="breadcrumbs">
             <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div class="flex items-center justify-between">
                     <h2 class="text-xl font-semibold">Signatory Management</h2>
@@ -164,94 +169,92 @@ const openEditDialog = (signatory: Signatory) => {
                     </Dialog>
                 </div>
 
-                <div class="rounded-md border">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>ID</TableHead>
-                                <TableHead>Full Name</TableHead>
-                                <TableHead>Position</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead class="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow v-for="signatory in signatories" :key="signatory.id">
-                                <TableCell>{{ signatory.id }}</TableCell>
-                                <TableCell>{{ signatory.full_name }}</TableCell>
-                                <TableCell>{{ signatory.position }}</TableCell>
-                                <TableCell>
-                                    <Badge 
-                                        :variant="signatory.status === 'active' ? 'default' : 'secondary'"
-                                        class="capitalize"
-                                    >
-                                        {{ signatory.status }}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell class="text-right">
-                                    <div class="flex gap-2 justify-end">
-                                        <Dialog v-model:open="isEditDialogOpen">
-                                            <DialogTrigger as-child>
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm" 
-                                                    @click="openEditDialog(signatory)"
-                                                >
-                                                    Edit
-                                                </Button>
-                                            </DialogTrigger>
-                                            <DialogContent>
-                                                <DialogHeader>
-                                                    <DialogTitle>Edit Signatory</DialogTitle>
-                                                </DialogHeader>
-                                                <div class="grid gap-4 py-4">
-                                                    <div class="grid grid-cols-4 items-center gap-4">
-                                                        <label for="edit-full_name" class="text-right">Full Name</label>
-                                                        <Input 
-                                                            id="edit-full_name" 
-                                                            v-model="editingSignatory.full_name" 
-                                                            class="col-span-3" 
-                                                        />
-                                                    </div>
-                                                    <div class="grid grid-cols-4 items-center gap-4">
-                                                        <label for="edit-position" class="text-right">Position</label>
-                                                        <Input 
-                                                            id="edit-position" 
-                                                            v-model="editingSignatory.position" 
-                                                            class="col-span-3" 
-                                                        />
-                                                    </div>
-                                                    <div class="grid grid-cols-4 items-center gap-4">
-                                                        <label for="edit-status" class="text-right">Status</label>
-                                                        <Select v-model="editingSignatory.status">
-                                                            <SelectTrigger class="col-span-3">
-                                                                <SelectValue placeholder="Select status" />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="active">Active</SelectItem>
-                                                                <SelectItem value="inactive">Inactive</SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>ID</TableHead>
+                            <TableHead>Full Name</TableHead>
+                            <TableHead>Position</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead class="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <TableRow v-for="signatory in signatories" :key="signatory.id">
+                            <TableCell>{{ signatory.id }}</TableCell>
+                            <TableCell>{{ signatory.full_name }}</TableCell>
+                            <TableCell>{{ signatory.position }}</TableCell>
+                            <TableCell>
+                                <Badge 
+                                    :variant="signatory.status === 'active' ? 'default' : 'secondary'"
+                                    class="capitalize"
+                                >
+                                    {{ signatory.status }}
+                                </Badge>
+                            </TableCell>
+                            <TableCell class="text-right">
+                                <div class="flex gap-2 justify-end">
+                                    <Dialog v-model:open="isEditDialogOpen">
+                                        <DialogTrigger as-child>
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm" 
+                                                @click="openEditDialog(signatory)"
+                                            >
+                                                Edit
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                            <DialogHeader>
+                                                <DialogTitle>Edit Signatory</DialogTitle>
+                                            </DialogHeader>
+                                            <div class="grid gap-4 py-4">
+                                                <div class="grid grid-cols-4 items-center gap-4">
+                                                    <label for="edit-full_name" class="text-right">Full Name</label>
+                                                    <Input 
+                                                        id="edit-full_name" 
+                                                        v-model="editingSignatory.full_name" 
+                                                        class="col-span-3" 
+                                                    />
                                                 </div>
-                                                <DialogFooter>
-                                                    <Button type="submit" @click="updateSignatory">Save Changes</Button>
-                                                </DialogFooter>
-                                            </DialogContent>
-                                        </Dialog>
-                                        <Button 
-                                            variant="destructive" 
-                                            size="sm" 
-                                            @click="deleteSignatory(signatory.id)"
-                                        >
-                                            Delete
-                                        </Button>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </div>
+                                                <div class="grid grid-cols-4 items-center gap-4">
+                                                    <label for="edit-position" class="text-right">Position</label>
+                                                    <Input 
+                                                        id="edit-position" 
+                                                        v-model="editingSignatory.position" 
+                                                        class="col-span-3" 
+                                                    />
+                                                </div>
+                                                <div class="grid grid-cols-4 items-center gap-4">
+                                                    <label for="edit-status" class="text-right">Status</label>
+                                                    <Select v-model="editingSignatory.status">
+                                                        <SelectTrigger class="col-span-3">
+                                                            <SelectValue placeholder="Select status" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="active">Active</SelectItem>
+                                                            <SelectItem value="inactive">Inactive</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            </div>
+                                            <DialogFooter>
+                                                <Button type="submit" @click="updateSignatory">Save Changes</Button>
+                                            </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
+                                    <Button 
+                                        variant="destructive" 
+                                        size="sm" 
+                                        @click="deleteSignatory(signatory.id)"
+                                    >
+                                        Delete
+                                    </Button>
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
             </div>
     </AppLayout>
 </template>
