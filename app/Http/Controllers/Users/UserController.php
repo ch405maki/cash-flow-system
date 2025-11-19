@@ -173,8 +173,8 @@ class UserController extends Controller
                 'email'         => 'required|email|max:255|unique:users,email,' . $id,
                 'role'          => 'required|string',
                 'status'        => 'required|in:active,inactive',
-                'department_id' => 'nullable|exists:departments,id', // Add department validation
-                'access_id'     => 'nullable|exists:accesses,id',    // Add access validation
+                'department_id' => 'nullable|exists:departments,id',
+                'access_id'     => 'nullable|exists:accesses,id',
             ]);
 
             // ✅ Add boolean values manually (convert to true/false)
@@ -185,7 +185,7 @@ class UserController extends Controller
 
             return response()->json([
                 'message' => 'User updated successfully!',
-                'user' => $user->load('department', 'access') // Load relationships
+                'user' => $user->load('department', 'access')
             ], 200);
 
         } catch (ValidationException $e) {
@@ -196,6 +196,37 @@ class UserController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to update user',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Add this to your UserController
+    public function updatePassword(Request $request, $id)
+    {
+        try {
+            $user = User::findOrFail($id);
+
+            $validated = $request->validate([
+                'password' => 'required|string|min:8|confirmed',
+            ]);
+
+            $user->update([
+                'password' => Hash::make($validated['password']),
+            ]);
+
+            return response()->json([
+                'message' => 'Password updated successfully!',
+            ], 200);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to update password',
                 'error' => $e->getMessage()
             ], 500);
         }

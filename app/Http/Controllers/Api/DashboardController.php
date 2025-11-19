@@ -22,6 +22,7 @@ use App\Models\Access;
 use App\Models\Voucher;
 use App\Models\Canvas;
 use App\Models\PettyCash;
+use App\Models\PettyCashFund;
 
 class DashboardController extends Controller
 {
@@ -160,28 +161,28 @@ class DashboardController extends Controller
         $user = Auth::user();
         
         $requests = Request::with(['user', 'details'])
-            ->where('department_id', $user->department_id)
-            ->orderBy('request_date', 'desc')
-            ->limit(10)
-            ->get()
-            ->map(function ($request) {
-                return [
-                    'id' => $request->id,
-                    'request_no' => $request->request_no,
-                    'request_date' => $request->request_date,
-                    'purpose' => $request->purpose,
-                    'status' => $request->status,
-                    'user' => $request->user ? $request->user->only(['first_name', 'last_name']) : null,
-                    'details' => $request->details->map(function ($detail) {
-                        return [
-                            'id' => $detail->id,
-                            'quantity' => $detail->quantity,
-                            'unit' => $detail->unit,
-                            'item_description' => $detail->item_description,
-                        ];
-                    }),
-                ];
-            });
+        ->where('department_id', $user->department_id)
+        ->orderBy('request_date', 'desc')
+        ->limit(10)
+        ->get()
+        ->map(function ($request) {
+            return [
+                'id' => $request->id,
+                'request_no' => $request->request_no,
+                'request_date' => $request->request_date,
+                'purpose' => $request->purpose,
+                'status' => $request->status,
+                'user' => $request->user ? $request->user->only(['first_name', 'last_name']) : null,
+                'details' => $request->details->map(function ($detail) {
+                    return [
+                        'id' => $detail->id,
+                        'quantity' => $detail->quantity,
+                        'unit' => $detail->unit,
+                        'item_description' => $detail->item_description,
+                    ];
+                }),
+            ];
+        });
             
         $statusCounts = [
             'pending' => Request::where('department_id', $user->department_id)
@@ -262,12 +263,45 @@ class DashboardController extends Controller
     protected function bursarDashboard()
     {
         $user = Auth::user();
+
+        $requests = Request::with(['user', 'details'])
+        ->where('department_id', $user->department_id)
+        ->orderBy('request_date', 'desc')
+        ->limit(10)
+        ->get()
+        ->map(function ($request) {
+            return [
+                'id' => $request->id,
+                'request_no' => $request->request_no,
+                'request_date' => $request->request_date,
+                'purpose' => $request->purpose,
+                'status' => $request->status,
+                'user' => $request->user ? $request->user->only(['first_name', 'last_name']) : null,
+                'details' => $request->details->map(function ($detail) {
+                    return [
+                        'id' => $detail->id,
+                        'quantity' => $detail->quantity,
+                        'unit' => $detail->unit,
+                        'item_description' => $detail->item_description,
+                    ];
+                }),
+            ];
+        });
+
+        $pettyCashFund = PettyCashFund::where('user_id', Auth::id())->first();
+        $pettyCash = PettyCash::with('items', 'user')
+            ->where('status', 'audited')
+            ->orderBy('created_at', 'desc')
+            ->get();
         
         
         return Inertia::render('Dashboard/Bursar/Index', [
             'isDepartmentUser' => true,
             'userRole' => $user->role,
             'username' => $user->username,
+            'pettyCash' => $pettyCash, 
+            'pettyCashFund' => $pettyCashFund,
+            'totalRequests' => Request::where('department_id', $user->department_id)->count(),
         ]);
     }
 

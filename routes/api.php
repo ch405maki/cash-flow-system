@@ -28,6 +28,7 @@ Route::post('/users', [UserController::class, 'store']);
 Route::post('/api/vouchers', [VoucherController::class, 'store']);
 Route::post('/upload-users', [UserController::class, 'uploadUsers']);
 Route::put('/users/{id}', [UserController::class, 'update']);
+Route::put('/users/{id}/password', [UserController::class, 'updatePassword']);
 Route::patch('/users/{user}/status', [UserController::class, 'updateStatus']);
 
 Route::prefix('profile-pictures')->group(function () {
