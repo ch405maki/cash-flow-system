@@ -362,6 +362,37 @@ class RequestController extends Controller
         }
     }
 
+    public function updatePurpose(HttpRequest $httpRequest, $id)
+    {
+        try {
+            $requestModel = Request::findOrFail($id);
+
+            $validated = $httpRequest->validate([
+                'purpose' => 'required|string|max:1000',
+            ]);
+
+            $requestModel->update([
+                'purpose' => $validated['purpose']
+            ]);
+
+            return response()->json([
+                'message' => 'Purpose updated successfully!',
+                'request' => $requestModel->fresh()
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to update purpose',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function updateStatus(HttpRequest $httpRequest, Request $request)
     {
         $validated = $httpRequest->validate([

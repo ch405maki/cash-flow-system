@@ -649,8 +649,8 @@ function openPreview(file: any) {
     </Dialog>
   </AppLayout>
 
-    <!-- Print section -->
-    <div id="print-section" class="hidden print:block">
+    <!-- Print section hidden print:block -->
+    <div id="print-section" class="">
       <div>
         <FormHeader text="Purchase Order" :bordered="false"  />
       </div>
@@ -658,8 +658,8 @@ function openPreview(file: any) {
         <table class="w-full text-sm border border-border rounded-lg mb-2">
           <tbody>
             <tr class="border-b">
-              <td class="p-2 font-medium text-muted-foreground border-r w-48">COMPANY NAME:</td>
-              <td class="p-2 uppercase border-r w-xl">{{ purchaseOrder.payee }}</td>
+              <td class="p-2 font-medium text-muted-foreground border-r w-[200px]">COMPANY NAME:</td>
+              <td class="p-2 uppercase border-r w-2xl">{{ purchaseOrder.payee }}</td>
               <td class="p-2 font-medium text-muted-foreground border-r w-40">P.O. NUMBER:</td>
               <td class="p-2 w-40 border-r">{{ purchaseOrder.po_no }}</td>
               <td class="p-2 w-40 font-medium text-muted-foreground border-r">P.O. DATE:</td>
@@ -667,7 +667,7 @@ function openPreview(file: any) {
             </tr>
             <tr class="border-b">
               <td class="p-2 font-medium text-muted-foreground border-r">CHECK PAYABLE TO:</td>
-              <td class="p-2 uppercase border-r">{{ purchaseOrder.check_payable_to }}</td>
+              <td class="p-2 uppercase border-r w-2xl">{{ purchaseOrder.check_payable_to }}</td>
               <td class="p-2 font-medium text-muted-foreground border-r">TIN:</td>
               <td class="p-2">{{ purchaseOrder.tin_no }}</td>
             </tr>
@@ -736,12 +736,12 @@ function openPreview(file: any) {
             <div class="text-left w-1/2">
               <div class="flex  items-center text-sm uppercase space-x-[55px]">
                 <h1>DEPARTMENT:</h1>
-                <h1>{{ purchaseOrder.department.department_name }}</h1>
+                <!-- <h1>{{ purchaseOrder.department.department_name }}</h1> -->
               </div>
-              <!-- <div class="flex  items-center text-sm uppercase space-x-[10px]">
+              <div class="flex  items-center text-sm uppercase space-x-[10px]">
                 <h1>ACCOUNT CHARGES:</h1>
-                <h1>{{ purchaseOrder.account?.account_title || 'N/A' }}</h1>
-              </div> -->
+                <!-- <h1>{{ purchaseOrder.account?.account_title || 'N/A' }}</h1> -->
+              </div>
             </div>
 
           <div class="text-right w-1/2">

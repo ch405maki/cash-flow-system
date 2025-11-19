@@ -4,9 +4,10 @@ import { type BreadcrumbItem } from '@/types'
 import { Head, Link } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import axios from 'axios';
 import { ref } from 'vue';
-import { Trash2 } from 'lucide-vue-next';
+import { Trash2, Edit, Save, X } from 'lucide-vue-next';
 import {
   Table,
   TableBody,
@@ -40,9 +41,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 // Add selected items state
 const selectedItems = ref<number[]>([]);
 const isReleasing = ref(false);
+const isEditingPurpose = ref(false);
 
-// Modify form to include released quantities
+// Modify form to include released quantities and purpose
 const form = ref({
+  purpose: props.request.purpose || '',
   details: props.request.details.map(detail => ({
     id: detail.id,
     quantity: detail.quantity,
@@ -97,6 +100,50 @@ const submit = async () => {
   } finally {
     processing.value = false;
   }
+};
+
+// Add purpose update function
+const updatePurpose = async () => {
+  try {
+    const response = await axios.put(`/api/requests/${props.request.id}/purpose`, {
+      purpose: form.value.purpose
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
+
+    toast.success('Purpose updated successfully');
+    isEditingPurpose.value = false;
+    
+    // Update the request object with new purpose
+    props.request.purpose = form.value.purpose;
+
+  } catch (error) {
+    console.error('Error updating purpose:', error);
+    
+    if (error.response?.data?.errors) {
+      toast({
+        title: 'Validation Error',
+        description: Object.entries(error.response.data.errors)
+          .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+          .join('\n'),
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to update purpose',
+        variant: 'destructive',
+      });
+    }
+  }
+};
+
+const cancelEditPurpose = () => {
+  form.value.purpose = props.request.purpose || '';
+  isEditingPurpose.value = false;
 };
 
 const addDetail = () => {
@@ -243,9 +290,65 @@ const toggleSelectAll = (checked: boolean) => {
                 <TableCell class="p-2">{{ request.user.first_name }} {{ request.user.last_name }}</TableCell>
             </TableRow>
             <TableRow>
-                <TableCell class="border-r p-2">Purpose:</TableCell>
-                <TableCell colspan="3" class="p-2">{{ request.purpose || 'N/A'}}</TableCell>
+              <TableCell class="border-r p-2">Purpose:</TableCell>
+
+              <TableCell colspan="3" class="p-2">
+                <div class="relative">
+
+                  <!-- Editing Mode -->
+                  <div v-if="isEditingPurpose" class="relative">
+                    <Textarea
+                      v-model="form.purpose"
+                      placeholder="Enter purpose..."
+                      class="min-h-[120px] pr-20"
+                    />
+
+                    <!-- Save / Cancel buttons -->
+                    <div class="absolute bottom-2 right-2 flex gap-2">
+                      <Button
+                        @click="updatePurpose"
+                        size="sm"
+                        class="h-7 px-3"
+                      >
+                        Save
+                      </Button>
+
+                      <Button
+                        @click="cancelEditPurpose"
+                        size="sm"
+                        variant="secondary"
+                        class="h-7 px-3"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+
+                  <!-- Display Mode -->
+                  <div
+                    v-else
+                    class="flex items-center justify-between w-full"
+                  >
+                    <!-- LEFT: Purpose text -->
+                    <span class="text-gray-900">
+                      {{ request.purpose || 'N/A' }}
+                    </span>
+
+                    <!-- RIGHT: Edit button -->
+                    <Button
+                      @click="isEditingPurpose = true"
+                      size="icon"
+                      variant="ghost"
+                      class="ml-4"
+                    >
+                      <Edit class="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                </div>
+              </TableCell>
             </TableRow>
+
         </TableBody>
         </Table>
       </div>
