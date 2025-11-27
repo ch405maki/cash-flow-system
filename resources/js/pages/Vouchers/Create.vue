@@ -16,6 +16,7 @@ import axios from 'axios'
 import { formatCurrency } from '@/lib/utils';
 import PageHeader from '@/components/PageHeader.vue';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from '@/components/ui/table'
+import { onMounted } from "vue";
 
 interface VoucherItem {
   amount: number;
@@ -257,6 +258,31 @@ const cancelEdit = (index: number) => {
   }
 };
 
+
+onMounted(() => {
+    if (props.distribution_expenses && props.distribution_expenses.length > 0) {
+        props.distribution_expenses.forEach(d => {
+            form.items.push({
+                account_id: findAccountIdByName(d.account_name),
+                charging_tag: "C",
+                amount: Number(d.amount),
+                hours: null,
+                rate: null,
+                editing: false
+            });
+        });
+
+        calculateTotalAmount(); // ← update totals after populating
+    }
+});
+
+
+const findAccountIdByName = (name) => {
+    const acc = props.accounts.find(a => a.account_title === name);
+    return acc ? acc.id.toString() : null;
+};
+
+
 const handleKeyDown = (event: KeyboardEvent, index: number) => {
   if (event.key === 'Enter') {
     saveEdit(index);
@@ -283,8 +309,6 @@ const handleKeyDown = (event: KeyboardEvent, index: number) => {
             </p>
         </div>
       </div>
-
-      Destribution Data: <p class="text-red-500">{{ props.distribution_expenses }}</p>
 
       <form @submit.prevent="submitVoucher" class="space-y-6">
         <!-- Voucher Header Section -->
