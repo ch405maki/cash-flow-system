@@ -22,6 +22,8 @@ use Illuminate\Validation\Rule;
 use Illuminate\Database\QueryException;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
+use App\Models\DistributionExpense;
+use App\Models\PettyCash;
 
 class VoucherController extends Controller
 {
@@ -46,16 +48,36 @@ class VoucherController extends Controller
     {
         $voucherNumber = $this->generateVoucherNumber();
         $poId = $request->query('po_id');
+        $pettyCashId = $request->query('petty_cash_id');
         
         $data = [
             'accounts' => Account::orderBy('account_title')->get(),
             'voucher_number' => $voucherNumber,
         ];
         
+        // Handle purchase order data
         if ($poId) {
             $purchaseOrder = PurchaseOrder::with(['department', 'account'])->find($poId);
             if ($purchaseOrder) {
                 $data['purchase_order'] = $purchaseOrder;
+            }
+        }
+        
+        // Handle distribution expenses from petty cash
+        if ($pettyCashId) {
+            $pettyCash = PettyCash::with('distributionExpenses')->find($pettyCashId);
+            
+            if ($pettyCash) {
+                $data['petty_cash'] = $pettyCash;
+                $data['distribution_expenses'] = $pettyCash->distributionExpenses;
+                
+                // You can also pre-fill other voucher data from petty cash
+                $data['prefilled_data'] = [
+                    'paid_to' => $pettyCash->paid_to,
+                    'total_amount' => $pettyCash->distributionExpenses->sum('amount'),
+                    'remarks' => "Voucher created from Petty Cash #{$pettyCash->pcv_no}",
+                    // Add any other fields you want to pre-fill
+                ];
             }
         }
         

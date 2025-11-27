@@ -27,6 +27,15 @@ interface VoucherItem {
   original?: VoucherItem;
 }
 
+interface DistributionExpense {
+  id: number;
+  account_name: string;
+  amount: number;
+  date: string;
+  petty_cash_id: number;
+  account_id?: number;
+}
+
 interface Props {
   accounts?: Array<{ id: number; account_title: string }>;
   auth: {
@@ -34,11 +43,26 @@ interface Props {
       id: number;
     };
   };
-  voucher_number: String
+  voucher_number: String;
   purchase_order?: {
     id: number;
     po_no: string;
     tin_no: string;
+    payee?: string;
+    check_payable_to?: string;
+  };
+  // Add these new props for distribution expenses
+  distribution_expenses?: DistributionExpense[];
+  petty_cash?: {
+    id: number;
+    pcv_no: string;
+    paid_to: string;
+    remarks?: string;
+  };
+  prefilled_data?: {
+    paid_to?: string;
+    total_amount?: number;
+    remarks?: string;
   };
 }
 
@@ -259,6 +283,8 @@ const handleKeyDown = (event: KeyboardEvent, index: number) => {
             </p>
         </div>
       </div>
+
+      Destribution Data: <p class="text-red-500">{{ props.distribution_expenses }}</p>
 
       <form @submit.prevent="submitVoucher" class="space-y-6">
         <!-- Voucher Header Section -->
