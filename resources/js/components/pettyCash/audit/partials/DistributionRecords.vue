@@ -3,7 +3,9 @@ import { computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 import { FileText } from 'lucide-vue-next'
+import { usePage } from '@inertiajs/vue3'
 
+const user = usePage().props.auth.user
 const props = defineProps<{
   distributionExpenses: any[]
   pettyCashId?: string | number
@@ -30,6 +32,7 @@ const navigateToCreateVoucher = () => {
     <div class="flex justify-between items-center mb-4">
       <h3 class="text-lg font-semibold">Existing Distribution Records</h3>
       <Button 
+        v-if="user.role == 'accounting'"
         @click="navigateToCreateVoucher"
         class="flex items-center gap-2"
         :disabled="!pettyCashId"

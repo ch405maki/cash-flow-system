@@ -224,9 +224,6 @@ console.log(props.pettyCash)
           </Sheet>
 
           <div v-if="user.role == 'accounting'">
-            <Button>
-              Create Voucher
-            </Button>
             <!-- Release button -->
             <AlertDialog v-if="props.pettyCash.status == 'requested'">
               <AlertDialogTrigger as-child>

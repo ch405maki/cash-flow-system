@@ -33,8 +33,8 @@ class VoucherController extends Controller
         $user = Auth::user();
         return Inertia::render('Vouchers/Index', [
             'vouchers' => Voucher::with(['user', 'details'])
-                                ->whereIn('status', ['draft', 'return', 'rejected', 'unreleased', 'released', 'completed'])
-                                ->get(),
+                        ->whereIn('status', ['draft', 'return', 'rejected', 'unreleased', 'released', 'completed'])
+                        ->get(),
             'accounts' => Account::all(),
             'authUser' => [
                 'id' => $user->id,
