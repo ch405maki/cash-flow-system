@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { formatDate, formatDateTime } from '@/lib/utils';
+import { formatDateTime } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { CirclePlus, Trash, Send, ChevronLeft, Check, ChevronsUpDown } from 'lucide-vue-next';
+import { CirclePlus, Trash, ShoppingBasket, Send, ChevronLeft, Check, ChevronsUpDown } from 'lucide-vue-next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from '@/components/ui/table';
 import PageHeader from '@/components/PageHeader.vue';
@@ -22,6 +22,7 @@ const props = defineProps<{
     id: number,
     department_id: number
   }
+  reorderRequest?: any
 }>();
 
 interface RequestItem {
@@ -184,15 +185,61 @@ const capitalizeWords = (str: string): string => {
     .replace(/\b\w/g, char => char.toUpperCase());
 };
 
+onMounted(() => {
+  // First try to use the prop from Laravel
+  if (props.reorderRequest && props.reorderRequest.id) {
+    populateFormFromReorder(props.reorderRequest);
+    // Clear session storage since we got the data from props
+    sessionStorage.removeItem('reorderRequest');
+  } 
+  // If prop is not available, try session storage as fallback
+  else {
+    const storedReorder = sessionStorage.getItem('reorderRequest');
+    if (storedReorder) {
+      try {
+        const reorderData = JSON.parse(storedReorder);
+        if (reorderData && reorderData.details) {
+          populateFormFromReorder(reorderData);
+          // Keep the data in session storage in case of page refresh
+        }
+      } catch (error) {
+        console.error('Error parsing reorder data from session storage:', error);
+        sessionStorage.removeItem('reorderRequest');
+      }
+    }
+  }
+});
+
+const populateFormFromReorder = (reorderRequest: any) => {
+  // Clear existing items first
+  form.value.items = [];
+  
+  // Set the purpose with "REORDER" prefix
+  form.value.purpose = `REORDER: ${reorderRequest.purpose || ''}`;
+  
+  // Populate items from the reorder request
+  if (reorderRequest.details && reorderRequest.details.length > 0) {
+    reorderRequest.details.forEach((detail: any) => {
+      form.value.items.push({
+        quantity: detail.released_quantity,
+        unit: detail.unit,
+        item_description: detail.item_description,
+        editing: false
+      });
+    });
+    
+    toast.success(`Populated ${reorderRequest.details.length} items from request ${reorderRequest.request_no}`);
+  }
+};
 </script>
 
 <template>
   <div class="space-y-4">
     <PageHeader 
-      title="New Request" 
-      subtitle="Create a new request with items and details"
+      :title="reorderRequest ? 'Re-order Request' : 'New Request'" 
+      :subtitle="reorderRequest ? `${form.items.length} items have been pre-populated from request #${reorderRequest.request_no}. You can modify them before submitting.` : 'Create a new request with items and details'"
     />
-    <form @submit.prevent="showConfirmation" class="space-y-6">
+    <form @submit.prevent="showConfirmation" class="space-y-4">
       <!-- Purpose -->
       <div>
         <Label for="purpose" required>Purpose</Label>
@@ -206,213 +253,212 @@ const capitalizeWords = (str: string): string => {
       </div>
 
       <!-- Items Section -->
-      <div>
-        <PageHeader 
-          title="Request Items" 
-        />
+      <PageHeader 
+        title="Request Items" 
+        :subtitle="reorderRequest ? `items ready for review, edit and add items to your request` : 'Add items to your request by filling out the form below'"
+      />
 
-        <!-- New Item Form -->
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-          <!-- Description -->
-          <div class="md:col-span-6 space-y-2">
-            <Label for="item_description" required>Description</Label>
-            <Input 
-              id="item_description" 
-              v-model="newItem.item_description" 
-              placeholder="Item description"
-            />
-          </div>
-
-          <!-- Quantity -->
-          <div class="md:col-span-2 space-y-2">
-            <Label for="quantity" required>Quantity</Label>
-            <Input 
-              id="quantity" 
-              type="number" 
-              v-model.number="newItem.quantity" 
-              min="1" 
-            />
-          </div>
-
-          <!-- Unit (Combobox: Dropdown + Manual Input) -->
-          <div class="md:col-span-2 space-y-2">
-            <Label for="unit" required>Unit</Label>
-
-            <Combobox v-model="newItem.unit">
-              <ComboboxAnchor>
-                <div class="relative w-full items-center">
-                  <ComboboxInput
-                    placeholder="Select or type a unit..."
-                    :display-value="(val) => val || ''"
-                    @update:model-value="(val) => newItem.unit = val"
-                    @change="(e) => newItem.unit = e.target.value"
-                  />
-                  <ComboboxTrigger
-                    class="absolute end-0 inset-y-0 flex items-center justify-center px-3"
-                  >
-                    <ChevronsUpDown class="size-4 text-muted-foreground" />
-                  </ComboboxTrigger>
-                </div>
-              </ComboboxAnchor>
-
-              <ComboboxList>
-                <ComboboxEmpty>
-                  <span class="text-sm text-muted-foreground px-2 py-1">
-                    No match found — type to add custom unit.
-                  </span>
-                </ComboboxEmpty>
-
-                <ComboboxGroup>
-                  <ComboboxItem
-                    v-for="unit in unitOptions"
-                    :key="unit.value"
-                    :value="unit.value"
-                  >
-                    {{ unit.label }}
-                    <ComboboxItemIndicator>
-                      <Check class="ml-auto h-4 w-4" />
-                    </ComboboxItemIndicator>
-                  </ComboboxItem>
-                </ComboboxGroup>
-              </ComboboxList>
-            </Combobox>
-          </div>
-
-          <!-- Add Button -->
-          <div class="sm:col-span-2 flex justify-end">
-            <Button 
-              type="button" 
-              @click="addItem" 
-              :disabled="!newItem.item_description.trim() || !newItem.quantity || !newItem.unit || submitting"
-            >
-              <CirclePlus class="h-4 w-4" />
-              <span class="sr-only sm:not-sr-only sm:ml-2">Add</span>
-            </Button>
-          </div>
+      <!-- New Item Form -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+        <!-- Description -->
+        <div class="md:col-span-6 space-y-2">
+          <Label for="item_description" required>Description</Label>
+          <Input 
+            id="item_description" 
+            v-model="newItem.item_description" 
+            placeholder="Item description"
+          />
         </div>
 
-        <!-- Items Table -->
-        <div class="max-h-64 overflow-y-auto mt-4">
-          <Table>
-            <TableHeader class="sticky top-0">
-              <TableRow>
-                <TableHead class="w-1/2">Description</TableHead>
-                <TableHead class="w-20">Qty</TableHead>
-                <TableHead class="w-24">Unit</TableHead>
-                <TableHead 
-                  v-if="form.items.some(item => item.editing)" 
-                  class="w-28 text-right"
-                >
-                  Actions
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow
-                v-for="(item, index) in form.items"
-                :key="index"
-                @click="editItem(index)"
-                :class="{
-                  'cursor-pointer': true,
-                }"
-              >
-                <!-- Description Column -->
-                <TableCell>
-                  <div v-if="!item.editing">{{ item.item_description }}</div>
-                  <Input 
-                    v-else
-                    v-model="item.item_description"
-                    @click.stop
-                    @keydown="handleKeyDown($event, index)"
-                    @input="item.item_description = capitalizeWords(item.item_description)"
-                    class="w-full"
-                  />
-                </TableCell>
-                
-                <!-- Quantity Column -->
-                <TableCell>
-                  <div v-if="!item.editing">{{ item.quantity }}</div>
-                  <Input 
-                    v-else
-                    type="number" 
-                    v-model.number="item.quantity" 
-                    min="1"
-                    @click.stop
-                    @keydown="handleKeyDown($event, index)"
-                    class="w-full"
-                  />
-                </TableCell>
-                
-                <!-- Unit Column -->
-                <TableCell>
-                  <div v-if="!item.editing">
-                    {{ unitOptions.find(u => u.value === item.unit)?.label || item.unit }}
-                  </div>
-                  <Select 
-                    v-else 
-                    v-model="item.unit" 
-                    @click.stop
-                  >
-                    <SelectTrigger class="w-full">
-                      <SelectValue placeholder="Select unit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectItem 
-                          v-for="unit in unitOptions" 
-                          :key="unit.value" 
-                          :value="unit.value"
-                        >
-                          {{ unit.label }}
-                        </SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </TableCell>
-                
-                <!-- Actions Column -->
-                <TableCell 
-                  v-if="item.editing"
-                  class="flex justify-end space-x-2"
-                >
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    @click.stop="saveEdit(index)"
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    @click.stop="cancelEdit(index)"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    @click.stop="removeItem(index)"
-                  >
-                    <Trash />
-                  </Button>
-                </TableCell>
-              </TableRow>
+        <!-- Quantity -->
+        <div class="md:col-span-2 space-y-2">
+          <Label for="quantity" required>Quantity</Label>
+          <Input 
+            id="quantity" 
+            type="number" 
+            v-model.number="newItem.quantity" 
+            min="1" 
+          />
+        </div>
 
-              <TableRow v-if="form.items.length === 0">
-                <TableCell :colspan="4" class="text-center text-sm text-gray-500">
-                  No items added yet
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+        <!-- Unit (Combobox: Dropdown + Manual Input) -->
+        <div class="md:col-span-2 space-y-2">
+          <Label for="unit" required>Unit</Label>
+
+          <Combobox v-model="newItem.unit">
+            <ComboboxAnchor>
+              <div class="relative w-full items-center">
+                <ComboboxInput
+                  placeholder="Select or type a unit..."
+                  :display-value="(val) => val || ''"
+                  @update:model-value="(val) => newItem.unit = val"
+                  @change="(e) => newItem.unit = e.target.value"
+                />
+                <ComboboxTrigger
+                  class="absolute end-0 inset-y-0 flex items-center justify-center px-3"
+                >
+                  <ChevronsUpDown class="size-4 text-muted-foreground" />
+                </ComboboxTrigger>
+              </div>
+            </ComboboxAnchor>
+
+            <ComboboxList>
+              <ComboboxEmpty>
+                <span class="text-sm text-muted-foreground px-2 py-1">
+                  No match found — type to add custom unit.
+                </span>
+              </ComboboxEmpty>
+
+              <ComboboxGroup>
+                <ComboboxItem
+                  v-for="unit in unitOptions"
+                  :key="unit.value"
+                  :value="unit.value"
+                >
+                  {{ unit.label }}
+                  <ComboboxItemIndicator>
+                    <Check class="ml-auto h-4 w-4" />
+                  </ComboboxItemIndicator>
+                </ComboboxItem>
+              </ComboboxGroup>
+            </ComboboxList>
+          </Combobox>
+        </div>
+
+        <!-- Add Button -->
+        <div class="sm:col-span-2 flex justify-end">
+          <Button 
+            type="button" 
+            @click="addItem" 
+            :disabled="!newItem.item_description.trim() || !newItem.quantity || !newItem.unit || submitting"
+          >
+            <ShoppingBasket class="h-4 w-4" />
+            <span class="sr-only sm:not-sr-only">Add</span>
+          </Button>
         </div>
       </div>
 
+      <!-- Items Table -->
+      <div v-if="form.items.length != 0" class="max-h-64 overflow-y-auto mt-4">
+        <Table>
+          <TableHeader class="sticky top-0">
+            <TableRow>
+              <TableHead class="w-1/2">Description</TableHead>
+              <TableHead class="w-20">Qty</TableHead>
+              <TableHead class="w-24">Unit</TableHead>
+              <TableHead 
+                v-if="form.items.some(item => item.editing)" 
+                class="w-28 text-right"
+              >
+                Actions
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow
+              v-for="(item, index) in form.items"
+              :key="index"
+              @click="editItem(index)"
+              :class="{
+                'cursor-pointer': true,
+              }"
+            >
+              <!-- Description Column -->
+              <TableCell>
+                <div v-if="!item.editing">{{ item.item_description }}</div>
+                <Input 
+                  v-else
+                  v-model="item.item_description"
+                  @click.stop
+                  @keydown="handleKeyDown($event, index)"
+                  @input="item.item_description = capitalizeWords(item.item_description)"
+                  class="w-full"
+                />
+              </TableCell>
+              
+              <!-- Quantity Column -->
+              <TableCell>
+                <div v-if="!item.editing">{{ item.quantity }}</div>
+                <Input 
+                  v-else
+                  type="number" 
+                  v-model.number="item.quantity" 
+                  min="1"
+                  @click.stop
+                  @keydown="handleKeyDown($event, index)"
+                  class="w-full"
+                />
+              </TableCell>
+              
+              <!-- Unit Column -->
+              <TableCell>
+                <div v-if="!item.editing">
+                  {{ unitOptions.find(u => u.value === item.unit)?.label || item.unit }}
+                </div>
+                <Select 
+                  v-else 
+                  v-model="item.unit" 
+                  @click.stop
+                >
+                  <SelectTrigger class="w-full">
+                    <SelectValue placeholder="Select unit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem 
+                        v-for="unit in unitOptions" 
+                        :key="unit.value" 
+                        :value="unit.value"
+                      >
+                        {{ unit.label }}
+                      </SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </TableCell>
+              
+              <!-- Actions Column -->
+              <TableCell 
+                v-if="item.editing"
+                class="flex justify-end space-x-2"
+              >
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  @click.stop="saveEdit(index)"
+                >
+                  Save
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  @click.stop="cancelEdit(index)"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  @click.stop="removeItem(index)"
+                >
+                  <Trash />
+                </Button>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
+      <div v-if="form.items.length === 0">
+        <Table class="flex flex-col items-center justify-center py-6 space-y-2">
+          <ShoppingBasket class="h-6 w-6" />
+          <p>No items added yet</p>
+        </Table>
+      </div>
+
       <!-- Submit Button -->
-      <div class="flex justify-end">
+      <div v-if="form.items.length != 0" class="flex justify-end">
         <Button type="submit" :disabled="submitting">
-          <Send class="mr-2 h-4 w-4" />
+          <Send class="h-4 w-4" />
           {{ submitting ? 'Submitting...' : 'Review and Submit Request' }}
         </Button>
       </div>
@@ -464,6 +510,7 @@ const capitalizeWords = (str: string): string => {
                     </TableRow>
                     <TableRow v-if="form.items.length === 0">
                       <TableCell :colspan="3" class="text-center">
+                        <ShoppingBasket />
                         No items added yet
                       </TableCell>
                     </TableRow>
