@@ -5,6 +5,7 @@ import {
 } from 'lucide-vue-next'
 import { router } from '@inertiajs/vue3'
 import PageHeader from '@/components/PageHeader.vue';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -47,6 +48,49 @@ function formatDate(dateStr: string): string {
     day: '2-digit'
   })
 }
+
+// Status badge configuration
+const getStatusConfig = (status: string) => {
+  const statusMap: Record<string, { color: string; label: string }> = {
+    'pending': {
+      color: 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100',
+      label: 'Pending'
+    },
+    'approved': {
+      color: 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100',
+      label: 'Approved'
+    },
+    'to_order': {
+      color: 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100',
+      label: 'To Order'
+    },
+    'rejected': {
+      color: 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100',
+      label: 'Rejected'
+    },
+    'draft': {
+      color: 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100',
+      label: 'Draft'
+    },
+    'in_review': {
+      color: 'bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-100',
+      label: 'In Review'
+    },
+    'completed': {
+      color: 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100',
+      label: 'Completed'
+    },
+    'cancelled': {
+      color: 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100',
+      label: 'Cancelled'
+    }
+  }
+
+  return statusMap[status.toLowerCase()] || {
+    color: 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100',
+    label: status.charAt(0).toUpperCase() + status.slice(1)
+  }
+}
 </script>
 
 <template>
@@ -59,10 +103,9 @@ function formatDate(dateStr: string): string {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead class="w-[200px]">Request #</TableHead>
+            <TableHead class="w-[200px]">Request No.</TableHead>
             <TableHead class="w-[120px]">Date</TableHead>
             <TableHead class="w-[320px]">Purpose</TableHead>
-            <TableHead class="text-right">Requested By</TableHead>
             <TableHead class="text-right">Status</TableHead>
           </TableRow>
         </TableHeader>
@@ -82,21 +125,15 @@ function formatDate(dateStr: string): string {
             <TableCell>
               {{ request.purpose }}
             </TableCell>
+
             <TableCell class="text-right">
-              {{ request.user?.first_name }} {{ request.user?.last_name }}
-            </TableCell>
-            <TableCell class="text-right">
-              <span 
-                class="capitalize font-medium"
-                :class="{
-                  'text-yellow-500': request.status === 'pending',
-                  'text-green-500': request.status === 'approved',
-                  'text-blue-500': request.status === 'to_order',
-                  'text-red-500': request.status === 'rejected'
-                }"
+              <Badge 
+                variant="outline" 
+                :class="getStatusConfig(request.status).color"
+                class="font-medium capitalize"
               >
-                {{ request.status }}
-              </span>
+                {{ getStatusConfig(request.status).label }}
+              </Badge>
             </TableCell>
           </TableRow>
         </TableBody>

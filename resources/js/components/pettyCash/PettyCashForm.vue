@@ -121,11 +121,11 @@ const submitForm = async () => {
     <div>
       <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
       <div class="md:col-span-2">
-        <Label>Paid To</Label>
+        <Label required>Paid To</Label>
         <Input v-model="form.paid_to" placeholder="Enter recipient name" />
       </div>
       <div>
-        <Label>Date</Label>
+        <Label required>Date</Label>
         <Input v-model="form.date" type="date" />
       </div>
     </div>
@@ -141,7 +141,7 @@ const submitForm = async () => {
       <div class="space-y-2">
         <!-- Type as Radio Group -->
         <div>
-        <Label>Type</Label>
+        <Label required>Type</Label>
         <RadioGroup v-model="newItem.type">
           <div class="flex mt-2 items-center space-x-4">
             <div class="flex items-center space-x-2">

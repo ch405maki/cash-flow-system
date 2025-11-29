@@ -195,7 +195,7 @@ const capitalizeWords = (str: string): string => {
     <form @submit.prevent="showConfirmation" class="space-y-6">
       <!-- Purpose -->
       <div>
-        <Label for="purpose">Purpose</Label>
+        <Label for="purpose" required>Purpose</Label>
         <Textarea
           id="purpose"
           v-model="form.purpose"
@@ -215,7 +215,7 @@ const capitalizeWords = (str: string): string => {
         <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
           <!-- Description -->
           <div class="md:col-span-6 space-y-2">
-            <Label for="item_description">Description</Label>
+            <Label for="item_description" required>Description</Label>
             <Input 
               id="item_description" 
               v-model="newItem.item_description" 
@@ -225,7 +225,7 @@ const capitalizeWords = (str: string): string => {
 
           <!-- Quantity -->
           <div class="md:col-span-2 space-y-2">
-            <Label for="quantity">Quantity</Label>
+            <Label for="quantity" required>Quantity</Label>
             <Input 
               id="quantity" 
               type="number" 
@@ -236,7 +236,7 @@ const capitalizeWords = (str: string): string => {
 
           <!-- Unit (Combobox: Dropdown + Manual Input) -->
           <div class="md:col-span-2 space-y-2">
-            <Label for="unit">Unit</Label>
+            <Label for="unit" required>Unit</Label>
 
             <Combobox v-model="newItem.unit">
               <ComboboxAnchor>
@@ -279,15 +279,14 @@ const capitalizeWords = (str: string): string => {
           </div>
 
           <!-- Add Button -->
-          <div class="md:col-span-2">
+          <div class="sm:col-span-2 flex justify-end">
             <Button 
               type="button" 
               @click="addItem" 
-              class="w-full"
               :disabled="!newItem.item_description.trim() || !newItem.quantity || !newItem.unit || submitting"
             >
               <CirclePlus class="h-4 w-4" />
-              Add Item
+              <span class="sr-only sm:not-sr-only sm:ml-2">Add</span>
             </Button>
           </div>
         </div>

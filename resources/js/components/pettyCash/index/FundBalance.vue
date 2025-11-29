@@ -38,7 +38,7 @@ const props = defineProps<Props>()
         >
           <!-- Icon -->
           <div
-            class="flex items-center justify-center w-10 h-10 rounded-full border-2 flex-shrink-0"
+            class="flex items-center justify-center w-10 h-10 flex-shrink-0"
             :class="fundStatus?.iconBackground || 'bg-gray-100 border-gray-400'"
           >
             <PhilippinePeso class="w-6 h-6" :class="fundStatus?.iconColor || 'text-gray-600'" />
