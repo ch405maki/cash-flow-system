@@ -78,6 +78,7 @@ Route::prefix('configuration/accounts')->group(function () {
     Route::delete('/{account}', [AccountController::class, 'destroy']);
 });
 
+
 Route::get('/canvas/{canvas}/files/{file}/preview', [CanvasController::class, 'preview'])->name('canvas.preview.file');
 
 // Purchase Order Routes

@@ -16,6 +16,7 @@ import axios from 'axios'
 import { formatCurrency } from '@/lib/utils';
 import PageHeader from '@/components/PageHeader.vue';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from '@/components/ui/table'
+import { onMounted } from "vue";
 
 interface VoucherItem {
   amount: number;
@@ -27,6 +28,15 @@ interface VoucherItem {
   original?: VoucherItem;
 }
 
+interface DistributionExpense {
+  id: number;
+  account_name: string;
+  amount: number;
+  date: string;
+  petty_cash_id: number;
+  account_id?: number;
+}
+
 interface Props {
   accounts?: Array<{ id: number; account_title: string }>;
   auth: {
@@ -34,11 +44,26 @@ interface Props {
       id: number;
     };
   };
-  voucher_number: String
+  voucher_number: String;
   purchase_order?: {
     id: number;
     po_no: string;
     tin_no: string;
+    payee?: string;
+    check_payable_to?: string;
+  };
+  // Add these new props for distribution expenses
+  distribution_expenses?: DistributionExpense[];
+  petty_cash?: {
+    id: number;
+    pcv_no: string;
+    paid_to: string;
+    remarks?: string;
+  };
+  prefilled_data?: {
+    paid_to?: string;
+    total_amount?: number;
+    remarks?: string;
   };
 }
 
@@ -232,6 +257,31 @@ const cancelEdit = (index: number) => {
     delete form.items[index].original;
   }
 };
+
+
+onMounted(() => {
+    if (props.distribution_expenses && props.distribution_expenses.length > 0) {
+        props.distribution_expenses.forEach(d => {
+            form.items.push({
+                account_id: findAccountIdByName(d.account_name),
+                charging_tag: "C",
+                amount: Number(d.amount),
+                hours: null,
+                rate: null,
+                editing: false
+            });
+        });
+
+        calculateTotalAmount(); // ← update totals after populating
+    }
+});
+
+
+const findAccountIdByName = (name) => {
+    const acc = props.accounts.find(a => a.account_title === name);
+    return acc ? acc.id.toString() : null;
+};
+
 
 const handleKeyDown = (event: KeyboardEvent, index: number) => {
   if (event.key === 'Enter') {

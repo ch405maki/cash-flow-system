@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
-import { Head } from '@inertiajs/vue3'
+import { Head, router } from '@inertiajs/vue3'
 import PrintableSection from '@/components/printables/RequestPrint.vue'
 import RequestDetailsTable from '@/components/requests/show/RequestDetailsTable.vue'
 import RequestItemsTable from '@/components/requests/show/RequestItemsTable.vue'
@@ -30,6 +30,11 @@ function printArea() {
 function printReleasedItems() {
   releasedItemsPrintable.value?.printArea()
 }
+
+function handleReorder(request: any) {
+  sessionStorage.setItem('reorderRequest', JSON.stringify(request))
+  router.get('/request/create')
+}
 </script>
 
 <template>
@@ -44,6 +49,7 @@ function printReleasedItems() {
             :user="user"
             @print-list="printArea"
             @print-released-items="printReleasedItems"
+            @reorder="handleReorder"
           />
         </div>
       </div>

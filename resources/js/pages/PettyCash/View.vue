@@ -303,7 +303,7 @@ console.log(props.pettyCash)
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-        </div>
+          </div>
           <Button
             @click="printReport"
           >

@@ -140,8 +140,17 @@ class RequestController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(HttpRequest $request)
     {
+        $reorderRequestId = $request->query('reorder_from');
+        $reorderRequest = null;
+
+        // If reordering from an existing request, load it properly
+        if ($reorderRequestId) {
+            $reorderRequest = Request::with(['department', 'user', 'details'])
+                ->findOrFail($reorderRequestId);
+        }
+
         $requests = Request::with(['department', 'user', 'details'])->get();
 
         return Inertia::render('Request/Create', [
@@ -151,6 +160,7 @@ class RequestController extends Controller
                 'id' => Auth::id(),
                 'department_id' => Auth::user()->department_id,
             ],
+            'reorderRequest' => $reorderRequest,
         ]);
     }
 

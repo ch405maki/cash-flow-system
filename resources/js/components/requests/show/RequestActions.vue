@@ -4,7 +4,7 @@ import { useToast } from 'vue-toastification'
 import { useForm, router } from '@inertiajs/vue3'
 import PasswordDialog from './PasswordDialog.vue'
 import { Button } from '@/components/ui/button'
-import { Printer, FilePenLine, BadgeCheck, History, Rocket, Clock, CheckCircle, XCircle } from 'lucide-vue-next'
+import { Printer, FilePenLine, BadgeCheck, History, Rocket, ShoppingCart, CheckCircle, XCircle } from 'lucide-vue-next'
 import { formatDateTime } from '@/lib/utils'
 import {
   Sheet,
@@ -15,15 +15,12 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import {
-  Stepper,
-  StepperDescription,
-  StepperIndicator,
-  StepperItem,
-  StepperSeparator,
-  StepperTitle,
-  StepperTrigger,
-} from '@/components/ui/stepper'
-import { Check, Circle, Dot } from "lucide-vue-next"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+
 
 const props = defineProps<{
   request: any
@@ -83,14 +80,17 @@ function closeAllDialogs() {
   showRejectModal.value = false 
 }
 
-const emit = defineEmits(['print-list', 'print-released-items'])
-
+const emit = defineEmits(['print-list', 'print-released-items', 'reorder'])
 function printList() {
   emit('print-list')
 }
 
 function printReleasedItems() {
   emit('print-released-items')
+}
+
+const handleReorder = () => {
+  emit('reorder', props.request)
 }
 </script>
 
@@ -199,14 +199,24 @@ function printReleasedItems() {
     </div>
 
     <!-- Staff or Department Head - Edit -->
-    <Button
-      size="sm"
-      variant="outline"
-      v-if="(user.role === 'staff' || user.role === 'department_head') && request.status === 'pending'"
-      @click.stop="goToEditRequest(request.id)"
-    >
-      <FilePenLine class="h-4" /> Edit
-    </Button>
+    <div v-if="user.role === 'staff' || user.role === 'department_head'">
+      <Button
+        size="sm"
+        variant="outline"
+        v-if="request.status === 'pending'"
+        @click.stop="goToEditRequest(request.id)"
+        >
+        <FilePenLine class="h-4" /> Edit
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        v-if="request.status === 'released'"
+        @click.stop="handleReorder"
+      >
+        <ShoppingCart class="h-4 w-4 mr-1" /> Re Order
+      </Button>
+    </div>
 
     <Sheet>
         <SheetTrigger><Button variant="outline" size="sm"><History />Time Stamp</Button></SheetTrigger>
@@ -266,19 +276,25 @@ function printReleasedItems() {
         </SheetContent>
     </Sheet>
 
-    <!-- Print List -->
-    <Button size="sm" @click="printList">
-      <Printer class="h-4" /> Print List
-    </Button>
-
-    <!-- Print Released Items - Show only if there are releases -->
-    <Button 
-      size="sm" 
-      variant="outline" 
-      @click="printReleasedItems"
-      v-if="request.releases && request.releases.length > 0"
-    >
-      <Printer class="h-4" /> Print Released Items
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger as-child>
+        <Button size="sm">
+          <Printer class="h-4 w-4" />
+          Print Options
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" class="w-48">
+        <DropdownMenuItem @click="printList" class="cursor-pointer">
+          Print List
+        </DropdownMenuItem>
+        <DropdownMenuItem 
+          @click="printReleasedItems" 
+          class="cursor-pointer"
+          :disabled="!(request.releases && request.releases.length > 0)"
+        >
+          Print Released Items
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   </div>
 </template>
