@@ -4,12 +4,11 @@ import { type BreadcrumbItem } from '@/types'
 import { Head, router, usePage } from '@inertiajs/vue3'
 import { computed, onMounted } from 'vue'
 
-// Components
-import PettyCashHeader from '@/components/pettycash/index/PettyCashHeader.vue'
-import ThresholdStatus from '@/components/pettycash/index/ThresholdStatus.vue'
-import FundBalance from '@/components/pettycash/index/FundBalance.vue'
-import PettyCashTable from '@/components/pettycash/index/PettyCashTable.vue'
-import EmptyState from '@/components/pettycash/index/EmptyState.vue'
+import PettyCashHeader from '@/components/pettyCash/index/PettyCashHeader.vue'
+import ThresholdStatus from '@/components/pettyCash/index/ThresholdStatus.vue'
+import FundBalance from '@/components/pettyCash/index/FundBalance.vue'
+import PettyCashTable from '@/components/pettyCash/index/PettyCashTable.vue'
+import EmptyState from '@/components/pettyCash/index/EmptyState.vue'
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Dashboard', href: '/dashboard' },
