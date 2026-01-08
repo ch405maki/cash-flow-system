@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
-import RejectedRequestTable from '@/components/requests/RejectedRequestTable.vue';
+import RequestTable from '@/components/requests/RequestTable.vue';
 import { type BreadcrumbItem } from '@/types';
 import PageHeader from '@/components/PageHeader.vue';
 
@@ -41,8 +41,7 @@ const props = defineProps({
         title="Released Requests" 
         subtitle="Active requests currently being processed"
       />
-
-      <RejectedRequestTable :requests="requests" />
+      <RequestTable :requests="requests" />
     </div>
   </AppLayout>
 </template>
