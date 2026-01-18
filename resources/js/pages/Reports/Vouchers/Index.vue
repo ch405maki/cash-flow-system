@@ -37,11 +37,11 @@ import {
 import { ChevronsUpDown, Check } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
 
-// 📦 Export dependencies
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import {
+  exportVoucherSummaryExcel,
+  exportVoucherSummaryPdf,
+} from "@/lib/voucherSummaryExport"
+
 
 const props = defineProps<{
   vouchers: Array<{
@@ -112,77 +112,6 @@ const filteredVouchers = computed(() => {
   })
 })
 
-
-// Export to Excel
-function exportExcel() {
-  const rows: any[] = [];
-
-  filteredVouchers.value.forEach(v => {
-    v.details.forEach((detail, idx) => {
-      rows.push({
-        "Voucher Date": idx === 0 ? formatDate(v.voucher_date) : "",
-        "Voucher No": idx === 0 ? v.voucher_no : "",
-        "Check Amount": idx === 0 ? v.check_amount : "",
-        "Payee": idx === 0 ? v.payee : "",
-        "Purpose": idx === 0 ? v.purpose : "",
-        "Account": detail.account?.account_title || "Unspecified",
-        "Detail Amount": detail.amount || 0,
-        "Charging Tag": detail.charging_tag,
-      });
-    });
-  });
-
-  const worksheet = XLSX.utils.json_to_sheet(rows);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Voucher Summary");
-  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-  const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-
-  const oldestMonth = getOldestMonth();
-  const filename = oldestMonth ? `voucher_summary_${oldestMonth}.xlsx` : "voucher_summary.xlsx";
-
-  saveAs(blob, filename);
-}
-
-
-// Export to PDF
-function exportPdf() {
-  const doc = new jsPDF({ orientation: "landscape" });
-  const tableData: any[] = [];
-
-  filteredVouchers.value.forEach(v => {
-    v.details.forEach((detail, idx) => {
-      tableData.push([
-        idx === 0 ? formatDate(v.voucher_date) : "",
-        idx === 0 ? v.voucher_no : "",
-        idx === 0 ? formatCurrency(v.check_amount) : "",
-        idx === 0 ? v.payee : "",
-        idx === 0 ? v.purpose : "",
-        detail.account?.account_title || "Unspecified",
-        formatCurrency(detail.amount || 0),
-        detail.charging_tag,
-      ]);
-    });
-  });
-
-  const oldestMonth = getOldestMonth();
-  const title = oldestMonth ? `Voucher Summary - ${oldestMonth}` : "Voucher Summary";
-
-  autoTable(doc, {
-    head: [["Voucher Date", "Voucher No",  "Check Amount", "Payee", "Purpose", "Account", "Detail Amount", "Charging Tag"]],
-    body: tableData,
-    styles: { fontSize: 8 },
-    headStyles: { fillColor: [99, 102, 241] },
-    didDrawPage: () => {
-      doc.setFontSize(12);
-      doc.text(title, 14, 10);
-    }
-  });
-
-  doc.save(`${title.replace(/\s+/g, "_").toLowerCase()}.pdf`);
-}
-
-
 function getOldestMonth(): string {
   if (!filteredVouchers.value.length) return "";
 
@@ -193,7 +122,6 @@ function getOldestMonth(): string {
 
   return oldest.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
-
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
@@ -209,6 +137,15 @@ const breadcrumbs: BreadcrumbItem[] = [
 function goToVoucher(id: number) {
   router.visit(`/vouchers/${id}`)
 }
+
+function exportExcel() {
+  exportVoucherSummaryExcel(filteredVouchers.value)
+}
+
+function exportPdf() {
+  exportVoucherSummaryPdf(filteredVouchers.value)
+}
+
 </script>
 
 <template>
