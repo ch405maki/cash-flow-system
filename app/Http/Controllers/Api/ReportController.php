@@ -13,7 +13,7 @@ use App\Models\VoucherDetail;
 use App\Models\Department;
 use App\Models\PurchaseOrder;
 use App\Models\PettyCash;
-use App\Models\PettyCashItem;;
+use App\Models\PettyCashItem;
 use Spatie\Browsershot\Browsershot;
 use App\Models\Request;
 use Illuminate\Http\Request as HttpRequest;
@@ -83,12 +83,25 @@ class ReportController extends Controller
     {
         $vouchers = Voucher::with(['details.account'])
             ->orderBy('voucher_date', 'desc')
-            ->get(['id', 'voucher_no', 'voucher_date', 'payee', 'check_amount', 'type', 'purpose']);
+            ->get([
+                'id',
+                'voucher_no',
+                'voucher_date',
+                'payee',
+                'check_amount',
+                'type',
+                'purpose'
+            ]);
+
+        $accounts = Account::orderBy('account_title')
+            ->get(['id', 'account_title']);
 
         return Inertia::render('Reports/Vouchers/Index', [
-            'vouchers' => $vouchers
+            'vouchers' => $vouchers,
+            'accounts' => $accounts,
         ]);
     }
+
 
     public function voucherReports()
     {
