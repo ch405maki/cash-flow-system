@@ -26,6 +26,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from '@/components/ui/command'
+import { ChevronsUpDown, Check } from 'lucide-vue-next'
+import { cn } from '@/lib/utils'
+
 // 📦 Export dependencies
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
@@ -51,13 +62,23 @@ const props = defineProps<{
       };
     }>;
   }>;
+  accounts: Array<{
+    id: number;
+    account_title: string;
+  }>;
 }>();
+
 
 // Filters
 const showAlert = ref(true)
 const startDate = ref<string>('');
 const endDate = ref<string>('');
 const selectedType = ref<string>('all');
+const selectedAccountId = ref<number | null>(null)
+
+const selectedAccount = computed(() =>
+  props.accounts.find(a => a.id === selectedAccountId.value)
+)
 
 // Voucher type dropdown
 const voucherType = computed(() => {
@@ -69,14 +90,28 @@ const voucherType = computed(() => {
 // Filtered vouchers
 const filteredVouchers = computed(() => {
   return props.vouchers.filter(v => {
-    const vDate = new Date(v.voucher_date);
-    const start = startDate.value ? new Date(startDate.value) : null;
-    const end = endDate.value ? new Date(endDate.value) : null;
-    const dateInRange = (!start || vDate >= start) && (!end || vDate <= end);
-    const typeMatch = selectedType.value === 'all' || v.type === selectedType.value;
-    return dateInRange && typeMatch;
-  });
-});
+    const vDate = new Date(v.voucher_date)
+    const start = startDate.value ? new Date(startDate.value) : null
+    const end = endDate.value ? new Date(endDate.value) : null
+
+    const dateInRange =
+      (!start || vDate >= start) &&
+      (!end || vDate <= end)
+
+    const typeMatch =
+      selectedType.value === 'all' ||
+      v.type === selectedType.value
+
+    const accountMatch =
+      !selectedAccountId.value ||
+      v.details.some(
+        d => d.account?.id === selectedAccountId.value
+      )
+
+    return dateInRange && typeMatch && accountMatch
+  })
+})
+
 
 // Export to Excel
 function exportExcel() {
@@ -108,7 +143,6 @@ function exportExcel() {
 
   saveAs(blob, filename);
 }
-
 
 
 // Export to PDF
@@ -196,15 +230,15 @@ function goToVoucher(id: number) {
 
       <!-- Filters -->
       <div class="grid grid-cols-1 gap-4 md:grid-cols-12">
-        <div class="col-span-3">
+        <div class="col-span-2">
           <Label class="block text-sm font-medium mb-1">Start Date</Label>
           <Input type="date" v-model="startDate" class="h-8" />
         </div>
-        <div class="col-span-3">
+        <div class="col-span-2">
           <Label class="block text-sm font-medium mb-1">End Date</Label>
           <Input type="date" v-model="endDate" class="h-8" />
         </div>
-        <div class="col-span-4">
+        <div class="col-span-3">
           <Label class="block text-sm font-medium mb-1">Voucher Type</Label>
           <Select v-model="selectedType" class="h-8">
             <SelectTrigger class="h-8 w-full">
@@ -216,19 +250,73 @@ function goToVoucher(id: number) {
             </SelectContent>
           </Select>
         </div>
+        <div class="col-span-3">
+          <Label class="block text-sm font-medium mb-1">Account</Label>
+
+          <Popover>
+            <PopoverTrigger as-child>
+              <Button
+                variant="outline"
+                role="combobox"
+                class="h-8 w-full justify-between"
+              >
+                {{ selectedAccount?.account_title || 'All Accounts' }}
+                <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+
+            <PopoverContent class="w-[300px] p-0">
+              <Command>
+                <CommandInput placeholder="Search account..." />
+                <CommandEmpty>No account found.</CommandEmpty>
+
+                <CommandGroup>
+                  <CommandItem
+                    value="all"
+                    @select="() => selectedAccountId = null"
+                  >
+                    <Check
+                      class="mr-2 h-4 w-4"
+                      :class="cn(
+                        selectedAccountId === null ? 'opacity-100' : 'opacity-0'
+                      )"
+                    />
+                    All Accounts
+                  </CommandItem>
+
+                  <CommandItem
+                    v-for="account in props.accounts"
+                    :key="account.id"
+                    :value="account.account_title"
+                    @select="() => selectedAccountId = account.id"
+                  >
+                    <Check
+                      class="mr-2 h-4 w-4"
+                      :class="cn(
+                        selectedAccountId === account.id ? 'opacity-100' : 'opacity-0'
+                      )"
+                    />
+                    {{ account.account_title }}
+                  </CommandItem>
+                </CommandGroup>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </div>
+
         <div class="col-span-2 flex items-end">
           <Button variant="destructive" class="h-8" @click="() => { startDate=''; endDate=''; selectedType='all'; }">
-            <Eraser class="mr-1 h-4 w-4"/>Clear
+            <Eraser class="h-4 w-4"/>Clear
           </Button>
         </div>
       </div>
 
       <!-- Table -->
-      <Table>
+      <Table class="text-xs">
         <TableHeader>
           <TableRow>
             <TableHead class="w-32">Voucher Date</TableHead>
-            <TableHead class="w-32">Voucher No</TableHead>
+            <TableHead class="w-48">Voucher No</TableHead>
             <TableHead class="w-32 text-right">Check Amount</TableHead>
             <TableHead class="w-48">Payee</TableHead>
             <TableHead class="w-64">Purpose</TableHead>
@@ -249,16 +337,16 @@ function goToVoucher(id: number) {
               <TableCell class="text-right font-medium">{{ formatCurrency(v.check_amount) }}</TableCell>
               <TableCell class="truncate" :title="v.payee">{{ v.payee }}</TableCell>
               <TableCell class="truncate" :title="v.purpose">{{ v.purpose }}</TableCell>
-              <TableCell colspan="3" class="text-muted-foreground text-sm">
+              <TableCell colspan="3" class="text-muted-foreground">
                 {{ v.details.length }} account{{ v.details.length > 1 ? 's' : '' }}
               </TableCell>
             </TableRow>
             <TableRow v-for="detail in v.details" :key="detail.id" class="bg-muted/20">
               <TableCell></TableCell>
               <TableCell colspan="4"></TableCell>
-              <TableCell class="text-sm">{{ detail.account?.account_title || 'Unspecified' }}</TableCell>
-              <TableCell class="text-right text-sm font-medium">{{ formatCurrency(detail.amount || 0) }}</TableCell>
-              <TableCell class="text-sm">{{ detail.charging_tag }}</TableCell>
+              <TableCell>{{ detail.account?.account_title || 'Unspecified' }}</TableCell>
+              <TableCell class="text-right font-medium">{{ formatCurrency(detail.amount || 0) }}</TableCell>
+              <TableCell>{{ detail.charging_tag }}</TableCell>
             </TableRow>
           </template>
         </TableBody>
