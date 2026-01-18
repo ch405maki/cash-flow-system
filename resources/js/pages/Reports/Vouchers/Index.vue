@@ -242,8 +242,18 @@ function exportPdf() {
         </div>
 
         <div class="col-span-2 flex items-end">
-          <Button variant="destructive" class="h-8" @click="() => { startDate=''; endDate=''; selectedType='all'; }">
-            <Eraser class="h-4 w-4"/>Clear
+          <Button
+            variant="destructive"
+            class="h-8"
+            @click="() => {
+              startDate = ''
+              endDate = ''
+              selectedType = 'all'
+              selectedAccountId = null
+            }"
+          >
+            <Eraser class="mr-1 h-4 w-4" />
+            Clear
           </Button>
         </div>
       </div>
