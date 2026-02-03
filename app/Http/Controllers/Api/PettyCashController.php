@@ -36,7 +36,7 @@ class PettyCashController extends Controller
         $pettyCash = $query->orderBy('created_at', 'desc')->get();
 
         /**
-         * ✅ Compute today's totals for this user's department
+         *  Compute today's totals for this user's department
          */
         $departmentPettyCashToday = PettyCash::whereHas('user', function ($q) use ($user) {
                 $q->where('department_id', $user->department_id);
@@ -54,7 +54,7 @@ class PettyCashController extends Controller
             ->sum('amount');
 
         /**
-         * ✅ Define thresholds
+         *  Define thresholds
          */
         $thresholds = [
             'cash_advance' => [
@@ -219,7 +219,7 @@ class PettyCashController extends Controller
             'items.*.receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
-        // 🔄 Only update fields that belong to PettyCash
+        // Only update fields that belong to PettyCash
         $pettyCash->update(array_filter([
             'paid_to' => $validated['paid_to'] ?? null,
             'status' => $validated['status'] ?? null,

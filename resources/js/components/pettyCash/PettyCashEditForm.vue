@@ -119,7 +119,6 @@ const changeByDate = computed(() => {
   return map
 })
 
-
 /**
  * Returns background class for any item based on date totals
  */

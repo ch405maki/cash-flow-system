@@ -130,7 +130,7 @@ const submitApprovalLiquidate = async () => {
       </Dialog>
 
       <!-- Return for Review -->
-      <Dialog v-if="!hasLiquidation" v-model:open="returnApprovalDialogOpen">
+      <Dialog  v-model:open="returnApprovalDialogOpen">
         <DialogTrigger as-child>
           <Button :disabled="!approval.remarks" variant="secondary">
             <Undo2 />Return For Review

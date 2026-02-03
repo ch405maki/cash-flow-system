@@ -48,7 +48,7 @@ const getStatusConfig = (status: string) => {
     'returned': { color: 'bg-orange-500 text-white', label: 'Returned' },
     'rejected': { color: 'bg-red-500 text-white', label: 'Rejected' },
     'liquidation': { color: 'bg-indigo-500 text-white', label: 'Liquidation' },
-    'approved liquidation': { color: 'bg-teal-500 text-white', label: 'Approved Liquidation' },
+    'approved liquidation': { color: 'bg-teal-500 text-white', label: 'Approved' },
     'released': { color: 'bg-emerald-500 text-white', label: 'Released' },
     'completed': { color: 'bg-green-600 text-white', label: 'Completed' },
     'cancelled': { color: 'bg-red-600 text-white', label: 'Cancelled' }

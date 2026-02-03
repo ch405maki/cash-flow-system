@@ -22,7 +22,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
       <PageHeader 
         title="Edit Petty Cash Voucher" 
-        :subtitle="`Update details for PCV ${props.pettyCash.pcv_no}`"
+        :subtitle="`Update details for ${props.pettyCash.pcv_no}`"
       />
       <PettyCashEditForm :petty-cash="props.pettyCash" />
     </div>
