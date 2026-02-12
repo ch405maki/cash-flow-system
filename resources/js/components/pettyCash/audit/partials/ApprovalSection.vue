@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { useToast } from 'vue-toastification'
 import { Label } from '@/components/ui/label'
@@ -64,7 +64,6 @@ const submitApproval = async () => {
   await router.post(`/petty-cash/${props.pettyCashId}/approve`, {  
     remarks: approval.remarks
   })
-  toast.success('Approval submitted!')
   approval.remarks = ''
 }
 
@@ -83,26 +82,27 @@ const submitApprovalLiquidate = async () => {
   toast.success('Liquidation approval submitted!')
   approval.remarks = ''
 }
+
+// Clear remarks when dialog closes
+const handleDialogClose = (dialogType: 'normal' | 'liquidation' | 'return') => {
+  approval.remarks = ''
+  if (dialogType === 'normal') {
+    confirmApproval.value = false
+  } else if (dialogType === 'liquidation') {
+    confirmLiquidation.value = false
+  } else {
+    confirmApproval.value = false
+  }
+}
 </script>
 
 <template>
   <div class="mt-6 border rounded-lg p-4" v-if="userRole === 'audit'">
-    <div class="mb-4">
-      <Label for="approvalRemarks">Remarks</Label>
-      <Textarea
-        id="approvalRemarks"
-        v-model="approval.remarks"
-        rows="3"
-        class="block w-full border rounded-md p-2"
-        placeholder="Add optional remarks for this approval..."
-      ></Textarea>
-    </div>
-
     <div class="flex justify-end space-x-2">
       <!-- Normal Approval -->
       <Dialog v-if="!hasLiquidation" v-model:open="normalApprovalDialogOpen">
         <DialogTrigger as-child>
-          <Button :disabled="!approval.remarks">
+          <Button>
             Confirm Approval
           </Button>
         </DialogTrigger>
@@ -115,13 +115,26 @@ const submitApprovalLiquidate = async () => {
             </DialogDescription>
           </DialogHeader>
 
-          <div class="flex items-center space-x-2 mt-4">
-            <Checkbox id="confirmApproval" v-model:checked="confirmApproval" />
-            <Label for="confirmApproval">I confirm the accuracy of this request.</Label>
+          <div class="space-y-4 mt-4">
+            <div>
+              <Label for="approvalRemarksDialog">Remarks (Optional)</Label>
+              <Textarea
+                id="approvalRemarksDialog"
+                v-model="approval.remarks"
+                rows="3"
+                class="block w-full border rounded-md p-2 mt-1"
+                placeholder="Add optional remarks for this approval..."
+              ></Textarea>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <Checkbox id="confirmApproval" v-model:checked="confirmApproval" />
+              <Label for="confirmApproval">I confirm the accuracy of this request.</Label>
+            </div>
           </div>
 
           <DialogFooter class="mt-4">
-            <Button variant="outline" @click="normalApprovalDialogOpen = false">Cancel</Button>
+            <Button variant="outline" @click="handleDialogClose('normal'); normalApprovalDialogOpen = false">Cancel</Button>
             <Button :disabled="!confirmApproval" @click="handleApproval('normal')">
               Approve
             </Button>
@@ -130,9 +143,9 @@ const submitApprovalLiquidate = async () => {
       </Dialog>
 
       <!-- Return for Review -->
-      <Dialog  v-model:open="returnApprovalDialogOpen">
+      <Dialog v-model:open="returnApprovalDialogOpen">
         <DialogTrigger as-child>
-          <Button :disabled="!approval.remarks" variant="secondary">
+          <Button variant="secondary">
             <Undo2 />Return For Review
           </Button>
         </DialogTrigger>
@@ -146,16 +159,30 @@ const submitApprovalLiquidate = async () => {
             </DialogDescription>
           </DialogHeader>
 
-          <div class="flex items-center space-x-2 mt-4">
-            <Checkbox id="confirmReturn" v-model:checked="confirmApproval" />
-            <Label for="confirmReturn">
-              I confirm I've reviewed this voucher and it needs revision.
-            </Label>
+          <div class="space-y-4 mt-4">
+            <div>
+              <Label for="returnRemarksDialog">Remarks</Label>
+              <Textarea
+                id="returnRemarksDialog"
+                v-model="approval.remarks"
+                rows="3"
+                class="block w-full border rounded-md p-2 mt-1"
+                placeholder="Please provide remarks explaining why this voucher needs revision..."
+                required
+              ></Textarea>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <Checkbox id="confirmReturn" v-model:checked="confirmApproval" />
+              <Label for="confirmReturn">
+                I confirm I've reviewed this voucher and it needs revision.
+              </Label>
+            </div>
           </div>
 
           <DialogFooter class="mt-4">
-            <Button variant="outline" @click="returnApprovalDialogOpen = false">Cancel</Button>
-            <Button :disabled="!confirmApproval" @click="handleApproval('return')">
+            <Button variant="outline" @click="handleDialogClose('return'); returnApprovalDialogOpen = false">Cancel</Button>
+            <Button :disabled="!confirmApproval || !approval.remarks" @click="handleApproval('return')">
               Confirm Return
             </Button>
           </DialogFooter>
@@ -165,7 +192,7 @@ const submitApprovalLiquidate = async () => {
       <!-- Liquidation Approval -->
       <Dialog v-if="hasLiquidation" v-model:open="liquidationDialogOpen">
         <DialogTrigger as-child>
-          <Button :disabled="!approval.remarks">
+          <Button>
             Confirm Liquidation Approval
           </Button>
         </DialogTrigger>
@@ -178,13 +205,26 @@ const submitApprovalLiquidate = async () => {
             </DialogDescription>
           </DialogHeader>
 
-          <div class="flex items-center space-x-2 mt-4">
-            <Checkbox id="confirmLiquidation" v-model:checked="confirmLiquidation" />
-            <Label for="confirmLiquidation">I confirm liquidation details are correct.</Label>
+          <div class="space-y-4 mt-4">
+            <div>
+              <Label for="liquidationRemarksDialog">Remarks (Optional)</Label>
+              <Textarea
+                id="liquidationRemarksDialog"
+                v-model="approval.remarks"
+                rows="3"
+                class="block w-full border rounded-md p-2 mt-1"
+                placeholder="Add optional remarks for this liquidation approval..."
+              ></Textarea>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <Checkbox id="confirmLiquidation" v-model:checked="confirmLiquidation" />
+              <Label for="confirmLiquidation">I confirm liquidation details are correct.</Label>
+            </div>
           </div>
 
           <DialogFooter class="mt-4">
-            <Button variant="outline" @click="liquidationDialogOpen = false">Cancel</Button>
+            <Button variant="outline" @click="handleDialogClose('liquidation'); liquidationDialogOpen = false">Cancel</Button>
             <Button :disabled="!confirmLiquidation" @click="handleApproval('liquidation')">
               Approve
             </Button>

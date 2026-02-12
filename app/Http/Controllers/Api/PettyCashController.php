@@ -19,24 +19,51 @@ class PettyCashController extends Controller
     public function index()
     {
         $user = auth()->user();
+        $userId = $user->id;
         $today = now()->toDateString();
 
-        $query = PettyCash::with(['items', 'user.department']);
+        $query = PettyCash::with(['items', 'user.department', 'approvals']);
 
+        /**
+         * ROLE-BASED VISIBILITY
+         */
         if ($user->role === 'accounting') {
-            // Accounting sees all requested petty cash
+
+            // Accounting sees requested + approved liquidation
             $query->whereIn('status', ['requested', 'approved liquidation']);
+
+        } elseif ($user->role === 'audit') {
+
+            // Audit logic (merged from second controller)
+            $query->whereNotIn('status', ['draft', 'for liquidation', 'requested'])
+                ->where(function ($q) use ($userId) {
+
+                    // Case 1: No rejection remarks yet
+                    $q->whereDoesntHave('approvals', function ($sub) use ($userId) {
+                        $sub->where('user_id', $userId)
+                            ->whereNotNull('remarks');
+                    })
+
+                    // OR Case 2: Has remarks BUT status is submitted
+                    ->orWhere(function ($sub) {
+                        $sub->where('status', 'submitted');
+                    });
+                });
+
         } else {
-            // Other users only see their own department’s
+
+            // Regular users → department only
             $query->whereHas('user', function ($q) use ($user) {
                 $q->where('department_id', $user->department_id);
             });
         }
 
-        $pettyCash = $query->orderBy('created_at', 'desc')->get();
+        $pettyCash = $query
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         /**
-         *  Compute today's totals for this user's department
+         * TODAY'S THRESHOLDS (department-based)
          */
         $departmentPettyCashToday = PettyCash::whereHas('user', function ($q) use ($user) {
                 $q->where('department_id', $user->department_id);
@@ -53,9 +80,6 @@ class PettyCashController extends Controller
             ->where('type', 'Reimbursement')
             ->sum('amount');
 
-        /**
-         *  Define thresholds
-         */
         $thresholds = [
             'cash_advance' => [
                 'limit' => 150000,
@@ -75,6 +99,7 @@ class PettyCashController extends Controller
             'today' => $today,
         ]);
     }
+
 
 
     public function create()

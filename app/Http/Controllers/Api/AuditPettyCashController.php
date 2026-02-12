@@ -13,35 +13,6 @@ use App\Models\DistributionExpense;
 
 class AuditPettyCashController extends Controller
 {
-public function index()
-{
-    $userId = auth()->id();
-
-    $pettyCash = PettyCash::with(['items', 'user', 'approvals'])
-        ->whereNotIn('status', ['draft', 'for liquidation'])
-        ->where(function ($query) use ($userId) {
-            $query
-                // Case 1: No rejection remarks yet
-                ->whereDoesntHave('approvals', function ($q) use ($userId) {
-                    $q->where('user_id', $userId)
-                      ->whereNotNull('remarks');
-                })
-
-                // OR Case 2: Has remarks BUT status is submitted
-                ->orWhere(function ($q) {
-                    $q->where('status', 'submitted');
-                });
-        })
-        ->orderBy('date', 'desc')
-        ->get();
-
-    return Inertia::render('PettyCash/Index', [
-        'pettyCash' => $pettyCash,
-    ]);
-}
-
-
-
     public function view(PettyCash $pettyCash)
     {
         $user = auth()->user();
