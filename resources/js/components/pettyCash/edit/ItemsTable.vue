@@ -27,7 +27,7 @@ const emit = defineEmits<{
 
 const { updateItem, deleteItem } = usePettyCash()
 
-// Compute grouped totals for row coloring
+// Compute grouped totals for row coloring (liquidation status)
 const groupedByDate = computed(() => {
   const grouped: Record<string, { cashAdvance: number; liquidation: number }> = {}
 
@@ -49,26 +49,59 @@ const groupedByDate = computed(() => {
   return grouped
 })
 
-// Get row class based on item type and liquidation status
+// Get row class based on item type first, then liquidation status
 const getRowClass = (item: any) => {
+  // First, apply base type colors
+  let baseClass = ''
+  
+  switch (item.type) {
+    case 'Cash Advance':
+      baseClass = 'bg-blue-50/50 dark:bg-blue-950/20'
+      break
+    case 'Liquidation':
+      baseClass = 'bg-green-50/50 dark:bg-green-950/20'
+      break
+    case 'Reimbursement':
+      baseClass = 'bg-purple-50/50 dark:bg-purple-950/20'
+      break
+    default:
+      baseClass = ''
+  }
+
+  // Then, override with liquidation status colors if applicable
   const key = item.type === 'Liquidation'
     ? item.liquidation_for_date || item.date
     : item.date
 
   const totals = groupedByDate.value[key]
 
-  if (!totals || totals.cashAdvance === 0) return ''
+  if (totals && totals.cashAdvance > 0) {
+    if (totals.liquidation >= totals.cashAdvance) {
+      return 'bg-green-100 dark:bg-green-900/20 hover:brightness-95 dark:hover:brightness-125' // Fully liquidated
+    }
+    if (totals.liquidation > 0 && totals.liquidation < totals.cashAdvance) {
+      return 'bg-yellow-100 dark:bg-yellow-900/20 hover:brightness-95 dark:hover:brightness-125' // Partially liquidated
+    }
+    if (item.type?.toLowerCase() === 'cash advance') {
+      return 'bg-rose-100 dark:bg-rose-900/20 hover:brightness-95 dark:hover:brightness-125' // Cash advance with no liquidation
+    }
+  }
 
-  if (totals.liquidation >= totals.cashAdvance) {
-    return 'bg-green-100 dark:bg-green-900/20'
+  return `${baseClass} hover:brightness-95 dark:hover:brightness-125`
+}
+
+// Get badge color for item type
+const getTypeBadgeClass = (type: string) => {
+  switch (type) {
+    case 'Cash Advance':
+      return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+    case 'Liquidation':
+      return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+    case 'Reimbursement':
+      return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
+    default:
+      return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
   }
-  if (totals.liquidation > 0 && totals.liquidation < totals.cashAdvance) {
-    return 'bg-yellow-100 dark:bg-yellow-900/20'
-  }
-  if (item.type?.toLowerCase() === 'cash advance') {
-    return 'bg-rose-100 dark:bg-rose-900/20'
-  }
-  return ''
 }
 
 const handleUpdateItem = async (index: number, field: string, value: any) => {
@@ -121,88 +154,117 @@ const handleDeleteItem = async (index: number) => {
 </script>
 
 <template>
-  <Table>
-    <TableHeader>
-      <TableRow>
-        <TableHead>Type</TableHead>
-        <TableHead>Particulars</TableHead>
-        <TableHead>Date</TableHead>
-        <TableHead v-if="isExisting" class="w-[15%]">Liquidation Dated</TableHead>
-        <TableHead class="text-right">Amount</TableHead>
-        <TableHead>Receipt</TableHead>
-        <TableHead class="text-center w-[100px]">Actions</TableHead>
-      </TableRow>
-    </TableHeader>
-    <TableBody>
-      <TableRow
-        v-for="(item, index) in items"
-        :key="item.id || index"
-        :class="getRowClass(item)"
-      >
-        <TableCell class="font-semibold">
-          {{ item.type }}
-          <span 
-            v-if="item?.liquidation_for_date" 
-            class="text-sm font-normal text-muted-foreground block"
-          >
-            ({{ formatDate(item.liquidation_for_date) }})
-          </span>
-        </TableCell>
-        
-        <EditableCell
-          :value="item.particulars"
-          :item-id="item.id"
-          :petty-cash-id="pettyCashId"
-          field="particulars"
-          @update:value="handleUpdateItem(index, 'particulars', $event)"
-        />
-        
-        <EditableCell
-          :value="item.date"
-          :item-id="item.id"
-          :petty-cash-id="pettyCashId"
-          field="date"
-          type="date"
-          @update:value="handleUpdateItem(index, 'date', $event)"
-        />
-        
-        <TableCell v-if="isExisting">
-          {{ item.liquidation_for_date ? formatDate(item.liquidation_for_date) : '-' }}
-        </TableCell>
-        
-        <EditableCell
-          :value="item.amount"
-          :item-id="item.id"
-          :petty-cash-id="pettyCashId"
-          field="amount"
-          type="number"
-          class="text-right"
-          @update:value="handleUpdateItem(index, 'amount', $event)"
-        />
-        
-        <TableCell>
-          <a 
-            v-if="item.receipt" 
-            :href="`/storage/${item.receipt}`" 
-            target="_blank" 
-            class="text-blue-600 hover:text-blue-800 underline text-sm"
-          >
-            View
-          </a>
-          <span v-else class="text-muted-foreground italic text-sm">No file</span>
-        </TableCell>
-        
-        <TableCell class="text-center">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            @click="handleDeleteItem(index)"
-            class="text-destructive hover:text-destructive hover:bg-destructive/10"
-          >
-            <Trash2 class="h-4 w-4" />
-          </Button>
-        </TableCell>
-      </TableRow>
-    </TableBody>
-  </Table>
+  <div class="overflow-x-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead class="w-[150px]">Type</TableHead>
+          <TableHead class="min-w-[250px]">Particulars</TableHead>
+          <TableHead class="w-[130px]">Date</TableHead>
+          <TableHead v-if="isExisting" class="w-[150px]">Liquidation Dated</TableHead>
+          <TableHead class="w-[150px] text-right">Amount (₱)</TableHead>
+          <TableHead class="w-[120px]">Receipt</TableHead>
+          <TableHead class="w-[80px] text-center">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <TableRow
+          v-for="(item, index) in items"
+          :key="item.id || index"
+          :class="[getRowClass(item), 'transition-colors duration-200']"
+        >
+          <!-- Type Column -->
+          <TableCell class="font-medium align-top">
+            <div class="space-y-1">
+              <span :class="['px-2 py-1 rounded-full text-xs font-medium inline-block', getTypeBadgeClass(item.type)]">
+                {{ item.type }}
+              </span>
+              <span 
+                v-if="item?.liquidation_for_date && !isExisting" 
+                class="text-xs font-normal text-muted-foreground block mt-1"
+              >
+                Liq: {{ formatDate(item.liquidation_for_date) }}
+              </span>
+            </div>
+          </TableCell>
+          
+          <!-- Particulars Column -->
+          <TableCell class="align-top">
+            <EditableCell
+              :value="item.particulars"
+              :item-id="item.id"
+              :petty-cash-id="pettyCashId"
+              field="particulars"
+              @update:value="handleUpdateItem(index, 'particulars', $event)"
+            />
+          </TableCell>
+          
+          <!-- Date Column -->
+          <TableCell class="align-top">
+            <EditableCell
+              :value="item.date"
+              :item-id="item.id"
+              :petty-cash-id="pettyCashId"
+              field="date"
+              type="date"
+              @update:value="handleUpdateItem(index, 'date', $event)"
+            />
+          </TableCell>
+          
+          <!-- Liquidation Dated Column (Only for existing items) -->
+          <TableCell v-if="isExisting" class="align-top">
+            <span v-if="item.liquidation_for_date" class="text-sm">
+              {{ formatDate(item.liquidation_for_date) }}
+            </span>
+            <span v-else class="text-muted-foreground italic text-sm">—</span>
+          </TableCell>
+          
+          <!-- Amount Column -->
+          <TableCell class="text-right align-top">
+            <EditableCell
+              :value="item.amount"
+              :item-id="item.id"
+              :petty-cash-id="pettyCashId"
+              field="amount"
+              type="number"
+              class="text-right font-medium"
+              @update:value="handleUpdateItem(index, 'amount', $event)"
+            />
+          </TableCell>
+          
+          <!-- Receipt Column -->
+          <TableCell class="align-top">
+            <div class="flex flex-col gap-1">
+              <a 
+                v-if="item.receipt" 
+                :href="`/storage/${item.receipt}`" 
+                target="_blank" 
+                class="text-blue-600 hover:text-blue-800 underline text-sm inline-flex items-center gap-1"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                View
+              </a>
+              <span v-else class="text-muted-foreground italic text-sm">No file</span>
+              <span v-if="item.receipt_name" class="text-xs text-muted-foreground truncate max-w-[100px]" :title="item.receipt_name">
+                {{ item.receipt_name }}
+              </span>
+            </div>
+          </TableCell>
+          
+          <!-- Actions Column -->
+          <TableCell class="text-center align-top">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              @click="handleDeleteItem(index)"
+              class="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
+            >
+              <Trash2 class="h-4 w-4" />
+              <span class="sr-only">Delete</span>
+            </Button>
+          </TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
+  </div>
 </template>

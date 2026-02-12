@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/table"
 import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Rocket, Forward } from 'lucide-vue-next'
+import { Rocket, Forward, Pencil, PlusCircle, X } from 'lucide-vue-next'
 import { formatDate } from '@/lib/utils'
 import { usePettyCash } from '@/composables/usePettyCash'
 
@@ -41,6 +41,54 @@ const form = reactive({
   remarks: props.pettyCash.remarks,
 })
 
+// Editing states for header fields
+const editingField = ref<string | null>(null)
+const editValue = ref<string>('')
+
+// Toggle for Add New Item form
+const showAddItemForm = ref(false)
+
+// Start editing a header field
+const startEditing = (field: string, currentValue: string) => {
+  editingField.value = field
+  editValue.value = currentValue || ''
+}
+
+// Save edited field
+const saveEdit = async (field: string) => {
+  if (editValue.value === form[field as keyof typeof form]) {
+    editingField.value = null
+    return
+  }
+
+  // Update form value
+  form[field as keyof typeof form] = editValue.value
+  
+  // Auto-save to server
+  await updateMainFields(props.pettyCash.id, {
+    [field]: editValue.value
+  })
+  
+  editingField.value = null
+}
+
+// Cancel editing
+const cancelEdit = () => {
+  editingField.value = null
+  editValue.value = ''
+}
+
+// Handle keyboard events
+const handleKeyDown = (e: KeyboardEvent, field: string) => {
+  if (e.key === 'Enter') {
+    e.preventDefault()
+    saveEdit(field)
+  }
+  if (e.key === 'Escape') {
+    cancelEdit()
+  }
+}
+
 // Existing items
 const existingItems = ref(props.pettyCash.items?.map((item: any) => ({
   ...item,
@@ -52,7 +100,7 @@ const existingItems = ref(props.pettyCash.items?.map((item: any) => ({
   }
 })) || [])
 
-// Auto-save main fields when they change
+// Auto-save main fields when they change (as backup)
 const saveMainFields = async () => {
   await updateMainFields(props.pettyCash.id, {
     paid_to: form.paid_to,
@@ -84,6 +132,13 @@ const handleItemDeleted = (deletedItemId: number) => {
 // Handle new item added
 const handleItemAdded = (newItem: any) => {
   existingItems.value.push(newItem)
+  // Close the form after adding
+  showAddItemForm.value = false
+}
+
+// Toggle add item form
+const toggleAddItemForm = () => {
+  showAddItemForm.value = !showAddItemForm.value
 }
 
 // All items for totals
@@ -120,7 +175,6 @@ watch(() => usePage().props.success, (success) => {
 
 watch(() => usePage().props.saved_item, (savedItem) => {
   if (savedItem) {
-    // Update existing items array with the saved item
     const index = existingItems.value.findIndex(i => i.id === savedItem.id)
     if (index !== -1) {
       existingItems.value[index] = savedItem
@@ -133,48 +187,126 @@ watch(() => usePage().props.saved_item, (savedItem) => {
 
 <template>
   <div class="space-y-6">
-    <!-- Voucher Header with Auto-save -->
-    <Table>
-      <TableBody>
-        <TableRow>
-          <TableCell class="font-medium w-[20%] border-r">
-            <div>
-              <div class="text-xs text-muted-foreground mb-1">PCV No</div>
-              <div>{{ props.pettyCash.pcv_no }}</div>
-            </div>
-          </TableCell>
-          <TableCell class="w-[20%] border-r">
-            <div>
-              <div class="text-xs text-muted-foreground mb-1">Status</div>
-              <div class="capitalize">{{ props.pettyCash.status }}</div>
-            </div>
-          </TableCell>
-          <TableCell class="w-[40%] border-r">
-            <div>
-              <div class="text-xs text-muted-foreground mb-1">Paid To</div>
-              <Input v-model="form.paid_to" placeholder="Paid to" />
-              <span class="text-xs text-muted-foreground mt-1">Auto-saves on change</span>
-            </div>
-          </TableCell>
-          <TableCell class="w-[20%]">
-            <div>
-              <div class="text-xs text-muted-foreground mb-1">Date</div>
-              <Input v-model="form.date" type="date" />
-              <span class="text-xs text-muted-foreground mt-1">Auto-saves on change</span>
-            </div>
-          </TableCell>
-        </TableRow>
-      </TableBody>
-    </Table>
+    <!-- Voucher Header with Double-click to Edit -->
+    <div class="overflow-hidden">
+      <Table>
+        <TableBody>
+          <TableRow class="divide-x">
+            <!-- PCV No (Read-only) -->
+            <TableCell class="font-medium w-[20%]">
+              <div class="space-y-1">
+                <div class="text-xs text-muted-foreground">PCV No</div>
+                <div class="font-semibold">{{ props.pettyCash.pcv_no }}</div>
+              </div>
+            </TableCell>
+            
+            <!-- Status (Read-only) -->
+            <TableCell class="w-[20%]">
+              <div class="space-y-1">
+                <div class="text-xs text-muted-foreground">Status</div>
+                <div class="capitalize">
+                  <span :class="{
+                    'text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full text-xs': props.pettyCash.status === 'pending',
+                    'text-blue-600 bg-blue-100 px-2 py-1 rounded-full text-xs': props.pettyCash.status === 'for liquidation',
+                    'text-green-600 bg-green-100 px-2 py-1 rounded-full text-xs': props.pettyCash.status === 'submitted',
+                    'text-gray-600 bg-gray-100 px-2 py-1 rounded-full text-xs': props.pettyCash.status === 'draft'
+                  }">
+                    {{ props.pettyCash.status }}
+                  </span>
+                </div>
+              </div>
+            </TableCell>
+            
+            <!-- Paid To (Editable) -->
+            <TableCell class="w-[40%] cursor-pointer hover:bg-muted/50 transition-colors" 
+                       @dblclick="startEditing('paid_to', form.paid_to)">
+              <div class="space-y-1">
+                <div class="text-xs text-muted-foreground flex items-center gap-1">
+                  Paid To
+                  <span class="text-[10px] text-muted-foreground/70">(double-click to edit)</span>
+                </div>
+                <div v-if="editingField === 'paid_to'" class="flex items-center gap-2">
+                  <Input
+                    v-model="editValue"
+                    placeholder="Enter paid to"
+                    class="h-8"
+                    @blur="saveEdit('paid_to')"
+                    @keydown.enter="saveEdit('paid_to')"
+                    @keydown.escape="cancelEdit"
+                    autofocus
+                  />
+                  <span class="text-xs text-muted-foreground animate-pulse">Auto-saves</span>
+                </div>
+                <div v-else class="font-medium flex items-center gap-2 group">
+                  {{ form.paid_to || '—' }}
+                  <Pencil class="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </div>
+            </TableCell>
+            
+            <!-- Date (Editable) -->
+            <TableCell class="w-[20%] cursor-pointer hover:bg-muted/50 transition-colors"
+                       @dblclick="startEditing('date', form.date)">
+              <div class="space-y-1">
+                <div class="text-xs text-muted-foreground flex items-center gap-1">
+                  Date
+                  <span class="text-[10px] text-muted-foreground/70">(double-click to edit)</span>
+                </div>
+                <div v-if="editingField === 'date'" class="flex items-center gap-2">
+                  <Input
+                    v-model="editValue"
+                    type="date"
+                    class="h-8 w-auto"
+                    @blur="saveEdit('date')"
+                    @keydown.enter="saveEdit('date')"
+                    @keydown.escape="cancelEdit"
+                    autofocus
+                  />
+                  <span class="text-xs text-muted-foreground animate-pulse">Auto-saves</span>
+                </div>
+                <div v-else class="font-medium flex items-center gap-2 group">
+                  {{ formatDate(form.date) }}
+                  <Pencil class="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </div>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </div>
     
-    <!-- Remarks with Auto-save -->
+    <!-- Remarks with Double-click to Edit -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="md:col-span-2">
-        <Alert>
+        <Alert class="cursor-pointer hover:bg-muted/50 transition-colors" 
+               @dblclick="startEditing('remarks', form.remarks)">
           <Rocket class="h-4 w-4" />
-          <AlertTitle>Remarks</AlertTitle>
-          <Textarea v-model="form.remarks" placeholder="Add remarks..." />
-          <span class="text-xs text-muted-foreground mt-1">Auto-saves on change</span>
+          <AlertTitle class="flex items-center gap-2">
+            Remarks
+            <span class="text-xs font-normal text-muted-foreground">(double-click to edit)</span>
+          </AlertTitle>
+          <AlertDescription>
+            <div v-if="editingField === 'remarks'" class="mt-2 space-y-2">
+              <Textarea
+                v-model="editValue"
+                placeholder="Add remarks..."
+                class="min-h-[100px]"
+                @blur="saveEdit('remarks')"
+                @keydown.enter.prevent="saveEdit('remarks')"
+                @keydown.escape="cancelEdit"
+                autofocus
+              />
+              <div class="flex justify-end">
+                <span class="text-xs text-muted-foreground animate-pulse">Auto-saves on blur</span>
+              </div>
+            </div>
+            <div v-else class="flex items-center justify-between group">
+              <span :class="{ 'text-muted-foreground italic': !form.remarks }">
+                {{ form.remarks || 'No remarks yet. Double-click to add...' }}
+              </span>
+              <Pencil class="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </AlertDescription>
         </Alert>
       </div>
     </div>
@@ -197,19 +329,46 @@ watch(() => usePage().props.saved_item, (savedItem) => {
       <TotalsSummary :items="allItemsForTotals" />
     </div>
 
-    <Separator />
+    <!-- Add New Item Form (Hidden by default) -->
+    <div v-if="showAddItemForm" class="border rounded-xl p-4 bg-muted/5">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold flex items-center gap-2">
+          Add New Item
+        </h3>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          @click="toggleAddItemForm"
+          class="gap-2"
+        >
+          <X class="h-4 w-4" />
+          Close
+        </Button>
+      </div>
 
-    <!-- Add New Item Form - Auto-saves on Accept -->
-    <ItemForm
-      :existing-items="existingItems"
-      :status="props.pettyCash.status"
-      :is-cash-advance-user="user.is_cash_advance === 1"
-      :petty-cash-id="props.pettyCash.id"
-      @item-added="handleItemAdded"
-    />
+      <ItemForm
+        :existing-items="existingItems"
+        :status="props.pettyCash.status"
+        :is-cash-advance-user="user.is_cash_advance === 1"
+        :petty-cash-id="props.pettyCash.id"
+        @item-added="handleItemAdded"
+      />
+    </div>
 
-    <!-- Submit Button Only -->
-    <div class="flex justify-end">
+    <!-- Action Buttons Row -->
+    <div class="flex justify-end gap-3">
+      <!-- Add Item Button -->
+      <Button
+        v-if="!showAddItemForm"
+        variant="outline"
+        @click="toggleAddItemForm"
+        class="gap-2"
+      >
+        <PlusCircle class="h-4 w-4" />
+        Add Item
+      </Button>
+
+      <!-- Submit Button -->
       <Button
         v-if="user.access_id == 3"
         @click="isSubmitDialogOpen = true"
