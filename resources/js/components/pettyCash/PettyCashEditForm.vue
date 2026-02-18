@@ -1,20 +1,16 @@
 <script setup lang="ts">
 import { reactive, ref, computed, watch } from 'vue'
-import { usePage } from '@inertiajs/vue3'
 import { useToast } from 'vue-toastification'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { usePage, router } from '@inertiajs/vue3'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Rocket, Forward, Pencil, PlusCircle, X } from 'lucide-vue-next'
 import { formatDate } from '@/lib/utils'
