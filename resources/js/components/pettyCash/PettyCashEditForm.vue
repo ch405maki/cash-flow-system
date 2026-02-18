@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { usePage, router } from '@inertiajs/vue3'
 import { Textarea } from '@/components/ui/textarea'
+import { route } from 'ziggy-js'
 import {
   Table,
   TableBody,
