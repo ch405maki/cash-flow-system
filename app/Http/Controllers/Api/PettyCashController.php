@@ -359,22 +359,36 @@ class PettyCashController extends Controller
         $now = Carbon::now();
         $yearMonth = $now->format('Ym');
         $prefix = $isCashAdvance ? 'CAV' : 'PCV';
-
-        // Get latest record for this prefix in the current month
-        $latest = PettyCash::whereYear('date', $now->year)
-            ->whereMonth('date', $now->month)
-            ->where('pcv_no', 'like', "{$prefix}-%")
-            ->orderByDesc('pcv_no')
+        
+        // Get the latest record with this prefix (any date) to get the highest number
+        $latest = PettyCash::where('pcv_no', 'like', "{$prefix}-%")
+            ->orderBy('pcv_no', 'desc')
             ->first();
-
+        
         $nextCounter = 1;
-
-        if ($latest && preg_match("/{$prefix}-\d{6}-(\d{4})$/", $latest->pcv_no, $matches)) {
-            $lastCounter = (int) $matches[1];
-            $nextCounter = $lastCounter + 1;
+        
+        if ($latest && preg_match("/{$prefix}-(\d{6})-(\d{4})$/", $latest->pcv_no, $matches)) {
+            $lastYearMonth = $matches[1];
+            $lastCounter = (int) $matches[2];
+            
+            // If it's a new month, reset counter to 1
+            if ($lastYearMonth !== $yearMonth) {
+                $nextCounter = 1;
+            } else {
+                $nextCounter = $lastCounter + 1;
+            }
         }
-
-        return "{$prefix}-{$yearMonth}-" . str_pad($nextCounter, 4, '0', STR_PAD_LEFT);
+        
+        // Double-check if the generated number already exists (for race conditions)
+        $generatedNo = "{$prefix}-{$yearMonth}-" . str_pad($nextCounter, 4, '0', STR_PAD_LEFT);
+        
+        // If it somehow exists, increment until we find a unique one
+        while (PettyCash::where('pcv_no', $generatedNo)->exists()) {
+            $nextCounter++;
+            $generatedNo = "{$prefix}-{$yearMonth}-" . str_pad($nextCounter, 4, '0', STR_PAD_LEFT);
+        }
+        
+        return $generatedNo;
     }
 
     public function submit(Request $request, $id)
