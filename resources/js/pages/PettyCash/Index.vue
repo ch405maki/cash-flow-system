@@ -38,21 +38,11 @@ const props = defineProps<{
   today: string
 }>()
 
-// Debug: Log all props when component mounts
-onMounted(() => {
-  console.log('🔍 PettyCashIndex Props:', {
-    pettyCash: props.pettyCash,
-    pettyCashLength: props.pettyCash?.length,
-    pettyCashFund: props.pettyCashFund,
-    thresholds: props.thresholds,
-    user: user
-  })
-})
+
 
 // Check if there are petty cash records - FIXED VERSION
 const hasItem = computed(() => {
   const hasData = !!(props.pettyCash && props.pettyCash.length > 0)
-  console.log('📊 hasItem computed:', hasData, 'pettyCash:', props.pettyCash)
   return hasData
 })
 

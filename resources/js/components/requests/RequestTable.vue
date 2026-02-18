@@ -61,7 +61,7 @@ function goToShowRequest(requestId: number) {
                 'bg-orange-100 text-yellow-600': request.status === 'to_property',
                 'bg-orange-100 text-orange-500': request.status === 'to_order',
                 'bg-yellow-100 text-yellow-800': request.status === 'pending',
-                'bg-green-100 text-green-800': request.status === 'approved',
+                'bg-green-100 text-green-800': request.status === 'released',
                 'bg-red-100 text-red-800': request.status === 'rejected',
               }"
             >
