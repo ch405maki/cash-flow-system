@@ -16,8 +16,12 @@ const emit = defineEmits(['create-petty-cash'])
     <p class="text-xs text-muted-foreground mb-4">
       List of your petty cash will appear here
     </p>
-    <Button v-if="user.is_petty_cash == 1" @click="$emit('create-petty-cash')">
+    <Button
+      v-if="user && user.is_petty_cash === 1"
+      @click="$emit('create-petty-cash')"
+    >
       Create New Petty Cash
     </Button>
+
   </div>
 </template>

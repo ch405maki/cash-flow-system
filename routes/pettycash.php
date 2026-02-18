@@ -18,8 +18,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/petty-cash/{id}/submit', [PettyCashController::class, 'submit'])->name('petty-cash.submit');
     Route::get('petty-cash/{pettyCash}/view', [PettyCashController::class, 'view'])->name('petty-cash.view');
 
-
-    Route::get('/audit/petty-cash', [AuditPettyCashController::class, 'index'])->name('audit.petty-cash.index');
     Route::get('/petty-cash/{pettyCash}/view', [AuditPettyCashController::class, 'view'])->name('petty-cash.view');
 
     Route::post('/audit/petty-cash/{pettyCash}/distribution', [AuditPettyCashController::class, 'storeDistribution'])->name('audit.petty-cash.distribution');

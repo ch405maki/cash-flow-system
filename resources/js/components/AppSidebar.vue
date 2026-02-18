@@ -2,9 +2,7 @@
 import { ref } from 'vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
-import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
 import {
@@ -19,7 +17,6 @@ import {
   BarChart3,
   Settings,
   Package,
-  ListTodo,
   Users, 
   ShieldCheck,
   Building2,
@@ -150,6 +147,7 @@ const custodianApprovalItems: NavItem[] = [
     icon: ClipboardCheck,
   },
 ];
+
 const custodianReportItems = ref<DropdownNavItem[]>([
     {
         title: 'Reports',
@@ -240,11 +238,6 @@ const accountingAuditNavItems: NavItem[] = [
   {
     title: 'Vouchers',
     href: '/voucher-approval',
-    icon: ReceiptText,
-  },
-  {
-    title: 'Petty Cash',
-    href: '/audit/petty-cash',
     icon: ReceiptText,
   },
 ];
@@ -345,13 +338,17 @@ const adminNavItems: NavItem[] = [
 ];
 
 // Pettycash
-const pettyCashNavItems: NavItem[] = [
+const pettyCashNavItems = ref<DropdownNavItem[]>([
   {
     title: 'Petty Cash',
-    href: '/petty-cash',
+    href: '#',
     icon: SquarePen,
+    isOpen: false,
+    children: [
+      { title: 'Petty Cash', href: '/petty-cash' },
+    ],
   },
-];
+]);
 
 const bursarNavItems: NavItem[] = [
   {
@@ -407,6 +404,7 @@ const bursarNavItems: NavItem[] = [
           
           <div v-if="user?.role === 'audit'">
             <NavMain :items="accountingAuditNavItems" group-label="Audit"/>
+            <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
             <NavMain :items="reportItems" group-label="Reports" />
           </div>
 
