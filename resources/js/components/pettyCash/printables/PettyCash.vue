@@ -16,31 +16,55 @@ const totalsByType = computed(() => {
   }, {})
 })
 
-// compute change amount (Cash Advance - Liquidation)
+// compute change amount (taking into account Reimbursement)
 const changeDetails = computed(() => {
   const cashAdvance = totalsByType.value['Cash Advance'] || 0
   const liquidation = totalsByType.value['Liquidation'] || 0
-  const diff = liquidation - cashAdvance // <-- flip order
-
-  if (diff > 0) {
-    // liquidation > cash advance → amount due
-    return { label: 'Amount Due', amount: diff }
-  } else if (diff < 0) {
-    // liquidation < cash advance → return
-    return { label: 'Return', amount: Math.abs(diff) }
-  } else {
-    return { label: '', amount: 0 }
+  const reimbursement = totalsByType.value['Reimbursement'] || 0
+  
+  // Calculate net amount
+  // For Reimbursement: company pays the employee
+  // For Liquidation: employee returns excess cash advance
+  // For Cash Advance: company gives money to employee
+  
+  // If there's a cash advance, we're in a CA/Liquidation scenario
+  if (cashAdvance > 0) {
+    const diff = liquidation - cashAdvance
+    if (diff > 0) {
+      // liquidation > cash advance → company owes employee
+      return { label: 'Amount Due', amount: diff }
+    } else if (diff < 0) {
+      // liquidation < cash advance → employee owes company
+      return { label: 'Return', amount: Math.abs(diff) }
+    } else {
+      return { label: 'Settled', amount: 0 }
+    }
+  } 
+  // If there's reimbursement but no cash advance
+  else if (reimbursement > 0) {
+    // Reimbursement is payment to employee
+    return { label: 'Amount', amount: reimbursement }
   }
+  
+  return { label: '', amount: 0 }
 })
 
+// Check if this is a reimbursement-only voucher
+const isReimbursementOnly = computed(() => {
+  return totalsByType.value['Cash Advance'] === 0 && 
+         totalsByType.value['Reimbursement'] > 0
+})
+
+// Get reimbursement total for display
+const reimbursementTotal = computed(() => {
+  return totalsByType.value['Reimbursement'] || 0
+})
 
 const cashAdvanceDate = computed(() => {
   const caItem = props.pettyCash.items.find(i => i.type === 'Cash Advance')
   return caItem ? formatDate(caItem.date) : ''
 })
-
 </script>
-
 
 <template>
   <div class="p-4 text-black bg-white w-[900px] mx-auto text-xs font-sans">
@@ -142,33 +166,42 @@ const cashAdvanceDate = computed(() => {
                   </tr>
                 </tbody>
                 <tbody>
-                  <!-- Actual item rows -->
-                  <tr v-for="item in props.pettyCash.items.slice(0, 1)" :key="item.id">
+                  <!-- Summary row -->
+                  <tr>
                       <td class="border-b border-black text-center p-1"></td>
-                      <td class="border border-black p-1 capitalize text-right">
+                      <td class="border border-black p-1 capitalize text-right font-bold">
                         {{ changeDetails.label }}
                       </td>
-                      <td class="border border-black text-right p-1">
-                        ₱ {{ changeDetails.amount ? changeDetails.amount.toLocaleString() : '' }}
+                      <td class="border border-black text-right p-1 font-bold">
+                        ₱ {{ changeDetails.amount ? changeDetails.amount.toLocaleString() : '0.00' }}
                       </td>
                   </tr>
                 </tbody>
             </table>
             <div class="grid grid-cols-1  border-r border-black">
               <div class="border-b border-black">
-                <!-- Received from -->
+                <!-- Received from - Updated for Reimbursement -->
                 <div class="p-1">
-                  <p>
-                    Received from the amount of
-                    <span class="underline px-2 font-medium tracking-wider">
+                  <p class="flex flex-wrap items-baseline gap-1">
+                    <span>Received from the amount of</span>
+                    <span class="underline font-medium tracking-wider break-words max-w-full">
                       {{ changeDetails.amount ? amountToWords(changeDetails.amount) : '' }}
                     </span>
-                  </p>
-                  <p>
-                    <span class="underline px-2 font-medium tracking-wider">
+                    <span v-if="!props.pettyCash.items.some(i => i.type === 'Reimbursement')" class="underline font-medium tracking-wider whitespace-nowrap">
                       (₱ {{ changeDetails.amount ? changeDetails.amount.toLocaleString() : '' }})
                     </span>
-                    {{ changeDetails.label === 'Amount Due' ? 'as amount due.' : 'to be returned.' }}
+                    <span v-if="isReimbursementOnly">
+                      as reimbursement for expenses.
+                    </span>
+                    <span v-else-if="changeDetails.label === 'Amount Due'">
+                      as amount due.
+                    </span>
+                    <span v-else-if="changeDetails.label === 'Return'">
+                      to be returned.
+                    </span>
+                    <span v-else-if="changeDetails.label === 'Settled'">
+                      as settled.
+                    </span>
                   </p>
                 </div>
               </div>
