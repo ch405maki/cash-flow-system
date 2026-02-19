@@ -37,9 +37,12 @@ class CanvasController extends Controller
                 ->latest()
                 ->get();
         } else {
-            // Purchasing officers see their own canvases
-            $canvases = Canvas::with(['creator', 'request_to_order', 'files', 'approvals.user',])
-                ->where('created_by', $user->id)->where('status', 'draft')
+            // Purchasing officers see canvases where they are in the same department as the creator
+            $canvases = Canvas::with(['creator', 'request_to_order', 'files', 'approvals.user'])
+                ->whereHas('creator', function ($query) use ($user) {
+                    $query->where('department_id', $user->department_id);
+                })
+                ->where('status', 'draft')
                 ->latest()
                 ->get();
         }
