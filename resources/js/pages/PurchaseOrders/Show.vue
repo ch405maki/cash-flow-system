@@ -379,7 +379,7 @@ function openPreview(file: any) {
                     <!-- Scrollable Container -->
                     <div class="max-h-48 overflow-y-auto pr-2">
                       <!-- Approvals Timeline -->
-                      <div v-if="purchaseOrder.voucher.approvals?.length">
+                      <div v-if="purchaseOrder.voucher?.approvals?.length">
                         <div class="relative pl-6">
                           <div class="absolute left-0 top-0 h-full w-0.5 bg-gray-200 ml-4"></div>
                           <div
@@ -532,8 +532,8 @@ function openPreview(file: any) {
       </Alert>
 
       <!-- Allert Remarks -->
-      <Alert 
-        v-if="showAlert && (purchaseOrder.remarks || purchaseOrder.canvas.approvals)" 
+      <Alert
+        v-if="showAlert && (purchaseOrder.remarks || purchaseOrder.canvas?.approvals?.length)"
         variant="success" 
         class="relative pr-10"
       >
@@ -543,7 +543,12 @@ function openPreview(file: any) {
           <div v-if="purchaseOrder.remarks">
             Purchasing: <span class="font-medium">{{ purchaseOrder.remarks }}.</span>
           </div>
-          <div class="capitalize" v-for="comment in purchaseOrder.canvas.approvals" >
+          <div 
+              v-if="purchaseOrder.canvas?.approvals?.length"
+              class="capitalize" 
+              v-for="comment in purchaseOrder.canvas.approvals"
+              :key="comment.id"
+            >
             {{ comment.user.username }}: <span class="font-medium">{{ comment.comments }}.</span> 
           </div>
         </AlertDescription>
