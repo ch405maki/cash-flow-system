@@ -4,7 +4,6 @@ import { formatDate } from '@/lib/utils'
 import AppLayout from '@/layouts/AppLayout.vue';
 import { UserRoundCheck, Clock, CheckCircle, XCircle, Download } from 'lucide-vue-next';
 import axios from 'axios';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
   Tabs,
   TabsContent,
@@ -13,7 +12,7 @@ import {
 } from '@/components/ui/tabs'
 import CanvasShowDialog from '@/components/canvas/CanvasShowDialog.vue'
 import CanvasTable from '@/components/canvas/CanvasTable.vue'
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import PageHeader from '@/components/PageHeader.vue';
 
 const props = defineProps<{
@@ -110,7 +109,7 @@ const breadcrumbs = [
 </script>
 
 <template>
-  <Head title="My Canvases" />
+  <Head title="Canvas" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">

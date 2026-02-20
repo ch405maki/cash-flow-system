@@ -86,12 +86,12 @@ const getTooltipText = (item: PettyCashItem) => {
       <TableCaption>A list of your petty cash.</TableCaption>
       <TableHeader>
         <TableRow>
-          <TableHead class="w-[150px]">PCV NO</TableHead>
-          <TableHead class="w-[100px]">Paid to</TableHead>
-          <TableHead class="w-[150px]">Requested By</TableHead>
-          <TableHead class="w-[100px]">Date</TableHead>
-          <TableHead class="w-[100px]">Status</TableHead>
-          <TableHead class="w-[200px]">Remarks</TableHead>
+          <TableHead>PCV NO</TableHead>
+          <TableHead>Paid to</TableHead>
+          <TableHead>Requested By</TableHead>
+          <TableHead>Date</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead class="text-right">Remarks</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -135,7 +135,7 @@ const getTooltipText = (item: PettyCashItem) => {
               </Badge>
             </TableCell>
             
-            <TableCell class="capitalize">
+            <TableCell class="capitalize text-right">
               "{{ item.remarks }}"
             </TableCell>
           </TableRow>

@@ -116,7 +116,6 @@ class User extends Authenticatable
         return $this->hasMany(Voucher::class, 'audited_by');
     }
 
-    // Petty Cash Voucher relationship
     public function pettyCashVouchers()
     {
         return $this->hasMany(PettyCash::class);
@@ -127,7 +126,6 @@ class User extends Authenticatable
         return $this->hasMany(PettyCashApproval::class);
     }
 
-    // DistributionExpense roles
     public function distributionExpensesPrepared()
     {
         return $this->hasMany(DistributionExpense::class, 'prepared_by');
@@ -148,7 +146,6 @@ class User extends Authenticatable
         return $this->hasMany(DistributionExpense::class, 'paid_by');
     }
 
-    // Pettycash release
     public function pettyCashFund()
     {
         return $this->hasOne(PettyCashFund::class);
