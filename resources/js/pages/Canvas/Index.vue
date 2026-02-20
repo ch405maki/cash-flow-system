@@ -4,16 +4,13 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { 
   FileText, 
   UserRoundCheck, 
-  Clock, 
   CheckCircle, 
   XCircle, 
-  Download, 
   Eye,
   Pencil,
   Check,
   X,
   ChevronRight,
-  ChevronLeft,
   Upload
 } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
@@ -25,9 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import CanvasUploadDialog from '@/components/canvas/CanvasUploadDialog.vue'
 import CanvasShowDialog from '@/components/canvas/CanvasShowDialog.vue'
 import { ref } from 'vue';
@@ -54,38 +49,6 @@ const statusVariants = {
   rejected: 'bg-red-100 text-red-800 hover:bg-red-200',
 };
 
-const actionButtons = {
-  purchasing: {
-    draft: [
-      { label: 'Submit', icon: ChevronRight, action: 'submit', variant: 'default' }
-    ],
-    submitted: [],
-    pending_approval: [],
-    approved: [],
-    rejected: [
-      { label: 'Re-upload', icon: Upload, action: 'reupload', variant: 'outline' }
-    ]
-  },
-  auditor: {
-    submitted: [
-      { label: 'Review', icon: Eye, action: 'review', variant: 'default' },
-      { label: 'Approve', icon: Check, action: 'approve', variant: 'success' },
-      { label: 'Reject', icon: X, action: 'reject', variant: 'destructive' }
-    ],
-    pending_approval: [],
-    approved: [],
-    rejected: []
-  },
-  executive_director: {
-    pending_approval: [
-      { label: 'Review', icon: Eye, action: 'review', variant: 'default' },
-      { label: 'Final Approve', icon: Check, action: 'final_approve', variant: 'success' }
-    ],
-    approved: [],
-    rejected: []
-  }
-};
-
 // Dialog state management
 const showDialog = ref(false);
 const showUploadDialog = ref(false);
@@ -108,10 +71,10 @@ const breadcrumbs = [
 </script>
 
 <template>
-  <Head title="My Canvases" />
+  <Head title="Canvases" />
   
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+    <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
     <PageHeader 
       title="Canvas" 
       subtitle="Monitoring submitted canvas requests"

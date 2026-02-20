@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
@@ -31,6 +31,40 @@ interface DropdownNavItem extends NavItem {
 }
 
 const user = usePage().props.auth.user;
+
+// Load saved state from localStorage
+const loadSavedState = () => {
+    try {
+        const saved = localStorage.getItem('sidebar-dropdown-state');
+        return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+        console.error('Failed to load sidebar state:', e);
+        return {};
+    }
+};
+
+// Save state to localStorage
+const saveState = (groupId: string, itemId: string, isOpen: boolean) => {
+    try {
+        const currentState = loadSavedState();
+        if (!currentState[groupId]) {
+            currentState[groupId] = {};
+        }
+        currentState[groupId][itemId] = isOpen;
+        localStorage.setItem('sidebar-dropdown-state', JSON.stringify(currentState));
+    } catch (e) {
+        console.error('Failed to save sidebar state:', e);
+    }
+};
+
+// Initialize items with saved state
+const initializeItems = (items: DropdownNavItem[], groupId: string): DropdownNavItem[] => {
+    const savedState = loadSavedState();
+    return items.map(item => ({
+        ...item,
+        isOpen: savedState[groupId]?.[item.title] ?? item.isOpen ?? false
+    }));
+};
 
 // Executive Nav
 const executiveMainItems: NavItem[] = [
@@ -73,43 +107,38 @@ const purchasingNavItems: NavItem[] = [
   },
 ];
 
-const purchasingCanvasNavItems = ref<DropdownNavItem[]>([
-  {
-    title: 'Canvas',
-    href: '#',
-    icon: ShoppingCart,
-    isOpen: false,
-    children: [
-      { title: 'Pending', href: '/canvas' },
-      { 
-        title: 'Submitted', 
-        href: '/canvas/approval?status=submitted',
-      },
-      { 
-        title: 'Approved', 
-        href: '/canvas/approval?status=approved',
-      },
-      { 
-        title: 'P. O. Created', 
-        href: '/canvas/approval?status=poCreated',
-      },
-    ],
-  },
-]);
+const purchasingCanvasNavItems = ref<DropdownNavItem[]>(
+  initializeItems([
+    {
+      title: 'Canvas',
+      href: '#',
+      icon: ShoppingCart,
+      isOpen: false,
+      children: [
+        { title: 'Pending', href: '/canvas' },
+        { title: 'Submitted', href: '/canvas/approval?status=submitted' },
+        { title: 'Approved', href: '/canvas/approval?status=approved' },
+        { title: 'P. O. Created', href: '/canvas/approval?status=poCreated' },
+      ],
+    },
+  ], 'purchasingCanvas')
+);
 
-const purchasingPONavItems = ref<DropdownNavItem[]>([
-  {
-    title: 'Purchase Order',
-    href: '#',
-    icon: ShoppingCart,
-    isOpen: false,
-    children: [
-      { title: 'Draft', href: '/purchase-orders?status=draft' },
-      { title: 'For EOD Approval', href: '/purchase-orders?status=forEOD' },
-      { title: 'P. O. Status', href: '/purchase-orders?status=approved' },
-    ],
-  },
-]);
+const purchasingPONavItems = ref<DropdownNavItem[]>(
+  initializeItems([
+    {
+      title: 'Purchase Order',
+      href: '#',
+      icon: ShoppingCart,
+      isOpen: false,
+      children: [
+        { title: 'Draft', href: '/purchase-orders?status=draft' },
+        { title: 'For EOD Approval', href: '/purchase-orders?status=forEOD' },
+        { title: 'P. O. Status', href: '/purchase-orders?status=approved' },
+      ],
+    },
+  ], 'purchasingPO')
+);
 
 // Property Custodian
 const custodianNavItems: NavItem[] = [
@@ -148,19 +177,21 @@ const custodianApprovalItems: NavItem[] = [
   },
 ];
 
-const custodianReportItems = ref<DropdownNavItem[]>([
+const custodianReportItems = ref<DropdownNavItem[]>(
+  initializeItems([
     {
-        title: 'Reports',
-        href: '/reports',
-        icon: BarChart3,
-        isOpen: false,
-        children: [
-          { title: 'Approved Request', href: '/reports/request?status=forPO'},
-          { title: 'Completed Request', href: '/reports/request?status=released'},
-          { title: 'Rejected Request', href: '/reports/request?status=rejected'},
-        ],
+      title: 'Reports',
+      href: '/reports',
+      icon: BarChart3,
+      isOpen: false,
+      children: [
+        { title: 'Approved Request', href: '/reports/request?status=forPO' },
+        { title: 'Completed Request', href: '/reports/request?status=released' },
+        { title: 'Rejected Request', href: '/reports/request?status=rejected' },
+      ],
     },
-  ]);
+  ], 'custodianReports')
+);
 
 // Staff
 const staffNavItems: NavItem[] = [
@@ -176,21 +207,23 @@ const staffNavItems: NavItem[] = [
   },
 ];
 
-const staffRequestItems = ref<DropdownNavItem[]>([
+const staffRequestItems = ref<DropdownNavItem[]>(
+  initializeItems([
     {
-        title: 'Request',
-        href: '/reports',
-        icon: FileText,
-        isOpen: false,
-        children: [
-        { title: 'Create', href: '/request/create'},
-        { title: 'Pending', href: '/request'},
-        { title: 'On Process', href: '/request/to-receive'},
-        { title: 'Completed', href: '/request/released'},
-        { title: 'Rejected', href: '/request/rejected'},
-        ],
+      title: 'Request',
+      href: '/reports',
+      icon: FileText,
+      isOpen: false,
+      children: [
+        { title: 'Create', href: '/request/create' },
+        { title: 'Pending', href: '/request' },
+        { title: 'On Process', href: '/request/to-receive' },
+        { title: 'Completed', href: '/request/released' },
+        { title: 'Rejected', href: '/request/rejected' },
+      ],
     },
-  ]);
+  ], 'staffRequests')
+);
 
 // Accounting
 const accountingNavItems: NavItem[] = [
@@ -242,44 +275,50 @@ const accountingAuditNavItems: NavItem[] = [
   },
 ];
 
-const reportItems = ref<DropdownNavItem[]>([
+const reportItems = ref<DropdownNavItem[]>(
+  initializeItems([
     {
-        title: 'Reports',
-        href: '/reports',
-        icon: BarChart3,
-        isOpen: false,
-        children: [
-        { title: 'Released Request Summary', href: '/reports/request-released'},
-        { title: 'Petty Cash Summary', href: '/reports/petty-cash'},
-        { title: 'Purchase Order Summary', href: '/reports/po-summary'},
-        { title: 'Voucher Summary', href: '/reports/voucher-summary'},
-        ],
+      title: 'Reports',
+      href: '/reports',
+      icon: BarChart3,
+      isOpen: false,
+      children: [
+        { title: 'Released Request Summary', href: '/reports/request-released' },
+        { title: 'Petty Cash Summary', href: '/reports/petty-cash' },
+        { title: 'Purchase Order Summary', href: '/reports/po-summary' },
+        { title: 'Voucher Summary', href: '/reports/voucher-summary' },
+      ],
     },
-  ]);
+  ], 'reports')
+);
 
-const bursarReportItems = ref<DropdownNavItem[]>([
+const bursarReportItems = ref<DropdownNavItem[]>(
+  initializeItems([
     {
-        title: 'Reports',
-        href: '/reports',
-        icon: BarChart3,
-        isOpen: false,
-        children: [
-        { title: 'Petty Cash Summary', href: '/reports/petty-cash'},
-        ],
+      title: 'Reports',
+      href: '/reports',
+      icon: BarChart3,
+      isOpen: false,
+      children: [
+        { title: 'Petty Cash Summary', href: '/reports/petty-cash' },
+      ],
     },
-  ]);
+  ], 'bursarReports')
+);
 
-const purchasingReportItems = ref<DropdownNavItem[]>([
+const purchasingReportItems = ref<DropdownNavItem[]>(
+  initializeItems([
     {
-        title: 'Reports',
-        href: '/reports',
-        icon: BarChart3,
-        isOpen: false,
-        children: [
-        { title: 'Purchase Order Summary', href: '/reports/po-summary'},
-        ],
+      title: 'Reports',
+      href: '/reports',
+      icon: BarChart3,
+      isOpen: false,
+      children: [
+        { title: 'Purchase Order Summary', href: '/reports/po-summary' },
+      ],
     },
-  ]);
+  ], 'purchasingReports')
+);
 
 const footerNavItems: NavItem[] = [
   {
@@ -333,22 +372,24 @@ const adminNavItems: NavItem[] = [
   {
     title: 'Logs',
     href: '/logs',
-    icon: Logs ,
+    icon: Logs,
   },
 ];
 
 // Pettycash
-const pettyCashNavItems = ref<DropdownNavItem[]>([
-  {
-    title: 'Petty Cash',
-    href: '#',
-    icon: SquarePen,
-    isOpen: false,
-    children: [
-      { title: 'Petty Cash', href: '/petty-cash' },
-    ],
-  },
-]);
+const pettyCashNavItems = ref<DropdownNavItem[]>(
+  initializeItems([
+    {
+      title: 'Petty Cash',
+      href: '#',
+      icon: SquarePen,
+      isOpen: false,
+      children: [
+        { title: 'Petty Cash', href: '/petty-cash' },
+      ],
+    },
+  ], 'pettyCash')
+);
 
 const bursarNavItems: NavItem[] = [
   {
@@ -362,6 +403,47 @@ const bursarNavItems: NavItem[] = [
     icon: SquarePen,
   },
 ];
+
+// Handle state updates from NavMain
+const handleStateUpdate = (groupId: string, itemId: string, isOpen: boolean) => {
+    saveState(groupId, itemId, isOpen);
+    
+    // Also update the local refs to keep UI in sync
+    const updateItems = (items: Ref<DropdownNavItem[]>) => {
+        const item = items.value.find(i => i.title === itemId);
+        if (item) {
+            item.isOpen = isOpen;
+        }
+    };
+
+    // Update the appropriate ref based on groupId
+    switch(groupId) {
+        case 'purchasingCanvas':
+            updateItems(purchasingCanvasNavItems);
+            break;
+        case 'purchasingPO':
+            updateItems(purchasingPONavItems);
+            break;
+        case 'custodianReports':
+            updateItems(custodianReportItems);
+            break;
+        case 'staffRequests':
+            updateItems(staffRequestItems);
+            break;
+        case 'reports':
+            updateItems(reportItems);
+            break;
+        case 'bursarReports':
+            updateItems(bursarReportItems);
+            break;
+        case 'purchasingReports':
+            updateItems(purchasingReportItems);
+            break;
+        case 'pettyCash':
+            updateItems(pettyCashNavItems);
+            break;
+    }
+};
 </script>
 
 <template>
@@ -387,58 +469,142 @@ const bursarNavItems: NavItem[] = [
             <NavMain :items="executiveMainItems" group-label="Navigation"/>
             <NavMain :items="executiveApprovalItems" group-label="For Approval"/>
             <div v-if="user?.is_petty_cash === 1">
-              <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
+              <NavMain 
+                :items="pettyCashNavItems" 
+                group-label="Petty Cash"
+                group-id="pettyCash"
+                @update:state="handleStateUpdate"
+              />
             </div>
-            <NavMain :items="reportItems" group-label="Reports" />
+            <NavMain 
+              :items="reportItems" 
+              group-label="Reports"
+              group-id="reports"
+              @update:state="handleStateUpdate"
+            />
           </div>
           
           <div v-if="user?.role === 'accounting'">
             <NavMain :items="accountingNavItems" group-label="Navigation"/>
             <NavMain :items="accountingCheckNavItems" group-label="Check"/>
             <div v-if="user?.is_petty_cash === 1">
-              <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
+              <NavMain 
+                :items="pettyCashNavItems" 
+                group-label="Petty Cash"
+                group-id="pettyCash"
+                @update:state="handleStateUpdate"
+              />
             </div>
-            <NavMain :items="staffRequestItems" group-label="Request"/>
-            <NavMain :items="reportItems" group-label="Reports" />
+            <NavMain 
+              :items="staffRequestItems" 
+              group-label="Request"
+              group-id="staffRequests"
+              @update:state="handleStateUpdate"
+            />
+            <NavMain 
+              :items="reportItems" 
+              group-label="Reports"
+              group-id="reports"
+              @update:state="handleStateUpdate"
+            />
           </div>
           
           <div v-if="user?.role === 'audit'">
             <NavMain :items="accountingAuditNavItems" group-label="Audit"/>
-            <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
-            <NavMain :items="reportItems" group-label="Reports" />
+            <NavMain 
+              :items="pettyCashNavItems" 
+              group-label="Petty Cash"
+              group-id="pettyCash"
+              @update:state="handleStateUpdate"
+            />
+            <NavMain 
+              :items="reportItems" 
+              group-label="Reports"
+              group-id="reports"
+              @update:state="handleStateUpdate"
+            />
           </div>
 
           <div v-if="user?.role === 'bursar'">
             <NavMain :items="bursarNavItems" group-label="Petty Cash"/>
-            <NavMain :items="staffRequestItems" group-label="Request"/>
-            <NavMain :items="bursarReportItems" group-label="Reports"/>
+            <NavMain 
+              :items="staffRequestItems" 
+              group-label="Request"
+              group-id="staffRequests"
+              @update:state="handleStateUpdate"
+            />
+            <NavMain 
+              :items="bursarReportItems" 
+              group-label="Reports"
+              group-id="bursarReports"
+              @update:state="handleStateUpdate"
+            />
           </div>
 
           <div v-if="user?.role === 'property_custodian'">
             <NavMain :items="custodianNavItems" group-label="Navigation"/>
             <NavMain :items="custodianApprovalItems" group-label="Request for Purchase"/>
             <div v-if="user?.is_petty_cash === 1">
-              <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
+              <NavMain 
+                :items="pettyCashNavItems" 
+                group-label="Petty Cash"
+                group-id="pettyCash"
+                @update:state="handleStateUpdate"
+              />
             </div>
-            <NavMain :items="custodianReportItems" group-label="Reports" />
+            <NavMain 
+              :items="custodianReportItems" 
+              group-label="Reports"
+              group-id="custodianReports"
+              @update:state="handleStateUpdate"
+            />
           </div>
 
           <div v-if="user?.role === 'purchasing'">
             <NavMain :items="purchasingNavItems" group-label="Navigation"/>
-            <NavMain :items="purchasingCanvasNavItems" group-label="Transaction"/>
-            <NavMain :items="purchasingPONavItems"/>
+            <NavMain 
+              :items="purchasingCanvasNavItems" 
+              group-label="Transaction"
+              group-id="purchasingCanvas"
+              @update:state="handleStateUpdate"
+            />
+            <NavMain 
+              :items="purchasingPONavItems"
+              group-id="purchasingPO"
+              @update:state="handleStateUpdate"
+            />
             <div v-if="user?.is_petty_cash === 1">
-              <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
+              <NavMain 
+                :items="pettyCashNavItems" 
+                group-label="Petty Cash"
+                group-id="pettyCash"
+                @update:state="handleStateUpdate"
+              />
             </div>
-            <NavMain :items="purchasingReportItems" group-label="Reports" />
+            <NavMain 
+              :items="purchasingReportItems" 
+              group-label="Reports"
+              group-id="purchasingReports"
+              @update:state="handleStateUpdate"
+            />
           </div>
 
           <div v-if="user?.role === 'staff' || user?.role === 'department_head'">
             <NavMain :items="staffNavItems" group-label="Navigation"/>
             <div v-if="user?.is_petty_cash === 1">
-              <NavMain :items="pettyCashNavItems" group-label="Petty Cash"/>
+              <NavMain 
+                :items="pettyCashNavItems" 
+                group-label="Petty Cash"
+                group-id="pettyCash"
+                @update:state="handleStateUpdate"
+              />
             </div>
-            <NavMain :items="staffRequestItems" group-label="Request"/>
+            <NavMain 
+              :items="staffRequestItems" 
+              group-label="Request"
+              group-id="staffRequests"
+              @update:state="handleStateUpdate"
+            />
           </div>
         </SidebarContent>
 
