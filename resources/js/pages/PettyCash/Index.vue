@@ -2,7 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue'
 import { type BreadcrumbItem } from '@/types'
 import { Head, router, usePage } from '@inertiajs/vue3'
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 
 import PettyCashHeader from '@/components/pettyCash/index/PettyCashHeader.vue'
 import ThresholdStatus from '@/components/pettyCash/index/ThresholdStatus.vue'
@@ -37,8 +37,6 @@ const props = defineProps<{
   }
   today: string
 }>()
-
-
 
 // Check if there are petty cash records - FIXED VERSION
 const hasItem = computed(() => {

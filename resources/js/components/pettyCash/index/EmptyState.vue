@@ -10,10 +10,6 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty'
 
-interface Props {
-  user: any
-}
-
 const emit = defineEmits(['create-petty-cash'])
 </script>
 
