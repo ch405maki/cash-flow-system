@@ -2,12 +2,11 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Download, ArrowLeft, Clock, CheckCircle, UserRoundCheck, XCircle, Check, X, Pencil, ChevronRight, ChevronDown, FileText, LoaderCircle } from 'lucide-vue-next';
+import { Download, CheckCircle, UserRoundCheck, XCircle, Check, X, Pencil, ChevronRight, ChevronDown, FileText, LoaderCircle } from 'lucide-vue-next';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
-import axios from 'axios';
 import { useToast } from 'vue-toastification';
 import { formatDateTime } from '@/lib/utils';
 import { router } from '@inertiajs/vue3';
@@ -224,7 +223,6 @@ function viewRequest(id: number) {
     <DialogContent 
       :class="[
         showTwoColumnLayout ? 'sm:max-w-[94vw]' : 'sm:max-w-[625px]',
-        'max-h-[94vh] overflow-y-auto'
       ]">
       <DialogHeader>
         <DialogTitle class="flex items-center gap-2">
@@ -486,6 +484,7 @@ function viewRequest(id: number) {
               </div>
             </template>
           </div>
+          <!-- Action Button  -->
           <div class="bottom-0 flex justify-end pb-6">
             <!-- Action Buttons -->
             <div class="flex justify-between items-center mt-4">
