@@ -1,16 +1,22 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Download, CheckCircle, UserRoundCheck, XCircle, Check, X, Pencil, ChevronRight, ChevronDown, FileText, LoaderCircle } from 'lucide-vue-next';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Textarea } from '@/components/ui/textarea';
-import { useForm } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
+import { useForm } from '@inertiajs/vue3';
 import { useToast } from 'vue-toastification';
-import { formatDateTime } from '@/lib/utils';
 import { router } from '@inertiajs/vue3';
+import { formatDateTime } from '@/lib/utils';
+
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/PageHeader.vue';
+
+// Import components
+import CanvasStatusBadge from './canvasShowPartials/CanvasStatusBadge.vue';
+import CanvasAlertNote from './canvasShowPartials/CanvasAlertNote.vue';
+import CanvasApprovalHistory from './canvasShowPartials/CanvasApprovalHistory.vue';
+import CanvasFileList from './canvasShowPartials/CanvasFileList.vue';
+import CanvasComments from './canvasShowPartials/CanvasComments.vue';
+import CanvasPdfPreview from './canvasShowPartials/CanvasPdfPreview.vue';
+import CanvasActionButtons from './canvasShowPartials/CanvasActionButtons.vue';
 
 const toast = useToast();
 
@@ -33,18 +39,9 @@ const emit = defineEmits(['update:open', 'updated', 'reupload']);
 
 // State management
 const isDownloading = ref(false);
-const showAlert = ref(true);
 const showTwoColumnLayout = ref(false);
-const selectedFileForPreview = ref<{
-  id: number;
-  original_filename: string;
-  mimetype?: string;
-  url?: string;
-} | null>(null);
-const previewLoading = ref(false);
-const previewError = ref(false);
+const selectedFileForPreview = ref<any>(null);
 const dialogWidth = ref('sm:max-w-[625px]');
-const showAllApprovals = ref(false)
 
 // Computed properties
 const isApproved = computed(
@@ -57,25 +54,6 @@ const approvedFile = computed(() => {
   if (props.canvas.status !== 'approved' && props.canvas.status !== 'poCreated') return null;
   return props.canvas.selected_files?.[0]?.file || null;
 });
-
-// Status icons and variants
-const statusIcons = {
-  draft: Pencil,
-  submitted: ChevronRight,
-  pending_approval: UserRoundCheck,
-  approved: CheckCircle,
-  rejected: XCircle,
-  forEOD: CheckCircle,
-};
-
-const statusVariants = {
-  draft: 'bg-gray-100 text-gray-800',
-  submitted: 'bg-blue-100 text-blue-800',
-  pending_approval: 'bg-purple-100 text-purple-800',
-  approved: 'bg-green-100 text-green-800',
-  rejected: 'bg-red-100 text-red-800',
-  forEOD: 'bg-green-100 text-green-800',
-};
 
 // Form handling
 const form = useForm({
@@ -103,36 +81,12 @@ const openPdfPreview = (file) => {
   selectedFileForPreview.value = file;
   showTwoColumnLayout.value = true;
   dialogWidth.value = 'sm:max-w-[90vw]';
-  previewLoading.value = true;
-  previewError.value = false;
-
-  if (!isPdfFile(file)) {
-    previewError.value = true;
-    previewLoading.value = false;
-  }
 };
 
 const closePreviewPanel = () => {
   showTwoColumnLayout.value = false;
   dialogWidth.value = 'sm:max-w-[625px]';
   selectedFileForPreview.value = null;
-};
-
-const getPreviewUrl = (file) => {
-  if (file.url) {
-    return file.url;
-  }
-  
-  return route('canvas.preview.file', { 
-    canvas: props.canvas.id, 
-    file: file.id 
-  }) + '#view=fitH&toolbar=0&navpanes=0';
-};
-
-const isPdfFile = (file) => {
-  return file?.mimetype?.includes('pdf') || 
-    file?.original_filename?.toLowerCase().endsWith('.pdf') ||
-    file?.type?.includes('pdf');
 };
 
 // File download
@@ -171,10 +125,8 @@ const handleAction = async (action) => {
   try {
     const payload = {
       status: "approved", 
-      comments: "This file Approved",
-      remarks: "",
-      selected_file: 1, 
-      file_remarks: "I want this supplier" 
+      comments: form.comments,
+      remarks: form.remarks,
     };
 
     if (action === 'final_approve') {
@@ -183,9 +135,8 @@ const handleAction = async (action) => {
         return;
       }
       
-      payload.selected_files = {
-        [form.selected_file]: { remarks: form.file_remarks }
-      };
+      payload.selected_file = form.selected_file;
+      payload.file_remarks = form.file_remarks;
     }
 
     await form.patch(route('canvas.update', props.canvas.id), {
@@ -220,17 +171,16 @@ function viewRequest(id: number) {
 
 <template>
   <Dialog :open="open" @update:open="val => emit('update:open', val)">
-    <DialogContent 
-      :class="[
-        showTwoColumnLayout ? 'sm:max-w-[94vw]' : 'sm:max-w-[625px]',
-      ]">
+    <DialogContent :class="dialogWidth">
       <DialogHeader>
         <DialogTitle class="flex items-center gap-2">
-          <PageHeader 
-            :title="`${canvas.title || 'Untitled Canvas'}`" 
-          />
+          <PageHeader :title="canvas.title || 'Untitled Canvas'" />
         </DialogTitle>
-        <DialogDescription v-if="hasLinkedOrder" class="hover:underline hover:cursor-pointer hover:text-violet-800" @click="viewRequest(canvas.request_to_order.id)">
+        <DialogDescription 
+          v-if="hasLinkedOrder" 
+          class="hover:underline hover:cursor-pointer hover:text-violet-800" 
+          @click="viewRequest(canvas.request_to_order.id)"
+        >
           Linked to Order # {{ canvas.request_to_order.order_no }} | {{ formatDateTime(canvas.request_to_order.order_date) }}
         </DialogDescription>
         <DialogDescription v-else>
@@ -240,19 +190,13 @@ function viewRequest(id: number) {
 
       <div class="flex h-[calc(90vh-150px)]">
         <!-- Left Column (Main Content) -->
-        <div class="flex-1 " :class="showTwoColumnLayout ? 'w-1/2 border-r pr-4' : 'w-full'">
+        <div class="flex-1" :class="showTwoColumnLayout ? 'w-1/2 border-r pr-4' : 'w-full'">
           <div class="grid gap-6 py-4">
             <!-- Status and Upload Info -->
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <h3 class="text-sm font-medium text-muted-foreground">Status</h3>
-                <Badge :class="statusVariants[canvas.status]" class="mt-1">
-                  <component 
-                    :is="statusIcons[canvas.status]" 
-                    class="h-3 w-3 mr-1" 
-                  />
-                  <span class="capitalize">{{ canvas.status.replace('_', ' ') }}</span>
-                </Badge>
+                <CanvasStatusBadge :status="canvas.status" />
               </div>
               <div>
                 <h3 class="text-sm font-medium text-muted-foreground">Canvas Uploaded</h3>
@@ -262,35 +206,14 @@ function viewRequest(id: number) {
               </div>
             </div>
 
-            <Alert 
-              v-if="showAlert && canvas?.note && canvas.note.length > 0" 
-              variant="warning" 
-              class="relative pr-10"
-            >
-              <AlertCircle class="h-4 w-4" />
-              <AlertTitle>Note!</AlertTitle>
-              <AlertDescription>
-                <template v-if="canvas">
-                  <h1 class="capitalize">{{ canvas?.note || 'No Note' }}</h1>
-                </template>
-                <template v-else>
-                  (Canvas details not available)
-                </template>
-              </AlertDescription>
-              <button
-                class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground"
-                @click="showAlert = false"
-                aria-label="Dismiss"
-              >
-                <X class="h-4 w-4 text-yellow-700" />
-              </button>
-            </Alert>
+            <!-- Alert Note -->
+            <CanvasAlertNote :note="canvas.note" />
 
             <!-- Approved File Section -->
             <div 
+              v-if="approvedFile"
               class="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded border"
               @click="openPdfPreview(approvedFile)"
-              v-if="approvedFile"
             >
               <div class="flex items-center gap-3">
                 <FileText class="h-5 w-5 text-muted-foreground" />
@@ -311,316 +234,58 @@ function viewRequest(id: number) {
             </div>
 
             <!-- Approval History -->
-            <div v-if="canvas.approvals?.length">
-              <h3 class="text-sm font-medium text-muted-foreground mb-3">History</h3>
-              <div class="relative pl-6">
-                <div class="absolute left-0 top-0 h-full w-0.5 bg-gray-200 ml-4"></div>
+            <CanvasApprovalHistory :approvals="canvas.approvals" />
 
-                <!-- Show only the first item unless expanded -->
-                <div
-                  v-for="(approval, index) in showAllApprovals 
-                    ? canvas.approvals 
-                    : canvas.approvals.slice(0, 1)"
-                  :key="approval.id"
-                  class="relative mb-6 last:mb-0"
-                >
-                  <div
-                    class="bg-green-500 border-2 border-green-500 absolute -left-6 top-0 h-8 w-8 rounded-full flex items-center justify-center z-10"
-                  >
-                    <component
-                      :is="approval.approved ? CheckCircle : CheckCircle"
-                      class="h-5 w-5 text-white"
-                    />
-                  </div>
-
-                  <div
-                    v-if="index < (showAllApprovals ? canvas.approvals.length - 1 : 0)"
-                    class="absolute -left-6 top-8 h-full w-0.5 ml-4 bg-green-500 z-0"
-                  ></div>
-
-                  <div class="pl-4">
-                    <div class="flex items-center justify-between">
-                      <div class="flex items-center gap-2">
-                        <span class="capitalize">{{ approval.user.username }}</span>
-                      </div>
-                      <span class="text-xs text-muted-foreground">
-                        {{ formatDateTime(approval.created_at) }}
-                      </span>
-                    </div>
-
-                    <div class="mt-1 flex items-start gap-2">
-                      <p class="text-sm">
-                        "{{ approval.comments || 'No comments' }}"
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Toggle Button -->
-              <div v-if="canvas.approvals.length > 1" class="flex justify-center mt-2">
-                <button
-                  class="flex items-center text-sm text-gray-500 hover:text-gray-700 transition"
-                  @click="showAllApprovals = !showAllApprovals"
-                >
-                  <span>
-                    {{ showAllApprovals ? "Show less" : `+${canvas.approvals.length - 1} more` }}
-                  </span>
-                  <ChevronDown
-                    class="h-4 w-4 ml-1 transition-transform"
-                    :class="{ 'rotate-180': showAllApprovals }"
-                  />
-                </button>
-              </div>
-            </div>
-
-            <!-- Only show these sections if NOT approved -->
-            <template v-if="!isApproved || isApproved">
-              <!-- Files Section -->
-              <div v-if="userRole != 'executive_director' && canvas.files?.length && canvas.status != 'approved' && canvas.status != 'poCreated' ">
+            <!-- Files Section -->
+            <template v-if="!isApproved && canvas.files?.length">
+              <div>
                 <h3 class="text-sm font-medium text-muted-foreground">Files</h3>
-                <div class="space-y-2 mt-2">
-                  <div 
-                    v-for="file in canvas.files" 
-                    :key="file.id" 
-                    class="flex items-center justify-between p-2 border rounded cursor-pointer transition-colors duration-150 relative z-10"
-                    :class="{
-                      'bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-700': selectedFileForPreview?.id === file.id,
-                      'hover:bg-gray-100 dark:hover:bg-gray-800': selectedFileForPreview?.id !== file.id
-                    }"
-                    @click="openPdfPreview(file)"
-                  >
-                    <div class="flex items-center gap-2">
-                      <FileText class="max-h-4 max-w-4 text-muted-foreground" />
-                      <span class="text-sm text-foreground truncate max-w-[200px]">
-                        {{ file.original_filename }}
-                      </span>
-                      <Badge v-if="isPdfFile(file)" variant="secondary" class="text-xs">
-                        PDF
-                      </Badge>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      @click.stop="downloadFile(file.id)"
-                    >
-                      <Download class="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- File Selection for Executive -->
-              <div v-if="userRole === 'executive_director' && canvas.files?.length">
-                <h3 class="text-sm font-medium text-muted-foreground">Select File for Approval</h3>
-                <p class="text-xs text-muted-foreground mb-2">Please select one file to approve</p>
-                
-                <div class="space-y-2 mt-2">
-                  <div 
-                    v-for="file in canvas.files" 
-                    :key="file.id" 
-                    class="flex items-center items-start gap-3 p-2 border rounded hover:bg-zinc-50 dark:hover:bg-zinc-900 cursor-pointer"
-                    :class="{
-                      'bg-zinc-50 dark:bg-zinc-800 border-zinc-200': selectedFileForPreview?.id === file.id
-                    }"
-                    @click="openPdfPreview(file)"
-                  >
-                    <div class="flex items-center h-5">
-                      <input
-                        type="radio"
-                        :id="`file-${file.id}`"
-                        v-model="form.selected_file"
-                        :value="file.id"
-                        class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
-                        @click.stop
-                      >
-                    </div>
-                    
-                    <div class="flex-1 flex items-center justify-between">
-                      <label :for="`file-${file.id}`" class="flex items-center gap-2 cursor-pointer">
-                        <FileText class="max-h-4 max-w-4 text-muted-foreground" />
-                        <span class="text-sm">{{ file.original_filename }}</span>
-                        <Badge v-if="isPdfFile(file)" variant="secondary" class="text-xs">
-                          PDF
-                        </Badge>
-                      </label>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        @click.stop="downloadFile(file.id)"
-                      >
-                        <Download class="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Comments Section -->
-              <div v-if="['audit', 'executive_director'].includes(userRole) ">
-                <h3 class="text-sm font-medium text-muted-foreground">
-                  {{ userRole === 'audit' ? 'Audit Comments' : 'Approval Comments' }}
-                </h3>
-                <Textarea
-                  v-model="form.comments"
-                  :placeholder="userRole === 'audit' 
-                    ? 'Enter your audit comments...' 
-                    : 'Enter approval comments...'"
-                  class="mt-2"
-                />
-              </div>
-              <!-- Comments Section for Purchasing-->
-              <div v-if="['purchasing'].includes(userRole) && canvas.status != 'approved' && canvas.status != 'poCreated'">
-                <h3 class="text-sm font-medium text-muted-foreground">
-                  {{ userRole === 'audit' ? 'Audit Comments' : 'Approval Comments' }}
-                </h3>
-                <Textarea
-                  v-model="form.comments"
-                  :placeholder="userRole === 'audit' 
-                    ? 'Enter your audit comments...' 
-                    : 'Enter approval comments...'"
-                  class="mt-2"
+                <CanvasFileList 
+                  :files="canvas.files"
+                  :selected-file-id="selectedFileForPreview?.id"
+                  @preview="openPdfPreview"
+                  @download="downloadFile"
+                  @select-file="(file) => form.selected_file = file.id"
                 />
               </div>
             </template>
-          </div>
-          <!-- Action Button  -->
-          <div class="bottom-0 flex justify-end pb-6">
-            <!-- Action Buttons -->
-            <div class="flex justify-between items-center mt-4">
-              <!-- Purchasing Officer Actions -->
-              <div v-if="userRole === 'purchasing'">
-                <div v-if="canvas.status === 'draft'" class="space-x-2">
-                  <Button 
-                    variant="default" 
-                    @click="handleAction('submited')"
-                    :disabled="form.processing"
-                  >
-                    <ChevronRight class="h-4 w-4" />
-                    Submit
-                  </Button>
-                </div>
-                <div v-if="canvas.status === 'rejected'" class="space-x-2">
-                  <Button 
-                    variant="outline" 
-                    @click="emit('reupload')"
-                  >
-                    <Upload class="h-4 w-4 mr-1" />
-                    Re-upload
-                  </Button>
-                </div>
-              </div>
 
-              <!-- audit Actions -->
-              <div v-if="userRole === 'audit' && canvas.status !== 'pending'" class="space-x-2">
-                <Button 
-                  variant="success" 
-                  @click="handleAction('approve')"
-                  :disabled="form.processing || !form.comments.trim()"
-                >
-                  <Check class="h-4 w-4 mr-1" />
-                  Submit
-                </Button>
-              </div>
-
-              <!-- Executive Director Actions -->
-              <div v-if="(userRole === 'executive_director')" class="space-x-2">
-                <div v-if="canvas.status === 'pending_approval' || canvas.status === 'submitted'">
-                  <Button 
-                    variant="success" 
-                    size="sm"
-                    @click="handleAction('final_approve')"
-                    :disabled="form.processing || !form.comments.trim() || !form.selected_file"
-                  >
-                    <Check class="h-4 w-4 mr-1" />
-                    Approve
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Common Actions -->
-            <div class="flex gap-2 justify-end mt-4">
-              <div v-if="canvas.status === 'approved' && userRole === 'purchasing'">
-                <Button 
-                  variant="default" 
-                  @click="goToCreate()"
-                  :disabled="form.processing"
-                >
-                  <Check class="h-4 w-4 mr-1" />
-                  Create P.O.
-                </Button>
-              </div>
-
-              <Button 
-                v-else-if="approvedFile"
-                @click="downloadFile(approvedFile.id)"
-                class="gap-2"
-                variant="outline"
-                :disabled="isDownloading"
-              >
-                <Download class="h-4 w-4" />
-                <span>{{ isDownloading ? 'Downloading...' : 'Download Approved File' }}</span>
-              </Button>
+            <!-- Comments Section -->
+            <div v-if="['audit', 'executive_director', 'purchasing'].includes(userRole) && !isApproved">
+              <CanvasComments
+                v-model="form.comments"
+                :label="userRole === 'audit' ? 'Audit Comments' : 'Approval Comments'"
+                :placeholder="userRole === 'audit' 
+                  ? 'Enter your audit comments...' 
+                  : 'Enter approval comments...'"
+              />
             </div>
           </div>
+
+          <!-- Action Buttons -->
+          <CanvasActionButtons
+            :user-role="userRole"
+            :canvas-status="canvas.status"
+            :has-comments="!!form.comments.trim()"
+            :has-selected-file="!!form.selected_file"
+            :is-downloading="isDownloading"
+            :has-approved-file="!!approvedFile"
+            :form-processing="form.processing"
+            @action="handleAction"
+            @reupload="emit('reupload')"
+            @create-po="goToCreate"
+            @download-approved="downloadFile(approvedFile?.id)"
+          />
         </div>
 
         <!-- Right Column (PDF Preview) -->
-        <div 
-          v-if="showTwoColumnLayout" 
-          class="w-1/2 pl-4 overflow-y-auto"
-        >
-          <div class="sticky top-0 bg-background z-10 pb-2 flex justify-between items-center">
-            <h3 class="text-sm font-medium">Preview: {{ selectedFileForPreview?.original_filename }}</h3>
-            <Button variant="ghost" size="sm" @click="closePreviewPanel">
-              <X class="h-4 w-4" />
-            </Button>
-          </div>
-          
-          <div v-if="isPdfFile(selectedFileForPreview)" class="h-full border rounded-md overflow-hidden bg-gray-50">
-            <div v-if="previewLoading" class="h-full flex items-center justify-center">
-              <LoaderCircle class="h-8 w-8 animate-spin text-gray-400" />
-            </div>
-            
-            <iframe 
-              v-show="!previewLoading && !previewError"
-              :src="getPreviewUrl(selectedFileForPreview)"
-              class="w-full h-full min-h-[500px]"
-              frameborder="0"
-              @load="previewLoading = false"
-              @error="previewError = true"
-            />
-            
-            <div v-if="previewError" class="h-full flex flex-col items-center justify-center p-4 text-center">
-              <XCircle class="h-8 w-8 text-red-400 mb-2" />
-              <p class="text-sm text-gray-600">Failed to load preview</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                class="mt-4"
-                @click="downloadFile(selectedFileForPreview.id)"
-              >
-                <Download class="h-4 w-4 mr-2" />
-                Download Instead
-              </Button>
-            </div>
-          </div>
-          
-          <div v-else class="h-full flex flex-col items-center justify-center p-4 text-center">
-            <FileText class="h-12 w-12 mx-auto text-gray-400 mb-2" />
-            <p class="text-sm text-gray-500">Preview not available for this file type</p>
-            <Button 
-              variant="default" 
-              size="sm" 
-              class="mt-4"
-              @click="downloadFile(selectedFileForPreview.id)"
-            >
-              <Download class="h-4 w-4 mr-2" />
-              Download File
-            </Button>
-          </div>
-        </div>
+        <CanvasPdfPreview
+          v-if="showTwoColumnLayout && selectedFileForPreview"
+          :file="selectedFileForPreview"
+          :canvas-id="canvas.id"
+          @close="closePreviewPanel"
+          @download="downloadFile"
+        />
       </div>
     </DialogContent>
   </Dialog>
