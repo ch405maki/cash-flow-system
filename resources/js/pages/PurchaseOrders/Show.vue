@@ -655,7 +655,7 @@ function openPreview(file: any) {
   </AppLayout>
 
     <!-- Print section hidden print:block -->
-    <div id="print-section" class="">
+    <div id="print-section" class="hidden print:block">
       <div>
         <FormHeader text="Purchase Order" :bordered="false"  />
       </div>

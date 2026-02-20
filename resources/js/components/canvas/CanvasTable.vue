@@ -53,10 +53,9 @@ function getDisplayFileName(canvas) {
           <TableHead>Status</TableHead>
           <TableHead>Remarks</TableHead>
           <TableHead>Uploaded</TableHead>
-          <TableHead class="text-right">Actions</TableHead>
+          <TableHead class="text-right">Action</TableHead>
         </TableRow>
       </TableHeader>
-
       <TableBody>
         <TableRow
           v-for="canvas in canvases"
@@ -67,12 +66,16 @@ function getDisplayFileName(canvas) {
           <TableCell>
             <div class="flex items-center gap-4">
               <FileText class="h-5 w-5 text-muted-foreground" />
-              <div class="font-medium capitalize">
-                {{ getDisplayFileName(canvas) }}
-              </div>
+                <div class="grid gap-1">
+                  <div class="font-medium">
+                    {{ canvas.title || 'Untitled Canvas' }}
+                  </div>
+                  <div class="text-xs text-muted-foreground">
+                    {{ canvas.files?.length || 0 }} files
+                  </div>
+                </div>
             </div>
           </TableCell>
-
           <TableCell>
             <Badge :class="statusVariants[canvas.status]">
               <component :is="statusIcons[canvas.status]" class="h-3 w-3 mr-1" />

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, XCircle, Download, FileText } from 'lucide-vue-next';
+import { LoaderCircle, X, Download, FileText } from 'lucide-vue-next';
 import { router } from '@inertiajs/vue3';
 
 const props = defineProps<{
@@ -64,7 +64,7 @@ const isPdfFile = (file: any) => {
       />
       
       <div v-if="previewError" class="h-full flex flex-col items-center justify-center p-4 text-center">
-        <XCircle class="h-8 w-8 text-red-400 mb-2" />
+        <X class="h-8 w-8 text-red-400 mb-2" />
         <p class="text-sm text-gray-600">Failed to load preview</p>
         <Button 
           variant="outline" 

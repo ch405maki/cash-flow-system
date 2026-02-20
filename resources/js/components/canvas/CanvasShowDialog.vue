@@ -171,8 +171,8 @@ function viewRequest(id: number) {
 
 <template>
   <Dialog :open="open" @update:open="val => emit('update:open', val)">
-    <DialogContent :class="dialogWidth">
-      <DialogHeader>
+    <DialogContent :class="[dialogWidth, 'p-0 gap-0 flex flex-col max-h-[90vh]']">
+      <DialogHeader class="px-4 py-4 border-b shrink-0">
         <DialogTitle class="flex items-center gap-2">
           <PageHeader :title="canvas.title || 'Untitled Canvas'" />
         </DialogTitle>
@@ -188,10 +188,14 @@ function viewRequest(id: number) {
         </DialogDescription>
       </DialogHeader>
 
-      <div class="flex h-[calc(90vh-150px)]">
-        <!-- Left Column (Main Content) -->
-        <div class="flex-1" :class="showTwoColumnLayout ? 'w-1/2 border-r pr-4' : 'w-full'">
-          <div class="grid gap-6 py-4">
+      <!-- Scrollable Content Area - Dynamic Height -->
+      <div class="flex flex-1 min-h-0">
+        <!-- Left Column (Main Content) - Scrollable -->
+        <div 
+          class="overflow-y-auto px-6 py-4 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent" 
+          :class="showTwoColumnLayout ? 'w-1/2 border-r' : 'w-full'"
+        >
+          <div class="grid gap-4 py-4">
             <!-- Status and Upload Info -->
             <div class="grid grid-cols-2 gap-4">
               <div>
@@ -261,8 +265,20 @@ function viewRequest(id: number) {
               />
             </div>
           </div>
+        </div>
 
-          <!-- Action Buttons -->
+        <!-- Right Column (PDF Preview) -->
+        <CanvasPdfPreview
+          v-if="showTwoColumnLayout && selectedFileForPreview"
+          :file="selectedFileForPreview"
+          :canvas-id="canvas.id"
+          @close="closePreviewPanel"
+          @download="downloadFile"
+        />
+      </div>
+      <!-- Fixed Footer with Action Buttons -->
+      <DialogFooter class="border-t px-4 mt-0 shrink-0">
+        <div class="w-full flex justify-end gap-2">
           <CanvasActionButtons
             :user-role="userRole"
             :canvas-status="canvas.status"
@@ -277,16 +293,7 @@ function viewRequest(id: number) {
             @download-approved="downloadFile(approvedFile?.id)"
           />
         </div>
-
-        <!-- Right Column (PDF Preview) -->
-        <CanvasPdfPreview
-          v-if="showTwoColumnLayout && selectedFileForPreview"
-          :file="selectedFileForPreview"
-          :canvas-id="canvas.id"
-          @close="closePreviewPanel"
-          @download="downloadFile"
-        />
-      </div>
+      </DialogFooter>
     </DialogContent>
   </Dialog>
 </template>

@@ -8,7 +8,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { router } from '@inertiajs/vue3'
 import { FileText } from 'lucide-vue-next'
 
