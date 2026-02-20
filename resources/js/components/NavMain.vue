@@ -15,26 +15,39 @@ import { Link, usePage } from '@inertiajs/vue3';
 import type { NavItem } from '@/types';
 import type { SharedData } from '@/types';
 
-    interface DropdownNavItem extends NavItem {
+interface DropdownNavItem extends NavItem {
     children?: NavItem[];
     isOpen?: boolean;
-    }
+    id?: string; // Add optional id for unique identification
+}
 
-    const props = defineProps<{
+const props = defineProps<{
     items: DropdownNavItem[] | Ref<DropdownNavItem[]>;
     groupLabel?: string;
-    }>()
+    groupId?: string; // Add groupId to identify this group
+}>()
 
-    const page = usePage<SharedData>()
+const emit = defineEmits<{
+    (e: 'update:state', groupId: string, itemId: string, isOpen: boolean): void
+}>()
 
-    // make a local reactive copy so Collapsible can toggle it
-    const localItems = ref<DropdownNavItem[]>([])
+const page = usePage<SharedData>()
 
-    watchEffect(() => {
+// make a local reactive copy so Collapsible can toggle it
+const localItems = ref<DropdownNavItem[]>([])
+
+watchEffect(() => {
     const arr = Array.isArray(props.items) ? props.items : props.items.value
     // clone so we can mutate isOpen safely
     localItems.value = arr.map(i => ({ ...i }))
-    })
+})
+
+// Handle dropdown toggle and emit state change
+const handleToggle = (itemId: string, isOpen: boolean) => {
+    if (props.groupId) {
+        emit('update:state', props.groupId, itemId, isOpen)
+    }
+}
 </script>
 
 <template>
@@ -54,7 +67,10 @@ import type { SharedData } from '@/types';
 
             <!-- Dropdown -->
             <template v-else>
-            <Collapsible v-model:open="item.isOpen">
+            <Collapsible 
+                v-model:open="item.isOpen"
+                @update:open="(val) => handleToggle(item.title, val)"
+            >
                 <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
                     <SidebarMenuButton :is-active="item.children?.some(c => c.href === page.url)">
