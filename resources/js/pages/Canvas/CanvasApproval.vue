@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { Head, router, usePage } from '@inertiajs/vue3';
-import { formatDate } from '@/lib/utils'
+import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { UserRoundCheck, Clock, CheckCircle, XCircle, Download } from 'lucide-vue-next';
-import axios from 'axios';
+import { UserRoundCheck, CircleCheck , XCircle } from 'lucide-vue-next';
 import {
   Tabs,
   TabsContent,
@@ -44,9 +42,10 @@ const filteredCanvases = computed(() => {
 
 const statusIcons = {
   pending_approval: UserRoundCheck,
-  approved: CheckCircle,
+  approved: CircleCheck,
+  submitted: CircleCheck,
   rejected: XCircle,
-  poCreated: CheckCircle,
+  poCreated: CircleCheck,
 };
 
 const statusVariants = {

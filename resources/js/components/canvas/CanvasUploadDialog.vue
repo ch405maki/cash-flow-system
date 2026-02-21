@@ -1,12 +1,15 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { useForm } from '@inertiajs/vue3';
+import { useToast } from 'vue-toastification';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { UploadCloud, X, Check } from 'lucide-vue-next';
+import { UploadCloud, X, Check, FileText, AlertCircle } from 'lucide-vue-next';
 import axios from 'axios';
+
+const toast = useToast();
 
 const props = defineProps({
   request: {
@@ -30,6 +33,7 @@ const emit = defineEmits(['update:open', 'success']);
 const isOpen = ref(props.open);
 const fileInput = ref(null);
 const files = ref([]);
+const isUploading = ref(false);
 
 watch(() => props.open, (val) => {
   isOpen.value = val;
@@ -39,6 +43,7 @@ watch(isOpen, (val) => {
   emit('update:open', val);
   if (!val) {
     files.value = [];
+    form.reset();
   }
 });
 
@@ -49,6 +54,12 @@ const form = useForm({
   request_to_order_id: props.request?.id || null,
   canvas_id: props.canvas?.id || null
 });
+
+// Set initial title if editing
+if (props.canvas) {
+  form.title = props.canvas.title || '';
+  form.note = props.canvas.note || '';
+}
 
 const handleFileChange = (e) => {
   const newFiles = Array.from(e.target.files);
@@ -63,25 +74,47 @@ const handleFileChange = (e) => {
     const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB
     
     if (!isValidType) {
-      alert(`File ${file.name} has invalid type. Only PDF, DOC, DOCX, XLS, XLSX are allowed.`);
+      toast.warning(`File ${file.name} has invalid type. Only PDF, DOC, DOCX, XLS, XLSX are allowed.`);
     }
     if (!isValidSize) {
-      alert(`File ${file.name} is too large. Maximum size is 10MB.`);
+      toast.warning(`File ${file.name} is too large. Maximum size is 10MB.`);
     }
     
     return isValidType && isValidSize;
   });
   
-  files.value = [...files.value, ...validFiles];
-  form.files = files.value;
+  if (validFiles.length > 0) {
+    files.value = [...files.value, ...validFiles];
+    form.files = files.value;
+  }
 };
 
 const removeFile = (index) => {
+  const removedFile = files.value[index];
   files.value.splice(index, 1);
   form.files = files.value;
+  toast.info(`Removed ${removedFile.name}`);
 };
 
 const submit = () => {
+  // Validate minimum files
+  if (files.value.length < 1) {
+    toast.error('Please upload at least 1 file');
+    return;
+  }
+
+  // Validate title
+  if (!form.title.trim()) {
+    toast.error('Please enter a canvas title');
+    return;
+  }
+
+  isUploading.value = true;
+  
+  const loadingToast = toast.info('Uploading canvas...', {
+    timeout: false
+  });
+
   const formData = new FormData();
 
   if (props.canvas) {
@@ -111,14 +144,46 @@ const submit = () => {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
-  }).then(response => {
+  })
+  .then(response => {
+    toast.dismiss(loadingToast);
+    toast.success(
+      props.canvas 
+        ? 'Canvas updated successfully!' 
+        : 'Canvas uploaded successfully!',
+      {
+        icon: Check,
+        timeout: 5000
+      }
+    );
+    
     emit('success');
     isOpen.value = false;
     form.reset();
     files.value = [];
-  }).catch(error => {
+  })
+  .catch(error => {
+    toast.dismiss(loadingToast);
     console.error('Upload failed:', error);
-    alert('Upload failed. Please try again.');
+    
+    if (error.response?.data?.errors) {
+      // Display validation errors
+      const errors = error.response.data.errors;
+      Object.keys(errors).forEach(key => {
+        errors[key].forEach(message => {
+          toast.error(message);
+        });
+      });
+    } else if (error.response?.data?.message) {
+      toast.error(error.response.data.message);
+    } else {
+      toast.error('Upload failed. Please try again.', {
+        icon: AlertCircle
+      });
+    }
+  })
+  .finally(() => {
+    isUploading.value = false;
   });
 };
 </script>
@@ -140,14 +205,6 @@ const submit = () => {
       </DialogHeader>
       
       <form @submit.prevent="submit" class="grid gap-4 py-4">
-        <div v-if="request" class="space-y-2">
-          <label class="block text-sm font-medium">Order Number</label>
-          <Input 
-            :model-value="request.order_no" 
-            disabled
-          />
-        </div>
-
         <div class="space-y-2">
           <label for="title" class="block text-sm font-medium">Canvas Title</label>
           <Input
@@ -159,10 +216,11 @@ const submit = () => {
         </div>
 
         <div class="space-y-2">
-          <label class="block text-sm font-medium">Canvas Files (Minimum 3)</label>
+          <label class="block text-sm font-medium">Canvas Files (Minimum 1)</label>
           <div 
             @click="fileInput?.click()"
             class="flex flex-col items-center justify-center px-6 py-12 border-2 border-dashed rounded-md cursor-pointer hover:bg-accent/50 transition-colors"
+            :class="{ 'opacity-50 pointer-events-none': isUploading }"
           >
             <UploadCloud class="mx-auto h-12 w-12 text-muted-foreground" />
             <div class="mt-4 flex text-sm text-muted-foreground">
@@ -179,6 +237,7 @@ const submit = () => {
               @change="handleFileChange"
               accept=".pdf,.doc,.docx,.xls,.xlsx"
               multiple
+              :disabled="isUploading"
             />
           </div>
           
@@ -194,14 +253,15 @@ const submit = () => {
                 size="sm" 
                 @click.stop="removeFile(index)"
                 class="h-6 w-6 p-0 text-destructive"
+                :disabled="isUploading"
               >
                 <X class="h-3 w-3" />
               </Button>
             </div>
           </div>
           
-          <p v-if="files.length < 3" class="text-sm text-muted-foreground mt-2">
-            {{ 3 - files.length }} more files required
+          <p v-if="files.length < 1" class="text-sm text-muted-foreground mt-2">
+            {{ 1 - files.length }} more file required
           </p>
         </div>
 
@@ -211,6 +271,7 @@ const submit = () => {
             id="note"
             v-model="form.note"
             placeholder="Add any internal notes"
+            :disabled="isUploading"
           />
         </div>
 
@@ -219,16 +280,18 @@ const submit = () => {
             variant="outline" 
             type="button" 
             @click="isOpen = false"
+            :disabled="isUploading"
           >
             Cancel
           </Button>
           <Button 
             type="submit" 
-            :disabled="files.length < 1"
+            :disabled="files.length < 1 || !form.title.trim() || isUploading"
             class="gap-2"
           >
-            <Check class="h-4 w-4" />
-            <span>{{ canvas ? 'Update Canvas' : 'Upload Canvas' }}</span>
+            <span v-if="isUploading" class="animate-spin mr-2">⏳</span>
+            <Check v-else class="h-4 w-4" />
+            <span>{{ isUploading ? 'Uploading...' : (canvas ? 'Update Canvas' : 'Upload Canvas') }}</span>
           </Button>
         </div>
       </form>

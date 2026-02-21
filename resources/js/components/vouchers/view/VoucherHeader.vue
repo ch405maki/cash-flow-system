@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import { Undo2, SquarePen, Printer, Check, X, BadgeCheck, History, Clock, CheckCircle, } from 'lucide-vue-next';
+import { Undo2, SquarePen, Printer, Check, X, BadgeCheck, History, CircleCheck, } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
 import AuditVerificationDialog from '@/components/vouchers/AuditVerificationDialog.vue';
 import DirectorVerificationDialog from '@/components/vouchers/DirectorVerificationDialog.vue';
 import AuditForReview from '@/components/vouchers/AuditForReview.vue';
 import { router } from '@inertiajs/vue3';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { ref } from 'vue'
 import ReceiptUploadDialog from '@/components/vouchers/upload/ReceiptUploadDialog.vue';
-import { Upload } from 'lucide-vue-next';
 import AddCheckDialog from '@/components/vouchers/edit/AddCheckDialog.vue';
 import { useToast } from 'vue-toastification'
 import { formatDateTime } from '@/lib/utils'
@@ -171,7 +169,7 @@ function goToEditVoucher(voucherId, e) {
                             class="bg-green-500 border-2 border-green-500 absolute -left-6 top-0 h-8 w-8 rounded-full flex items-center justify-center z-10"
                         >
                             <component
-                            :is="approval.approved ? CheckCircle : CheckCircle"
+                            :is="approval.approved ? CircleCheck : CircleCheck"
                             class="h-5 w-5 text-white"
                             />
                         </div>

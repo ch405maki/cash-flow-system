@@ -7,9 +7,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { FileText, Download } from 'lucide-vue-next';
+import { FileText } from 'lucide-vue-next';
+import { formatDate } from '@/lib/utils'
 
 defineProps({
   canvases: Array,
@@ -17,31 +17,6 @@ defineProps({
   statusVariants: Object
 })
 const emit = defineEmits(['show', 'download'])
-
-function formatDate(dateStr) {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit'
-  })
-}
-
-// Helper function to display appropriate filename
-function getDisplayFileName(canvas) {
-  // For approved canvases, show the selected file name
-  if (canvas.status === 'approved' && canvas.selected_files?.length > 0) {
-    return canvas.selected_files[0].file?.original_filename || 'Selected file';
-  }
-  
-  // For canvases with multiple files, show count
-  if (canvas.files?.length > 0) {
-    return `${canvas.files.length} file${canvas.files.length > 1 ? 's' : ''}`;
-  }
-  
-  // Fallback to title if no files
-  return canvas.title || 'No files';
-}
 </script>
 
 <template>
@@ -51,9 +26,8 @@ function getDisplayFileName(canvas) {
         <TableRow>
           <TableHead>File</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead>Remarks</TableHead>
           <TableHead>Uploaded</TableHead>
-          <TableHead class="text-right">Action</TableHead>
+          <TableHead class="text-right">Remarks</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -71,7 +45,15 @@ function getDisplayFileName(canvas) {
                     {{ canvas.title || 'Untitled Canvas' }}
                   </div>
                   <div class="text-xs text-muted-foreground">
-                    {{ canvas.files?.length || 0 }} files
+                    <!-- If approved or PO created, show approved filename -->
+                    <template v-if="['approved', 'poCreated'].includes(canvas.status)">
+                      {{ canvas.selected_files?.[0]?.file?.original_filename || 'No approved file' }}
+                    </template>
+
+                    <!-- Otherwise show file count -->
+                    <template v-else>
+                      {{ canvas.files?.length || 0 }} files
+                    </template>
                   </div>
                 </div>
             </div>
@@ -82,24 +64,9 @@ function getDisplayFileName(canvas) {
               <span class="capitalize">{{ canvas.status.replace('_', ' ') }}</span>
             </Badge>
           </TableCell>
-
-          <TableCell class="text-muted-foreground truncate max-w-[200px]">
-            {{ canvas.note || canvas.selected_files[0]?.remarks || 'No remarks' }}
-          </TableCell>
-
           <TableCell>{{ formatDate(canvas.created_at) }}</TableCell>
-
-          <TableCell class="text-right">
-            <Button
-              variant="outline"
-              size="sm"
-              class="gap-1"
-              @click.stop="emit('download', canvas)"
-              :disabled="canvas.isDownloading"
-            >
-              <Download class="h-3.5 w-3.5" />
-              <span>{{ canvas.isDownloading ? 'Downloading...' : 'Download' }}</span>
-            </Button>
+          <TableCell class="text-right text-muted-foreground">
+            {{ canvas.note || canvas.selected_files[0]?.remarks || 'No remarks' }}
           </TableCell>
         </TableRow>
       </TableBody>

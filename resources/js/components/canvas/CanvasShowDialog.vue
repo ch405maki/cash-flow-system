@@ -4,6 +4,7 @@ import { useForm } from '@inertiajs/vue3';
 import { useToast } from 'vue-toastification';
 import { router } from '@inertiajs/vue3';
 import { formatDateTime } from '@/lib/utils';
+import { FileText, Download } from 'lucide-vue-next';
 
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -158,6 +159,37 @@ const handleAction = async (action) => {
   }
 };
 
+const showFilesSection = computed(() => {
+  if (!props.canvas.files?.length) return false;
+
+  if (props.userRole === 'audit') return true;
+
+  return !isApproved.value;
+});
+
+const showCommentsSection = computed(() => {
+  const role = props.userRole;
+  const status = props.canvas.status;
+
+  if (role === 'audit') {
+    return true;
+  }
+
+  if (['approved', 'poCreated'].includes(status)) {
+    return false;
+  }
+
+  if (role === 'purchasing' && status === 'submitted') {
+    return false;
+  }
+
+  if (role === 'executive_director') {
+    return true;
+  }
+
+  return false;
+});
+
 // Navigation
 function goToCreate() {
   const canvasId = props.canvas?.id;
@@ -167,6 +199,12 @@ function goToCreate() {
 function viewRequest(id: number) {
   router.visit(`/request-to-order/${id}`);
 }
+
+const isPdfFile = (file: any) => {
+  return file?.mimetype?.includes('pdf') || 
+    file?.original_filename?.toLowerCase().endsWith('.pdf') ||
+    file?.type?.includes('pdf');
+};
 </script>
 
 <template>
@@ -184,7 +222,7 @@ function viewRequest(id: number) {
           Linked to Order # {{ canvas.request_to_order.order_no }} | {{ formatDateTime(canvas.request_to_order.order_date) }}
         </DialogDescription>
         <DialogDescription v-else>
-          Not linked to any order. 
+          Not linked to any order.
         </DialogDescription>
       </DialogHeader>
 
@@ -216,7 +254,7 @@ function viewRequest(id: number) {
             <!-- Approved File Section -->
             <div 
               v-if="approvedFile"
-              class="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded border"
+              class="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded-lg border"
               @click="openPdfPreview(approvedFile)"
             >
               <div class="flex items-center gap-3">
@@ -241,26 +279,28 @@ function viewRequest(id: number) {
             <CanvasApprovalHistory :approvals="canvas.approvals" />
 
             <!-- Files Section -->
-            <template v-if="!isApproved && canvas.files?.length">
+            <template v-if="showFilesSection">
               <div>
                 <h3 class="text-sm font-medium text-muted-foreground">Files</h3>
-                <CanvasFileList 
+                <CanvasFileList
                   :files="canvas.files"
-                  :selected-file-id="selectedFileForPreview?.id"
+                  :selected-file-id="form.selected_file"
+                  :preview-file-id="selectedFileForPreview?.id"
+                  :user-role="userRole"
                   @preview="openPdfPreview"
                   @download="downloadFile"
-                  @select-file="(file) => form.selected_file = file.id"
+                  @update:selectedFileId="val => form.selected_file = val"
                 />
               </div>
             </template>
 
             <!-- Comments Section -->
-            <div v-if="['audit', 'executive_director', 'purchasing'].includes(userRole) && !isApproved">
+            <div v-if="showCommentsSection">
               <CanvasComments
                 v-model="form.comments"
                 :label="userRole === 'audit' ? 'Audit Comments' : 'Approval Comments'"
-                :placeholder="userRole === 'audit' 
-                  ? 'Enter your audit comments...' 
+                :placeholder="userRole === 'audit'
+                  ? 'Enter your audit comments...'
                   : 'Enter approval comments...'"
               />
             </div>

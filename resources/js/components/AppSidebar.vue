@@ -115,7 +115,7 @@ const purchasingCanvasNavItems = ref<DropdownNavItem[]>(
       icon: ShoppingCart,
       isOpen: false,
       children: [
-        { title: 'Pending', href: '/canvas' },
+        { title: 'Draft', href: '/canvas' },
         { title: 'Submitted', href: '/canvas/approval?status=submitted' },
         { title: 'Approved', href: '/canvas/approval?status=approved' },
         { title: 'P. O. Created', href: '/canvas/approval?status=poCreated' },

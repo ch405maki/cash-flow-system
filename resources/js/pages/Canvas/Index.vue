@@ -42,7 +42,7 @@ const statusIcons = {
 };
 
 const statusVariants = {
-  draft: 'bg-gray-100 text-gray-800 hover:bg-gray-200',
+  draft: 'bg-gray-400 text-gray-800 hover:bg-gray-200',
   submitted: 'bg-blue-100 text-blue-800 hover:bg-blue-200',
   pending_approval: 'bg-purple-100 text-purple-800 hover:bg-purple-200',
   approved: 'bg-green-100 text-green-800 hover:bg-green-200',
