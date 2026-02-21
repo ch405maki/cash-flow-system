@@ -27,21 +27,6 @@ function formatDate(dateStr) {
   })
 }
 
-// Helper function to display appropriate filename
-function getDisplayFileName(canvas) {
-  // For approved canvases, show the selected file name
-  if (canvas.status === 'approved' && canvas.selected_files?.length > 0) {
-    return canvas.selected_files[0].file?.original_filename || 'Selected file';
-  }
-  
-  // For canvases with multiple files, show count
-  if (canvas.files?.length > 0) {
-    return `${canvas.files.length} file${canvas.files.length > 1 ? 's' : ''}`;
-  }
-  
-  // Fallback to title if no files
-  return canvas.title || 'No files';
-}
 </script>
 
 <template>
@@ -53,7 +38,6 @@ function getDisplayFileName(canvas) {
           <TableHead>Status</TableHead>
           <TableHead>Remarks</TableHead>
           <TableHead>Uploaded</TableHead>
-          <TableHead class="text-right">Action</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -88,19 +72,6 @@ function getDisplayFileName(canvas) {
           </TableCell>
 
           <TableCell>{{ formatDate(canvas.created_at) }}</TableCell>
-
-          <TableCell class="text-right">
-            <Button
-              variant="outline"
-              size="sm"
-              class="gap-1"
-              @click.stop="emit('download', canvas)"
-              :disabled="canvas.isDownloading"
-            >
-              <Download class="h-3.5 w-3.5" />
-              <span>{{ canvas.isDownloading ? 'Downloading...' : 'Download' }}</span>
-            </Button>
-          </TableCell>
         </TableRow>
       </TableBody>
     </Table>

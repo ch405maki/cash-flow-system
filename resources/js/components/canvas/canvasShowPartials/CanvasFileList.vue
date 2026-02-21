@@ -27,7 +27,7 @@ const isPdfFile = (file: any) => {
     <div 
       v-for="file in files" 
       :key="file.id" 
-      class="flex items-center justify-between p-2 border rounded cursor-pointer transition-colors duration-150"
+      class="flex items-center justify-between p-2 border rounded-lg cursor-pointer transition-colors duration-150"
       :class="{
         'bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-700': selectedFileId === file.id,
         'hover:bg-gray-100 dark:hover:bg-gray-800': selectedFileId !== file.id
