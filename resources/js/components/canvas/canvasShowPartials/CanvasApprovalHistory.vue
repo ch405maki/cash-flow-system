@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, ChevronDown } from 'lucide-vue-next';
+import { CircleCheck, ChevronDown } from 'lucide-vue-next';
 import { formatDateTime } from '@/lib/utils';
 
 const props = defineProps<{
@@ -28,7 +28,7 @@ const showAllApprovals = ref(false);
         <div
           class="bg-green-500 border-2 border-green-500 absolute -left-6 top-0 h-8 w-8 rounded-full flex items-center justify-center z-10"
         >
-          <CheckCircle class="h-5 w-5 text-white" />
+          <CircleCheck class="h-5 w-5 text-white" />
         </div>
 
         <div

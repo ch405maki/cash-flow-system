@@ -388,7 +388,7 @@ const submitForm = async () => {
             </div>
 
             <!-- Items Table -->
-            <div class="border rounded-lg overflow-hidden">
+            <div class="overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -483,8 +483,8 @@ const submitForm = async () => {
                     </TableCell>
                     
                     <!-- Actions Column -->
-                    <TableCell class="text-right">
-                      <div class="flex justify-end gap-2" v-if="item.editing">
+                    <TableCell class="text-right" v-if="item.editing">
+                      <div class="flex justify-end gap-2">
                         <Button
                           variant="outline"
                           size="sm"

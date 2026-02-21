@@ -1,23 +1,26 @@
 <script setup lang="ts">
 import { Textarea } from '@/components/ui/textarea';
 
-defineProps<{
+const props = defineProps<{
   modelValue: string
   placeholder?: string
   label?: string
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
 }>();
 </script>
 
 <template>
   <div>
-    <h3 v-if="label" class="text-sm font-medium text-muted-foreground">{{ label }}</h3>
+    <h3 v-if="label" class="text-sm font-medium text-muted-foreground">
+      {{ label }}
+    </h3>
+
     <Textarea
-      :value="modelValue"
-      @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
+      :model-value="modelValue"
+      @update:model-value="emit('update:modelValue', $event)"
       :placeholder="placeholder"
       class="mt-2"
     />

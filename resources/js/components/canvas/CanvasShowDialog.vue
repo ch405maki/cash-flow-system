@@ -4,6 +4,7 @@ import { useForm } from '@inertiajs/vue3';
 import { useToast } from 'vue-toastification';
 import { router } from '@inertiajs/vue3';
 import { formatDateTime } from '@/lib/utils';
+import { FileText, Download } from 'lucide-vue-next';
 
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -158,6 +159,26 @@ const handleAction = async (action) => {
   }
 };
 
+const showCommentsSection = computed(() => {
+  // must be allowed role
+  if (!['audit', 'executive_director', 'purchasing'].includes(props.userRole)) {
+    return false;
+  }
+
+  // never show if approved
+  if (isApproved.value) {
+    return false;
+  }
+
+  // special restriction:
+  // hide when purchasing AND status is submitted
+  if (props.userRole === 'purchasing' && props.canvas.status === 'submitted') {
+    return false;
+  }
+
+  return true;
+});
+
 // Navigation
 function goToCreate() {
   const canvasId = props.canvas?.id;
@@ -167,6 +188,12 @@ function goToCreate() {
 function viewRequest(id: number) {
   router.visit(`/request-to-order/${id}`);
 }
+
+const isPdfFile = (file: any) => {
+  return file?.mimetype?.includes('pdf') || 
+    file?.original_filename?.toLowerCase().endsWith('.pdf') ||
+    file?.type?.includes('pdf');
+};
 </script>
 
 <template>
@@ -216,7 +243,7 @@ function viewRequest(id: number) {
             <!-- Approved File Section -->
             <div 
               v-if="approvedFile"
-              class="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded border"
+              class="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded-lg border"
               @click="openPdfPreview(approvedFile)"
             >
               <div class="flex items-center gap-3">
@@ -244,23 +271,26 @@ function viewRequest(id: number) {
             <template v-if="!isApproved && canvas.files?.length">
               <div>
                 <h3 class="text-sm font-medium text-muted-foreground">Files</h3>
-                <CanvasFileList 
+                <CanvasFileList
+                  v-if="canvas.files?.length && canvas.status !== 'approved' && canvas.status !== 'poCreated'"
                   :files="canvas.files"
-                  :selected-file-id="selectedFileForPreview?.id"
+                  :selected-file-id="form.selected_file"
+                  :preview-file-id="selectedFileForPreview?.id"
+                  :user-role="userRole"
                   @preview="openPdfPreview"
                   @download="downloadFile"
-                  @select-file="(file) => form.selected_file = file.id"
+                  @update:selectedFileId="val => form.selected_file = val"
                 />
               </div>
             </template>
 
             <!-- Comments Section -->
-            <div v-if="['audit', 'executive_director', 'purchasing'].includes(userRole) && !isApproved">
+            <div v-if="showCommentsSection">
               <CanvasComments
                 v-model="form.comments"
                 :label="userRole === 'audit' ? 'Audit Comments' : 'Approval Comments'"
-                :placeholder="userRole === 'audit' 
-                  ? 'Enter your audit comments...' 
+                :placeholder="userRole === 'audit'
+                  ? 'Enter your audit comments...'
                   : 'Enter approval comments...'"
               />
             </div>

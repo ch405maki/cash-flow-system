@@ -73,6 +73,18 @@ const emit = defineEmits<{
         </div>
       </div>
 
+      <!-- Download Approved File Button -->
+      <Button 
+        v-else-if="canvasStatus === 'approved' || hasApprovedFile"
+        @click="$emit('download-approved')"
+        class="gap-2"
+        variant="outline"
+        :disabled="isDownloading"
+      >
+        <Download class="h-4 w-4" />
+        <span>{{ isDownloading ? 'Downloading...' : 'Download Approved File' }}</span>
+      </Button>
+
       <!-- Create PO Button -->
       <div v-if="canvasStatus === 'approved' && userRole === 'purchasing'">
         <Button 
@@ -84,18 +96,6 @@ const emit = defineEmits<{
           Create P.O.
         </Button>
       </div>
-
-      <!-- Download Approved File Button -->
-      <Button 
-        v-else-if="hasApprovedFile"
-        @click="$emit('download-approved')"
-        class="gap-2"
-        variant="outline"
-        :disabled="isDownloading"
-      >
-        <Download class="h-4 w-4" />
-        <span>{{ isDownloading ? 'Downloading...' : 'Download Approved File' }}</span>
-      </Button>
     </div>
   </div>
 </template>
