@@ -159,24 +159,35 @@ const handleAction = async (action) => {
   }
 };
 
+const showFilesSection = computed(() => {
+  if (!props.canvas.files?.length) return false;
+
+  if (props.userRole === 'audit') return true;
+
+  return !isApproved.value;
+});
+
 const showCommentsSection = computed(() => {
-  // must be allowed role
-  if (!['audit', 'executive_director', 'purchasing'].includes(props.userRole)) {
+  const role = props.userRole;
+  const status = props.canvas.status;
+
+  if (role === 'audit') {
+    return true;
+  }
+
+  if (['approved', 'poCreated'].includes(status)) {
     return false;
   }
 
-  // never show if approved
-  if (isApproved.value) {
+  if (role === 'purchasing' && status === 'submitted') {
     return false;
   }
 
-  // special restriction:
-  // hide when purchasing AND status is submitted
-  if (props.userRole === 'purchasing' && props.canvas.status === 'submitted') {
-    return false;
+  if (role === 'executive_director') {
+    return true;
   }
 
-  return true;
+  return false;
 });
 
 // Navigation
@@ -211,7 +222,7 @@ const isPdfFile = (file: any) => {
           Linked to Order # {{ canvas.request_to_order.order_no }} | {{ formatDateTime(canvas.request_to_order.order_date) }}
         </DialogDescription>
         <DialogDescription v-else>
-          Not linked to any order. 
+          Not linked to any order.
         </DialogDescription>
       </DialogHeader>
 
@@ -268,11 +279,10 @@ const isPdfFile = (file: any) => {
             <CanvasApprovalHistory :approvals="canvas.approvals" />
 
             <!-- Files Section -->
-            <template v-if="!isApproved && canvas.files?.length">
+            <template v-if="showFilesSection">
               <div>
                 <h3 class="text-sm font-medium text-muted-foreground">Files</h3>
                 <CanvasFileList
-                  v-if="canvas.files?.length && canvas.status !== 'approved' && canvas.status !== 'poCreated'"
                   :files="canvas.files"
                   :selected-file-id="form.selected_file"
                   :preview-file-id="selectedFileForPreview?.id"

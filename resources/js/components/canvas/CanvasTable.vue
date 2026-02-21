@@ -7,9 +7,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { FileText, Download } from 'lucide-vue-next';
+import { FileText } from 'lucide-vue-next';
+import { formatDate } from '@/lib/utils'
 
 defineProps({
   canvases: Array,
@@ -17,16 +17,6 @@ defineProps({
   statusVariants: Object
 })
 const emit = defineEmits(['show', 'download'])
-
-function formatDate(dateStr) {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit'
-  })
-}
-
 </script>
 
 <template>
@@ -36,8 +26,8 @@ function formatDate(dateStr) {
         <TableRow>
           <TableHead>File</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead>Remarks</TableHead>
           <TableHead>Uploaded</TableHead>
+          <TableHead class="text-right">Remarks</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -55,7 +45,15 @@ function formatDate(dateStr) {
                     {{ canvas.title || 'Untitled Canvas' }}
                   </div>
                   <div class="text-xs text-muted-foreground">
-                    {{ canvas.files?.length || 0 }} files
+                    <!-- If approved or PO created, show approved filename -->
+                    <template v-if="['approved', 'poCreated'].includes(canvas.status)">
+                      {{ canvas.selected_files?.[0]?.file?.original_filename || 'No approved file' }}
+                    </template>
+
+                    <!-- Otherwise show file count -->
+                    <template v-else>
+                      {{ canvas.files?.length || 0 }} files
+                    </template>
                   </div>
                 </div>
             </div>
@@ -66,12 +64,10 @@ function formatDate(dateStr) {
               <span class="capitalize">{{ canvas.status.replace('_', ' ') }}</span>
             </Badge>
           </TableCell>
-
-          <TableCell class="text-muted-foreground truncate max-w-[200px]">
+          <TableCell>{{ formatDate(canvas.created_at) }}</TableCell>
+          <TableCell class="text-right text-muted-foreground">
             {{ canvas.note || canvas.selected_files[0]?.remarks || 'No remarks' }}
           </TableCell>
-
-          <TableCell>{{ formatDate(canvas.created_at) }}</TableCell>
         </TableRow>
       </TableBody>
     </Table>
