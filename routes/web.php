@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Users\UserController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\AccessController;
@@ -20,9 +21,8 @@ use Illuminate\Notifications\Notifiable;
 use App\Notifications\WelcomeEmail;
 
 
-Route::get('/', function () {
-    return Inertia::render('auth/Login');
-})->name('home');
+Route::get('/', [AuthenticatedSessionController::class, 'create'])
+        ->name('home');
 
 // Dashboard Route
 Route::middleware(['auth', 'verified'])->group(function () {
