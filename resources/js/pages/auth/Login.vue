@@ -52,20 +52,24 @@ const submit = () => {
                 </div>
 
                 <div class="grid gap-2">
-                    <div class="flex items-center justify-between">
-                        <Label for="password">Password</Label>
-                        <TextLink v-if="canResetPassword" :href="route('password.request')" class="text-sm">
+                    <Label for="password">Password</Label>
+                    <div class="relative">
+                        <Input
+                            id="password"
+                            type="password"
+                            required
+                            autocomplete="current-password"
+                            v-model="form.password"
+                            placeholder="Password"
+                        />
+                        <TextLink 
+                            v-if="canResetPassword" 
+                            :href="route('password.request')" 
+                            class="absolute right-0 top-0 text-sm -mt-6"
+                        >
                             Forgot password?
                         </TextLink>
                     </div>
-                    <Input
-                        id="password"
-                        type="password"
-                        required
-                        autocomplete="current-password"
-                        v-model="form.password"
-                        placeholder="Password"
-                    />
                     <InputError :message="form.errors.password" />
                 </div>
 
