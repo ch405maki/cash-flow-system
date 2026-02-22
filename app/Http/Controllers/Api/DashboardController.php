@@ -327,22 +327,57 @@ class DashboardController extends Controller
         $pendingVouchers = Voucher::where('status', 'forAudit')->count();
         $pendingPettyCash = PettyCash::where('status', 'submitted')->count();
         
-        // Get recent pending items
-        $recentCanvasses = Canvas::with('creator')
+        // Get recent pending items with relationships and computed fields
+        $recentCanvasses = Canvas::with(['creator', 'files'])
             ->where('status', 'submitted')
             ->latest()
             ->limit(5)
-            ->get();
-            
-        $recentVouchers = Voucher::where('status', 'forAudit')
+            ->get()
+            ->map(function ($canvas) {
+                return [
+                    'id' => $canvas->id,
+                    'title' => $canvas->title,
+                    'status' => $canvas->status,
+                    'files_count' => $canvas->files->count(),
+                    'created_at' => $canvas->created_at,
+                ];
+            });
+        
+        $recentVouchers = Voucher::with(['user'])
+            ->where('status', 'forAudit')
             ->latest()
             ->limit(5)
-            ->get();
-            
-        $recentPettyCash = PettyCash::where('status', 'submitted')
+            ->get()
+            ->map(function ($voucher) {
+                return [
+                    'id' => $voucher->id,
+                    'voucher_no' => $voucher->voucher_no,
+                    'payee' => $voucher->payee,
+                    'check_amount' => $voucher->check_amount,
+                    'created_at' => $voucher->created_at,
+                ];
+            });
+        
+        $recentPettyCash = PettyCash::with(['user', 'items'])
+            ->where('status', 'submitted')
             ->latest()
             ->limit(5)
-            ->get();
+            ->get()
+            ->map(function ($pettyCash) {
+                // Calculate total amount from items
+                $totalAmount = $pettyCash->items->sum('amount');
+                
+                return [
+                    'id' => $pettyCash->id,
+                    'pcv_no' => $pettyCash->pcv_no,
+                    'paid_to' => $pettyCash->paid_to,
+                    'remarks' => $pettyCash->remarks, // Added remarks field
+                    'date' => $pettyCash->date,
+                    'total_amount' => $totalAmount,
+                    'items_count' => $pettyCash->items->count(),
+                    'created_at' => $pettyCash->created_at,
+                ];
+            });
         
         return Inertia::render('Dashboard/Audit/Index', [
             'isDepartmentUser' => true,
