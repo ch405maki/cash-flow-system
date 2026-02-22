@@ -323,13 +323,21 @@ class DashboardController extends Controller
         $user = Auth::user();
         
         // Get counts for dashboard stats
-        $pendingCanvasses = Canvas::where('status', 'submitted')->count();
+        $pendingCanvasses = Canvas::where('status', 'submitted')
+            ->whereDoesntHave('approvals', function ($query) {
+                $query->where('role', 'audit');
+            })
+            ->count();
+            
         $pendingVouchers = Voucher::where('status', 'forAudit')->count();
         $pendingPettyCash = PettyCash::where('status', 'submitted')->count();
         
         // Get recent pending items with relationships and computed fields
-        $recentCanvasses = Canvas::with(['creator', 'files'])
+        $recentCanvasses = Canvas::with(['creator', 'files', 'approvals'])
             ->where('status', 'submitted')
+            ->whereDoesntHave('approvals', function ($query) {
+                $query->where('role', 'audit');
+            })
             ->latest()
             ->limit(5)
             ->get()
@@ -371,7 +379,7 @@ class DashboardController extends Controller
                     'id' => $pettyCash->id,
                     'pcv_no' => $pettyCash->pcv_no,
                     'paid_to' => $pettyCash->paid_to,
-                    'remarks' => $pettyCash->remarks, // Added remarks field
+                    'remarks' => $pettyCash->remarks,
                     'date' => $pettyCash->date,
                     'total_amount' => $totalAmount,
                     'items_count' => $pettyCash->items->count(),
@@ -396,7 +404,7 @@ class DashboardController extends Controller
             ],
         ]);
     }
-
+    
     protected function purchasingDashboard()
     {
         $user = Auth::user();
