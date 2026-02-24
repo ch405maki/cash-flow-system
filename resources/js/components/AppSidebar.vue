@@ -377,19 +377,13 @@ const adminNavItems: NavItem[] = [
 ];
 
 // Pettycash
-const pettyCashNavItems = ref<DropdownNavItem[]>(
-  initializeItems([
-    {
-      title: 'Petty Cash',
-      href: '#',
-      icon: SquarePen,
-      isOpen: false,
-      children: [
-        { title: 'Petty Cash', href: '/petty-cash' },
-      ],
-    },
-  ], 'pettyCash')
-);
+const pettyCashNavItems: NavItem[] = [
+  {
+    title: 'Petty Cash',
+    href: '/petty-cash',
+    icon: SquarePen,
+  },
+];
 
 const bursarNavItems: NavItem[] = [
   {

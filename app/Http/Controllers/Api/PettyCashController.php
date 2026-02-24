@@ -101,7 +101,6 @@ class PettyCashController extends Controller
     }
 
 
-
     public function create()
     {
         return Inertia::render('PettyCash/Create');
@@ -400,5 +399,4 @@ class PettyCashController extends Controller
 
         return redirect()->back()->with('success', 'Petty Cash submitted for audit.');
     }
-
 }

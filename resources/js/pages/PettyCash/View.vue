@@ -96,7 +96,7 @@ const releaseCashAdvance = () => {
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Dashboard', href: '/dashboard' },
   { title: 'Petty Cash Voucher', href: '#' },
-  { title: `Viewing ${props.pettyCash.pcv_no}`, href: '#' }
+  { title: `${props.pettyCash.pcv_no}`, href: '#' }
 ]
 
 const reimbursementTotal = computed(() => {
@@ -143,7 +143,7 @@ console.log(props.pettyCash)
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
       <div class="flex items-center justify-between">
         <PageHeader 
-          :title="`Viewing ${props.pettyCash.pcv_no}`" 
+          :title="`${props.pettyCash.pcv_no}`" 
           subtitle="Review Petty Cash Voucher"
         />
 
