@@ -2,7 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue'
 import { type BreadcrumbItem } from '@/types'
 import { Head, router, usePage } from '@inertiajs/vue3'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import PettyCashHeader from '@/components/pettyCash/index/PettyCashHeader.vue'
 import ThresholdStatus from '@/components/pettyCash/index/ThresholdStatus.vue'
@@ -38,7 +38,10 @@ const props = defineProps<{
   today: string
 }>()
 
-// Check if there are petty cash records - FIXED VERSION
+// Active tab state
+const activeTab = ref('all')
+
+// Check if there are petty cash records
 const hasItem = computed(() => {
   const hasData = !!(props.pettyCash && props.pettyCash.length > 0)
   return hasData
@@ -47,6 +50,42 @@ const hasItem = computed(() => {
 // Ensure we always pass an array to the table
 const tableData = computed(() => {
   return props.pettyCash || []
+})
+
+// Get unique statuses from data for dynamic tabs
+const uniqueStatuses = computed(() => {
+  if (!props.pettyCash || props.pettyCash.length === 0) return []
+  
+  const statuses = [...new Set(props.pettyCash.map(item => item.status))]
+  // Sort statuses in a logical order (customize as needed)
+  const statusOrder = ['draft', 'requested', 'submitted', 'approved', 'liquidation', 'approved liquidation', 'released', 'completed', 'returned', 'rejected', 'cancelled']
+  
+  return statuses.sort((a, b) => {
+    const indexA = statusOrder.indexOf(a)
+    const indexB = statusOrder.indexOf(b)
+    // If status not in order list, put it at the end
+    if (indexA === -1) return 1
+    if (indexB === -1) return -1
+    return indexA - indexB
+  })
+})
+
+// Count items per status
+const statusCounts = computed(() => {
+  if (!props.pettyCash) return {}
+  
+  return props.pettyCash.reduce((acc, item) => {
+    const status = item.status
+    acc[status] = (acc[status] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+})
+
+// Filter data based on active tab
+const filteredData = computed(() => {
+  if (!props.pettyCash) return []
+  if (activeTab.value === 'all') return props.pettyCash
+  return props.pettyCash.filter(item => item.status === activeTab.value)
 })
 
 const fundStatus = computed(() => {
@@ -97,20 +136,25 @@ const goToCreate = () => {
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
-      <!-- Header Section -->
+      <!-- Header Section with integrated tabs -->
       <PettyCashHeader
         :user="user"
         :thresholds="thresholds"
         :petty-cash-fund="pettyCashFund"
         :fund-status="fundStatus"
         :has-item="hasItem"
+        :active-tab="activeTab"
+        :unique-statuses="uniqueStatuses"
+        :status-counts="statusCounts"
+        :total-count="pettyCash?.length || 0"
         @create-petty-cash="goToCreate"
+        @update:activeTab="activeTab = $event"
       >
         <template #threshold-content>
           <ThresholdStatus :thresholds="thresholds" />
         </template>
         
-        <template v-if="props.pettyCashFund && props.pettyCashFund.fund_balance !== undefined"  #fund-balance>
+        <template v-if="props.pettyCashFund && props.pettyCashFund.fund_balance !== undefined" #fund-balance>
           <FundBalance 
             :petty-cash-fund="pettyCashFund"
             :fund-status="fundStatus"
@@ -118,13 +162,15 @@ const goToCreate = () => {
         </template>
       </PettyCashHeader>
 
-      <!-- Content Section -->
-      <PettyCashTable
-        v-if="hasItem"
-        :petty-cash="tableData"
-        :user="user"
-      />
+      <!-- Content Section - Only the table, no tabs here -->
+      <div v-if="hasItem">
+        <PettyCashTable
+          :petty-cash="filteredData"
+          :user="user"
+        />
+      </div>
 
+      <!-- Empty State -->
       <EmptyState
         v-else
         :user="user"

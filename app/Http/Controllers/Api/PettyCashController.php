@@ -101,7 +101,6 @@ class PettyCashController extends Controller
     }
 
 
-
     public function create()
     {
         return Inertia::render('PettyCash/Create');
@@ -205,7 +204,7 @@ class PettyCashController extends Controller
 
     public function edit(PettyCash $pettyCash)
     {
-        $pettyCash->load('items');
+        $pettyCash->load(['items', 'approvals.user']);
 
         return Inertia::render('PettyCash/Edit', [
             'pettyCash' => $pettyCash,
@@ -229,82 +228,82 @@ class PettyCashController extends Controller
     }
 
     public function update(Request $request, PettyCash $pettyCash)
-{
-    $validated = $request->validate([
-        'paid_to' => 'sometimes|string',
-        'status' => 'sometimes|string',
-        'date' => 'sometimes|date',
-        'remarks' => 'nullable|string',
-        'items' => 'nullable|array',
-        'items.*.id' => 'sometimes|exists:petty_cash_items,id',
-        'items.*.type' => 'required_with:items|string',
-        'items.*.particulars' => 'required_with:items|string',
-        'items.*.date' => 'required_with:items|date',
-        'items.*.liquidation_for_date' => 'nullable|date',
-        'items.*.amount' => 'required_with:items|numeric|min:0',
-        'items.*.receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-        'deleted_items' => 'nullable|array',
-        'deleted_items.*' => 'exists:petty_cash_items,id',
-    ]);
+    {
+        $validated = $request->validate([
+            'paid_to' => 'sometimes|string',
+            'status' => 'sometimes|string',
+            'date' => 'sometimes|date',
+            'remarks' => 'nullable|string',
+            'items' => 'nullable|array',
+            'items.*.id' => 'sometimes|exists:petty_cash_items,id',
+            'items.*.type' => 'required_with:items|string',
+            'items.*.particulars' => 'required_with:items|string',
+            'items.*.date' => 'required_with:items|date',
+            'items.*.liquidation_for_date' => 'nullable|date',
+            'items.*.amount' => 'required_with:items|numeric|min:0',
+            'items.*.receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'deleted_items' => 'nullable|array',
+            'deleted_items.*' => 'exists:petty_cash_items,id',
+        ]);
 
-    // Update Petty Cash main fields
-    $pettyCash->update([
-        'paid_to' => $validated['paid_to'] ?? $pettyCash->paid_to,
-        'status' => $validated['status'] ?? $pettyCash->status,
-        'date' => $validated['date'] ?? $pettyCash->date,
-        'remarks' => $validated['remarks'] ?? $pettyCash->remarks,
-    ]);
+        // Update Petty Cash main fields
+        $pettyCash->update([
+            'paid_to' => $validated['paid_to'] ?? $pettyCash->paid_to,
+            'status' => $validated['status'] ?? $pettyCash->status,
+            'date' => $validated['date'] ?? $pettyCash->date,
+            'remarks' => $validated['remarks'] ?? $pettyCash->remarks,
+        ]);
 
-    // Delete removed items
-    if (!empty($validated['deleted_items'])) {
-        PettyCashItem::whereIn('id', $validated['deleted_items'])->delete();
-    }
+        // Delete removed items
+        if (!empty($validated['deleted_items'])) {
+            PettyCashItem::whereIn('id', $validated['deleted_items'])->delete();
+        }
 
-    $savedItems = [];
+        $savedItems = [];
 
-    // Process items
-    if (!empty($validated['items'])) {
-        foreach ($validated['items'] as $itemData) {
-            // Handle receipt upload
-            $receiptPath = null;
-            if (isset($itemData['receipt']) && $itemData['receipt'] instanceof \Illuminate\Http\UploadedFile) {
-                $receiptPath = $itemData['receipt']->store('petty_cash_receipts', 'public');
-            }
-
-            $itemPayload = [
-                'type' => $itemData['type'],
-                'particulars' => $itemData['particulars'],
-                'date' => $itemData['date'],
-                'liquidation_for_date' => $itemData['liquidation_for_date'] ?? null,
-                'amount' => $itemData['amount'],
-            ];
-
-            if ($receiptPath) {
-                $itemPayload['receipt'] = $receiptPath;
-            }
-
-            // Update or create
-            if (!empty($itemData['id'])) {
-                $item = PettyCashItem::find($itemData['id']);
-                if ($item) {
-                    $item->update($itemPayload);
-                    $savedItems[] = $item->fresh();
+        // Process items
+        if (!empty($validated['items'])) {
+            foreach ($validated['items'] as $itemData) {
+                // Handle receipt upload
+                $receiptPath = null;
+                if (isset($itemData['receipt']) && $itemData['receipt'] instanceof \Illuminate\Http\UploadedFile) {
+                    $receiptPath = $itemData['receipt']->store('petty_cash_receipts', 'public');
                 }
-            } else {
-                $itemPayload['petty_cash_id'] = $pettyCash->id;
-                $item = PettyCashItem::create($itemPayload);
-                $savedItems[] = $item;
+
+                $itemPayload = [
+                    'type' => $itemData['type'],
+                    'particulars' => $itemData['particulars'],
+                    'date' => $itemData['date'],
+                    'liquidation_for_date' => $itemData['liquidation_for_date'] ?? null,
+                    'amount' => $itemData['amount'],
+                ];
+
+                if ($receiptPath) {
+                    $itemPayload['receipt'] = $receiptPath;
+                }
+
+                // Update or create
+                if (!empty($itemData['id'])) {
+                    $item = PettyCashItem::find($itemData['id']);
+                    if ($item) {
+                        $item->update($itemPayload);
+                        $savedItems[] = $item->fresh();
+                    }
+                } else {
+                    $itemPayload['petty_cash_id'] = $pettyCash->id;
+                    $item = PettyCashItem::create($itemPayload);
+                    $savedItems[] = $item;
+                }
             }
         }
-    }
 
-    // Return Inertia response with flash message
-    return redirect()->back()->with([
-        'success' => 'Petty cash voucher updated successfully.',
-        'petty_cash' => $pettyCash->fresh()->load('items'),
-        'saved_item' => count($savedItems) === 1 ? $savedItems[0] : null
-    ]);
-}
+        // Return Inertia response with flash message
+        return redirect()->back()->with([
+            'success' => 'Petty cash voucher updated successfully.',
+            'petty_cash' => $pettyCash->fresh()->load('items'),
+            'saved_item' => count($savedItems) === 1 ? $savedItems[0] : null
+        ]);
+    }
 
     public function destroy(PettyCashItem $item)
     {
@@ -400,5 +399,4 @@ class PettyCashController extends Controller
 
         return redirect()->back()->with('success', 'Petty Cash submitted for audit.');
     }
-
 }
