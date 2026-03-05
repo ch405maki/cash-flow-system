@@ -56,7 +56,7 @@ class HandleInertiaRequests extends Middleware
                     'full_name' => $signatory->full_name,
                     'position' => $signatory->position,
                 ];
-            })->toArray(), // Convert to array for frontend
+            })->toArray(),
             'ziggy' => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),

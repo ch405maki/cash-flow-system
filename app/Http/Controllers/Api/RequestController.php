@@ -614,4 +614,18 @@ class RequestController extends Controller
 
         $request->update(['status' => $status]);
     }
+
+
+    // Api method to update tagging status
+    public function data(): JsonResponse
+    {
+        $requests = Request::with(['department', 'user', 'details'])
+            ->whereIn('status', ['propertyCustodian'])
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $requests,
+        ]);
+    }
 }

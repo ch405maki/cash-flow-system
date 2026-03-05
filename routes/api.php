@@ -46,6 +46,8 @@ Route::post('/vouchers/{voucher}/receipt', [VoucherController::class, 'uploadRec
 Route::patch('/vouchers/{voucher}/check', [VoucherController::class, 'addCheckDetails']);
 
 // Request Routes
+Route::get('/requests', [RequestController::class, 'data']);
+
 Route::post('/requests', [RequestController::class, 'store']);
 Route::put('/requests/{request}/items', [RequestController::class, 'updateItems']);
 Route::post('/requests/{request}/release', [RequestController::class, 'releaseItems']);
