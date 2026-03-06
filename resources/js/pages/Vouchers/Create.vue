@@ -2,13 +2,13 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { reactive, computed, ref } from 'vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, usePage, router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardFooter } from '@/components/ui/card';
 import { useToast } from 'vue-toastification';
 import { Plus, Trash2, FilePlus2, Ban, Check, ChevronsUpDown, Search } from 'lucide-vue-next';
 import { Combobox, ComboboxAnchor, ComboboxEmpty, ComboboxGroup, ComboboxInput, ComboboxItem, ComboboxItemIndicator, ComboboxList, ComboboxTrigger } from '@/components/ui/combobox';
@@ -117,7 +117,7 @@ const newItem = ref<VoucherItem>({
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Dashboard', href: '/dashboard' },
   { title: 'Vouchers', href: '/vouchers' },
-  { title: 'Create Voucher', href: '/vouchers/create' },
+  { title: 'Create Voucher', href: '#' },
 ];
 
 const isCashVoucher = computed(() => form.type === 'cash');

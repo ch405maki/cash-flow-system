@@ -122,154 +122,151 @@ const deleteNotification = (notification) => {
 <template>
     <Head title="Notifications" />
     <AppLayout :breadcrumbs="breadcrumbs">
-        
-        <div class="p-4">
-            <div class="mx-auto max-w-7xl space-y-6">
-                <!-- Page Header -->
-                <PageHeader 
-                    title="Notifications"
-                    :subtitle="`${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}`"
-                >
-                    <template #actions>
-                        <Button 
-                            v-if="unreadCount > 0"
-                            variant="outline" 
-                            size="sm"
-                            @click="markAllAsRead"
-                            class="w-full sm:w-auto"
+        <div class="p-4 space-y-6">
+            <!-- Page Header -->
+            <PageHeader 
+                title="Notifications"
+                :subtitle="`${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}`"
+            >
+                <template #actions>
+                    <Button 
+                        v-if="unreadCount > 0"
+                        variant="outline" 
+                        size="sm"
+                        @click="markAllAsRead"
+                        class="w-full sm:w-auto"
+                    >
+                        <CheckCheck class="h-4 w-4 mr-2" />
+                        Mark all as read
+                    </Button>
+                </template>
+            </PageHeader>
+            <!-- Tabs -->
+            <Tabs :default-value="activeTab" @update:model-value="activeTab = $event">
+                <TabsList class="grid w-full max-w-[400px] grid-cols-2">
+                    <TabsTrigger 
+                        v-for="tab in tabs" 
+                        :key="tab.value"
+                        :value="tab.value"
+                        class="relative"
+                    >
+                        {{ tab.label }}
+                        <Badge 
+                            v-if="tab.value === 'unread' && unreadCount > 0"
+                            variant="secondary"
+                            class="ml-2"
                         >
-                            <CheckCheck class="h-4 w-4 mr-2" />
-                            Mark all as read
-                        </Button>
-                    </template>
-                </PageHeader>
-                <!-- Tabs -->
-                <Tabs :default-value="activeTab" @update:model-value="activeTab = $event">
-                    <TabsList class="grid w-full max-w-[400px] grid-cols-2">
-                        <TabsTrigger 
-                            v-for="tab in tabs" 
-                            :key="tab.value"
-                            :value="tab.value"
-                            class="relative"
-                        >
-                            {{ tab.label }}
-                            <Badge 
-                                v-if="tab.value === 'unread' && unreadCount > 0"
-                                variant="secondary"
-                                class="ml-2"
-                            >
-                                {{ unreadCount }}
-                            </Badge>
-                        </TabsTrigger>
-                    </TabsList>
-                </Tabs>
+                            {{ unreadCount }}
+                        </Badge>
+                    </TabsTrigger>
+                </TabsList>
+            </Tabs>
 
-                <!-- Notifications Table - Removed Card wrapper -->
-                <Table>
-                    <TableHeader>
+            <!-- Notifications Table - Removed Card wrapper -->
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Notification</TableHead>
+                        <TableHead class="w-[150px]">Date</TableHead>
+                        <TableHead class="w-[120px] text-right">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    <template v-if="filteredNotifications.length === 0">
                         <TableRow>
-                            <TableHead>Notification</TableHead>
-                            <TableHead class="w-[150px]">Date</TableHead>
-                            <TableHead class="w-[120px] text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        <template v-if="filteredNotifications.length === 0">
-                            <TableRow>
-                                <TableCell colspan="4" class="h-32 text-center">
-                                    <div class="flex flex-col items-center justify-center text-muted-foreground">
-                                        <Bell class="h-8 w-8 mb-2" />
-                                        <p>No notifications</p>
-                                        <p class="text-sm">
-                                            {{ activeTab === 'unread' ? 'You have no unread notifications' : 'No notifications to show' }}
-                                        </p>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        </template>
-                        
-                        <TableRow 
-                            v-for="notification in filteredNotifications" 
-                            :key="notification.id"
-                            :class="[
-                                !notification.read_at ? 'bg-muted/30' : '',
-                                'hover:bg-muted/50 transition-colors'
-                            ]"
-                        >
-                            <!-- Notification content with status indicator -->
-                            <TableCell>
-                                <div class="flex items-start gap-3">
-                                    <span 
-                                        v-if="!notification.read_at"
-                                        class="mt-1.5 h-2 w-2 rounded-full bg-blue-600 flex-shrink-0"
-                                        title="Unread"
-                                    ></span>
-                                    <span 
-                                        v-else
-                                        class="mt-1.5 h-2 w-2 rounded-full bg-slate-600 flex-shrink-0"
-                                        title="Unread"
-                                    ></span>
-                                    <div class="space-y-1">
-                                        <p class="text-sm font-medium text-foreground">
-                                            {{ notification.data.title || 'Notification' }}
-                                        </p>
-                                        <p class="text-sm text-muted-foreground line-clamp-2">
-                                            {{ notification.data.message }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </TableCell>
-
-                            <!-- Date -->
-                            <TableCell>
-                                <div class="flex items-center gap-1 text-sm text-muted-foreground whitespace-nowrap">
-                                    <Clock class="h-3.5 w-3.5" />
-                                    {{ formatDateTime(notification.created_at) }}
-                                </div>
-                            </TableCell>
-
-                            <!-- Actions -->
-                            <TableCell class="text-right">
-                                <div class="flex items-center justify-end gap-1">
-                                    <Button 
-                                        v-if="!notification.read_at"
-                                        variant="ghost" 
-                                        size="icon"
-                                        @click="markAsRead(notification)"
-                                        class="h-8 w-8"
-                                        title="Mark as read"
-                                    >
-                                        <Check class="h-4 w-4" />
-                                    </Button>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon"
-                                        @click="viewNotification(notification)"
-                                        class="h-8 w-8"
-                                        :title="notification.data.link ? 'View details' : 'No link available'"
-                                        :disabled="!notification.data.link"
-                                    >
-                                        <Eye class="h-4 w-4" />
-                                    </Button>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon"
-                                        @click="deleteNotification(notification)"
-                                        class="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                        title="Delete"
-                                    >
-                                        <Trash2 class="h-4 w-4" />
-                                    </Button>
+                            <TableCell  class="h-32 text-center">
+                                <div class="flex flex-col items-center justify-center text-muted-foreground">
+                                    <Bell class="h-8 w-8 mb-2" />
+                                    <p>No notifications</p>
+                                    <p class="text-sm">
+                                        {{ activeTab === 'unread' ? 'You have no unread notifications' : 'No notifications to show' }}
+                                    </p>
                                 </div>
                             </TableCell>
                         </TableRow>
-                    </TableBody>
-                </Table>
+                    </template>
+                    
+                    <TableRow 
+                        v-for="notification in filteredNotifications" 
+                        :key="notification.id"
+                        :class="[
+                            !notification.read_at ? 'bg-muted/30' : '',
+                            'hover:bg-muted/50 transition-colors'
+                        ]"
+                    >
+                        <!-- Notification content with status indicator -->
+                        <TableCell>
+                            <div class="flex items-start gap-3">
+                                <span 
+                                    v-if="!notification.read_at"
+                                    class="mt-1.5 h-2 w-2 rounded-full bg-blue-600 flex-shrink-0"
+                                    title="Unread"
+                                ></span>
+                                <span 
+                                    v-else
+                                    class="mt-1.5 h-2 w-2 rounded-full bg-slate-600 flex-shrink-0"
+                                    title="Unread"
+                                ></span>
+                                <div class="space-y-1">
+                                    <p class="text-sm font-medium text-foreground">
+                                        {{ notification.data.title || 'Notification' }}
+                                    </p>
+                                    <p class="text-sm text-muted-foreground line-clamp-2">
+                                        {{ notification.data.message }}
+                                    </p>
+                                </div>
+                            </div>
+                        </TableCell>
 
-                <!-- Pagination -->
-                <div v-if="notifications.meta && notifications.meta.last_page > 1" class="border-t px-6 py-4">
-                    <Pagination :links="notifications.meta.links" />
-                </div>
+                        <!-- Date -->
+                        <TableCell>
+                            <div class="flex items-center gap-1 text-sm text-muted-foreground whitespace-nowrap">
+                                <Clock class="h-3.5 w-3.5" />
+                                {{ formatDateTime(notification.created_at) }}
+                            </div>
+                        </TableCell>
+
+                        <!-- Actions -->
+                        <TableCell class="text-right">
+                            <div class="flex items-center justify-end gap-1">
+                                <Button 
+                                    v-if="!notification.read_at"
+                                    variant="ghost" 
+                                    size="icon"
+                                    @click="markAsRead(notification)"
+                                    class="h-8 w-8"
+                                    title="Mark as read"
+                                >
+                                    <Check class="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    @click="viewNotification(notification)"
+                                    class="h-8 w-8"
+                                    :title="notification.data.link ? 'View details' : 'No link available'"
+                                    :disabled="!notification.data.link"
+                                >
+                                    <Eye class="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    @click="deleteNotification(notification)"
+                                    class="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    title="Delete"
+                                >
+                                    <Trash2 class="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
+
+            <!-- Pagination -->
+            <div v-if="notifications.meta && notifications.meta.last_page > 1" class="border-t px-6 py-4">
+                <Pagination :links="notifications.meta.links" />
             </div>
         </div>
     </AppLayout>

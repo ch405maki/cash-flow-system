@@ -23,9 +23,11 @@ defineProps<{
             </div>
 
             <!-- Right side: NavUser, fixed width -->
-            <div class="flex-shrink-0 flex items-center gap-2">
-                  <NotificationBell />
-                  <AppearanceTabs />
+            <div class="flex-shrink-0 flex items-center">
+                  <div class="flex  gap-2">
+                        <NotificationBell />
+                        <AppearanceTabs />
+                  </div>
                   <NavUser />
             </div>
       </div>
