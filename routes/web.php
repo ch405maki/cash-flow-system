@@ -56,6 +56,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/logs/{modelType}/{modelId}', [ActivityLogController::class, 'forModel'])->name('logs.model');
 });
 
+// Add these with your other routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/notifications/{notification}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::patch('/notifications/read-all', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::delete('/notifications/{notification}', [App\Http\Controllers\NotificationController::class, 'destroy'])->name('notifications.destroy');
+});
+
 Route::get('/test-email', function () {
     $details = [
         'subject' => 'Test Email from RPV System',
@@ -76,3 +84,4 @@ require __DIR__.'/pettycash.php';
 require __DIR__.'/vouchers.php';
 require __DIR__.'/reports.php';
 require __DIR__.'/request.php';
+require __DIR__.'/notification.php';

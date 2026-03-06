@@ -2,15 +2,9 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
-import {Button} from '@/components/ui/button'
 import StatsCards from '@/components/dashboard/accounting/StatsCards.vue';
 import RecentRequestsTable from '@/components/dashboard/accounting/RecentRequestsTable.vue';
-import VoucherStats from '@/components/dashboard/accounting/VoucherStats.vue';
-import { ChartArea } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
-import { ref } from 'vue';
-
-const showVoucherStats = ref(true);
 
 const props = defineProps<{
     isDepartmentUser: boolean;
@@ -46,10 +40,6 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/dashboard',
     },
 ];
-
-const toggleVoucherStats = () => {
-    showVoucherStats.value = !showVoucherStats.value;
-};
 </script>
 
 <template>
@@ -63,20 +53,9 @@ const toggleVoucherStats = () => {
                     :title="`Welcome, ${username}`" 
                     subtitle="Accounting Dashboard"
                 />
-                <Button @click="toggleVoucherStats">
-                    <ChartArea /> {{ showVoucherStats ? 'Hide' : 'Show' }} Monthly Voucher Graph
-                </Button>
             </div>
             
             <StatsCards :status-counts="statusCounts" />
-
-            <div v-if="showVoucherStats" class="space-y-4">
-                <PageHeader 
-                    title="Monthly Voucher Trends" 
-                    subtitle="Analytics and insights for voucher processing"
-                />
-                <VoucherStats :stats="voucherStats" />
-            </div>
             
             <div class="space-y-4">
                 <PageHeader 

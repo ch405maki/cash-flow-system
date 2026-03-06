@@ -46,7 +46,7 @@ const acceptTerms = async () => {
 
         showTermsDialog.value = false;
 
-        // ✅ Redirect after success
+        // Redirect after success
         router.visit('/settings/password');
 
     } catch (error) {
