@@ -3,7 +3,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { useToast } from 'vue-toastification'
 import axios from 'axios'
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { type BreadcrumbItem } from '@/types';
 import { router } from '@inertiajs/vue3';
 import VoucherHeaderForm from '@/components/vouchers/edit/VoucherHeaderForm.vue';

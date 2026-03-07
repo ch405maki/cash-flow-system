@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, usePage, router } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { type BreadcrumbItem } from '@/types';
 import { useToast } from 'vue-toastification'

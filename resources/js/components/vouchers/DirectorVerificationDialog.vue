@@ -84,7 +84,7 @@ const verify = async () => {
       action: props.action, 
     }, {
       onSuccess: () => {
-        toast.success(`Voucher sent to EOD`);
+        toast.success(`Voucher sent to Audit`);
         router.visit(`/vouchers/${props.voucherId}/view`);
       },
       onError: (err) => {

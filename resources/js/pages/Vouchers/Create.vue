@@ -89,13 +89,13 @@ const form = reactive({
     issue_date: '',
     payment_date: '',
     delivery_date: '',
-    voucher_date: '',
+    voucher_date: new Date().toISOString().split('T')[0],
     purpose: '',
     payee: '',
     check_no: null,
     check_payable_to: '',
     check_amount: 0,
-    status: 'draft',
+    status: 'forAudit',
     type: 'cash',
     user_id: props.auth.user.id,
     items: [] as VoucherItem[],
@@ -456,8 +456,8 @@ onUnmounted(() => {
           </div>
           <div class="...">
             <div class="grid gap-2">
-              <Label for="tin_no">TIN *</Label>
-              <Input id="tin_no" v-model="form.tin_no" required />
+              <Label for="tin_no">TIN</Label>
+              <Input id="tin_no" v-model="form.tin_no" />
             </div>
           </div>
           <div class="...">
