@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { reactive, computed, ref } from 'vue';
+import { reactive, computed, ref, watch } from 'vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CardFooter } from '@/components/ui/card';
 import { useToast } from 'vue-toastification';
-import { Plus, Trash2, FilePlus2, Ban, Check, ChevronsUpDown, Search } from 'lucide-vue-next';
+import { Plus, Trash2, FilePlus2, Ban, Check, RefreshCcw, ChevronsUpDown, Search, TriangleAlert } from 'lucide-vue-next';
 import { Combobox, ComboboxAnchor, ComboboxEmpty, ComboboxGroup, ComboboxInput, ComboboxItem, ComboboxItemIndicator, ComboboxList, ComboboxTrigger } from '@/components/ui/combobox';
 import axios from 'axios'
 import { formatCurrency } from '@/lib/utils';
@@ -70,6 +70,10 @@ interface Props {
 const props = defineProps<Props>();
 const toast = useToast();
 const accountSearchQuery = ref('');
+
+const voucherNumberError = ref('');
+const checkingVoucher = ref(false);
+let checkTimeout = null;
 
 const filteredAccounts = computed(() => {
   if (!accountSearchQuery.value) return props.accounts || [];
@@ -184,8 +188,88 @@ const calculateTotal = (tag: string) => {
   }, 0);
 };
 
+// Simple debounced function using setTimeout
+const checkVoucherNumber = (voucherNo) => {
+    // Clear previous timeout
+    if (checkTimeout) {
+        clearTimeout(checkTimeout);
+    }
+    
+    if (!voucherNo || voucherNo.trim() === '') {
+        voucherNumberError.value = 'Voucher number is required';
+        return;
+    }
+
+    // Set new timeout
+    checkTimeout = setTimeout(async () => {
+        checkingVoucher.value = true;
+        
+        try {
+            // If editing, pass the current voucher ID to ignore
+            const params = new URLSearchParams({
+                voucher_no: voucherNo,
+                // ignore_id: props.voucher?.id // Uncomment if you're editing
+            });
+            
+            const response = await axios.get(`/api/vouchers/check-number?${params}`);
+            console.log('API Response:', response.data);
+            
+            if (!response.data.available) {
+                voucherNumberError.value = 'Voucher number already exists';
+                // Show toast notification
+                toast.error('Voucher number already exists in the system', {
+                    timeout: 3000,
+                    position: 'top-right'
+                });
+            } else {
+                voucherNumberError.value = '';
+                // Optional: Show success toast when available
+                // toast.success('Voucher number is available');
+            }
+        } catch (error) {
+            console.error('Error checking voucher number:', error);
+            // Show error toast for API failures
+            toast.error('Unable to validate voucher number', {
+                timeout: 3000,
+                position: 'top-right'
+            });
+        } finally {
+            checkingVoucher.value = false;
+        }
+    }, 500); // Wait 500ms after user stops typing
+};
+
+// Watch for changes in voucher number
+watch(() => form.voucher_no, (newVal) => {
+    checkVoucherNumber(newVal);
+});
+
+// Function to generate a new voucher number suggestion
+const suggestVoucherNumber = async () => {
+    try {
+        const response = await axios.get('/api/vouchers/generate-number');
+        if (response.data.success) {
+            form.voucher_no = response.data.voucher_number;
+        }
+    } catch (error) {
+        console.error('Error generating voucher number:', error);
+    }
+};
+
 async function submitVoucher() {
   try {
+
+    // Check if voucher number is provided
+    if (!form.voucher_no || form.voucher_no.trim() === '') {
+      toast.error('Voucher number is required');
+      return;
+    }
+
+    if (voucherNumberError.value) {
+        toast.error(voucherNumberError.value);
+        return;
+    }
+    
     // Cancel any active edits before submitting
     form.items.forEach((item, index) => {
       if (item.editing) {
@@ -290,6 +374,14 @@ const handleKeyDown = (event: KeyboardEvent, index: number) => {
     cancelEdit(index);
   }
 };
+
+import { onUnmounted } from 'vue';
+
+onUnmounted(() => {
+    if (checkTimeout) {
+        clearTimeout(checkTimeout);
+    }
+});
 </script>
 
 <template>
@@ -301,13 +393,56 @@ const handleKeyDown = (event: KeyboardEvent, index: number) => {
           title="Create Voucher" 
           subtitle="Complete all required fields"
         />
-        <div class=" text-right">
-            <h1 class="text-xl font-bold" title="voucher number"># {{ voucher_number }}</h1>
-            <p v-if="purchase_order?.po_no" class="text-sm text-muted-foreground">
+        <div class="text-right">
+          <div class="flex items-center justify-end gap-2">
+            <div class="relative">
+                <!-- Prefix # symbol inside input -->
+                <div class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+                    #
+                </div>
+                
+                <!-- Input with left padding for the # symbol -->
+                <Input 
+                    v-model="form.voucher_no"
+                    class="w-48 text-right font-bold text-lg h-9 pl-6 pr-8"
+                    :class="{ 'border-destructive': voucherNumberError }"
+                    placeholder="Voucher number"
+                    title="voucher number"
+                    @blur="checkVoucherNumber(form.voucher_no)"
+                />
+                
+                <!-- Loading spinner -->
+                <div v-if="checkingVoucher" class="absolute right-2 top-1/2 -translate-y-1/2">
+                    <div class="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                </div>
+                
+                <!-- Success indicator -->
+                <div v-else-if="form.voucher_no && !voucherNumberError" class="absolute right-2 top-1/2 -translate-y-1/2">
+                    <Check class="h-4 w-4 text-green-600" />
+                </div>
+                <div v-else-if="form.voucher_no && voucherNumberError" class="absolute right-2 top-1/2 -translate-y-1/2">
+                    <TriangleAlert class="h-4 w-4 text-red-600" />
+                </div>
+            </div>
+            
+            <!-- Suggest button -->
+            <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm"
+                @click="suggestVoucherNumber"
+                class="h-8 px-2"
+                title="Generate next available number"
+            >
+                <RefreshCcw class="h-4 w-4" />
+            </Button>
+        </div>
+          
+          <p v-if="purchase_order?.po_no" class="text-sm text-muted-foreground mt-1">
               Purchase Order #: <span class="font-medium mr-2">{{ purchase_order?.po_no }}</span> 
               Amount: <span class="font-medium">{{ formatCurrency(purchase_order?.amount) }}</span>
-            </p>
-        </div>
+          </p>
+      </div>
       </div>
 
       <form @submit.prevent="submitVoucher" class="space-y-6">
@@ -615,7 +750,7 @@ const handleKeyDown = (event: KeyboardEvent, index: number) => {
               </TableRow>
               <TableRow v-if="form.items.length === 0">
                 <TableCell 
-                  :colspan="isCashVoucher ? (form.items.some(i => i.editing) ? 5 : 4) : (form.items.some(i => i.editing) ? 6 : 5)" 
+                  :colspan="isCashVoucher ? (form.items.some(i => i.editing) ? 5 : 4) : (form.items.some(i => i.editing) ? 6 : 5)"
                   class="text-center text-sm text-gray-500"
                 >
                   No items added yet

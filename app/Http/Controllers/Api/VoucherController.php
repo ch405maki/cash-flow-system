@@ -721,4 +721,58 @@ class VoucherController extends Controller
             'errors' => $errors,
         ], $status);
     }
+
+
+    /**
+     * Check if voucher number is unique
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function checkVoucherNumber(Request $request): JsonResponse
+    {
+        $request->validate([
+            'voucher_no' => 'required|string|max:50',
+            'ignore_id' => 'nullable|integer|exists:vouchers,id' // For edit mode
+        ]);
+
+        $query = Voucher::where('voucher_no', $request->voucher_no);
+        
+        // If we're editing an existing voucher, exclude it from the check
+        if ($request->has('ignore_id') && $request->ignore_id) {
+            $query->where('id', '!=', $request->ignore_id);
+        }
+
+        $exists = $query->exists();
+
+        return response()->json([
+            'success' => true,
+            'available' => !$exists,
+            'message' => $exists ? 'Voucher number already exists' : 'Voucher number is available'
+        ]);
+    }
+
+    /**
+     * Generate next voucher number suggestion
+     * 
+     * @return JsonResponse
+     */
+    public function generateNewVoucherNumber(): JsonResponse
+    {
+        $prefix = 'V-' . now()->format('Ym') . '-'; 
+        $lastVoucher = Voucher::where('voucher_no', 'like', $prefix . '%')
+            ->orderBy('voucher_no', 'desc')
+            ->first();
+
+        $sequence = $lastVoucher
+            ? (int) str_replace($prefix, '', $lastVoucher->voucher_no) + 1
+            : 1;
+
+        $voucherNumber = $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+
+        return response()->json([
+            'success' => true,
+            'voucher_number' => $voucherNumber
+        ]);
+    }
 }

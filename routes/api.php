@@ -25,7 +25,6 @@ Route::post('/terms/accept', [TermsController::class, 'accept']);
 
 Route::delete('/users/{id}', [UserController::class, 'destroy']);
 Route::post('/users', [UserController::class, 'store']);
-Route::post('/api/vouchers', [VoucherController::class, 'store']);
 Route::post('/upload-users', [UserController::class, 'uploadUsers']);
 Route::put('/users/{id}', [UserController::class, 'update']);
 Route::put('/users/{id}/password', [UserController::class, 'updatePassword']);
@@ -34,16 +33,22 @@ Route::patch('/users/{user}/status', [UserController::class, 'updateStatus']);
 Route::prefix('profile-pictures')->group(function () {
     Route::post('/', [ProfilePictureController::class, 'store'])->name('profile-pictures.store');
     Route::delete('/{profilePicture}', [ProfilePictureController::class, 'destroy'])->name('profile-pictures.destroy');
-});
-
+    });
+    
 // Voucher Routes
-Route::apiResource('vouchers', VoucherController::class);
+Route::get('/vouchers/check-number', [VoucherController::class, 'checkVoucherNumber']);
+Route::get('/vouchers/generate-number', [VoucherController::class, 'generateNewVoucherNumber']);
+
+Route::post('/api/vouchers', [VoucherController::class, 'store']);
 Route::put('/vouchers/{voucher}/details', [VoucherController::class, 'updateDetails']);
 Route::put('/vouchers/{voucher}', [VoucherController::class, 'update']);
 Route::get('/vouchers/{voucher}', [VoucherController::class, 'show']);
 
+
 Route::post('/vouchers/{voucher}/receipt', [VoucherController::class, 'uploadReceipt']);
 Route::patch('/vouchers/{voucher}/check', [VoucherController::class, 'addCheckDetails']);
+
+Route::apiResource('vouchers', VoucherController::class);
 
 // Request Routes
 Route::get('/requests', [RequestController::class, 'data']);
