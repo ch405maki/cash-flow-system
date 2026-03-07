@@ -29,7 +29,7 @@ class VoucherApprovalController extends Controller {
     {
         $user = Auth::user();
 
-        return Inertia::render('Vouchers/ForApproval/Index', [
+        return Inertia::render('Vouchers/Index', [
             'vouchers' => Voucher::with(['user', 'details'])
                                 ->whereIn('status', ['forAudit'])
                                 ->get(),

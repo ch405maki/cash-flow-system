@@ -38,8 +38,8 @@ const props = defineProps<{
   today: string
 }>()
 
-// Active tab state
-const activeTab = ref('all')
+// Active filter state - changed from activeTab
+const activeFilter = ref('all')
 
 // Check if there are petty cash records
 const hasItem = computed(() => {
@@ -52,7 +52,7 @@ const tableData = computed(() => {
   return props.pettyCash || []
 })
 
-// Get unique statuses from data for dynamic tabs
+// Get unique statuses from data for dynamic filter
 const uniqueStatuses = computed(() => {
   if (!props.pettyCash || props.pettyCash.length === 0) return []
   
@@ -81,11 +81,11 @@ const statusCounts = computed(() => {
   }, {} as Record<string, number>)
 })
 
-// Filter data based on active tab
+// Filter data based on active filter - changed from activeTab
 const filteredData = computed(() => {
   if (!props.pettyCash) return []
-  if (activeTab.value === 'all') return props.pettyCash
-  return props.pettyCash.filter(item => item.status === activeTab.value)
+  if (activeFilter.value === 'all') return props.pettyCash
+  return props.pettyCash.filter(item => item.status === activeFilter.value)
 })
 
 const fundStatus = computed(() => {
@@ -136,19 +136,19 @@ const goToCreate = () => {
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
-      <!-- Header Section with integrated tabs -->
+      <!-- Header Section with integrated filter -->
       <PettyCashHeader
         :user="user"
         :thresholds="thresholds"
         :petty-cash-fund="pettyCashFund"
         :fund-status="fundStatus"
         :has-item="hasItem"
-        :active-tab="activeTab"
+        :active-filter="activeFilter" 
         :unique-statuses="uniqueStatuses"
         :status-counts="statusCounts"
         :total-count="pettyCash?.length || 0"
         @create-petty-cash="goToCreate"
-        @update:activeTab="activeTab = $event"
+        @update:activeFilter="activeFilter = $event" 
       >
         <template #threshold-content>
           <ThresholdStatus :thresholds="thresholds" />
@@ -162,7 +162,7 @@ const goToCreate = () => {
         </template>
       </PettyCashHeader>
 
-      <!-- Content Section - Only the table, no tabs here -->
+      <!-- Content Section - Only the table, no filter here -->
       <div v-if="hasItem">
         <PettyCashTable
           :petty-cash="filteredData"

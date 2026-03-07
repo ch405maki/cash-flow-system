@@ -1,13 +1,20 @@
 <script setup lang="ts">
 import PageHeader from '@/components/PageHeader.vue';
 import { Button } from '@/components/ui/button'
-import { Info, SquarePen } from 'lucide-vue-next'
+import { Info, SquarePen, Filter } from 'lucide-vue-next'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { computed } from 'vue'
 
@@ -17,61 +24,93 @@ interface Props {
   pettyCashFund?: any
   fundStatus: any
   hasItem: boolean
-  // New props for tabs
-  activeTab: string
+  activeFilter: string
   uniqueStatuses: string[]
   statusCounts: Record<string, number>
   totalCount: number
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits(['create-petty-cash', 'update:activeTab'])
+const emit = defineEmits(['create-petty-cash', 'update:activeFilter'])
 
 const goToCreate = () => {
   emit('create-petty-cash')
 }
 
-const handleTabChange = (value: string) => {
-  emit('update:activeTab', value)
+const handleFilterChange = (value: string) => {
+  emit('update:activeFilter', value)
 }
 
-// Status color mapping for tabs
-const getStatusTabColor = (status: string) => {
-  const colorMap: Record<string, string> = {
-    'draft': 'text-gray-600',
-    'requested': 'text-blue-600',
-    'submitted': 'text-purple-600',
-    'approved': 'text-green-600',
-    'returned': 'text-orange-600',
-    'rejected': 'text-red-600',
-    'liquidation': 'text-indigo-600',
-    'approved liquidation': 'text-teal-600',
-    'released': 'text-emerald-600',
-    'completed': 'text-green-700',
-    'cancelled': 'text-red-700'
+// Get display label for selected filter
+const getFilterDisplay = computed(() => {
+  if (!props.activeFilter || props.activeFilter === 'all') {
+    return `All (${props.totalCount || 0})`
   }
-  return colorMap[status] || 'text-gray-600'
-}
+  const count = props.statusCounts?.[props.activeFilter] || 0
+  return `${props.activeFilter} (${count})`
+})
 
-// Check if tabs should be shown
-const showTabs = computed(() => {
-  return props.hasItem && props.uniqueStatuses.length > 0
+// Check if filter should be shown
+const showFilter = computed(() => {
+  return props.hasItem && props.uniqueStatuses?.length > 0
 })
 </script>
 
 <template>
   <div class="space-y-4">
-    <!-- Header Section -->
-    <div class="flex justify-between items-center">
+    <!-- Header Section - Now with filter inline -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <PageHeader 
         title="Petty Cash" 
         subtitle="List of created petty cash."
       />
 
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 w-full sm:w-auto">
+        <!-- Filter Select - Moved here to be inline with buttons -->
+        <div v-if="showFilter" class="w-full">
+          <Select :model-value="activeFilter || 'all'" @update:model-value="handleFilterChange">
+            <SelectTrigger class="w-full h-9 px-4">
+              <div class="flex items-center gap-2">
+                <Filter class="h-4 w-4 text-muted-foreground shrink-0" />
+                <SelectValue>
+                  {{ getFilterDisplay }}
+                </SelectValue>
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <!-- All option -->
+                <SelectItem value="all" class="cursor-pointer">
+                  <div class="flex items-center justify-between w-full gap-4">
+                    <span>All</span>
+                    <Badge variant="secondary" class="ml-2">
+                      {{ totalCount || 0 }}
+                    </Badge>
+                  </div>
+                </SelectItem>
+
+                <!-- Dynamic status options -->
+                <SelectItem 
+                  v-for="status in uniqueStatuses" 
+                  :key="status"
+                  :value="status"
+                  class="cursor-pointer capitalize"
+                >
+                  <div class="flex items-center justify-between w-full gap-4">
+                    <span>{{ status }}</span>
+                    <Badge variant="secondary" class="ml-2">
+                      {{ statusCounts?.[status] || 0 }}
+                    </Badge>
+                  </div>
+                </SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+
         <Popover v-if="user.role != 'bursar'">
           <PopoverTrigger as-child>
-            <Button title="Daily Threshold Status" variant="outline" size="icon" class="h-9 w-9 border-orange-200 bg-orange-50 hover:bg-orange-100">
+            <Button title="Daily Threshold Status" variant="outline" size="icon" class="h-9 w-9 border-orange-200 bg-orange-50 hover:bg-orange-100 shrink-0">
               <Info class="h-4 w-4 text-orange-600" />
             </Button>
           </PopoverTrigger>
@@ -82,42 +121,10 @@ const showTabs = computed(() => {
         
         <slot name="fund-balance" />
         
-        <Button v-if="hasItem && user.is_petty_cash == 1" @click="goToCreate">
-          <SquarePen />New Petty Cash
+        <Button v-if="hasItem && user.is_petty_cash == 1" @click="goToCreate" class="shrink-0">
+          <SquarePen class="h-4 w-4 mr-2" />New Petty Cash
         </Button>
       </div>
-    </div>
-
-    <!-- Tabs Section - Directly under header -->
-    <div v-if="showTabs" class="border-b border-border">
-      <Tabs :model-value="activeTab" @update:model-value="handleTabChange" class="w-full">
-        <TabsList class="w-full justify-end h-auto p-0 bg-transparent border-0 gap-1">
-          <!-- All tab -->
-          <TabsTrigger 
-            value="all" 
-            class="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent px-4 py-2 text-muted-foreground data-[state=active]:text-foreground"
-          >
-            All
-            <Badge variant="secondary" class="ml-2">
-              {{ totalCount }}
-            </Badge>
-          </TabsTrigger>
-
-          <!-- Dynamic status tabs -->
-          <TabsTrigger 
-            v-for="status in uniqueStatuses" 
-            :key="status"
-            :value="status"
-            class="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent px-4 py-2 text-muted-foreground data-[state=active]:text-foreground capitalize"
-            :class="getStatusTabColor(status)"
-          >
-            {{ status }}
-            <Badge variant="secondary" class="ml-2">
-              {{ statusCounts[status] || 0 }}
-            </Badge>
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
     </div>
   </div>
 </template>

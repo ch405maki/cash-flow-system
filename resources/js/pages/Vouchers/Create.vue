@@ -366,15 +366,6 @@ const findAccountIdByName = (name) => {
     return acc ? acc.id.toString() : null;
 };
 
-
-const handleKeyDown = (event: KeyboardEvent, index: number) => {
-  if (event.key === 'Enter') {
-    saveEdit(index);
-  } else if (event.key === 'Escape') {
-    cancelEdit(index);
-  }
-};
-
 import { onUnmounted } from 'vue';
 
 onUnmounted(() => {

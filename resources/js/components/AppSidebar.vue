@@ -243,7 +243,7 @@ const accountingNavItems: NavItem[] = [
     icon: ReceiptText,
   },
   {
-    title: 'Voucher For Approval',
+    title: 'Voucher For Audit',
     href: '/voucher-approval',
     icon: ReceiptText,
   },
