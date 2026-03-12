@@ -14,7 +14,7 @@ use App\Http\Requests\StoreRequestToOrderRequest;
 use Illuminate\Support\Facades\DB;
 use App\Models\RequestToOrderApproval;
 use Illuminate\Support\Facades\Log;
-
+use App\Models\User;
 
 use App\Models\Department;
 use App\Models\PurchaseOrderDetail;
@@ -267,6 +267,60 @@ class RequestToOrderController extends Controller
                 'approved_at' => now(),
             ]);
 
+            // ===== NOTIFICATION FOR CREATOR (PROPERTY CUSTODIAN) =====
+            $creator = User::find($order->user_id);
+            
+            if ($creator) {
+                DB::table('notifications')->insert([
+                    'id' => (string) \Illuminate\Support\Str::uuid(),
+                    'type' => 'OrderApproved',
+                    'notifiable_type' => 'App\Models\User',
+                    'notifiable_id' => $creator->id,
+                    'data' => json_encode([
+                        'order_id' => $order->id,
+                        'title' => 'Order Approved',
+                        'order_no' => $order->order_no,
+                        'amount' => $order->total_amount ?? 0,
+                        'department' => $order->department->name ?? 'N/A',
+                        'purpose' => $order->purpose,
+                        'status' => 'forPO',
+                        'message' => "Your order #{$order->order_no} has been approved by the Executive Director and is now ready for purchasing",
+                        'link' => route('request-to-order.show', $order->id),
+                        'approved_by' => $user->name,
+                    ]),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            // ===== NOTIFICATION FOR PURCHASING ROLE =====
+            $purchasingUsers = User::where('role', 'purchasing')->get();
+            
+            foreach ($purchasingUsers as $purchasing) {
+                DB::table('notifications')->insert([
+                    'id' => (string) \Illuminate\Support\Str::uuid(),
+                    'type' => 'OrderReadyForPurchase',
+                    'notifiable_type' => 'App\Models\User',
+                    'notifiable_id' => $purchasing->id,
+                    'data' => json_encode([
+                        'order_id' => $order->id,
+                        'title' => 'Order Ready for Purchasing',
+                        'order_no' => $order->order_no,
+                        'amount' => $order->total_amount ?? 0,
+                        'created_by' => $creator?->name ?? 'Unknown',
+                        'department' => $order->department->name ?? 'N/A',
+                        'purpose' => $order->purpose,
+                        'status' => 'forPO',
+                        'message' => "Order #{$order->order_no} has been approved and is ready for your processing",
+                        'link' => route('request-to-order.show', $order->id),
+                        'approved_by' => $user->name,
+                    ]),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+            // ===== END NOTIFICATIONS =====
+
             // 3. Log activity
             activity()
                 ->performedOn($order)
@@ -310,6 +364,39 @@ class RequestToOrderController extends Controller
                 'status' => 'pending',
                 'remarks' => 'Submitted for EOD approval',
             ]);
+
+            // ===== NOTIFICATION FOR EXECUTIVE DIRECTOR ROLE =====
+            // Get all users with role 'executive_director'
+            $executiveDirectors = User::where('role', 'executive_director')->get();
+            
+            // Get the creator of the order
+            $creator = User::find($order->user_id);
+            
+            foreach ($executiveDirectors as $director) {
+                DB::table('notifications')->insert([
+                    'id' => (string) \Illuminate\Support\Str::uuid(),
+                    'type' => 'OrderForEOD',
+                    'notifiable_type' => 'App\Models\User',
+                    'notifiable_id' => $director->id,
+                    'data' => json_encode([
+                        'order_id' => $order->id,
+                        'title' => 'Order Ready for EOD Approval',
+                        'order_no' => $order->order_no,
+                        'amount' => $order->total_amount ?? 0,
+                        'created_by' => $creator?->name ?? 'Unknown',
+                        'department' => $order->department->name ?? 'N/A',
+                        'purpose' => $order->purpose,
+                        'previous_status' => $order->getOriginal('status'),
+                        'status' => 'forEOD',
+                        'message' => "Order #{$order->order_no} needs your review.",
+                        'link' => route('request-to-order.show', $order->id),
+                        'submitted_by' => $user->name,
+                    ]),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+            // ===== END NOTIFICATIONS =====
 
             // 3. Log the activity
             activity()

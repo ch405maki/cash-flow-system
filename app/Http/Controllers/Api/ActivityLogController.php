@@ -14,8 +14,7 @@ class ActivityLogController extends Controller
         return Inertia::render('Logs/Index', [
             'logs' => Activity::with(['causer', 'subject'])
                 ->latest()
-                ->paginate(20) 
-                ->withQueryString(),
+                ->get() // Returns ALL logs
         ]);
     }
     

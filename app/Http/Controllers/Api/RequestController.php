@@ -452,7 +452,7 @@ class RequestController extends Controller
         // Base update data
         $updateData = ['status' => $validated['status']];
 
-        // ✅ If approver is same department as request, assign them as request owner
+        // If approver is same department as request, assign them as request owner
         if ($authUser->department_id === $request->department_id) {
             $updateData['user_id'] = $authUser->id;
         }
@@ -470,6 +470,66 @@ class RequestController extends Controller
             'approved_at' => now(),
             'remarks' => $description,
         ]);
+
+        // ===== NOTIFICATION FOR PROPERTY CUSTODIAN ROLE =====
+        // Only notify if status is propertyCustodian
+        if ($validated['status'] === 'propertyCustodian') {
+            // Get all users with role 'property_custodian'
+            $custodians = User::where('role', 'property_custodian')->get();
+            
+            // Get the request creator
+            $creator = User::find($request->user_id);
+            
+            foreach ($custodians as $custodian) {
+                DB::table('notifications')->insert([
+                    'id' => (string) \Illuminate\Support\Str::uuid(),
+                    'type' => 'RequestForCustodian',
+                    'notifiable_type' => 'App\Models\User',
+                    'notifiable_id' => $custodian->id,
+                    'data' => json_encode([
+                        'request_id' => $request->id,
+                        'title' => 'Request Ready for Custodian',
+                        'request_no' => $request->request_no,
+                        'department' => $request->department->name ?? 'N/A',
+                        'purpose' => $request->purpose,
+                        'created_by' => $creator?->name ?? 'Unknown',
+                        'previous_status' => $oldStatus,
+                        'status' => $validated['status'],
+                        'message' => "Request #{$request->request_no} from {$request->department->name} is ready for processing.",
+                        'link' => route('request.show', $request->id),
+                        'updated_by' => $authUser->name,
+                    ]),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+        
+        // ===== NOTIFY CREATOR WHEN STATUS IS TO_ORDER =====
+        if ($validated['status'] === 'to_order') {
+            $creator = User::find($request->user_id);
+            
+            if ($creator) {
+                DB::table('notifications')->insert([
+                    'id' => (string) \Illuminate\Support\Str::uuid(),
+                    'type' => 'RequestReadyToOrder',
+                    'notifiable_type' => 'App\Models\User',
+                    'notifiable_id' => $creator->id,
+                    'data' => json_encode([
+                        'request_id' => $request->id,
+                        'title' => 'Request Ready to Order',
+                        'request_no' => $request->request_no,
+                        'status' => $validated['status'],
+                        'message' => "Your request #{$request->request_no} is now ready to order.",
+                        'link' => route('request.show', $request->id),
+                        'updated_by' => $authUser->name,
+                    ]),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+        // ===== END NOTIFICATIONS =====
 
         // Log activity
         activity()
