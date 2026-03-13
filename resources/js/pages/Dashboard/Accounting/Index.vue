@@ -13,8 +13,8 @@ const props = defineProps<{
     statusCounts: {
         pending: number;
         approved: number;
-        forApproval: number;
-        rejected: number;
+        forAudit: number;
+        return: number;
     };
     voucherStats: {
         totalVouchers: number
@@ -24,10 +24,10 @@ const props = defineProps<{
         statusCounts: {
             totalForVoucher?: number
             pending?: number
-            forApproval?: number
+            forAudit?: number
             approved?: number
             paid?: number
-            rejected?: number
+            return?: number
         }
         monthlyData: Array<any>
     };

@@ -11,18 +11,14 @@ defineProps<{
   statusCounts: {
     totalForVoucher: number;
     pending: number;
-    forApproval: number;
+    forAudit: number;
     approved: number;
-    rejected: number;
+    return: number;
   };
 }>()
 
 const goToForVoucher = () => {
   router.get('/for-voucher');
-};
-
-const goToPending = () => {
-  router.get('/vouchers')
 };
 </script>
 
@@ -55,7 +51,7 @@ const goToPending = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <div class="text-2xl font-bold"># Audit count</div>
+        <div class="text-2xl font-bold">{{ statusCounts.forAudit }}</div>
         <p class="text-xs text-muted-foreground">
           Waiting for Audit review
         </p>
@@ -72,9 +68,9 @@ const goToPending = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <div class="text-2xl font-bold"># Returned Voucher</div>
+        <div class="text-2xl font-bold">{{ statusCounts.return }}</div>
         <p class="text-xs text-muted-foreground">
-          Pending For EOD Approval
+          Vouchers sent back for revision or correction
         </p>
       </CardContent>
     </Card>

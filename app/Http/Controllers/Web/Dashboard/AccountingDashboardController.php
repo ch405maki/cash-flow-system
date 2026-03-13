@@ -57,10 +57,10 @@ class AccountingDashboardController extends BaseDashboardController
                 ->count(),
             'statusCounts' => [
                 'pending' => Voucher::where('status', 'pending')->count(),
-                'forApproval' => Voucher::where('status', 'forEOD')->count(),
+                'forAudit' => Voucher::where('status', 'forAudit')->count(),
                 'approved' => Voucher::where('status', 'forCheck')->count(),
                 'paid' => Voucher::where('status', 'paid')->count(),
-                'rejected' => Voucher::where('status', 'rejected')->count(),
+                'return' => Voucher::where('status', 'return')->count(),
             ],
             'monthlyData' => Voucher::selectRaw('YEAR(issue_date) as year, MONTH(issue_date) as month, COUNT(*) as count, SUM(check_amount) as amount')
                 ->groupBy('year', 'month')
@@ -72,9 +72,9 @@ class AccountingDashboardController extends BaseDashboardController
         $statusCounts = [
             'totalForVoucher' => PurchaseOrder::where('status', 'approved')->count(),
             'pending' => Voucher::where('status', 'draft')->count(),
-            'forApproval' => Voucher::where('status', 'forEOD')->count(),
+            'forAudit' => Voucher::where('status', 'forAudit')->count(),
             'approved' => Voucher::whereIn('status', ['forCheck', 'unreleased', 'released'])->count(),
-            'rejected' => Voucher::where('status', 'rejected')->count(),
+            'return' => Voucher::where('status', 'return')->count(),
         ];
 
         return Inertia::render('Dashboard/Accounting/Index', [
