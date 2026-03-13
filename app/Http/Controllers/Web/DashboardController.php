@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request as HttpRequest;
@@ -72,7 +72,7 @@ class DashboardController extends Controller
             'inactiveUsers' => User::where('status', 'inactive')->count(),
             'departments' => Department::withCount('users')->get(),
             'accessLevels' => Access::withCount('users')->get(),
-            'users' => User::with(['department', 'access'])->get(), // Add this line
+            'users' => User::with(['department', 'access'])->get(),
         ];
 
         return Inertia::render('Dashboard/Admin/Index', [
@@ -372,7 +372,6 @@ class DashboardController extends Controller
             ->limit(5)
             ->get()
             ->map(function ($pettyCash) {
-                // Calculate total amount from items
                 $totalAmount = $pettyCash->items->sum('amount');
                 
                 return [

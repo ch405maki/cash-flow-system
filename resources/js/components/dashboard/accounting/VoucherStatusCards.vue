@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { 
-  Users,
   Clock,
   CheckCircle,
   ShoppingCart,
-  XCircle,
 } from 'lucide-vue-next'
 import { router } from '@inertiajs/vue3'
 
@@ -47,35 +45,34 @@ const goToPending = () => {
         </p>
       </CardContent>
     </Card>
-    <Card class="h-full cursor-pointer transition-all duration-200 hover:shadow-md hover:bg-muted/50"  @click="goToPending">
+    <Card class="h-full cursor-pointer transition-all duration-200 hover:shadow-md hover:bg-muted/50">
       <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle class="text-sm font-medium">
-          Pending
+          For Audit
         </CardTitle>
         <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
           <Clock class="h-4 w-4 text-muted-foreground" />
         </div>
       </CardHeader>
       <CardContent>
-        <div class="text-2xl font-bold">{{ statusCounts.pending }}</div>
+        <div class="text-2xl font-bold"># Audit count</div>
         <p class="text-xs text-muted-foreground">
-          Waiting for department head approval
+          Waiting for Audit review
         </p>
       </CardContent>
     </Card>
 
-    <!-- To Order Card -->
     <Card class="h-full">
       <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle class="text-sm font-medium">
-          For EOD Approval
+          Returned Voucher
         </CardTitle>
         <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
           <ShoppingCart class="h-4 w-4 text-muted-foreground" />
         </div>
       </CardHeader>
       <CardContent>
-        <div class="text-2xl font-bold">{{ statusCounts.forApproval }}</div>
+        <div class="text-2xl font-bold"># Returned Voucher</div>
         <p class="text-xs text-muted-foreground">
           Pending For EOD Approval
         </p>
@@ -99,23 +96,5 @@ const goToPending = () => {
         </p>
       </CardContent>
     </Card>
-
-    <!-- Rejected Card -->
-    <!-- <Card class="h-full">
-      <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle class="text-sm font-medium">
-          Rejected
-        </CardTitle>
-        <div class="p-2 rounded-lg bg-purple-500/10 text-violet-500 border">
-          <XCircle class="h-4 w-4 text-muted-foreground"/>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div class="text-2xl font-bold">{{ statusCounts.rejected }}</div>
-        <p class="text-xs text-muted-foreground">
-          Not approved for review
-        </p>
-      </CardContent>
-    </Card> -->
   </div>
 </template>

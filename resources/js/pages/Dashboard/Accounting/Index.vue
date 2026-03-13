@@ -2,7 +2,8 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
-import StatsCards from '@/components/dashboard/accounting/StatsCards.vue';
+import VoucherStatusCards from '@/components/dashboard/accounting/VoucherStatusCards.vue';
+import RequestStatusCards from '@/components/dashboard/accounting/RequestStatusCards.vue';
 import RecentRequestsTable from '@/components/dashboard/accounting/RecentRequestsTable.vue';
 import PageHeader from '@/components/PageHeader.vue';
 
@@ -55,7 +56,8 @@ const breadcrumbs: BreadcrumbItem[] = [
                 />
             </div>
             
-            <StatsCards :status-counts="statusCounts" />
+            <VoucherStatusCards :status-counts="statusCounts" />
+            <RequestStatusCards :status-counts="statusCounts" />
             
             <div class="space-y-4">
                 <PageHeader 

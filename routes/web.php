@@ -11,9 +11,11 @@ use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\SignatoryController;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\CanvasController;
-use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\ProfilePictureController;
+
+// web
+use App\Http\Controllers\Web\DashboardController;
 
 use App\Models\User;
 use Illuminate\Notifications\AnonymousNotifiable;
