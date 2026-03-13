@@ -67,6 +67,11 @@ function viewVoucher(id: number) {
                     }">
                     {{ voucher.status }}
                     </span>
+                    <StatusBadge 
+                      :status="voucher.status"
+                      show-icon
+                      size="md"
+                    />
                 </TableCell>
             </TableRow>
         </TableBody>

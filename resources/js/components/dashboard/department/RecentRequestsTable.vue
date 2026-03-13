@@ -5,7 +5,7 @@ import {
 } from 'lucide-vue-next'
 import { router } from '@inertiajs/vue3'
 import PageHeader from '@/components/PageHeader.vue';
-import { Badge } from '@/components/ui/badge';
+import StatusBadge from '@/components/StatusBadge.vue';
 import {
   Table,
   TableBody,
@@ -48,49 +48,6 @@ function formatDate(dateStr: string): string {
     day: '2-digit'
   })
 }
-
-// Status badge configuration
-const getStatusConfig = (status: string) => {
-  const statusMap: Record<string, { color: string; label: string }> = {
-    'pending': {
-      color: 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100',
-      label: 'Pending'
-    },
-    'approved': {
-      color: 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100',
-      label: 'Approved'
-    },
-    'to_order': {
-      color: 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100',
-      label: 'To Order'
-    },
-    'rejected': {
-      color: 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100',
-      label: 'Rejected'
-    },
-    'draft': {
-      color: 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100',
-      label: 'Draft'
-    },
-    'in_review': {
-      color: 'bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-100',
-      label: 'In Review'
-    },
-    'completed': {
-      color: 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100',
-      label: 'Completed'
-    },
-    'cancelled': {
-      color: 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100',
-      label: 'Cancelled'
-    }
-  }
-
-  return statusMap[status.toLowerCase()] || {
-    color: 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100',
-    label: status.charAt(0).toUpperCase() + status.slice(1)
-  }
-}
 </script>
 
 <template>
@@ -98,6 +55,7 @@ const getStatusConfig = (status: string) => {
     title="Recent Requests" 
     subtitle="Latest purchase and service requests awaiting action"
   />
+  
   <div v-if="isDepartmentUser && recentRequests.length > 0">
     <div class="relative w-full overflow-auto">
       <Table>
@@ -125,15 +83,12 @@ const getStatusConfig = (status: string) => {
             <TableCell>
               {{ request.purpose }}
             </TableCell>
-
             <TableCell class="text-right">
-              <Badge 
-                variant="outline" 
-                :class="getStatusConfig(request.status).color"
-                class="font-medium capitalize"
-              >
-                {{ getStatusConfig(request.status).label }}
-              </Badge>
+              <StatusBadge 
+                :status="request.status"
+                show-icon
+                size="md"
+              />
             </TableCell>
           </TableRow>
         </TableBody>

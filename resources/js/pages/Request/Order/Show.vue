@@ -34,7 +34,7 @@ import {
 } from '@/components/ui/table'
 import FormHeader from '@/components/reports/header/formHeder.vue'
 import PrintableSection from '@/components/printables/OrderPrint.vue'
-import { Badge } from '@/components/ui/badge'
+import StatusBadge from '@/components/StatusBadge.vue';
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from 'vue-toastification'
@@ -317,9 +317,11 @@ const breadcrumbs: BreadcrumbItem[] = [
                 Status:
               </TableCell>
               <TableCell class="p-2 w-40">
-                <Badge :variant="getStatusVariant(requestOrder.status)" class="capitalize">
-                  {{ requestOrder.status }}
-                </Badge>
+                <StatusBadge 
+                    :status="requestOrder.status"
+                    show-icon
+                    size="md"
+                  />
               </TableCell>
             </TableRow>
           </TableBody>
@@ -338,7 +340,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                 <TableHead class="border-r p-2">Item Description</TableHead>
                 <TableHead class="border-r p-2">Quantity</TableHead>
                 <TableHead class="border-r">Unit</TableHead>
-                <TableHead class="p-2">Status</TableHead>
+                <!-- <TableHead class="p-2">Status</TableHead> -->
             </TableRow>
             </TableHeader>
             <TableBody>
@@ -347,7 +349,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                 <TableCell class="border p-2">{{ detail.item_description }}</TableCell>
                 <TableCell class="border p-2">{{ detail.quantity }}</TableCell>
                 <TableCell class="border p-2">{{ detail.unit }}</TableCell>
-                <TableCell class="border-b p-2">{{ detail.request_detail?.tracking_status || 'Not Tracked' }}</TableCell>
+                <!-- <TableCell class="border-b p-2">{{ detail.request_detail?.tracking_status || 'Not Tracked' }}</TableCell> -->
             </TableRow>
             </TableBody>
         </Table>

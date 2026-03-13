@@ -19,6 +19,8 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty'
+import StatusBadge from '@/components/StatusBadge.vue';
+
 
 const props = defineProps<{
   vouchers: Array<any>;
@@ -85,15 +87,11 @@ function formatDisplayDate(dateString: string): string {
             {{ formatDisplayDate(voucher.created_at || voucher.voucher_date) }}
           </TableCell>
           <TableCell class="px-4 py-4 capitalize text-right">
-            <span class="inline-block rounded-full px-3 py-0.5 text-xs font-semibold" :class="{
-              'bg-yellow-100 text-yellow-800': voucher.status === 'draft',
-              'bg-green-100 text-green-800': voucher.status === 'forCheck',
-              'bg-red-100 text-red-800': voucher.status === 'rejected',
-              'bg-blue-100 text-blue-800': voucher.status === 'forEOD',
-              'bg-orange-100 text-orange-800': voucher.status === 'forAudit',
-            }">
-              {{ voucher.status }}
-            </span>
+            <StatusBadge 
+                :status="voucher.status"
+                show-icon
+                size="md"
+              />
           </TableCell>
         </TableRow>
       </TableBody>

@@ -396,6 +396,11 @@ const bursarNavItems: NavItem[] = [
     href: '/bursar/petty-cash',
     icon: SquarePen,
   },
+  {
+    title: 'Create Request',
+    href: '/request/create',
+    icon: SquarePen,
+  },
 ];
 
 // Handle state updates from NavMain

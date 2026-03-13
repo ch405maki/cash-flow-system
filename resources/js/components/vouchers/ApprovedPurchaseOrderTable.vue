@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/table'
 import { FileText } from 'lucide-vue-next';
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { router } from '@inertiajs/vue3'
 import {
   Empty,
@@ -18,6 +17,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty'
+import StatusBadge from '@/components/StatusBadge.vue';
 
 defineProps({
   purchaseOrders: {
@@ -45,11 +45,6 @@ function formatDate(dateStr: string): string {
     month: 'short',
     day: '2-digit'
   })
-}
-
-function goToCreate(poId?: number) {
-  const url = poId ? `/vouchers/create?po_id=${poId}` : '/vouchers/create'
-  router.visit(url)
 }
 </script>
 
@@ -79,9 +74,11 @@ function goToCreate(poId?: number) {
           <TableCell>{{ po.department.department_name }}</TableCell>
           <TableCell>{{ po.amount.toLocaleString() }}</TableCell>
           <TableCell>
-            <Badge>
-              {{ po?.status || 'N/A' }}
-            </Badge>
+            <StatusBadge 
+                :status="po?.status"
+                show-icon
+                size="md"
+              />
           </TableCell>
         </TableRow>
       </TableBody>
