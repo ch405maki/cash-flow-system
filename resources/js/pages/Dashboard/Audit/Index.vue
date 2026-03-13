@@ -10,10 +10,6 @@ import {
     ClipboardList, 
     Receipt, 
     Wallet,
-    Calendar,
-    User,
-    DollarSign,
-    Hash
 } from 'lucide-vue-next';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -25,8 +21,9 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { formatDateTime, formatCurrency } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 import PageHeader from '@/components/PageHeader.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 
 const props = defineProps<{
     isDepartmentUser: boolean;
@@ -57,7 +54,7 @@ const props = defineProps<{
             id: number;
             pcv_no: string;
             paid_to: string;
-            remarks: string;  // Added remarks field
+            remarks: string;
             date: string;
             total_amount: number;
             items_count: number;
@@ -241,9 +238,11 @@ const formatDate = (date: string) => {
                                 >
                                     <TableCell class="font-medium">{{ canvas.title }}</TableCell>
                                     <TableCell>
-                                        <Badge variant="secondary" class="bg-blue-100 text-blue-800 px-2 py-0.5 w-fit">
-                                            {{ canvas.status }}
-                                        </Badge>
+                                        <StatusBadge 
+                                            :status="canvas.status"
+                                            show-icon
+                                            size="md"
+                                        />
                                     </TableCell>
                                     <TableCell>{{ canvas.files_count }} files</TableCell>
                                     <TableCell>{{ formatDate(canvas.created_at) }}</TableCell>
