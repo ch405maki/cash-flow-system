@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import StatusBadge from '@/components/StatusBadge.vue';
 
 interface PettyCashItem {
   id: number
@@ -37,28 +38,6 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-
-// Status color mapping (same as before)
-const getStatusConfig = (status: string) => {
-  const statusMap: Record<string, { color: string; label: string }> = {
-    'draft': { color: 'bg-gray-500 text-white', label: 'Draft' },
-    'requested': { color: 'bg-blue-500 text-white', label: 'Requested' },
-    'submitted': { color: 'bg-purple-500 text-white', label: 'Submitted' },
-    'approved': { color: 'bg-green-500 text-white', label: 'Approved' },
-    'returned': { color: 'bg-orange-500 text-white', label: 'Returned' },
-    'rejected': { color: 'bg-red-500 text-white', label: 'Rejected' },
-    'liquidation': { color: 'bg-indigo-500 text-white', label: 'Liquidation' },
-    'approved liquidation': { color: 'bg-teal-500 text-white', label: 'Approved' },
-    'released': { color: 'bg-emerald-500 text-white', label: 'Released' },
-    'completed': { color: 'bg-green-600 text-white', label: 'Completed' },
-    'cancelled': { color: 'bg-red-600 text-white', label: 'Cancelled' }
-  }
-
-  return statusMap[status.toLowerCase()] || {
-    color: 'bg-gray-400 text-white',
-    label: status
-  }
-}
 
 // Handle row click
 const handleRowClick = (item: PettyCashItem) => {
@@ -127,12 +106,11 @@ const getTooltipText = (item: PettyCashItem) => {
             </TableCell>
             
             <TableCell>
-              <Badge 
-                :class="getStatusConfig(item.status).color"
-                class="capitalize font-medium text-white"
-              >
-                {{ getStatusConfig(item.status).label }}
-              </Badge>
+              <StatusBadge 
+                :status="item.status"
+                show-icon
+                size="md"
+              />
             </TableCell>
             
             <TableCell class="capitalize text-right">

@@ -4,6 +4,7 @@ import { Head } from '@inertiajs/vue3'
 import { router } from '@inertiajs/vue3'
 import { FileText } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import {
   Table,
   TableCaption,
@@ -84,7 +85,7 @@ function formatDate(dateStr: string): string {
                 <TableHead>Order No</TableHead>
                 <TableHead>Date Request</TableHead>
                 <TableHead>Notes</TableHead>
-                <TableHead class="w-[100px]">Status</TableHead>
+                <TableHead class="text-right">Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -98,13 +99,12 @@ function formatDate(dateStr: string): string {
                 <TableCell class="font-medium">{{ request.order_no }}</TableCell>
                 <TableCell>{{ formatDate(request.order_date) }}</TableCell>
                 <TableCell>{{ request.notes || 'No Note(s) Attatched'}}</TableCell>
-                <TableCell>
-                  <Badge
-                    :variant="getStatusVariant(request.status)"
-                    class="capitalize"
-                  >
-                    {{ request.status }}
-                  </Badge>
+                <TableCell class="text-right">
+                  <StatusBadge 
+                    :status="request.status"
+                    show-icon
+                    size="md"
+                  />
                 </TableCell>
               </TableRow>
             </TableBody>

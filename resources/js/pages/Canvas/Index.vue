@@ -22,7 +22,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
+
+import StatusBadge from '@/components/StatusBadge.vue';
 import CanvasUploadDialog from '@/components/canvas/CanvasUploadDialog.vue'
 import CanvasShowDialog from '@/components/canvas/CanvasShowDialog.vue'
 import { ref } from 'vue';
@@ -32,22 +33,6 @@ defineProps<{
   canvases: Array<any>;
   authUserRole: string;
 }>();
-
-const statusIcons = {
-  draft: Pencil,
-  submitted: ChevronRight,
-  pending_approval: UserRoundCheck,
-  approved: CheckCircle,
-  rejected: XCircle,
-};
-
-const statusVariants = {
-  draft: 'bg-gray-100 text-gray-800 hover:bg-gray-200',
-  submitted: 'bg-blue-100 text-blue-800 hover:bg-blue-200',
-  pending_approval: 'bg-purple-100 text-purple-800 hover:bg-purple-200',
-  approved: 'bg-green-100 text-green-800 hover:bg-green-200',
-  rejected: 'bg-red-100 text-red-800 hover:bg-red-200',
-};
 
 // Dialog state management
 const showDialog = ref(false);
@@ -84,9 +69,9 @@ const breadcrumbs = [
         <TableHeader>
           <TableRow>
             <TableHead>Files</TableHead>
-            <TableHead>Status</TableHead>
             <TableHead>Notes</TableHead>
             <TableHead>Uploaded</TableHead>
+            <TableHead>Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -104,17 +89,7 @@ const breadcrumbs = [
                 </div>
               </div>
             </TableCell>
-            
-            <TableCell>
-              <Badge :class="statusVariants[canvas.status]">
-                <component 
-                  :is="statusIcons[canvas.status]" 
-                  class="h-3 w-3 mr-1" 
-                />
-                <span class="capitalize">{{ canvas.status.replace('_', ' ') }}</span>
-              </Badge>
-            </TableCell>
-            
+
             <TableCell>
               <div class="text-sm text-muted-foreground max-w-[200px] truncate">
                 {{ canvas.note || 'No Notes' }}
@@ -125,6 +100,13 @@ const breadcrumbs = [
               <div class="text-sm">
                 {{ formatDateTime(canvas.created_at) }}
               </div>
+            </TableCell>
+            <TableCell>
+              <StatusBadge 
+                :status="canvas.status"
+                show-icon
+                size="md"
+              />
             </TableCell>
           </TableRow>
         </TableBody>

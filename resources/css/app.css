@@ -57,48 +57,55 @@ html {
     }
 
     .dark {
-        --background: 270 20% 10%;             /* dark violet */
-        --foreground: 270 80% 90%;             /* light violet text */
+        /* Base */
+        --background: 240 10% 8%;              /* near-black neutral */
+        --foreground: 0 0% 92%;                /* soft white text */
 
-        --card: 270 20% 12%;
-        --card-foreground: 270 80% 90%;
+        /* Surfaces */
+        --card: 240 10% 12%;
+        --card-foreground: 0 0% 92%;
 
-        --popover: 270 20% 12%;
-        --popover-foreground: 270 80% 90%;
+        --popover: 240 10% 12%;
+        --popover-foreground: 0 0% 92%;
 
-        --primary: 270 80% 60%;                /* keep vibrant violet as strong accent */
+        /* Brand Accent */
+        --primary: 270 80% 60%;                /* vibrant violet */
         --primary-foreground: 0 0% 100%;
 
-        --secondary: 270 30% 25%;              /* muted dark violet */
-        --secondary-foreground: 270 80% 90%;
+        --secondary: 240 6% 18%;               /* neutral surface */
+        --secondary-foreground: 0 0% 85%;
 
-        --muted: 270 20% 20%;                  /* muted dark violet */
-        --muted-foreground: 270 40% 70%;
+        --muted: 240 6% 16%;
+        --muted-foreground: 240 5% 65%;
 
-        --accent: 270 25% 30%;                 /* deep violet */
-        --accent-foreground: 270 80% 90%;
+        --accent: 270 60% 50%;                 /* softer violet accent */
+        --accent-foreground: 0 0% 100%;
 
-        --destructive: 0 70% 40%;
-        --destructive-foreground: 0 0% 98%;
+        /* States */
+        --destructive: 0 65% 50%;
+        --destructive-foreground: 0 0% 100%;
 
-        --border: 270 20% 20%;
-        --input: 270 20% 20%;
-        --ring: 270 80% 60%;
+        /* UI Elements */
+        --border: 240 6% 18%;
+        --input: 240 6% 18%;
+        --ring: 270 80% 65%;
 
+        /* Charts */
         --chart-1: 270 80% 60%;
-        --chart-2: 270 70% 50%;
-        --chart-3: 270 60% 40%;
-        --chart-4: 270 50% 30%;
-        --chart-5: 270 40% 20%;
+        --chart-2: 250 70% 55%;
+        --chart-3: 230 60% 50%;
+        --chart-4: 200 60% 45%;
+        --chart-5: 180 50% 40%;
 
-        --sidebar-background: 270 20% 8%;
-        --sidebar-foreground: 270 80% 90%;
+        /* Sidebar */
+        --sidebar-background: 240 10% 6%;
+        --sidebar-foreground: 0 0% 90%;
         --sidebar-primary: 270 80% 60%;
         --sidebar-primary-foreground: 0 0% 100%;
-        --sidebar-accent: 270 30% 25%;
-        --sidebar-accent-foreground: 270 80% 90%;
-        --sidebar-border: 270 20% 20%;
-        --sidebar-ring: 270 80% 60%;
+        --sidebar-accent: 240 6% 18%;
+        --sidebar-accent-foreground: 0 0% 85%;
+        --sidebar-border: 240 6% 18%;
+        --sidebar-ring: 270 80% 65%;
     }
 }
 

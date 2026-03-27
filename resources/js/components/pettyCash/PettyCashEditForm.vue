@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Rocket, Forward, Pencil, PlusCircle, X } from 'lucide-vue-next'
+import { Rocket, Forward, Pencil, PlusCircle, X, Info } from 'lucide-vue-next'
 import { formatDate } from '@/lib/utils'
 import { usePettyCash } from '@/composables/usePettyCash'
 
@@ -44,6 +44,20 @@ const editValue = ref<string>('')
 
 // Toggle for Add New Item form
 const showAddItemForm = ref(false)
+
+// Find the latest returned approval remarks
+const returnedRemarks = computed(() => {
+  if (props.pettyCash.status !== 'returned') return null
+  
+  // Find the most recent approval with 'returned' status
+  const returnedApproval = props.pettyCash.approvals
+    ?.filter((a: any) => a.status === 'returned')
+    ?.sort((a: any, b: any) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )[0]
+  
+  return returnedApproval?.remarks || 'No specific remarks provided'
+})
 
 // Start editing a header field
 const startEditing = (field: string, currentValue: string) => {
@@ -184,6 +198,14 @@ watch(() => usePage().props.saved_item, (savedItem) => {
 
 <template>
   <div class="space-y-6">
+    <Alert v-if="props.pettyCash.status === 'returned'" class="border-orange-200 bg-orange-50 dark:bg-orange-600">
+      <Info class="h-4 w-4" />
+      <AlertTitle>Return Remarks<span class="text-xs text-orange-600 dark:text-orange-200 font-normal text-muted-foreground ml-2">(Please make the necessary revisions and resubmit.)</span></AlertTitle>
+      <AlertDescription>
+          "{{ returnedRemarks || 'No specific remarks provided' }}"
+      </AlertDescription>
+    </Alert>
+
     <!-- Voucher Header with Double-click to Edit -->
     <div class="overflow-hidden">
       <Table>
@@ -206,6 +228,7 @@ watch(() => usePage().props.saved_item, (savedItem) => {
                     'text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full text-xs': props.pettyCash.status === 'pending',
                     'text-blue-600 bg-blue-100 px-2 py-1 rounded-full text-xs': props.pettyCash.status === 'for liquidation',
                     'text-green-600 bg-green-100 px-2 py-1 rounded-full text-xs': props.pettyCash.status === 'submitted',
+                    'text-orange-600 bg-orange-100 px-2 py-1 rounded-full text-xs': props.pettyCash.status === 'returned',
                     'text-gray-600 bg-gray-100 px-2 py-1 rounded-full text-xs': props.pettyCash.status === 'draft'
                   }">
                     {{ props.pettyCash.status }}
@@ -365,14 +388,15 @@ watch(() => usePage().props.saved_item, (savedItem) => {
         Add Item
       </Button>
 
-      <!-- Submit Button -->
+      <!-- Submit Button - Enable for returned status too -->
       <Button
         v-if="user.access_id == 3"
         @click="isSubmitDialogOpen = true"
         class="bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
         :disabled="props.pettyCash.status === 'submitted'"
       >
-        <Forward class="mr-2 h-4 w-4" /> Submit Petty Cash
+        <Forward class="mr-2 h-4 w-4" /> 
+        {{ props.pettyCash.status === 'returned' ? 'Resubmit Petty Cash' : 'Submit Petty Cash' }}
       </Button>
     </div>
 
@@ -380,8 +404,10 @@ watch(() => usePage().props.saved_item, (savedItem) => {
     <ConfirmationDialog
       v-model:open="isSubmitDialogOpen"
       v-model:checked="submitConfirmChecked"
-      title="Submit Petty Cash"
-      description="Please confirm that all entries are correct before submitting this petty cash voucher for audit."
+      :title="props.pettyCash.status === 'returned' ? 'Resubmit Petty Cash' : 'Submit Petty Cash'"
+      :description="props.pettyCash.status === 'returned' 
+        ? 'Please confirm that you have addressed all return remarks before resubmitting this petty cash voucher for audit.'
+        : 'Please confirm that all entries are correct before submitting this petty cash voucher for audit.'"
       confirm-label="Confirm & Submit"
       @confirm="confirmAndSubmit"
     />

@@ -7,10 +7,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
+import StatusBadge from '@/components/StatusBadge.vue';
 import { router } from '@inertiajs/vue3'
 import { FileText } from 'lucide-vue-next'
-
+import { formatCurrency } from '@/lib/utils'
 
 defineProps({
   purchaseOrders: {
@@ -50,13 +50,15 @@ function goToPO(id: number) {
         <TableRow @click="goToPO(po.id)" class="hover:cursor-pointer hover:underline" v-for="po in purchaseOrders.data" :key="po.id" title="View Purchase Order">
           <TableCell class="font-medium">{{ po.po_no }}</TableCell>
           <TableCell>{{ formatDate(po.date) }}</TableCell>
-          <TableCell>{{ po.payee }}</TableCell>
+          <TableCell class="capitalize">{{ po.payee }}</TableCell>
           <TableCell>{{ po.department.department_name }}</TableCell>
-          <TableCell>{{ po.amount.toLocaleString() }}</TableCell>
+          <TableCell>{{ formatCurrency(po.amount) }}</TableCell>
           <TableCell>
-            <Badge class="capitalize">  
-              {{ po?.status || 'N/A' }}
-            </Badge>
+            <StatusBadge 
+                :status="po?.status"
+                show-icon
+                size="md"
+              />
           </TableCell>
         </TableRow>
       </TableBody>

@@ -269,7 +269,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                     </CardContent>
                 </Card>
 
-                <div class="border rounded-lg">
+                <div>
                     <Table>
                     <TableHeader>
                         <TableRow>

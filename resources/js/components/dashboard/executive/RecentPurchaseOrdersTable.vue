@@ -8,6 +8,8 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table'
+import StatusBadge from '@/components/StatusBadge.vue';
+
 
 defineProps<{
   recentPurchaseOrders: Array<any>;
@@ -52,16 +54,12 @@ function goToPO(id: number) {
           <TableCell>{{ formatDate(po.date) }}</TableCell>
           <TableCell>{{ po.payee }}</TableCell>
           <TableCell>₱{{ po.amount.toLocaleString() }}</TableCell>
-          <TableCell class="capitalize">
-            <span
-              :class="{
-                'text-green-600': po.status === 'approved',
-                'text-yellow-600': po.status === 'pending',
-                'text-red-600': po.status === 'rejected'
-              }"
-            >
-              {{ po.status.replace('_', ' ') }}
-            </span>
+          <TableCell>
+            <StatusBadge 
+                :status="po.status"
+                show-icon
+                size="md" 
+              />
           </TableCell>
         </TableRow>
       </TableBody>

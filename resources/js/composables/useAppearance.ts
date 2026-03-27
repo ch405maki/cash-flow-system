@@ -46,7 +46,7 @@ const getStoredAppearance = () => {
 const handleSystemThemeChange = () => {
     const currentAppearance = getStoredAppearance();
 
-    updateTheme(currentAppearance || 'system');
+    updateTheme(currentAppearance || 'light'); // Changed from 'system' to 'light'
 };
 
 export function initializeTheme() {
@@ -54,16 +54,26 @@ export function initializeTheme() {
         return;
     }
 
-    // Initialize theme from saved preference or default to system...
+    // Check if there's a saved preference
     const savedAppearance = getStoredAppearance();
-    updateTheme(savedAppearance || 'system');
+    
+    if (savedAppearance) {
+        // Use saved preference if it exists
+        updateTheme(savedAppearance);
+    } else {
+        // Default to light mode
+        updateTheme('light');
+        // Optionally store the default preference
+        localStorage.setItem('appearance', 'light');
+        setCookie('appearance', 'light');
+    }
 
     // Set up system theme change listener...
     mediaQuery()?.addEventListener('change', handleSystemThemeChange);
 }
 
 export function useAppearance() {
-    const appearance = ref<Appearance>('system');
+    const appearance = ref<Appearance>('light'); // Changed default to 'light'
 
     onMounted(() => {
         initializeTheme();
@@ -72,6 +82,8 @@ export function useAppearance() {
 
         if (savedAppearance) {
             appearance.value = savedAppearance;
+        } else {
+            appearance.value = 'light';
         }
     });
 

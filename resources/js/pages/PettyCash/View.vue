@@ -6,7 +6,7 @@ import PettyCashView from '@/components/pettyCash/audit/PettyCashView.vue'
 import PettyCashPrint from '@/components/pettyCash/printables/PettyCash.vue'
 import PettyCashDistribution from '@/components/pettyCash/audit/PettyCashDistribution.vue'
 import { Button } from '@/components/ui/button'
-import { History, CheckCircle, } from 'lucide-vue-next'
+import { History, CircleCheck } from 'lucide-vue-next'
 import { formatDateTime } from '@/lib/utils'
 import PageHeader from '@/components/PageHeader.vue';
 import {
@@ -21,7 +21,7 @@ import {
   AlertDialogAction
 } from '@/components/ui/alert-dialog'
 import { Checkbox } from '@/components/ui/checkbox'
-import { reactive, ref, computed } from 'vue'
+import {  ref, computed } from 'vue'
 import { useToast } from "vue-toastification";
 import {
   Sheet,
@@ -96,7 +96,7 @@ const releaseCashAdvance = () => {
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Dashboard', href: '/dashboard' },
   { title: 'Petty Cash Voucher', href: '#' },
-  { title: `Viewing ${props.pettyCash.pcv_no}`, href: '#' }
+  { title: `${props.pettyCash.pcv_no}`, href: '#' }
 ]
 
 const reimbursementTotal = computed(() => {
@@ -143,7 +143,7 @@ console.log(props.pettyCash)
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
       <div class="flex items-center justify-between">
         <PageHeader 
-          :title="`Viewing ${props.pettyCash.pcv_no}`" 
+          :title="`${props.pettyCash.pcv_no}`" 
           subtitle="Review Petty Cash Voucher"
         />
 
@@ -184,7 +184,7 @@ console.log(props.pettyCash)
                         <div
                           class="bg-green-500 border-2 border-green-500 absolute -left-6 top-0 h-8 w-8 rounded-full flex items-center justify-center z-10"
                         >
-                          <CheckCircle class="h-5 w-5 text-white" />
+                          <CircleCheck class="h-5 w-5 text-white" />
                         </div>
 
                         <!-- Connector line -->

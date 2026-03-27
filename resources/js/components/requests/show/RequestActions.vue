@@ -4,7 +4,7 @@ import { useToast } from 'vue-toastification'
 import { useForm, router } from '@inertiajs/vue3'
 import PasswordDialog from './PasswordDialog.vue'
 import { Button } from '@/components/ui/button'
-import { Printer, FilePenLine, BadgeCheck, History, Rocket, ShoppingCart, CheckCircle, XCircle } from 'lucide-vue-next'
+import { Printer, FilePenLine, BadgeCheck, History, Rocket, ShoppingCart, CircleCheck, XCircle } from 'lucide-vue-next'
 import { formatDateTime } from '@/lib/utils'
 import {
   Sheet,
@@ -242,7 +242,7 @@ const handleReorder = () => {
                     class="bg-green-500 border-2 border-green-500 absolute -left-6 top-0 h-8 w-8 rounded-full flex items-center justify-center z-10"
                 >
                     <component
-                    :is="approval.approved ? CheckCircle : CheckCircle"
+                    :is="approval.approved ? CircleCheck : CircleCheck"
                     class="h-5 w-5 text-white"
                     />
                 </div>

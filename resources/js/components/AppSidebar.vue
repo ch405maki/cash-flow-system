@@ -115,7 +115,7 @@ const purchasingCanvasNavItems = ref<DropdownNavItem[]>(
       icon: ShoppingCart,
       isOpen: false,
       children: [
-        { title: 'Pending', href: '/canvas' },
+        { title: 'Draft', href: '/canvas' },
         { title: 'Submitted', href: '/canvas/approval?status=submitted' },
         { title: 'Approved', href: '/canvas/approval?status=approved' },
         { title: 'P. O. Created', href: '/canvas/approval?status=poCreated' },
@@ -155,6 +155,11 @@ const custodianNavItems: NavItem[] = [
   {
     title: 'On Process Orders',
     href: '/released-order',
+    icon: Package,
+  },
+  {
+    title: 'Inventory',
+    href: '/inventory',
     icon: Package,
   },
 ];
@@ -243,7 +248,7 @@ const accountingNavItems: NavItem[] = [
     icon: ReceiptText,
   },
   {
-    title: 'Voucher For Approval',
+    title: 'Voucher For Audit',
     href: '/voucher-approval',
     icon: ReceiptText,
   },
@@ -377,19 +382,13 @@ const adminNavItems: NavItem[] = [
 ];
 
 // Pettycash
-const pettyCashNavItems = ref<DropdownNavItem[]>(
-  initializeItems([
-    {
-      title: 'Petty Cash',
-      href: '#',
-      icon: SquarePen,
-      isOpen: false,
-      children: [
-        { title: 'Petty Cash', href: '/petty-cash' },
-      ],
-    },
-  ], 'pettyCash')
-);
+const pettyCashNavItems: NavItem[] = [
+  {
+    title: 'Petty Cash',
+    href: '/petty-cash',
+    icon: SquarePen,
+  },
+];
 
 const bursarNavItems: NavItem[] = [
   {
@@ -400,6 +399,11 @@ const bursarNavItems: NavItem[] = [
   {
     title: 'Petty Cash',
     href: '/bursar/petty-cash',
+    icon: SquarePen,
+  },
+  {
+    title: 'Create Request',
+    href: '/request/create',
     icon: SquarePen,
   },
 ];
