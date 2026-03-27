@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\CanvasController;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\ProfilePictureController;
+use App\Http\Controllers\NotificationController;
 
 // web
 use App\Http\Controllers\Web\DashboardController;
@@ -60,10 +61,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 // Add these with your other routes
 Route::middleware(['auth'])->group(function () {
-    Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
-    Route::patch('/notifications/{notification}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
-    Route::patch('/notifications/read-all', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
-    Route::delete('/notifications/{notification}', [App\Http\Controllers\NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
 
 Route::get('/test-email', function () {
@@ -87,3 +88,4 @@ require __DIR__.'/vouchers.php';
 require __DIR__.'/reports.php';
 require __DIR__.'/request.php';
 require __DIR__.'/notification.php';
+require __DIR__.'/inventory.php';
