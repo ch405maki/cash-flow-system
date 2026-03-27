@@ -9,9 +9,10 @@ import { FileText, Download } from 'lucide-vue-next';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/PageHeader.vue';
+import { Badge } from '@/components/ui/badge'
 
 // Import components
-import CanvasStatusBadge from './canvasShowPartials/CanvasStatusBadge.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import CanvasAlertNote from './canvasShowPartials/CanvasAlertNote.vue';
 import CanvasApprovalHistory from './canvasShowPartials/CanvasApprovalHistory.vue';
 import CanvasFileList from './canvasShowPartials/CanvasFileList.vue';
@@ -230,7 +231,7 @@ const isPdfFile = (file: any) => {
       <div class="flex flex-1 min-h-0">
         <!-- Left Column (Main Content) - Scrollable -->
         <div 
-          class="overflow-y-auto px-6 py-4 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent" 
+          class="overflow-y-auto px-6 py-4 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
           :class="showTwoColumnLayout ? 'w-1/2 border-r' : 'w-full'"
         >
           <div class="grid gap-4 py-4">
@@ -238,7 +239,11 @@ const isPdfFile = (file: any) => {
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <h3 class="text-sm font-medium text-muted-foreground">Status</h3>
-                <CanvasStatusBadge :status="canvas.status" />
+                <StatusBadge 
+                  :status="canvas.status"
+                  show-icon
+                  size="md"
+                />
               </div>
               <div>
                 <h3 class="text-sm font-medium text-muted-foreground">Canvas Uploaded</h3>

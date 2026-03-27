@@ -1,22 +1,9 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
-import RequestForm from '@/components/requests/RequestForm.vue';
-import RejectedRequestTable from '@/components/requests/RejectedRequestTable.vue';
+import RequestTable from '@/components/requests/RequestTable.vue';
 import { type BreadcrumbItem } from '@/types';
-import { router } from '@inertiajs/vue3'
-import { Button } from '@/components/ui/button'
-import { ref, watch } from 'vue'
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Filter, PlusCircle } from 'lucide-vue-next'
+
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -54,7 +41,7 @@ const props = defineProps({
         <h1 class="text-xl font-bold">Rejected Requests</h1>
       </div>
 
-      <RejectedRequestTable :requests="requests" />
+      <RequestTable :requests="requests" />
     </div>
   </AppLayout>
 </template>

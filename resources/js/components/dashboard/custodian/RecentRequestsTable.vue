@@ -6,6 +6,8 @@ import {
 import { router } from '@inertiajs/vue3'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import StatusBadge from '@/components/StatusBadge.vue';
+
 
 defineProps<{
   isDepartmentUser: boolean;
@@ -97,12 +99,11 @@ const getStatusVariant = (status: string) => {
               {{ request.purpose }}
             </TableCell>
             <TableCell>
-                <Badge 
-                  :variant="getStatusVariant(request.status)"
-                  class="capitalize"
-                >
-                  {{ request.status }}
-                </Badge>
+                <StatusBadge 
+                  :status="request.status"
+                  show-icon
+                  size="md"
+                />
             </TableCell>
           </TableRow>
         </TableBody>

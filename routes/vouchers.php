@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-use App\Http\Controllers\Api\VoucherController;
+use App\Http\Controllers\Web\VoucherController;
 use App\Http\Controllers\Api\ApprovedVoucherController;
 use App\Http\Controllers\Api\VoucherApprovalController;
 use App\Http\Controllers\Api\ApprovedPurchaseOrderController;

@@ -5,7 +5,7 @@ import CanvasUploadDialog from '@/components/canvas/CanvasUploadDialog.vue'
 import { formatDate } from '@/lib/utils'
 import { type BreadcrumbItem } from '@/types';
 import { router } from '@inertiajs/vue3'
-import { Filter, PlusCircle } from 'lucide-vue-next'
+import { PlusCircle } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { FileText } from 'lucide-vue-next'
 import {
@@ -17,7 +17,7 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
+import StatusBadge from '@/components/StatusBadge.vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard', },
@@ -91,12 +91,11 @@ function getStatusVariant(status: string) {
             <TableCell>{{ formatDate(request.order_date) }}</TableCell>
             <TableCell>{{ request.notes }}</TableCell>
             <TableCell>
-              <Badge
-                :variant="getStatusVariant(request.status)"
-                class="capitalize"
-              >
-                {{ request.status }}
-              </Badge>
+              <StatusBadge 
+                :status="request.status"
+                show-icon
+                size="md"
+              />
             </TableCell>
             <TableCell class="space-x-2 text-right flex items-center justify-end">
               <CanvasUploadDialog :request="request" />

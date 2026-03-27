@@ -12,6 +12,7 @@ import CanvasShowDialog from '@/components/canvas/CanvasShowDialog.vue'
 import CanvasTable from '@/components/canvas/CanvasTable.vue'
 import { ref, computed } from 'vue';
 import PageHeader from '@/components/PageHeader.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 
 const props = defineProps<{
   canvases: Array<any>;
@@ -39,21 +40,6 @@ const filteredCanvases = computed(() => {
     return canvas.status === activeTab.value;
   });
 });
-
-const statusIcons = {
-  pending_approval: UserRoundCheck,
-  approved: CircleCheck,
-  submitted: CircleCheck,
-  rejected: XCircle,
-  poCreated: CircleCheck,
-};
-
-const statusVariants = {
-  pending_approval: 'bg-purple-100 text-purple-800 hover:bg-purple-200',
-  approved: 'bg-green-100 text-green-800 hover:bg-green-200',
-  submitted: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
-  poCreated: 'bg-blue-100 text-blue-800 hover:bg-blue-200',
-};
 
 // Dialog state management
 const showDialog = ref(false);
@@ -137,8 +123,6 @@ const breadcrumbs = [
                     :value="tab">
           <CanvasTable
             :canvases="filteredCanvases.filter(c => c.status === tab)"
-            :status-icons="statusIcons"
-            :status-variants="statusVariants"
             @show="showCanvas"
             @download="downloadFile"
           />

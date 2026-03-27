@@ -184,26 +184,52 @@ class RequestController extends Controller
 
             // Create the request
             $requestModel = Request::create(collect($validated)->except('items')->toArray());
-            $requestModel->user->notify(new NewRequestNotification($requestModel));
+            
+            // ===== NOTIFICATION CHANGES START =====
+            // Instead of using the notification class, manually insert into notifications table
+            
+            // 1. Notify the creator
+            DB::table('notifications')->insert([
+                'id' => (string) \Illuminate\Support\Str::uuid(),
+                'type' => 'Request',
+                'notifiable_type' => 'App\Models\User',
+                'notifiable_id' => $validated['user_id'],
+                'data' => json_encode([
+                    'request_id' => $requestModel->id,
+                    'title' => "Request",
+                    'request_no' => $requestModel->request_no,
+                    'status' => $requestModel->status,
+                    'message' => "Request #{$requestModel->request_no} has been created",
+                    'link' => route('request.show', $requestModel->id),
+                ]),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
 
-            $departmentApprover = User::where('department_id', $validated['department_id'])
+            // 2. Notify department approvers (access level 3)
+            $approvers = User::where('department_id', $validated['department_id'])
                 ->where('access_id', 3)
-                ->where('id', '!=', $validated['user_id']) // Exclude creator if needed
-                ->first();
+                ->where('id', '!=', $validated['user_id'])
+                ->get();
 
-            // Notify department users with access level 3
-            if ($departmentApprover) {
-                try {
-                    $departmentApprover->notify(new NewRequestNotification($requestModel));
-                } catch (\Exception $e) {
-                    \Log::error("Approver notification failed", [
-                        'approver' => $departmentApprover->email,
-                        'error' => $e->getMessage()
-                    ]);
-                }
-            } else {
-                \Log::warning("No approver found for department {$validated['department_id']}");
+            foreach ($approvers as $approver) {
+                DB::table('notifications')->insert([
+                    'id' => (string) \Illuminate\Support\Str::uuid(),
+                    'type' => 'App\Notifications\NewRequestNotification',
+                    'notifiable_type' => 'App\Models\User',
+                    'notifiable_id' => $approver->id,
+                    'data' => json_encode([
+                        'request_id' => $requestModel->id,
+                        'request_no' => $requestModel->request_no,
+                        'status' => $requestModel->status,
+                        'message' => "New request #{$requestModel->request_no} needs approval from " . ($creatorUser->name ?? 'Unknown'),
+                        'link' => route('request.show', $requestModel->id),
+                    ]),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
             }
+            // ===== NOTIFICATION CHANGES END =====
 
             // Log the creation with full details
             $creatorUser = User::find($validated['user_id']);
@@ -254,31 +280,29 @@ class RequestController extends Controller
             ], 201);
 
         } catch (ValidationException $e) {
-    $errors = $e->errors();
-    
-    if (isset($errors['request_no'])) {
-        $errors['request_no'] = [
-            'The request number must be unique.',
-            'Suggested available number: ' . $this->generateRequestNumber()
-        ];  
-    }
-    
-    return response()->json([
-        'success' => false,
-        'message' => 'Validation error',
-        'errors' => $errors,
-        'suggestions' => [
-            'available_request_no' => $this->generateRequestNumber()
-        ]
-    ], 422);
-    }
-    catch (QueryException $e) {
+            $errors = $e->errors();
+            
+            if (isset($errors['request_no'])) {
+                $errors['request_no'] = [
+                    'The request number must be unique.',
+                    'Suggested available number: ' . $this->generateRequestNumber()
+                ];  
+            }
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $errors,
+                'suggestions' => [
+                    'available_request_no' => $this->generateRequestNumber()
+                ]
+            ], 422);
+        } catch (QueryException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Database error',
                 'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -428,7 +452,7 @@ class RequestController extends Controller
         // Base update data
         $updateData = ['status' => $validated['status']];
 
-        // ✅ If approver is same department as request, assign them as request owner
+        // If approver is same department as request, assign them as request owner
         if ($authUser->department_id === $request->department_id) {
             $updateData['user_id'] = $authUser->id;
         }
@@ -446,6 +470,66 @@ class RequestController extends Controller
             'approved_at' => now(),
             'remarks' => $description,
         ]);
+
+        // ===== NOTIFICATION FOR PROPERTY CUSTODIAN ROLE =====
+        // Only notify if status is propertyCustodian
+        if ($validated['status'] === 'propertyCustodian') {
+            // Get all users with role 'property_custodian'
+            $custodians = User::where('role', 'property_custodian')->get();
+            
+            // Get the request creator
+            $creator = User::find($request->user_id);
+            
+            foreach ($custodians as $custodian) {
+                DB::table('notifications')->insert([
+                    'id' => (string) \Illuminate\Support\Str::uuid(),
+                    'type' => 'RequestForCustodian',
+                    'notifiable_type' => 'App\Models\User',
+                    'notifiable_id' => $custodian->id,
+                    'data' => json_encode([
+                        'request_id' => $request->id,
+                        'title' => 'Request Ready for Custodian',
+                        'request_no' => $request->request_no,
+                        'department' => $request->department->name ?? 'N/A',
+                        'purpose' => $request->purpose,
+                        'created_by' => $creator?->name ?? 'Unknown',
+                        'previous_status' => $oldStatus,
+                        'status' => $validated['status'],
+                        'message' => "Request #{$request->request_no} from {$request->department->name} is ready for processing.",
+                        'link' => route('request.show', $request->id),
+                        'updated_by' => $authUser->name,
+                    ]),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+        
+        // ===== NOTIFY CREATOR WHEN STATUS IS TO_ORDER =====
+        if ($validated['status'] === 'to_order') {
+            $creator = User::find($request->user_id);
+            
+            if ($creator) {
+                DB::table('notifications')->insert([
+                    'id' => (string) \Illuminate\Support\Str::uuid(),
+                    'type' => 'RequestReadyToOrder',
+                    'notifiable_type' => 'App\Models\User',
+                    'notifiable_id' => $creator->id,
+                    'data' => json_encode([
+                        'request_id' => $request->id,
+                        'title' => 'Request Ready to Order',
+                        'request_no' => $request->request_no,
+                        'status' => $validated['status'],
+                        'message' => "Your request #{$request->request_no} is now ready to order.",
+                        'link' => route('request.show', $request->id),
+                        'updated_by' => $authUser->name,
+                    ]),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+        // ===== END NOTIFICATIONS =====
 
         // Log activity
         activity()
@@ -613,5 +697,19 @@ class RequestController extends Controller
         }
 
         $request->update(['status' => $status]);
+    }
+
+
+    // Api method to update tagging status
+    public function data(): JsonResponse
+    {
+        $requests = Request::with(['department', 'user', 'details'])
+            ->whereIn('status', ['propertyCustodian'])
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $requests,
+        ]);
     }
 }

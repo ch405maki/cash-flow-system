@@ -8,6 +8,7 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table'
+import StatusBadge from '@/components/StatusBadge.vue';
 import { 
   FileText,
 } from 'lucide-vue-next'
@@ -53,16 +54,11 @@ function viewRequest(id: number) {
             {{ formatDate(order.order_date) }}
           </TableCell>
           <TableCell class="text-right capitalize">
-            <span
-              :class="{
-                'text-green-600': order.status === 'approved',
-                'text-yellow-600': order.status === 'to_order',
-                'text-blue-600': order.status === 'to_property',
-                'text-red-600': order.status === 'rejected'
-              }"
-            >
-              {{ order.status.replace('_', ' ') }}
-            </span>
+            <StatusBadge 
+                :status="order.status"
+                show-icon
+                size="md"
+              />
           </TableCell>
         </TableRow>
       </TableBody>

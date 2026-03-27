@@ -13,10 +13,9 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { Input } from '@/components/ui/input'
-import { Search, X, Calendar } from 'lucide-vue-next';
+import { Search, X, Calendar, Loader2 } from 'lucide-vue-next';
 import LogDetails from './LogDetails.vue';
-import { ref, computed } from 'vue';
-import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
+import { ref, computed, watch, onMounted } from 'vue';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -44,22 +43,24 @@ interface Log {
     created_at: string;
 }
 
+interface PaginatedLogs {
+    data: Log[];
+    links: {
+        url: string | null;
+        label: string;
+        active: boolean;
+    }[];
+    current_page: number;
+    last_page: number;
+    prev_page_url: string | null;
+    next_page_url: string | null;
+    from: number;
+    to: number;
+    total: number;
+}
+
 interface Props {
-    logs: {
-        data: Log[];
-        links: {
-            url: string | null;
-            label: string;
-            active: boolean;
-        }[];
-        current_page: number;
-        last_page: number;
-        prev_page_url: string | null;
-        next_page_url: string | null;
-        from: number;
-        to: number;
-        total: number;
-    };
+    logs: PaginatedLogs | Log[];
     filters?: {
         search?: string;
     };
@@ -69,11 +70,38 @@ const props = defineProps<Props>();
 const selectedLog = ref<Log | null>(null);
 const searchQuery = ref(props.filters?.search || '');
 const dateFilter = ref<Date | undefined>();
+const isLoading = ref(true);
+
+// Client-side pagination state - 50 items per page
+const currentPage = ref(1);
+const itemsPerPage = 50;
+
+// Normalize logs data - handle both paginated and non-paginated formats
+const logsArray = computed<Log[]>(() => {
+    if (Array.isArray(props.logs)) {
+        return props.logs; // Direct array from ->get()
+    }
+    return props.logs?.data || []; // Paginated response
+});
+
+// Get total count for display
+const totalLogs = computed(() => {
+    if (Array.isArray(props.logs)) {
+        return props.logs.length;
+    }
+    return props.logs?.total || logsArray.value.length;
+});
+
+// Simulate loading state
+onMounted(() => {
+    // Small timeout to show loading state (remove in production)
+    setTimeout(() => {
+        isLoading.value = false;
+    }, 800);
+});
 
 const filteredLogs = computed(() => {
-    if (!props.logs?.data) return [];
-    
-    let logs = [...props.logs.data];
+    let logs = logsArray.value;
     
     if (searchQuery.value) {
         const query = searchQuery.value.toLowerCase();
@@ -105,13 +133,45 @@ const filteredLogs = computed(() => {
     return logs;
 });
 
+// Get paginated logs - 50 per page
+const paginatedLogs = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return filteredLogs.value.slice(start, end);
+});
+
+// Calculate total pages based on filtered results
+const totalPages = computed(() => {
+    return Math.ceil(filteredLogs.value.length / itemsPerPage);
+});
+
+// Pagination methods
+const nextPage = () => {
+    if (currentPage.value < totalPages.value) {
+        currentPage.value++;
+    }
+};
+
+const prevPage = () => {
+    if (currentPage.value > 1) {
+        currentPage.value--;
+    }
+};
+
 const clearSearch = () => {
     searchQuery.value = '';
+    currentPage.value = 1;
 };
 
 const clearDateFilter = () => {
     dateFilter.value = undefined;
+    currentPage.value = 1;
 };
+
+// Reset to first page when filters change
+watch([searchQuery, dateFilter], () => {
+    currentPage.value = 1;
+});
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -139,9 +199,10 @@ const breadcrumbs: BreadcrumbItem[] = [
                         v-model="searchQuery"
                         placeholder="Filter logs by any field..."
                         class="w-full pl-10 pr-10"
+                        :disabled="isLoading"
                     />
                     <X
-                        v-if="searchQuery"
+                        v-if="searchQuery && !isLoading"
                         class="absolute right-3 top-3 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
                         @click="clearSearch"
                     />
@@ -155,11 +216,12 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 variant="outline"
                                 class="w-full justify-start text-left font-normal"
                                 :class="!dateFilter ? 'text-muted-foreground' : ''"
+                                :disabled="isLoading"
                             >
                                 <Calendar class="mr-2 h-4 w-4" />
                                 {{ dateFilter ? formatDateTime(dateFilter) : 'Filter by date...' }}
                                 <X
-                                    v-if="dateFilter"
+                                    v-if="dateFilter && !isLoading"
                                     class="ml-auto h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
                                     @click.stop="clearDateFilter"
                                 />
@@ -176,79 +238,105 @@ const breadcrumbs: BreadcrumbItem[] = [
                 </div>
             </div>
 
-            <!-- Logs Table -->
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead class="w-[220px]">Event</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead class="w-[200px]">User</TableHead>
-                        <TableHead class="w-[180px]">Date</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    <template v-if="filteredLogs.length > 0">
-                        <TableRow v-for="log in filteredLogs" :key="log.id">
-                            <TableCell class="font-medium capitalize">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                                    {{ log.log_name || log.properties.action || 'system' }}
-                                </span>
-                            </TableCell>
-                            <TableCell @click="selectedLog = log" class="max-w-[300px] truncate cursor-pointer hover:underline" title="View Details">
-                                {{ log.description }}
-                            </TableCell>
-                            <TableCell>
-                                <div class="flex items-center space-x-2">
-                                    <span class="font-medium">{{ log.causer?.username || 'System' }}</span>
-                                    <span v-if="log.causer?.email" class="text-xs text-muted-foreground">
-                                        ({{ log.causer.email }})
-                                    </span>
-                                </div>
-                            </TableCell>
-                            <TableCell class="text-muted-foreground">
-                                {{ formatDateTime(log.created_at) }}
-                            </TableCell>
-                        </TableRow>
-                    </template>
-                    <template v-else>
-                        <TableRow>
-                            <TableCell colspan="5" class="text-center py-8 text-muted-foreground">
-                                <div class="flex flex-col items-center justify-center space-y-2">
-                                    <Search class="h-8 w-8" />
-                                    <p>No logs found matching your criteria</p>
-                                    <Button variant="ghost" size="sm" @click="[clearSearch(), clearDateFilter()]">
-                                        Clear all filters
-                                    </Button>
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                    </template>
-                </TableBody>
-            </Table>
+            <!-- Loading State -->
+            <div v-if="isLoading" class="flex flex-col items-center justify-center py-16 space-y-4">
+                <Loader2 class="h-12 w-12 animate-spin text-primary" />
+                <p class="text-sm text-muted-foreground">Loading activity logs...</p>
+            </div>
 
-            <!-- Pagination -->
-            <div class="mr-2">
-                <Pagination class="flex items-center justify-end mt-4">
-                <PaginationContent class="space-x-4">
-                    <template v-for="(link, index) in logs.links" :key="index">
-                    <PaginationItem v-if="link.url">
-                        <a
-                        :href="link.url"
-                        class="px-3 py-1.5 text-sm rounded-md"
-                        :class="{
-                            'bg-primary text-primary-foreground': link.active,
-                            'hover:bg-accent hover:text-accent-foreground': !link.active,
-                            'text-muted-foreground': !link.active,
-                        }"
-                        v-html="link.label"
-                        />
-                    </PaginationItem>
-                    <PaginationItem v-else>
-                        <span class="px-3 py-1.5 text-sm text-muted-foreground" v-html="link.label" />
-                    </PaginationItem>
-                    </template>
-                </PaginationContent>
-            </Pagination>
+            <!-- Logs Table -->
+            <div v-else>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead class="w-[220px]">Event</TableHead>
+                            <TableHead>Description</TableHead>
+                            <TableHead class="w-[200px]">User</TableHead>
+                            <TableHead class="w-[180px]">Date</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <template v-if="paginatedLogs.length > 0">
+                            <TableRow v-for="log in paginatedLogs" :key="log.id">
+                                <TableCell class="font-medium capitalize">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                                        {{ log.log_name || log.properties.action || 'system' }}
+                                    </span>
+                                </TableCell>
+                                <TableCell @click="selectedLog = log" class="max-w-[300px] truncate cursor-pointer hover:underline" title="View Details">
+                                    {{ log.description }}
+                                </TableCell>
+                                <TableCell>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="font-medium">{{ log.causer?.username || 'System' }}</span>
+                                        <span v-if="log.causer?.email" class="text-xs text-muted-foreground">
+                                            ({{ log.causer.email }})
+                                        </span>
+                                    </div>
+                                </TableCell>
+                                <TableCell class="text-muted-foreground">
+                                    {{ formatDateTime(log.created_at) }}
+                                </TableCell>
+                            </TableRow>
+                        </template>
+                        <template v-else>
+                            <TableRow>
+                                <TableCell colspan="5" class="text-center py-8 text-muted-foreground">
+                                    <div class="flex flex-col items-center justify-center space-y-2">
+                                        <Search class="h-8 w-8" />
+                                        <p>No logs found matching your criteria</p>
+                                        <Button variant="ghost" size="sm" @click="[clearSearch(), clearDateFilter()]">
+                                            Clear all filters
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        </template>
+                    </TableBody>
+                </Table>
+
+                <!-- Pagination - Show when total pages > 1 -->
+                <div v-if="totalPages > 1" class="mt-6 flex flex-col items-center gap-2">
+                    <div class="flex items-center gap-4">
+                        <Button 
+                            variant="outline" 
+                            size="sm"
+                            @click="prevPage" 
+                            :disabled="currentPage === 1"
+                        >
+                            Previous
+                        </Button>
+                        
+                        <span class="text-sm">
+                            Page {{ currentPage }} of {{ totalPages }}
+                        </span>
+                        
+                        <Button 
+                            variant="outline" 
+                            size="sm"
+                            @click="nextPage" 
+                            :disabled="currentPage === totalPages"
+                        >
+                            Next
+                        </Button>
+                    </div>
+
+                    <!-- Items per page indicator -->
+                    <div class="text-xs text-muted-foreground">
+                        Showing {{ Math.min((currentPage - 1) * itemsPerPage + 1, filteredLogs.length) }} 
+                        - {{ Math.min(currentPage * itemsPerPage, filteredLogs.length) }} 
+                        of {{ filteredLogs.length }} total {{ filteredLogs.length === 1 ? 'log' : 'logs' }}
+                        (out of {{ totalLogs }} total in database)
+                    </div>
+                </div>
+                
+                <!-- Show total count when no pagination needed (50 or fewer items) -->
+                <div v-else-if="filteredLogs.length > 0" class="mt-4 text-xs text-center text-muted-foreground">
+                    Showing all {{ filteredLogs.length }} {{ filteredLogs.length === 1 ? 'log' : 'logs' }}
+                    <span v-if="filteredLogs.length < totalLogs">
+                        (filtered from {{ totalLogs }} total)
+                    </span>
+                </div>
             </div>
         </div>
     </AppLayout>

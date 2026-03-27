@@ -5,6 +5,7 @@ import {
 } from 'lucide-vue-next'
 import { router } from '@inertiajs/vue3'
 import { formatDate, formatCurrency } from '@/lib/utils';
+import StatusBadge from '@/components/StatusBadge.vue';
 
 interface RequestItem {
   id: number;
@@ -80,14 +81,11 @@ function goToPO(id: number) {
                 {{ request.user?.first_name }} {{ request.user?.last_name }}
               </td>
               <td class="p-4 align-middle capitalize">
-                <span :class="{
-                  'text-yellow-500': request.status === 'pending',
-                  'text-green-500': request.status === 'approved',
-                  'text-blue-500': request.status === 'to_order',
-                  'text-red-500': request.status === 'rejected'
-                }">
-                  {{ request.status }}
-                </span>
+                <StatusBadge 
+                  :status="request.status"
+                  show-icon
+                  size="md"
+                />
               </td>
             </tr>
           </tbody>

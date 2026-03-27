@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button';
 import { computed } from 'vue';
 import { router } from '@inertiajs/vue3';
-import { SquarePen, FileText, Eye } from 'lucide-vue-next';
-import { formatDate, formatCurrency } from '@/lib/utils';
+import { FileText} from 'lucide-vue-next';
+import { formatCurrency } from '@/lib/utils';
 import {
   Table,
   TableHeader,
@@ -12,6 +11,16 @@ import {
   TableBody,
   TableCell,
 } from '@/components/ui/table'
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
+import StatusBadge from '@/components/StatusBadge.vue';
+
 
 const props = defineProps<{
   vouchers: Array<any>;
@@ -34,8 +43,6 @@ const sortedVouchers = computed(() => {
     return new Date(dateB).getTime() - new Date(dateA).getTime();
   });
 });
-
-const getRole = (user: any) => `${user.role} `;
 
 function viewVoucher(id: number) {
   router.get(`/vouchers/${id}/view`);
@@ -80,24 +87,28 @@ function formatDisplayDate(dateString: string): string {
             {{ formatDisplayDate(voucher.created_at || voucher.voucher_date) }}
           </TableCell>
           <TableCell class="px-4 py-4 capitalize text-right">
-            <span class="inline-block rounded-full px-3 py-0.5 text-xs font-semibold" :class="{
-              'bg-yellow-100 text-yellow-800': voucher.status === 'draft',
-              'bg-green-100 text-green-800': voucher.status === 'forCheck',
-              'bg-red-100 text-red-800': voucher.status === 'rejected',
-              'bg-blue-100 text-blue-800': voucher.status === 'forEOD',
-              'bg-orange-100 text-orange-800': voucher.status === 'forAudit',
-            }">
-              {{ voucher.status }}
-            </span>
+            <StatusBadge 
+                :status="voucher.status"
+                show-icon
+                size="md"
+              />
           </TableCell>
         </TableRow>
       </TableBody>
     </Table>
   </div>
 
-  <div v-else class="flex h-48 flex-col items-center justify-center rounded-xl border">
-    <FileText class="h-8 w-8 text-muted-foreground" />
-    <p class="mt-2 text-sm text-muted-foreground">No voucher found</p>
-    <p class="text-xs text-muted-foreground">Approved voucher for cheque will appear here.</p>
+  <div v-else >
+    <Empty>
+    <EmptyHeader>
+      <EmptyMedia variant="icon">
+        <FileText />
+      </EmptyMedia>
+      <EmptyTitle>No voucher found</EmptyTitle>
+      <EmptyDescription>
+        Approved voucher for cheque will appear here.
+      </EmptyDescription>
+    </EmptyHeader>
+  </Empty>
 </div>
 </template>

@@ -5,6 +5,7 @@ import {
 } from 'lucide-vue-next'
 import { router } from '@inertiajs/vue3'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import StatusBadge from '@/components/StatusBadge.vue';
 
 defineProps<{
   isDepartmentUser: boolean;
@@ -86,14 +87,11 @@ function formatDate(dateStr: string): string {
               {{ request.purpose }}
             </TableCell>
             <TableCell class="p-4 align-middle">
-              <span :class="{
-                'text-yellow-500': request.status === 'pending',
-                'text-green-500': request.status === 'approved',
-                'text-blue-500': request.status === 'to_order',
-                'text-red-500': request.status === 'rejected'
-              }">
-                {{ request.status }}
-              </span>
+              <StatusBadge 
+                :status="request.status"
+                show-icon
+                size="md"
+              />
             </TableCell>
           </TableRow>
         </TableBody>

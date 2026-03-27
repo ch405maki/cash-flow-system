@@ -7,14 +7,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
 import { FileText } from 'lucide-vue-next';
 import { formatDate } from '@/lib/utils'
+import StatusBadge from '@/components/StatusBadge.vue';
 
 defineProps({
   canvases: Array,
-  statusIcons: Object,
-  statusVariants: Object
 })
 const emit = defineEmits(['show', 'download'])
 </script>
@@ -59,10 +57,11 @@ const emit = defineEmits(['show', 'download'])
             </div>
           </TableCell>
           <TableCell>
-            <Badge :class="statusVariants[canvas.status]">
-              <component :is="statusIcons[canvas.status]" class="h-3 w-3 mr-1" />
-              <span class="capitalize">{{ canvas.status.replace('_', ' ') }}</span>
-            </Badge>
+            <StatusBadge 
+                :status="canvas.status"
+                show-icon
+                size="md"
+              />
           </TableCell>
           <TableCell>{{ formatDate(canvas.created_at) }}</TableCell>
           <TableCell class="text-right text-muted-foreground">

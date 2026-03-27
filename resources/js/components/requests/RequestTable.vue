@@ -12,6 +12,7 @@ import { router } from '@inertiajs/vue3';
 import { usePage } from '@inertiajs/vue3';
 import { formatDate, formatDateTime } from '@/lib/utils';
 import { FileText } from 'lucide-vue-next';
+import StatusBadge from '@/components/StatusBadge.vue';
 
 
 const props = defineProps<{
@@ -54,19 +55,11 @@ function goToShowRequest(requestId: number) {
           <TableCell>{{ request.department?.department_name }}</TableCell>
           <TableCell>{{ getFullName(request.user) }}</TableCell>
           <TableCell class="text-right">
-            <span
-              class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize"
-              :class="{
-                'bg-indigo-100 text-indigo-800': request.status === 'partially_released',
-                'bg-orange-100 text-yellow-600': request.status === 'to_property',
-                'bg-orange-100 text-orange-500': request.status === 'to_order',
-                'bg-yellow-100 text-yellow-800': request.status === 'pending',
-                'bg-green-100 text-green-800': request.status === 'released',
-                'bg-red-100 text-red-800': request.status === 'rejected',
-              }"
-            >
-              {{ request.status }}
-            </span>
+            <StatusBadge 
+                :status="request.status"
+                show-icon
+                size="md"
+              />
           </TableCell>
         </TableRow>
       </TableBody>

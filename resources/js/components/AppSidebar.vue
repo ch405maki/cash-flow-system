@@ -157,6 +157,11 @@ const custodianNavItems: NavItem[] = [
     href: '/released-order',
     icon: Package,
   },
+  {
+    title: 'Inventory',
+    href: '/inventory',
+    icon: Package,
+  },
 ];
 
 const custodianApprovalItems: NavItem[] = [
@@ -243,7 +248,7 @@ const accountingNavItems: NavItem[] = [
     icon: ReceiptText,
   },
   {
-    title: 'Voucher For Approval',
+    title: 'Voucher For Audit',
     href: '/voucher-approval',
     icon: ReceiptText,
   },
@@ -394,6 +399,11 @@ const bursarNavItems: NavItem[] = [
   {
     title: 'Petty Cash',
     href: '/bursar/petty-cash',
+    icon: SquarePen,
+  },
+  {
+    title: 'Create Request',
+    href: '/request/create',
     icon: SquarePen,
   },
 ];

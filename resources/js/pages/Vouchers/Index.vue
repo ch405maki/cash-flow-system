@@ -185,16 +185,22 @@ const props = defineProps({
             </SelectContent>
           </Select>
 
-          <div class="flex items-center gap-2">
-            <Input type="search" placeholder="Search vouchers..." class="w-[200px] lg:w-[300px] h-8"
-              v-model="searchQuery" />
+          <div class="relative w-[200px] lg:w-[300px]">
+            <Search class="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+
+            <Input
+              type="search"
+              placeholder="Search vouchers..."
+              class="pl-8 h-8"
+              v-model="searchQuery"
+            />
           </div>
 
           <!-- Only show if the user is NOT an executive_director and staff -->
           <Button v-if="authUser.role !== 'executive_director' && authUser.access_id !== '3'  " variant="default"
             size="sm" @click="goToCreate()">
             <PlusCircle class="h-4 w-4" />
-            Create New Voucher
+              Create Voucher
           </Button>
 
         </div>
@@ -209,7 +215,11 @@ const props = defineProps({
         </Button>
       </div>
 
-      <VoucherTable :vouchers="vouchers" :authUser="authUser" :state="true"/>
+      <VoucherTable 
+        :vouchers="filteredVouchers" 
+        :authUser="authUser" 
+        :state="true"
+      />
 
       <div class="mt-4 flex items-center justify-between">
         <div class="flex-1 text-sm text-muted-foreground">

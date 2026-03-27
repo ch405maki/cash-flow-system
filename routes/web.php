@@ -11,9 +11,12 @@ use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\SignatoryController;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\CanvasController;
-use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\ProfilePictureController;
+use App\Http\Controllers\NotificationController;
+
+// web
+use App\Http\Controllers\Web\DashboardController;
 
 use App\Models\User;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -56,6 +59,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/logs/{modelType}/{modelId}', [ActivityLogController::class, 'forModel'])->name('logs.model');
 });
 
+// Add these with your other routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+});
+
 Route::get('/test-email', function () {
     $details = [
         'subject' => 'Test Email from RPV System',
@@ -76,3 +87,5 @@ require __DIR__.'/pettycash.php';
 require __DIR__.'/vouchers.php';
 require __DIR__.'/reports.php';
 require __DIR__.'/request.php';
+require __DIR__.'/notification.php';
+require __DIR__.'/inventory.php';

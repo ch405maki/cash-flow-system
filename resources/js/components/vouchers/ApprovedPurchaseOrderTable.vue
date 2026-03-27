@@ -9,9 +9,15 @@ import {
 } from '@/components/ui/table'
 import { FileText } from 'lucide-vue-next';
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { router } from '@inertiajs/vue3'
-import { Ticket } from 'lucide-vue-next';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
+import StatusBadge from '@/components/StatusBadge.vue';
 
 defineProps({
   purchaseOrders: {
@@ -39,11 +45,6 @@ function formatDate(dateStr: string): string {
     month: 'short',
     day: '2-digit'
   })
-}
-
-function goToCreate(poId?: number) {
-  const url = poId ? `/vouchers/create?po_id=${poId}` : '/vouchers/create'
-  router.visit(url)
 }
 </script>
 
@@ -73,18 +74,28 @@ function goToCreate(poId?: number) {
           <TableCell>{{ po.department.department_name }}</TableCell>
           <TableCell>{{ po.amount.toLocaleString() }}</TableCell>
           <TableCell>
-            <Badge>
-              {{ po?.status || 'N/A' }}
-            </Badge>
+            <StatusBadge 
+                :status="po?.status"
+                show-icon
+                size="md"
+              />
           </TableCell>
         </TableRow>
       </TableBody>
     </Table>
   </div>
 
-  <div v-else class="flex h-48 flex-col items-center justify-center rounded-xl border">
-    <FileText class="h-8 w-8 text-muted-foreground" />
-    <p class="mt-2 text-sm text-muted-foreground">No purchase order for voucher found</p>
-    <p class="text-xs text-muted-foreground">Purchase order for voucher from Purchasing Department will appear here.</p>
+  <div v-else>
+    <Empty>
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <FileText />
+        </EmptyMedia>
+        <EmptyTitle>No purchase order for voucher found</EmptyTitle>
+        <EmptyDescription>
+          Purchase order for voucher from Purchasing Department will appear here.
+        </EmptyDescription>
+      </EmptyHeader>
+    </Empty>
 </div>
 </template>

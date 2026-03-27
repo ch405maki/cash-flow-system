@@ -5,6 +5,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { formatDate } from '@/lib/utils'
 import { FileText, Wallet, ListChecks, SendHorizontal, Clock } from 'lucide-vue-next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import StatusBadge from '@/components/StatusBadge.vue';
 import {
   Table,
   TableBody,
@@ -130,7 +131,11 @@ const hasItem = computed(() => props.pettyCash && Object.keys(props.pettyCash).l
                         {{ formatDate(item.date) }}
                         </TableCell>
                         <TableCell class="capitalize">
-                        {{ item.status }}
+                            <StatusBadge 
+                                :status="item.status"
+                                show-icon
+                                size="md"
+                            />
                         </TableCell>
                         <TableCell class="capitalize">
                         "{{ item.remarks }}"

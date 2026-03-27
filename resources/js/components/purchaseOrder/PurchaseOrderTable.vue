@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
+import StatusBadge from '@/components/StatusBadge.vue';
 import { router } from '@inertiajs/vue3'
 import { FileText } from 'lucide-vue-next'
 import { formatCurrency } from '@/lib/utils'
@@ -54,9 +54,11 @@ function goToPO(id: number) {
           <TableCell>{{ po.department.department_name }}</TableCell>
           <TableCell>{{ formatCurrency(po.amount) }}</TableCell>
           <TableCell>
-            <Badge class="capitalize">  
-              {{ po?.status || 'N/A' }}
-            </Badge>
+            <StatusBadge 
+                :status="po?.status"
+                show-icon
+                size="md"
+              />
           </TableCell>
         </TableRow>
       </TableBody>
