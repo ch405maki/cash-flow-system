@@ -39,6 +39,7 @@ class RequestController extends Controller
                 'department_id' => 'required|exists:departments,id',
                 'user_id' => 'required|exists:users,id',
                 'items' => 'required|array|min:1',
+                'items.*.item_id' => 'nullable|integer', 
                 'items.*.quantity' => 'required|numeric|min:1',
                 'items.*.unit' => 'required|string|max:20',
                 'items.*.item_description' => 'required|string|max:255'
@@ -129,9 +130,12 @@ class RequestController extends Controller
             foreach ($validated['items'] as $item) {
                 RequestDetail::create([
                     'request_id' => $requestModel->id,
+                    'item_id' => $item['item_id'] ?? null,   
                     'quantity' => $item['quantity'],
+                    'released_quantity' => 0,
                     'unit' => $item['unit'],
-                    'item_description' => $item['item_description']
+                    'item_description' => $item['item_description'],
+                    'tracking_status' => 'pending'
                 ]);
             }
 

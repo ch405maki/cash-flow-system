@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Web;
 
+use Inertia\Inertia;
+
 use App\Http\Controllers\Controller;
 use App\Notifications\NewRequestNotification;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Auth;
@@ -18,6 +19,7 @@ use App\Models\Department;
 use App\Models\RequestDetail;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderDetail;
+use App\Models\Request;
 use App\Models\Account;
 use App\Models\Release;
 use App\Models\User;

@@ -25,7 +25,13 @@ const props = defineProps<{
   reorderRequest?: any
 }>();
 
+// NEW: Products from inventory
+const inventoryProducts = ref<Array<{id: number, product_code: string, name: string}>>([]);
+const isLoadingProducts = ref(false);
+
 interface RequestItem {
+  item_id?: number;        // NEW: Store inventory item ID
+  product_code?: string;   // NEW: Store product code
   quantity: number;
   unit: string;
   item_description: string;
@@ -34,14 +40,12 @@ interface RequestItem {
 }
 
 const editItem = (index: number) => {
-  // Exit any other editing modes first
   form.value.items.forEach((item, i) => {
     if (i !== index && item.editing) {
       cancelEdit(i);
     }
   });
   
-  // Set editing mode for this item
   form.value.items[index].editing = true;
   form.value.items[index].original = { ...form.value.items[index] };
 };
@@ -77,7 +81,12 @@ const form = ref({
   items: [] as RequestItem[],
 });
 
+// NEW: Selected product from combobox
+const selectedProduct = ref<{id: number, product_code: string, name: string} | null>(null);
+
 const newItem = ref<RequestItem>({
+  item_id: undefined,
+  product_code: '',
   quantity: 1,
   unit: 'pcs',
   item_description: ''
@@ -94,9 +103,30 @@ const unitOptions = [
   { value: 'pack', label: 'Pack/s' }
 ];
 
+// NEW: Handle product selection from combobox
+const onProductSelect = (product: typeof inventoryProducts.value[0]) => {
+  selectedProduct.value = product;
+  newItem.value.item_id = product.id;
+  newItem.value.product_code = product.product_code;
+  newItem.value.item_description = product.name;
+};
+
+// NEW: Clear selected product
+const clearSelectedProduct = () => {
+  selectedProduct.value = null;
+  newItem.value.item_id = undefined;
+  newItem.value.product_code = '';
+  newItem.value.item_description = '';
+};
+
 const addItem = () => {
   if (!newItem.value.item_description) {
-    toast.error('Item description is required');
+    toast.error('Please select a product or enter item description');
+    return;
+  }
+
+  if (!newItem.value.quantity || newItem.value.quantity <= 0) {
+    toast.error('Quantity must be greater than 0');
     return;
   }
 
@@ -109,7 +139,10 @@ const removeItem = (index: number) => {
 };
 
 const resetNewItem = () => {
+  selectedProduct.value = null;
   newItem.value = {
+    item_id: undefined,
+    product_code: '',
     quantity: 1,
     unit: 'pcs',
     item_description: ''
@@ -185,14 +218,34 @@ const capitalizeWords = (str: string): string => {
     .replace(/\b\w/g, char => char.toUpperCase());
 };
 
+// NEW: Load products from inventory
+const loadInventoryProducts = async () => {
+  isLoadingProducts.value = true;
+  try {
+    const response = await axios.get('/api/inventory/products');
+    if (response.data.success) {
+      inventoryProducts.value = response.data.data;
+      console.log('Loaded products:', inventoryProducts.value);
+    } else {
+      toast.error('Failed to load products from inventory');
+    }
+  } catch (error) {
+    console.error('Error loading products:', error);
+    toast.error('Could not connect to inventory system');
+  } finally {
+    isLoadingProducts.value = false;
+  }
+};
+
 onMounted(() => {
+  // Load products from inventory
+  loadInventoryProducts();
+  
   // First try to use the prop from Laravel
   if (props.reorderRequest && props.reorderRequest.id) {
     populateFormFromReorder(props.reorderRequest);
-    // Clear session storage since we got the data from props
     sessionStorage.removeItem('reorderRequest');
   } 
-  // If prop is not available, try session storage as fallback
   else {
     const storedReorder = sessionStorage.getItem('reorderRequest');
     if (storedReorder) {
@@ -200,7 +253,6 @@ onMounted(() => {
         const reorderData = JSON.parse(storedReorder);
         if (reorderData && reorderData.details) {
           populateFormFromReorder(reorderData);
-          // Keep the data in session storage in case of page refresh
         }
       } catch (error) {
         console.error('Error parsing reorder data from session storage:', error);
@@ -211,16 +263,14 @@ onMounted(() => {
 });
 
 const populateFormFromReorder = (reorderRequest: any) => {
-  // Clear existing items first
   form.value.items = [];
-  
-  // Set the purpose with "REORDER" prefix
   form.value.purpose = `REORDER: ${reorderRequest.purpose || ''}`;
   
-  // Populate items from the reorder request
   if (reorderRequest.details && reorderRequest.details.length > 0) {
     reorderRequest.details.forEach((detail: any) => {
       form.value.items.push({
+        item_id: detail.item_id,  // Preserve item_id if exists
+        product_code: detail.product_code,
         quantity: detail.released_quantity,
         unit: detail.unit,
         item_description: detail.item_description,
@@ -255,44 +305,27 @@ const populateFormFromReorder = (reorderRequest: any) => {
       <!-- Items Section -->
       <PageHeader 
         title="Request Items" 
-        :subtitle="reorderRequest ? `items ready for review, edit and add items to your request` : 'Add items to your request by filling out the form below'"
+        :subtitle="reorderRequest ? `items ready for review, edit and add items to your request` : 'Select products from inventory or add custom items'"
       />
 
       <!-- New Item Form -->
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-        <!-- Description -->
-        <div class="md:col-span-6 space-y-2">
-          <Label for="item_description" required>Description</Label>
-          <Input 
-            id="item_description" 
-            v-model="newItem.item_description" 
-            placeholder="Item description"
-          />
-        </div>
-
-        <!-- Quantity -->
-        <div class="md:col-span-2 space-y-2">
-          <Label for="quantity" required>Quantity</Label>
-          <Input 
-            id="quantity" 
-            type="number" 
-            v-model.number="newItem.quantity" 
-            min="1" 
-          />
-        </div>
-
-        <!-- Unit (Combobox: Dropdown + Manual Input) -->
-        <div class="md:col-span-2 space-y-2">
-          <Label for="unit" required>Unit</Label>
-
-          <Combobox v-model="newItem.unit">
+      <div class="grid grid-cols-1 gap-4">
+        <!-- Product Combobox (from inventory) -->
+        <div class="space-y-2">
+          <Label>Select Product from Inventory (Optional)</Label>
+          <Combobox 
+            v-model="selectedProduct" 
+            @update:model-value="onProductSelect"
+            :filter-function="(query, product) => {
+              return product.name.toLowerCase().includes(query.toLowerCase()) ||
+                     product.product_code.toLowerCase().includes(query.toLowerCase())
+            }"
+          >
             <ComboboxAnchor>
               <div class="relative w-full items-center">
                 <ComboboxInput
-                  placeholder="Select or type a unit..."
-                  :display-value="(val) => val || ''"
-                  @update:model-value="(val) => newItem.unit = val"
-                  @change="(e) => newItem.unit = e.target.value"
+                  placeholder="Search products by name or code..."
+                  :display-value="(val) => val ? `${val.name} (${val.product_code})` : ''"
                 />
                 <ComboboxTrigger
                   class="absolute end-0 inset-y-0 flex items-center justify-center px-3"
@@ -304,18 +337,22 @@ const populateFormFromReorder = (reorderRequest: any) => {
 
             <ComboboxList>
               <ComboboxEmpty>
-                <span class="text-sm text-muted-foreground px-2 py-1">
-                  No match found — type to add custom unit.
-                </span>
+                <div class="text-sm text-muted-foreground px-2 py-4 text-center">
+                  <span v-if="isLoadingProducts">Loading products...</span>
+                  <span v-else>No products found</span>
+                </div>
               </ComboboxEmpty>
 
               <ComboboxGroup>
                 <ComboboxItem
-                  v-for="unit in unitOptions"
-                  :key="unit.value"
-                  :value="unit.value"
+                  v-for="product in inventoryProducts"
+                  :key="product.id"
+                  :value="product"
                 >
-                  {{ unit.label }}
+                  <div class="flex flex-col">
+                    <span class="font-medium">{{ product.name }}</span>
+                    <span class="text-xs text-muted-foreground">{{ product.product_code }}</span>
+                  </div>
                   <ComboboxItemIndicator>
                     <Check class="ml-auto h-4 w-4" />
                   </ComboboxItemIndicator>
@@ -323,18 +360,99 @@ const populateFormFromReorder = (reorderRequest: any) => {
               </ComboboxGroup>
             </ComboboxList>
           </Combobox>
+          
+          <div v-if="selectedProduct" class="text-sm text-green-600">
+            Selected: {{ selectedProduct.name }} (ID: {{ selectedProduct.id }})
+            <Button variant="ghost" size="sm" @click="clearSelectedProduct" class="ml-2">Clear</Button>
+          </div>
         </div>
 
-        <!-- Add Button -->
-        <div class="sm:col-span-2 flex justify-end">
-          <Button 
-            type="button" 
-            @click="addItem" 
-            :disabled="!newItem.item_description.trim() || !newItem.quantity || !newItem.unit || submitting"
-          >
-            <ShoppingBasket class="h-4 w-4" />
-            <span class="sr-only sm:not-sr-only">Add</span>
-          </Button>
+        <!-- OR Divider -->
+        <div class="relative">
+          <div class="absolute inset-0 flex items-center">
+            <span class="w-full border-t" />
+          </div>
+          <div class="relative flex justify-center text-xs uppercase">
+            <span class="bg-background px-2 text-muted-foreground">Or add custom item</span>
+          </div>
+        </div>
+
+        <!-- Manual Item Entry -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+          <!-- Description -->
+          <div class="md:col-span-6 space-y-2">
+            <Label for="item_description" required>Description</Label>
+            <Input 
+              id="item_description" 
+              v-model="newItem.item_description" 
+              placeholder="Item description"
+              :disabled="!!selectedProduct"
+            />
+          </div>
+
+          <!-- Quantity -->
+          <div class="md:col-span-2 space-y-2">
+            <Label for="quantity" required>Quantity</Label>
+            <Input 
+              id="quantity" 
+              type="number" 
+              v-model.number="newItem.quantity" 
+              min="1" 
+            />
+          </div>
+
+          <!-- Unit -->
+          <div class="md:col-span-2 space-y-2">
+            <Label for="unit" required>Unit</Label>
+            <Combobox v-model="newItem.unit">
+              <ComboboxAnchor>
+                <div class="relative w-full items-center">
+                  <ComboboxInput
+                    placeholder="Select or type a unit..."
+                    :display-value="(val) => val || ''"
+                    @update:model-value="(val) => newItem.unit = val"
+                    @change="(e) => newItem.unit = e.target.value"
+                  />
+                  <ComboboxTrigger
+                    class="absolute end-0 inset-y-0 flex items-center justify-center px-3"
+                  >
+                    <ChevronsUpDown class="size-4 text-muted-foreground" />
+                  </ComboboxTrigger>
+                </div>
+              </ComboboxAnchor>
+              <ComboboxList>
+                <ComboboxEmpty>
+                  <span class="text-sm text-muted-foreground px-2 py-1">
+                    No match found — type to add custom unit.
+                  </span>
+                </ComboboxEmpty>
+                <ComboboxGroup>
+                  <ComboboxItem
+                    v-for="unit in unitOptions"
+                    :key="unit.value"
+                    :value="unit.value"
+                  >
+                    {{ unit.label }}
+                    <ComboboxItemIndicator>
+                      <Check class="ml-auto h-4 w-4" />
+                    </ComboboxItemIndicator>
+                  </ComboboxItem>
+                </ComboboxGroup>
+              </ComboboxList>
+            </Combobox>
+          </div>
+
+          <!-- Add Button -->
+          <div class="sm:col-span-2 flex justify-end">
+            <Button 
+              type="button" 
+              @click="addItem" 
+              :disabled="!newItem.item_description.trim() || !newItem.quantity || !newItem.unit || submitting"
+            >
+              <ShoppingBasket class="h-4 w-4" />
+              <span class="sr-only sm:not-sr-only">Add</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -346,6 +464,7 @@ const populateFormFromReorder = (reorderRequest: any) => {
               <TableHead class="w-1/2">Description</TableHead>
               <TableHead class="w-20">Qty</TableHead>
               <TableHead class="w-24">Unit</TableHead>
+              <TableHead class="w-24">Product Code</TableHead>
               <TableHead 
                 v-if="form.items.some(item => item.editing)" 
                 class="w-28 text-right"
@@ -363,7 +482,6 @@ const populateFormFromReorder = (reorderRequest: any) => {
                 'cursor-pointer': true,
               }"
             >
-              <!-- Description Column -->
               <TableCell>
                 <div v-if="!item.editing">{{ item.item_description }}</div>
                 <Input 
@@ -376,7 +494,6 @@ const populateFormFromReorder = (reorderRequest: any) => {
                 />
               </TableCell>
               
-              <!-- Quantity Column -->
               <TableCell>
                 <div v-if="!item.editing">{{ item.quantity }}</div>
                 <Input 
@@ -390,7 +507,6 @@ const populateFormFromReorder = (reorderRequest: any) => {
                 />
               </TableCell>
               
-              <!-- Unit Column -->
               <TableCell>
                 <div v-if="!item.editing">
                   {{ unitOptions.find(u => u.value === item.unit)?.label || item.unit }}
@@ -417,7 +533,20 @@ const populateFormFromReorder = (reorderRequest: any) => {
                 </Select>
               </TableCell>
               
-              <!-- Actions Column -->
+              <TableCell>
+                <div v-if="!item.editing">
+                  <span v-if="item.product_code" class="text-xs text-muted-foreground">{{ item.product_code }}</span>
+                  <span v-else class="text-xs text-gray-400">-</span>
+                </div>
+                <Input 
+                  v-else
+                  v-model="item.product_code"
+                  placeholder="Product code"
+                  @click.stop
+                  class="w-full"
+                />
+              </TableCell>
+              
               <TableCell 
                 v-if="item.editing"
                 class="flex justify-end space-x-2"
@@ -466,7 +595,7 @@ const populateFormFromReorder = (reorderRequest: any) => {
 
     <!-- Preview Dialog -->
     <Dialog v-model:open="showPreview">
-      <DialogContent class="max-h-screen  overflow-y-auto sm:max-w-2xl">
+      <DialogContent class="max-h-screen overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Review Your Request</DialogTitle>
         </DialogHeader>
@@ -489,7 +618,6 @@ const populateFormFromReorder = (reorderRequest: any) => {
 
           <div class="space-y-2">
             <Label class="text-sm sm:text-base text-muted-foreground">Items</Label>
-            <!-- In the Preview Dialog section -->
             <div class="overflow-hidden">
               <div class="max-h-[60vh] overflow-y-auto">
                 <Table>
@@ -498,6 +626,7 @@ const populateFormFromReorder = (reorderRequest: any) => {
                       <TableHead>Description</TableHead>
                       <TableHead>Quantity</TableHead>
                       <TableHead>Unit</TableHead>
+                      <TableHead>Product Code</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -507,9 +636,12 @@ const populateFormFromReorder = (reorderRequest: any) => {
                       <TableCell>
                         {{ unitOptions.find(u => u.value === item.unit)?.label || item.unit }}
                       </TableCell>
+                      <TableCell>
+                        <span class="text-xs">{{ item.product_code || '-' }}</span>
+                      </TableCell>
                     </TableRow>
                     <TableRow v-if="form.items.length === 0">
-                      <TableCell :colspan="3" class="text-center">
+                      <TableCell :colspan="4" class="text-center">
                         <ShoppingBasket />
                         No items added yet
                       </TableCell>

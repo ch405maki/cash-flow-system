@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'inventory' => [
+        'base_url' => env('INVENTORY_API_URL', 'http://192.168.0.145'),
+        'timeout' => env('INVENTORY_API_TIMEOUT', 10),
+    ],
+
 ];

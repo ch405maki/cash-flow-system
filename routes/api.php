@@ -16,6 +16,7 @@ use App\Http\Controllers\Configuration\AccountController;
 use App\Http\Controllers\Api\ProfilePictureController;
 use App\Http\Controllers\Api\TermsController;
 use App\Http\Controllers\Api\CanvasController;
+use App\Http\Controllers\Api\InventoryController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -91,3 +92,5 @@ Route::get('/canvas/{canvas}/files/{file}/preview', [CanvasController::class, 'p
 Route::apiResource('purchase-orders', PurchaseOrderController::class)->only(['store']);
 Route::patch('purchase-orders/{purchase_order}/approve', [PurchaseOrderController::class, 'approve']);
 Route::patch('purchase-orders/{purchase_order}/reject', [PurchaseOrderController::class, 'reject']);
+
+Route::get('/inventory/products', [InventoryController::class, 'getProducts']);
