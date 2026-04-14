@@ -52,7 +52,6 @@ Route::apiResource('vouchers', VoucherController::class);
 
 // Request Routes
 Route::get('/requests', [RequestController::class, 'data']);
-
 Route::post('/requests', [RequestController::class, 'store']);
 Route::put('/requests/{request}/items', [RequestController::class, 'updateItems']);
 Route::post('/requests/{request}/release', [RequestController::class, 'releaseItems']);
