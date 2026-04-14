@@ -82,4 +82,45 @@ class InventoryApiService
             ];
         }
     }
+    
+    /**
+     * Create a transaction in inventory system (Out/Deduction)
+     */
+    public function createTransaction(array $data): array
+    {
+        try {
+            $response = Http::timeout(10)->post($this->baseUrl . '/api/transactions', $data);
+            
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'data' => $response->json(),
+                    'status_code' => $response->status()
+                ];
+            }
+            
+            Log::error('Failed to create inventory transaction', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'data_sent' => $data
+            ]);
+            
+            return [
+                'success' => false,
+                'error' => 'Inventory API returned error: ' . $response->status(),
+                'status_code' => $response->status()
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Inventory transaction connection error', [
+                'message' => $e->getMessage(),
+                'data_sent' => $data
+            ]);
+            
+            return [
+                'success' => false,
+                'error' => 'Cannot connect to inventory system: ' . $e->getMessage()
+            ];
+        }
+    }
 }

@@ -2,7 +2,7 @@
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Trash2 } from 'lucide-vue-next'
+import { Trash2, Package, PackageX } from 'lucide-vue-next'
 import { Checkbox } from '@/components/ui/checkbox'
 
 const props = defineProps({
@@ -48,6 +48,7 @@ const toggleItemSelection = (id: number, checked: boolean, index: number) => {
           <TableHead class="w-[100px] border-r text-xs">Quantity</TableHead>
           <TableHead class="w-[100px] border-r text-xs">Unit</TableHead>
           <TableHead class="text-xs">Description</TableHead>
+          <TableHead class="w-[80px] text-xs text-center">Inventory</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -90,6 +91,17 @@ const toggleItemSelection = (id: number, checked: boolean, index: number) => {
 
           <TableCell class="p-2">
             <p>{{ detail.item_description }}</p>
+          </TableCell>
+          
+          <TableCell class="p-2 text-center">
+            <div v-if="detail.item_id" class="text-green-600" title="Linked to inventory - will auto-deduct">
+              <Package class="h-4 w-4 inline" />
+              <span class="text-xs ml-1">Linked</span>
+            </div>
+            <div v-else class="text-red-500" title="Not linked to inventory - cannot release">
+              <PackageX class="h-4 w-4 inline" />
+              <span class="text-xs ml-1">Not Linked</span>
+            </div>
           </TableCell>
         </TableRow>
       </TableBody>
