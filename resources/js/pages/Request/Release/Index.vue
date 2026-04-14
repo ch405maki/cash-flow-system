@@ -167,7 +167,7 @@ const updateReleasedQuantity = ({ index, value }: { index: number, value: number
         
         <form @submit.prevent="submit" class="space-y-4">
           <ItemsTable
-            :details="form.details"
+            :details="props.request.details"
             :selected-items="selectedItems"
             @update:selectedItems="(items) => selectedItems = items"
             @update:releasedQuantity="updateReleasedQuantity"
