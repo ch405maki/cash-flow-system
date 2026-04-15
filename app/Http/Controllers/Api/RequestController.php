@@ -292,152 +292,152 @@ class RequestController extends Controller
     }
 
     public function releaseItems(HttpRequest $httpRequest, Request $request, InventoryApiService $inventoryApi)
-{
-    DB::beginTransaction();
-    try {
-        $validated = $httpRequest->validate([
-            'items' => 'required|array|min:1',
-            'items.*.request_detail_id' => [
-                'required',
-                Rule::exists('request_details', 'id')->where('request_id', $request->id)
-            ],
-            'items.*.quantity' => 'required|integer|min:1',
-            'notes' => 'nullable|string',
-            'user_id' => 'required|exists:users,id'
-        ]);
-
-        $authUser = User::findOrFail($validated['user_id']);
-
-        $release = Release::create([
-            'request_id' => $request->id,
-            'user_id' => $authUser->id,
-            'release_date' => now(),
-            'notes' => $validated['notes'] ?? null
-        ]);
-
-        $totalQuantity = 0;
-
-        foreach ($validated['items'] as $item) {
-            $requestDetail = RequestDetail::where('id', $item['request_detail_id'])
-                ->where('request_id', $request->id)
-                ->lockForUpdate()
-                ->firstOrFail();
-
-            // Calculate remaining quantity
-            $remainingQuantity = $requestDetail->quantity - $requestDetail->released_quantity;
-
-            if ($item['quantity'] > $remainingQuantity) {
-                throw ValidationException::withMessages([
-                    'quantity' => [
-                        "Cannot release {$item['quantity']} items. Only {$remainingQuantity} available."
-                    ]
-                ]);
-            }
-
-            // CHECK IF ITEM HAS INVENTORY ID
-            if (!$requestDetail->item_id) {
-                throw ValidationException::withMessages([
-                    'item' => [
-                        "Item '{$requestDetail->item_description}' is not linked to inventory. Cannot release."
-                    ]
-                ]);
-            }
-
-            // CALL INVENTORY API FOR DEDUCTION
-            $inventoryData = [
-                'item_id' => $requestDetail->item_id,
-                'user_id' => 1, // Hardcoded as requested
-                'type' => 'Out',
-                'quantity' => $item['quantity'],
-                'source_destination' => $request->department->department_name ?? 'N/A',
-                'personnel_name' => trim(($request->user->first_name ?? '') . ' ' . ($request->user->last_name ?? '')),
-                'reference_no' => 'REL-' . now()->format('Ymd'), // Auto-generate
-                'note' => $request->purpose ?? 'N/A'
-            ];
-            
-            // Use the service to create transaction
-            $inventoryResult = $inventoryApi->createTransaction($inventoryData);
-            
-            if (!$inventoryResult['success']) {
-                throw new \Exception("Inventory update failed: " . $inventoryResult['error']);
-            }
-
-            ReleaseDetail::create([
-                'release_id' => $release->id,
-                'request_detail_id' => $item['request_detail_id'],
-                'quantity' => $item['quantity']
+    {
+        DB::beginTransaction();
+        try {
+            $validated = $httpRequest->validate([
+                'items' => 'required|array|min:1',
+                'items.*.request_detail_id' => [
+                    'required',
+                    Rule::exists('request_details', 'id')->where('request_id', $request->id)
+                ],
+                'items.*.quantity' => 'required|integer|min:1',
+                'notes' => 'nullable|string',
+                'user_id' => 'required|exists:users,id'
             ]);
 
-            // Update request detail
-            $requestDetail->increment('released_quantity', $item['quantity']);
-            
-            // Update tracking status
-            $newReleasedTotal = $requestDetail->released_quantity;
-            if ($newReleasedTotal >= $requestDetail->quantity) {
-                $requestDetail->tracking_status = 'completed';
-            } else {
-                $requestDetail->tracking_status = 'partial';
+            $authUser = User::findOrFail($validated['user_id']);
+
+            $release = Release::create([
+                'request_id' => $request->id,
+                'user_id' => $authUser->id,
+                'release_date' => now(),
+                'notes' => $validated['notes'] ?? null
+            ]);
+
+            $totalQuantity = 0;
+
+            foreach ($validated['items'] as $item) {
+                $requestDetail = RequestDetail::where('id', $item['request_detail_id'])
+                    ->where('request_id', $request->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                // Calculate remaining quantity
+                $remainingQuantity = $requestDetail->quantity - $requestDetail->released_quantity;
+
+                if ($item['quantity'] > $remainingQuantity) {
+                    throw ValidationException::withMessages([
+                        'quantity' => [
+                            "Cannot release {$item['quantity']} items. Only {$remainingQuantity} available."
+                        ]
+                    ]);
+                }
+
+                // CHECK IF ITEM HAS INVENTORY ID
+                if (!$requestDetail->item_id) {
+                    throw ValidationException::withMessages([
+                        'item' => [
+                            "Item '{$requestDetail->item_description}' is not linked to inventory. Cannot release."
+                        ]
+                    ]);
+                }
+
+                // CALL INVENTORY API FOR DEDUCTION
+                $inventoryData = [
+                    'item_id' => $requestDetail->item_id,
+                    'user_id' => 1, // Hardcoded as requested
+                    'type' => 'Out',
+                    'quantity' => $item['quantity'],
+                    'source_destination' => $request->department->department_name ?? 'N/A',
+                    'personnel_name' => trim(($request->user->first_name ?? '') . ' ' . ($request->user->last_name ?? '')),
+                    'reference_no' => 'REL-' . now()->format('Ymd'), // Auto-generate
+                    'note' => $request->purpose ?? 'N/A'
+                ];
+                
+                // Use the service to create transaction
+                $inventoryResult = $inventoryApi->createTransaction($inventoryData);
+                
+                if (!$inventoryResult['success']) {
+                    throw new \Exception("Inventory update failed: " . $inventoryResult['error']);
+                }
+
+                ReleaseDetail::create([
+                    'release_id' => $release->id,
+                    'request_detail_id' => $item['request_detail_id'],
+                    'quantity' => $item['quantity']
+                ]);
+
+                // Update request detail
+                $requestDetail->increment('released_quantity', $item['quantity']);
+                
+                // Update tracking status
+                $newReleasedTotal = $requestDetail->released_quantity;
+                if ($newReleasedTotal >= $requestDetail->quantity) {
+                    $requestDetail->tracking_status = 'completed';
+                } else {
+                    $requestDetail->tracking_status = 'partial';
+                }
+                $requestDetail->save();
+
+                $totalQuantity += $item['quantity'];
             }
-            $requestDetail->save();
 
-            $totalQuantity += $item['quantity'];
+            $this->updateRequestStatus($request);
+
+            $description = "Released {$totalQuantity} items for request #{$request->request_no} by {$authUser->username}";
+
+            RequestApproval::create([
+                'request_id' => $request->id,
+                'user_id' => $authUser->id,
+                'status' => 'released',
+                'approved_at' => now(),
+                'remarks' => $description,
+            ]);
+
+            // Activity logging
+            activity()
+                ->performedOn($release)
+                ->causedBy($authUser)
+                ->useLog('Released Items')
+                ->withProperties([
+                    'action' => 'release',
+                    'event' => 'Items Released',
+                    'ip_address' => $httpRequest->ip(),
+                    'request_no' => $request->request_no,
+                    'released_quantity' => $totalQuantity,
+                    'inventory_synced' => true
+                ])
+                ->log("Released {$totalQuantity} items for request #{$request->request_no} and synced with inventory");
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Items released successfully and inventory updated',
+                'data' => [
+                    'release' => $release->load('details'),
+                    'request' => $request->load('details')
+                ]
+            ]);
+
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Release failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Release failed: ' . $e->getMessage(),
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
         }
-
-        $this->updateRequestStatus($request);
-
-        $description = "Released {$totalQuantity} items for request #{$request->request_no} by {$authUser->username}";
-
-        RequestApproval::create([
-            'request_id' => $request->id,
-            'user_id' => $authUser->id,
-            'status' => 'released',
-            'approved_at' => now(),
-            'remarks' => $description,
-        ]);
-
-        // Activity logging
-        activity()
-            ->performedOn($release)
-            ->causedBy($authUser)
-            ->useLog('Released Items')
-            ->withProperties([
-                'action' => 'release',
-                'event' => 'Items Released',
-                'ip_address' => $httpRequest->ip(),
-                'request_no' => $request->request_no,
-                'released_quantity' => $totalQuantity,
-                'inventory_synced' => true
-            ])
-            ->log("Released {$totalQuantity} items for request #{$request->request_no} and synced with inventory");
-
-        DB::commit();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Items released successfully and inventory updated',
-            'data' => [
-                'release' => $release->load('details'),
-                'request' => $request->load('details')
-            ]
-        ]);
-
-    } catch (ValidationException $e) {
-        DB::rollBack();
-        return response()->json([
-            'success' => false,
-            'message' => 'Validation failed',
-            'errors' => $e->errors()
-        ], 422);
-    } catch (\Exception $e) {
-        DB::rollBack();
-        \Log::error('Release failed: ' . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => 'Release failed: ' . $e->getMessage(),
-            'error' => config('app.debug') ? $e->getMessage() : null
-        ], 500);
     }
-}
 
     protected function updateRequestStatus($request)
     {

@@ -310,7 +310,7 @@ const populateFormFromReorder = (reorderRequest: any) => {
 
       <!-- New Item Form -->
       <div class="grid grid-cols-1 gap-4">
-        <!-- Product Combobox (from inventory) -->
+                <!-- Product Combobox (from inventory) -->
         <div class="space-y-2">
           <Label>Select Product from Inventory (Optional)</Label>
           <Combobox 
@@ -318,14 +318,16 @@ const populateFormFromReorder = (reorderRequest: any) => {
             @update:model-value="onProductSelect"
             :filter-function="(query, product) => {
               return product.name.toLowerCase().includes(query.toLowerCase()) ||
-                     product.product_code.toLowerCase().includes(query.toLowerCase())
+                    product.product_code.toLowerCase().includes(query.toLowerCase())
             }"
+            class="max-w-lg"
           >
-            <ComboboxAnchor>
+            <ComboboxAnchor class="flex items-center w-full">
               <div class="relative w-full items-center">
                 <ComboboxInput
                   placeholder="Search products by name or code..."
                   :display-value="(val) => val ? `${val.name} (${val.product_code})` : ''"
+                  class="py-2.5 px-4 pr-10 text-sm w-full"
                 />
                 <ComboboxTrigger
                   class="absolute end-0 inset-y-0 flex items-center justify-center px-3"
@@ -333,11 +335,14 @@ const populateFormFromReorder = (reorderRequest: any) => {
                   <ChevronsUpDown class="size-4 text-muted-foreground" />
                 </ComboboxTrigger>
               </div>
+              <div v-if="selectedProduct" class="text-sm text-green-600">
+                <Button variant="destructive" size="sm" @click="clearSelectedProduct" class="ml-2">Clear</Button>
+              </div>
             </ComboboxAnchor>
 
-            <ComboboxList>
+            <ComboboxList class="min-w-[400px] w-full">
               <ComboboxEmpty>
-                <div class="text-sm text-muted-foreground px-2 py-4 text-center">
+                <div class="text-sm text-muted-foreground px-4 py-6 text-center">
                   <span v-if="isLoadingProducts">Loading products...</span>
                   <span v-else>No products found</span>
                 </div>
@@ -348,10 +353,10 @@ const populateFormFromReorder = (reorderRequest: any) => {
                   v-for="product in inventoryProducts"
                   :key="product.id"
                   :value="product"
+                  class="py-3 px-4"
                 >
                   <div class="flex flex-col">
-                    <span class="font-medium">{{ product.name }}</span>
-                    <span class="text-xs text-muted-foreground">{{ product.product_code }}</span>
+                    <span class="font-medium text-sm">{{ product.name }}</span>
                   </div>
                   <ComboboxItemIndicator>
                     <Check class="ml-auto h-4 w-4" />
@@ -360,11 +365,6 @@ const populateFormFromReorder = (reorderRequest: any) => {
               </ComboboxGroup>
             </ComboboxList>
           </Combobox>
-          
-          <div v-if="selectedProduct" class="text-sm text-green-600">
-            Selected: {{ selectedProduct.name }} (ID: {{ selectedProduct.id }})
-            <Button variant="ghost" size="sm" @click="clearSelectedProduct" class="ml-2">Clear</Button>
-          </div>
         </div>
 
         <!-- OR Divider -->
