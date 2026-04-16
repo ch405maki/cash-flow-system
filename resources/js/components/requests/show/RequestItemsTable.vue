@@ -18,7 +18,7 @@ const props = defineProps<{ details: any[] }>()
       <TableRow v-for="(detail, index) in details" :key="detail.id">
         <TableCell class="border-r">{{ index + 1 }}</TableCell>
         <TableCell class="border-r">
-          <span class="text-zinc-600">{{ +detail.quantity + +detail.released_quantity }} Request</span>
+          <span class="text-zinc-600">{{ detail.quantity }} Request</span>
           (Released: {{ detail.released_quantity }})
         </TableCell>
         <TableCell class="border-r">{{ detail.unit }}</TableCell>

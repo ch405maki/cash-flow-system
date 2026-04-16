@@ -183,6 +183,30 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/logs',
     },
 ];
+
+type LogProperties = {
+  ip_address?: string
+  mac_address?: string
+  [key: string]: unknown
+}
+
+const getProps = (log: Log): LogProperties => {
+  // if already object, return directly
+  if (typeof log.properties === 'object') {
+    return log.properties as LogProperties
+  }
+
+  // if string, parse once and cache
+  if (!(log as any)._parsedProps) {
+    try {
+      ;(log as any)._parsedProps = JSON.parse(log.properties as any)
+    } catch {
+      ;(log as any)._parsedProps = {}
+    }
+  }
+
+  return (log as any)._parsedProps
+}
 </script>
 
 <template>
@@ -251,6 +275,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                         <TableRow>
                             <TableHead class="w-[220px]">Event</TableHead>
                             <TableHead>Description</TableHead>
+                            <TableHead class="w-[200px]">Mac Address | IP</TableHead>
                             <TableHead class="w-[200px]">User</TableHead>
                             <TableHead class="w-[180px]">Date</TableHead>
                         </TableRow>
@@ -266,12 +291,30 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 <TableCell @click="selectedLog = log" class="max-w-[300px] truncate cursor-pointer hover:underline" title="View Details">
                                     {{ log.description }}
                                 </TableCell>
+                                <TableCell
+                                    @click="selectedLog = log"
+                                    class="cursor-pointer hover:underline"
+                                    title="View Details"
+                                    >
+                                    <div class="text-xs leading-tight">
+                                        <div>
+                                        <span class="font-medium">MAC:</span>
+                                        {{ getProps(log).mac_address || '-' }}
+                                        </div>
+                                        <div>
+                                        <span class="font-medium">IP:</span>
+                                        {{ getProps(log).ip_address || '-' }}
+                                        </div>
+                                    </div>
+                                </TableCell>
                                 <TableCell>
-                                    <div class="flex items-center space-x-2">
+                                    <div>
+                                        <div>
                                         <span class="font-medium">{{ log.causer?.username || 'System' }}</span>
-                                        <span v-if="log.causer?.email" class="text-xs text-muted-foreground">
-                                            ({{ log.causer.email }})
-                                        </span>
+                                        </div>
+                                        <div>
+                                        <span v-if="log.causer?.email" class="text-xs text-muted-foreground">({{ log.causer.email }})</span>
+                                        </div>
                                     </div>
                                 </TableCell>
                                 <TableCell class="text-muted-foreground">

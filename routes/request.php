@@ -3,8 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+use App\Http\Controllers\Web\RequestController;
 use App\Http\Controllers\Api\RequestApprovalController;
-use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\RequestToOrderController;
 use App\Http\Controllers\Api\ApprovedRequestController;
 use App\Http\Controllers\Api\RequestToOrderReleaseController;

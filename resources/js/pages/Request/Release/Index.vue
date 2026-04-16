@@ -149,7 +149,7 @@ const updateReleasedQuantity = ({ index, value }: { index: number, value: number
       <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold">Request Information</h1>
         <Link :href="route('request.index')">
-          <Button variant="outline"> Back to Requests </Button>
+          <Button variant="outline">Back to Requests</Button>
         </Link>
       </div>
       
@@ -167,7 +167,7 @@ const updateReleasedQuantity = ({ index, value }: { index: number, value: number
         
         <form @submit.prevent="submit" class="space-y-4">
           <ItemsTable
-            :details="form.details"
+            :details="props.request.details"
             :selected-items="selectedItems"
             @update:selectedItems="(items) => selectedItems = items"
             @update:releasedQuantity="updateReleasedQuantity"
