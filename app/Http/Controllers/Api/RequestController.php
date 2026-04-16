@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use App\Notifications\NewRequestNotification;
+use App\Helpers\MacAddressHelper;
 
 use App\Services\InventoryApiService;
 
@@ -35,6 +36,8 @@ class RequestController extends Controller
     public function store(HttpRequest $request): JsonResponse
     {
         try {
+            $macAddress = MacAddressHelper::getClientMac($request);
+
             $validated = $request->validate([
                 'purpose' => 'required|string|max:500',
                 'status' => 'required|in:pending,approved,rejected',
@@ -120,6 +123,8 @@ class RequestController extends Controller
                 ->withProperties([
                     'action' => 'create',
                     'event' => 'Request Created',
+                    'mac_address' => $macAddress,
+                    'user_agent' => $request->userAgent(),
                     'ip_address' => $request->ip(),
                     'request_data' => $validated, 
                     'items_count' => count($validated['items']),
@@ -147,7 +152,8 @@ class RequestController extends Controller
                 'data' => $requestModel->load(['department', 'user', 'details']),
                 'meta' => [
                     'created_at' => now()->toDateTimeString(),
-                    'items_count' => count($validated['items'])
+                    'items_count' => count($validated['items']),
+                    'mac_address' => $macAddress
                 ]
             ], 201);
 
