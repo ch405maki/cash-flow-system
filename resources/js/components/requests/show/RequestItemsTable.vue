@@ -10,15 +10,14 @@ const props = defineProps<{
 </script>
 
 <template>
-  {{ user }}
   <Table>
     <TableHeader>
       <TableRow>
         <TableHead class="border-r w-10">#</TableHead>
-        <TableHead class="border-r">Quantity</TableHead>
-        <TableHead class="border-r">Unit</TableHead>
+        <TableHead class="border-r w-[250px]">Quantity</TableHead>
+        <TableHead class="border-r w-[100px]">Unit</TableHead>
         <TableHead>Item Description</TableHead>
-        <TableHead class="border-l">Inventory Status</TableHead>
+        <TableHead class="border-l w-[160px]" v-if="user.role == 'property_custodian'">Inventory</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>
