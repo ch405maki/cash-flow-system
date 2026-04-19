@@ -13,6 +13,40 @@ class InventoryApiService
     {
         $this->baseUrl = config('services.inventory.base_url', 'http://192.168.0.145');
     }
+
+    /**
+ * Check if product exists and get its quantity
+ */
+    public function checkProductQuantity($productId): array
+    {
+        try {
+            $response = Http::timeout(10)->get($this->baseUrl . "/api/productCode/{$productId}");
+            
+            if ($response->successful()) {
+                $data = $response->json();
+                return [
+                    'exists' => true,
+                    'quantity' => $data['quantity'] ?? 0,
+                    'success' => true
+                ];
+            }
+            
+            return [
+                'exists' => false,
+                'quantity' => 0,
+                'success' => false,
+                'error' => 'Product not found'
+            ];
+            
+        } catch (\Exception $e) {
+            return [
+                'exists' => false,
+                'quantity' => 0,
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
     
     /**
      * Get all products from inventory system
