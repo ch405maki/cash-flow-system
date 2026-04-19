@@ -4,11 +4,13 @@ import { PackageCheck, PackageOpen, PackageX, PackageSearch } from 'lucide-vue-n
 
 const props = defineProps<{ 
   details: any[],
-  inventoryStatus: any 
+  inventoryStatus: any ,
+  user: any
 }>()
 </script>
 
 <template>
+  {{ user }}
   <Table>
     <TableHeader>
       <TableRow>
@@ -28,7 +30,7 @@ const props = defineProps<{
         </TableCell>
         <TableCell class="border-r">{{ detail.unit }}</TableCell>
         <TableCell>{{ detail.item_description }}</TableCell>
-        <TableCell class="border-l">
+        <TableCell v-if="user.role == 'property_custodian'" class="border-l">
           <div v-if="inventoryStatus[detail.id]">
             <div v-if="!inventoryStatus[detail.id].has_item_id" class="text-gray-500 text-sm">
               <PackageX class="h-4 w-4 inline" />

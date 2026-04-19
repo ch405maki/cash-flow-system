@@ -87,22 +87,15 @@ const releaseItems = async () => {
       user_id: props.current_user.id,
     });
 
-    // Update local state with the response data
-    form.value.details = form.value.details.map(detail => {
-      const updatedDetail = response.data.data.request.details.find(
-        (d: any) => d.id === detail.id
-      );
-      return updatedDetail ? {
-        ...detail,
-        quantity: updatedDetail.quantity,
-        released_quantity: updatedDetail.released_quantity
-      } : detail;
-    });
-
     toast.success('Items released successfully');
 
     // Clear selection after successful release
     selectedItems.value = [];
+    
+    // Refresh the page to show updated status and inventory
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000); // Delay reload to let user see success message
     
   } catch (error: any) {
     console.error('Release error:', error);

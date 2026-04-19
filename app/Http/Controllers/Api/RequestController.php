@@ -445,25 +445,63 @@ class RequestController extends Controller
         }
     }
 
-    protected function updateRequestStatus($request)
+    /**
+     * Update request status based on released quantities
+     */
+    protected function updateRequestStatus(Request $request)
     {
-        $hasRemaining = RequestDetail::where('request_id', $request->id)
-            ->where('quantity', '>', 0)
-            ->exists();
-
-        $hasReleased = RequestDetail::where('request_id', $request->id)
-            ->where('released_quantity', '>', 0)
-            ->exists();
-
-        if (!$hasRemaining && $hasReleased) {
-            $status = 'released';
-        } elseif ($hasRemaining && $hasReleased) {
-            $status = 'partially_released';
-        } else {
-            $status = $request->status;
+        // Refresh to get latest data
+        $request->refresh();
+        $request->load('details');
+        
+        $details = $request->details;
+        
+        if ($details->isEmpty()) {
+            return;
         }
-
-        $request->update(['status' => $status]);
+        
+        $statusChanged = false;
+        $newStatus = $request->status;
+        
+        // Check if all items are fully released
+        $allItemsFullyReleased = $details->every(function ($detail) {
+            return $detail->released_quantity >= $detail->quantity;
+        });
+        
+        // Check if any items have been released
+        $anyItemsReleased = $details->some(function ($detail) {
+            return $detail->released_quantity > 0;
+        });
+        
+        // Determine new status
+        if ($allItemsFullyReleased && $anyItemsReleased) {
+            $newStatus = 'released';
+            $statusChanged = true;
+        } elseif ($anyItemsReleased && !$allItemsFullyReleased) {
+            if ($request->status !== 'partially_released') {
+                $newStatus = 'partially_released';
+                $statusChanged = true;
+            }
+        }
+        
+        // Update if status changed
+        if ($statusChanged) {
+            $oldStatus = $request->status;
+            $request->update(['status' => $newStatus]);
+            
+            // Log the status change
+            activity()
+                ->performedOn($request)
+                ->causedBy(auth()->user())
+                ->useLog('Request Status Update')
+                ->withProperties([
+                    'old_status' => $oldStatus,
+                    'new_status' => $newStatus,
+                    'total_quantity' => $details->sum('quantity'),
+                    'total_released' => $details->sum('released_quantity')
+                ])
+                ->log("Request status automatically updated from {$oldStatus} to {$newStatus}");
+        }
     }
 
     // Add to RequestController

@@ -58,7 +58,7 @@ function handleReorder(request: any) {
       <RequestDetailsTable :request="request" />
       <h2 class="text-lg font-semibold my-4">Items</h2>
       <!-- Pass inventory status to the table -->
-      <RequestItemsTable :details="request.details" :inventory-status="inventoryStatus" />
+      <RequestItemsTable :user="user" :details="request.details" :inventory-status="inventoryStatus" />
 
       <PrintableSection ref="printableComponent" :request="request" :user="user" />
       <ReleasedItemsPrint ref="releasedItemsPrintable" :request="request" :user="user" />
