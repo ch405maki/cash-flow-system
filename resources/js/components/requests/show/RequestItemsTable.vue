@@ -5,6 +5,7 @@ const props = defineProps<{ details: any[] }>()
 </script>
 
 <template>
+  {{ details }}
   <Table>
     <TableHeader>
       <TableRow>
