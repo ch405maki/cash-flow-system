@@ -26,6 +26,8 @@ use App\Models\User;
 use App\Models\RequestApproval;
 use App\Models\ReleaseDetail;
 
+use App\Services\InventoryApiService;
+
 class RequestController extends Controller
 {
     public function index()
@@ -54,10 +56,11 @@ class RequestController extends Controller
         ]);
     }
 
-    public function show(Request $request)
+    public function show(Request $request, InventoryApiService $inventoryApi)
     {
         $user = Auth::user();
 
+        // Load relationships
         $request->load([
             'user', 
             'department', 
@@ -67,9 +70,31 @@ class RequestController extends Controller
             'releases.user'
         ]);
 
+        // Check inventory for each item that has item_id
+        $inventoryStatus = [];
+        foreach ($request->details as $detail) {
+            if ($detail->item_id) {
+                $result = $inventoryApi->checkProductQuantity($detail->item_id);
+                $inventoryStatus[$detail->id] = [
+                    'has_item_id' => true,
+                    'exists_in_inventory' => $result['exists'],
+                    'available_quantity' => $result['quantity'],
+                    'has_sufficient' => $result['exists'] && $result['quantity'] > 0
+                ];
+            } else {
+                $inventoryStatus[$detail->id] = [
+                    'has_item_id' => false,
+                    'exists_in_inventory' => false,
+                    'available_quantity' => 0,
+                    'has_sufficient' => false
+                ];
+            }
+        }
+
         return Inertia::render('Request/Show', [
             'request' => $request,
             'accounts' => Account::all(['id', 'account_title']),
+            'inventoryStatus' => $inventoryStatus, // Pass to frontend
             'user' => [
                 'id' => $user->id,
                 'role' => $user->role,
@@ -171,17 +196,44 @@ class RequestController extends Controller
         ]);
     }
 
-    public function release(Request $request)
+    public function release(Request $request, InventoryApiService $inventoryApi)
     {
+        // Load request with details
+        $request->load([
+            'details' => function ($query) {
+                $query->where('quantity', '!=', 0);
+            },
+            'user', 
+            'department'
+        ]);
+        
+        // Check inventory for each item that has item_id
+        $inventoryStatus = [];
+        foreach ($request->details as $detail) {
+            if ($detail->item_id) {
+                $result = $inventoryApi->checkProductQuantity($detail->item_id);
+                $inventoryStatus[$detail->id] = [
+                    'has_item_id' => true,
+                    'exists' => $result['exists'],
+                    'available_quantity' => $result['quantity'],
+                    'has_stock' => $result['exists'] && $result['quantity'] > 0,
+                    'sufficient_for_request' => $result['exists'] && $result['quantity'] >= ($detail->quantity - $detail->released_quantity)
+                ];
+            } else {
+                $inventoryStatus[$detail->id] = [
+                    'has_item_id' => false,
+                    'exists' => false,
+                    'available_quantity' => 0,
+                    'has_stock' => false,
+                    'sufficient_for_request' => false
+                ];
+            }
+        }
+
         return Inertia::render('Request/Release/Index', [
-            'request' => $request->load([
-                'details' => function ($query) {
-                    $query->where('quantity', '!=', 0);
-                },
-                'user', 
-                'department'
-            ]),
+            'request' => $request,
             'departments' => Department::all(),
+            'inventoryStatus' => $inventoryStatus, 
             'current_user' => [
                 'id' => auth()->id(),
             ]

@@ -11,7 +11,8 @@ import type { BreadcrumbItem } from '@/types'
 
 const props = defineProps<{ 
     request: any, 
-    user: any 
+    user: any,
+    inventoryStatus: any  // Add this
 }>()
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -56,7 +57,8 @@ function handleReorder(request: any) {
 
       <RequestDetailsTable :request="request" />
       <h2 class="text-lg font-semibold my-4">Items</h2>
-      <RequestItemsTable :details="request.details" />
+      <!-- Pass inventory status to the table -->
+      <RequestItemsTable :details="request.details" :inventory-status="inventoryStatus" />
 
       <PrintableSection ref="printableComponent" :request="request" :user="user" />
       <ReleasedItemsPrint ref="releasedItemsPrintable" :request="request" :user="user" />

@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Trash2, Package, PackageX, PackageCheck } from 'lucide-vue-next'
+import { Package, PackageX, PackageCheck } from 'lucide-vue-next'
 import { Checkbox } from '@/components/ui/checkbox'
 
 const props = defineProps({
@@ -12,6 +11,10 @@ const props = defineProps({
   },
   selectedItems: {
     type: Array,
+    required: true
+  },
+  inventoryStatus: {
+    type: Object,
     required: true
   }
 })
@@ -30,6 +33,13 @@ const isFullyReleased = (detail: any) => {
 // Get remaining quantity
 const getRemainingQuantity = (detail: any) => {
   return detail.quantity - detail.released_quantity
+}
+
+// Get inventory status for an item
+const getInventoryStatusInfo = (detail: any) => {
+  const status = props.inventoryStatus[detail.id]
+  if (!status) return null
+  return status
 }
 
 const toggleItemSelection = (id: number, checked: boolean, index: number) => {
@@ -58,7 +68,7 @@ const toggleItemSelection = (id: number, checked: boolean, index: number) => {
           <TableHead class="w-[140px] border-r text-xs">Quantity</TableHead>
           <TableHead class="w-[100px] border-r text-xs">Unit</TableHead>
           <TableHead class="text-xs">Description</TableHead>
-          <TableHead class="w-[100px] text-xs text-center">Status</TableHead>
+          <TableHead class="w-[100px] text-xs text-center">Inventory</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -74,7 +84,7 @@ const toggleItemSelection = (id: number, checked: boolean, index: number) => {
           <div class="flex justify-center items-center w-full">
             <!-- Hide checkbox for fully released items -->
             <div v-if="isFullyReleased(detail)" class="text-green-600 flex justify-center items-center w-full">
-              <PackageCheck class="h-5 w-5" />
+              <PackageCheck class="h-4 w-4 inline" />
             </div>
             <div v-else class="flex justify-center items-center w-full">
               <Checkbox 
@@ -89,7 +99,7 @@ const toggleItemSelection = (id: number, checked: boolean, index: number) => {
 
           <TableCell class="border-r p-2">
             <!-- Show disabled input for fully released items -->
-            <div v-if="isFullyReleased(detail)" class="text-center text-green-600 font-medium">
+            <div v-if="isFullyReleased(detail)" class="text-green-600">
               Completed
             </div>
             <div v-else>
@@ -135,18 +145,24 @@ const toggleItemSelection = (id: number, checked: boolean, index: number) => {
           </TableCell>
           
           <TableCell class="p-2 text-center">
-            <!-- Show different status badges -->
-            <div v-if="isFullyReleased(detail)" class="text-green-600 font-medium" title="Item fully released">
-              <PackageCheck class="h-4 w-4 inline" />
-              <span class="text-xs ml-1">Completed</span>
-            </div>
-            <div v-else-if="detail.item_id && !isFullyReleased(detail)" class="text-green-600" title="Linked to inventory - will auto-deduct">
-              <Package class="h-4 w-4 inline" />
-              <span class="text-xs ml-1">Linked</span>
-            </div>
-            <div v-else class="text-red-500" title="Not linked to inventory - cannot release">
-              <PackageX class="h-4 w-4 inline" />
-              <span class="text-xs ml-1">Not Linked</span>
+            <!-- Inventory Status Display -->
+            <div v-if="getInventoryStatusInfo(detail)">
+              <div v-if="!getInventoryStatusInfo(detail).has_item_id" class="text-gray-500 text-xs" title="No inventory link">
+                <PackageX class="h-4 w-4 inline" />
+                <span class="ml-1">Not Linked</span>
+              </div>
+              <div v-else-if="!getInventoryStatusInfo(detail).exists" class="text-red-600 text-xs" title="Not found in inventory">
+                <AlertCircle class="h-4 w-4 inline" />
+                <span class="ml-1">Not Found</span>
+              </div>
+              <div v-else-if="getInventoryStatusInfo(detail).sufficient_for_request" class="text-green-600 text-xs" title="Sufficient stock available">
+                <Package class="h-4 w-4 inline" />
+                <span class="ml-1">{{ getInventoryStatusInfo(detail).available_quantity }} available</span>
+              </div>
+              <div v-else class="text-red-600 text-xs" title="Insufficient stock">
+                <AlertCircle class="h-4 w-4 inline" />
+                <span class="ml-1">Low Stock ({{ getInventoryStatusInfo(detail).available_quantity }})</span>
+              </div>
             </div>
           </TableCell>
         </TableRow>

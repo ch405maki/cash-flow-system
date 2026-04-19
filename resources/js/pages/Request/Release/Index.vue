@@ -10,6 +10,7 @@ import RequestInfoTable from '@/components/requests/releasing/RequestInfoTable.v
 import RequestStatusBadge from '@/components/requests/releasing/RequestStatusBadge.vue'
 import ItemsTable from '@/components/requests/releasing/ItemsTable.vue'
 import ReleaseControls from '@/components/requests/releasing/ReleaseControls.vue'
+import { ArrowLeft } from 'lucide-vue-next';
 
 const toast = useToast()
 
@@ -23,6 +24,10 @@ const props = defineProps({
     required: true,
   },
   current_user: {
+    type: Object,
+    required: true,
+  },
+  inventoryStatus: { 
     type: Object,
     required: true,
   },
@@ -149,7 +154,7 @@ const updateReleasedQuantity = ({ index, value }: { index: number, value: number
       <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold">Request Information</h1>
         <Link :href="route('request.index')">
-          <Button variant="outline">Back to Requests</Button>
+          <Button variant="outline"><ArrowLeft />Back</Button>
         </Link>
       </div>
       
@@ -169,6 +174,7 @@ const updateReleasedQuantity = ({ index, value }: { index: number, value: number
           <ItemsTable
             :details="props.request.details"
             :selected-items="selectedItems"
+            :inventory-status="inventoryStatus"
             @update:selectedItems="(items) => selectedItems = items"
             @update:releasedQuantity="updateReleasedQuantity"
             @removeDetail="removeDetail"

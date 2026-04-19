@@ -466,6 +466,46 @@ class RequestController extends Controller
         $request->update(['status' => $status]);
     }
 
+    // Add to RequestController
+    public function checkInventoryAvailability(Request $request)
+    {
+        try {
+            $request->load('details');
+            $inventoryApi = app(InventoryApiService::class);
+            
+            $availability = [];
+            
+            foreach ($request->details as $detail) {
+                if ($detail->item_id) {
+                    $check = $inventoryApi->checkProductAvailability(
+                        $detail->item_id,
+                        $detail->quantity - $detail->released_quantity
+                    );
+                    
+                    $availability[$detail->id] = [
+                        'item_description' => $detail->item_description,
+                        'requested' => $detail->quantity - $detail->released_quantity,
+                        'available' => $check['success'] ? $check['available'] : null,
+                        'has_stock' => $check['success'] ? $check['has_stock'] : false,
+                        'error' => $check['error'] ?? null
+                    ];
+                }
+            }
+            
+            return response()->json([
+                'success' => true,
+                'availability' => $availability
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to check inventory',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     // Api method to update tagging status
     public function data(): JsonResponse
     {
