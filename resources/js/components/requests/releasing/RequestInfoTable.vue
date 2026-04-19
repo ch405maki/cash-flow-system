@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
+import { Table, TableBody, TableRow, TableCell } from '@/components/ui/table'
+import StatusBadge from '@/components/StatusBadge.vue';
 
 defineProps({
   request: {
@@ -17,7 +18,11 @@ defineProps({
         <TableCell class="border-r p-2">{{ request.request_no }}</TableCell>
         <TableCell class="border-r p-2 w-32">Status:</TableCell>
         <TableCell class="p-2 capitalize">
-          <slot name="status-badge"></slot>
+          <StatusBadge 
+              :status="request.status"
+              show-icon
+              size="md"
+            />
         </TableCell>
       </TableRow>
       <TableRow>
