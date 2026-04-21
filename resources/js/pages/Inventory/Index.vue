@@ -117,8 +117,8 @@ const getStockStatusBadgeClass = (quantity: number, minStock: number) => {
 const fetchItems = async () => {
     loading.value = true;
     try {
-        const response = await axios.get('http://192.168.0.145/api/items');
-        items.value = response.data;
+        const response = await axios.get('/api/inventory/items');
+        items.value = response.data.data;
     } catch (error) {
         console.error('Error fetching items:', error);
         toast.error('Failed to load inventory items');
@@ -244,7 +244,7 @@ onMounted(() => {
                     size="sm"
                     class="h-9"
                 >
-                    <X class="h-4 w-4 mr-2" />
+                    <X class="h-4 w-4" />
                     Clear Filters
                 </Button>
             </div>
