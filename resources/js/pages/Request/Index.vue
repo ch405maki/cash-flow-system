@@ -144,7 +144,7 @@ watch([departmentFilter, statusFilter], () => {
 
           <!-- Create Button -->
           <Button v-if="authUser.role == 'staff'" variant="default" size="sm" @click="goToCreate()" class="h-8">
-            <PlusCircle class="h-4 w-4 mr-2" />
+            <PlusCircle class="h-4 w-4" />
             Create Request
           </Button>
         </div>

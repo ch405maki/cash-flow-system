@@ -13,6 +13,37 @@ class InventoryApiService
     {
         $this->baseUrl = config('services.inventory.base_url', 'http://192.168.0.145');
     }
+    
+    public function getItems(): array
+    {
+        try {
+            $response = Http::timeout(10)->get($this->baseUrl . '/api/items');
+            
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'data' => $response->json()
+                ];
+            }
+            
+            return [
+                'success' => false,
+                'data' => [],
+                'error' => 'Failed to fetch items'
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Inventory API - getItems error', [
+                'message' => $e->getMessage()
+            ]);
+            
+            return [
+                'success' => false,
+                'data' => [],
+                'error' => 'Cannot connect to inventory system'
+            ];
+        }
+    }
 
     /**
  * Check if product exists and get its quantity

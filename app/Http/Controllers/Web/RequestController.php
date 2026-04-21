@@ -26,6 +26,7 @@ use App\Models\User;
 use App\Models\RequestApproval;
 use App\Models\ReleaseDetail;
 
+use App\Helpers\MacAddressHelper;
 use App\Services\InventoryApiService;
 
 class RequestController extends Controller
@@ -242,6 +243,8 @@ class RequestController extends Controller
 
     public function updateStatus(HttpRequest $httpRequest, Request $request)
     {
+        $macAddress = MacAddressHelper::getClientMac($httpRequest);
+
         $validated = $httpRequest->validate([
             'status' => 'required|in:approved,rejected,propertyCustodian,to_order,released',
             'password' => 'required_if:status,approved,propertyCustodian,to_order,released',
@@ -352,6 +355,8 @@ class RequestController extends Controller
             ->withProperties([
                 'action' => 'status_update',
                 'event' => 'Status Updated',
+                'mac_address' => $macAddress,
+                'user_agent' => $httpRequest->userAgent(),
                 'ip_address' => $httpRequest->ip(),
                 'old_status' => $oldStatus,
                 'new_status' => $validated['status'],

@@ -214,7 +214,7 @@ const handleReorder = () => {
         v-if="request.status === 'released'"
         @click.stop="handleReorder"
       >
-        <ShoppingCart class="h-4 w-4 mr-1" /> Re Order
+        <ShoppingCart class="h-4 w-4" /> Re Order
       </Button>
     </div>
 
@@ -231,45 +231,43 @@ const handleReorder = () => {
                 <p>Created At: {{ formatDateTime(request.created_at) }}</p>
             </div>
             <div v-if="request.approvals?.length">
-            <div class="relative pl-6">
-                <div class="absolute left-0 top-0 h-full w-0.5 bg-gray-200 ml-4"></div>
-                <div
+              <div
                 v-for="(approval, index) in request.approvals"
                 :key="approval.id"
-                class="relative mb-6 last:mb-0"
-                >
-                <div
-                    class="bg-green-500 border-2 border-green-500 absolute -left-6 top-0 h-8 w-8 rounded-full flex items-center justify-center z-10"
-                >
-                    <component
-                    :is="approval.approved ? CircleCheck : CircleCheck"
-                    class="h-5 w-5 text-white"
-                    />
-                </div>
+                class="flex gap-4"
+              >
+                <!-- Left: icon + connector line -->
+                <div class="flex flex-col items-center w-5 flex-shrink-0">
+                  <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 z-10 bg-green-500">
+                    <CircleCheck class="h-4 w-4 text-white" />
+                  </div>
 
-                <div
+                  <div
                     v-if="index < request.approvals.length - 1"
-                    class="absolute -left-6 top-8 h-full w-0.5 ml-4 bg-green-500 z-0"
-                ></div>
+                    class="flex-1 w-0.5 bg-green-500"
+                  ></div>
+                </div>
 
-                <div class="pl-4">
-                    <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <span class="capitalize">{{ approval.user?.username || 'Unknown' }}</span>
-                    </div>
-                    <span class="text-xs text-muted-foreground">
-                        {{ formatDateTime(approval.created_at) }}
+                <!-- Right: content -->
+                <div
+                  :class="[
+                    'flex-1 pt-0.5',
+                    index < request.approvals.length - 1 ? 'pb-6' : 'pb-0'
+                  ]"
+                >
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-sm font-medium capitalize">
+                      {{ approval.user?.username || 'Unknown' }}
                     </span>
-                    </div>
-
-                    <div class="mt-1 flex items-start gap-2">
-                    <p class="text-sm text-xs text-muted-foreground">
-                        "{{ approval.remarks || 'No remarks' }}."
-                    </p>
-                    </div>
+                    <span class="text-xs text-muted-foreground whitespace-nowrap">
+                      {{ formatDateTime(approval.created_at) }}
+                    </span>
+                  </div>
+                  <p class="mt-1 text-xs text-muted-foreground">
+                    "{{ approval.remarks || 'No remarks' }}."
+                  </p>
                 </div>
-                </div>
-            </div>
+              </div>
             </div>
             </SheetDescription>
         </SheetHeader>

@@ -35,4 +35,22 @@ class InventoryController extends Controller
             'data' => []
         ], 500);
     }
+
+    public function getItems(): JsonResponse
+    {
+        $result = $this->inventoryApi->getItems();
+        
+        if ($result['success']) {
+            return response()->json([
+                'success' => true,
+                'data' => $result['data']
+            ]);
+        }
+        
+        return response()->json([
+            'success' => false,
+            'message' => $result['error'] ?? 'Failed to fetch items',
+            'data' => []
+        ], 500);
+    }
 }

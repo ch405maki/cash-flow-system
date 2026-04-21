@@ -95,3 +95,4 @@ Route::patch('purchase-orders/{purchase_order}/reject', [PurchaseOrderController
 
 Route::get('/inventory/products', [InventoryController::class, 'getProducts']);
 Route::get('/requests/{request}/check-inventory', [RequestController::class, 'checkInventoryAvailability']);
+ Route::get('/inventory/items', [InventoryController::class, 'getItems']);

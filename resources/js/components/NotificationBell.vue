@@ -92,7 +92,7 @@ const goToAllNotifications = () => {
             <!-- Notifications List - Scrollable area -->
             <div class="flex-1 overflow-y-auto px-6">
                 <div v-if="notifications.length === 0" class="flex flex-col items-center justify-center h-full text-center">
-                    <Bell class="h-12 w-12 text-muted-foreground/50 mb-4" />
+                    <Bell class="text-muted-foreground/50 mb-4" />
                     <p class="text-sm text-muted-foreground">No notifications yet</p>
                     <p class="text-xs text-muted-foreground/70 mt-1">We'll notify you when something arrives</p>
                 </div>

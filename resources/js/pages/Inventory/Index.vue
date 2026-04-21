@@ -22,6 +22,15 @@ import {
 } from 'lucide-vue-next';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
+import PageHeader from '@/components/PageHeader.vue';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table'
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -108,8 +117,8 @@ const getStockStatusBadgeClass = (quantity: number, minStock: number) => {
 const fetchItems = async () => {
     loading.value = true;
     try {
-        const response = await axios.get('http://192.168.0.145/api/items');
-        items.value = response.data;
+        const response = await axios.get('/api/inventory/items');
+        items.value = response.data.data;
     } catch (error) {
         console.error('Error fetching items:', error);
         toast.error('Failed to load inventory items');
@@ -163,10 +172,11 @@ onMounted(() => {
         <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
             <!-- Header Section -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Inventory Management</h1>
-                    <p class="text-sm text-gray-500 mt-1">Manage and track your inventory items</p>
-                </div>
+                <PageHeader 
+                    class="capitalize"
+                    title="Inventory Management"
+                    subtitle="Manage and track your inventory items"
+                />
                 <Button 
                     @click="refreshData" 
                     variant="outline" 
@@ -174,7 +184,7 @@ onMounted(() => {
                     :disabled="loading"
                     class="h-9"
                 >
-                    <RefreshCw :class="['h-4 w-4 mr-2', loading && 'animate-spin']" />
+                    <RefreshCw :class="['h-4 w-4', loading && 'animate-spin']" />
                     Refresh
                 </Button>
             </div>
@@ -195,7 +205,7 @@ onMounted(() => {
                         @click="clearSearch"
                         class="absolute right-3 top-1/2 transform -translate-y-1/2"
                     >
-                        <X class="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                        <X class="h-4 w-4 text-gray-400" />
                     </button>
                 </div>
 
@@ -234,7 +244,7 @@ onMounted(() => {
                     size="sm"
                     class="h-9"
                 >
-                    <X class="h-4 w-4 mr-2" />
+                    <X class="h-4 w-4" />
                     Clear Filters
                 </Button>
             </div>
@@ -250,17 +260,17 @@ onMounted(() => {
             </div>
 
             <!-- Loading Skeleton -->
-            <div v-if="loading" class="bg-white rounded-lg border shadow-sm overflow-hidden">
+            <div v-if="loading" class="rounded-lg border shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                    <table class="min-w-full divide-y">
+                        <thead>
                             <tr>
                                 <th v-for="i in 8" :key="i" class="px-4 py-3">
                                     <Skeleton class="h-4 w-20" />
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="divide-y ">
                             <tr v-for="i in 5" :key="i">
                                 <td v-for="j in 8" :key="j" class="px-4 py-3">
                                     <Skeleton class="h-4 w-full" />
@@ -272,84 +282,68 @@ onMounted(() => {
             </div>
 
             <!-- Table -->
-            <div v-else class="bg-white rounded-lg border shadow-sm overflow-hidden">
+            <div v-else class="overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Product Code
-                                </th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Item Name
-                                </th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Category
-                                </th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Quantity
-                                </th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Unit
-                                </th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Min Stock
-                                </th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Status
-                                </th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Last Updated
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <tr 
+                    <Table class="min-w-full divide-y">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead >Product Code</TableHead>
+                                <TableHead >Item Name</TableHead>
+                                <TableHead >Category</TableHead>
+                                <TableHead >Quantity</TableHead>
+                                <TableHead >Unit</TableHead>
+                                <TableHead >Min Stock</TableHead>
+                                <TableHead >Status</TableHead>
+                                <TableHead >Last Updated</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow 
                                 v-for="item in filteredItems" 
                                 :key="item.id"
-                                class="hover:bg-gray-50 transition-colors"
+                                class="transition-colors"
                             >
-                                <td class="px-4 py-3 whitespace-nowrap text-sm font-mono text-gray-600">
+                                <TableCell>
                                     {{ item.product_code }}
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
+                                </TableCell>
+                                <TableCell class="px-4 py-3 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <Package class="h-4 w-4 text-gray-400 mr-2" />
-                                        <span class="text-sm font-medium text-gray-900">{{ item.name }}</span>
+                                        <span class="text-sm font-medium">{{ item.name }}</span>
                                     </div>
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
+                                </TableCell>
+                                <TableCell class="px-4 py-3 whitespace-nowrap">
                                     <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
                                         {{ item.category?.name || 'Uncategorized' }}
                                     </span>
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
+                                </TableCell>
+                                <TableCell class="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
                                     <span :class="getStockStatusClass(item.quantity, item.min_stock)">
                                         {{ item.quantity }}
                                     </span>
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                                </TableCell>
+                                <TableCell class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                                     {{ item.unit?.name || 'N/A' }}
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                                </TableCell>
+                                <TableCell class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                                     {{ item.min_stock }}
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
+                                </TableCell>
+                                <TableCell class="px-4 py-3 whitespace-nowrap">
                                     <span :class="[
                                         'px-2 py-1 text-xs rounded-full font-medium',
                                         getStockStatusBadgeClass(item.quantity, item.min_stock)
                                     ]">
                                         {{ getStockStatusText(item.quantity, item.min_stock) }}
                                     </span>
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                </TableCell>
+                                <TableCell class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                                     {{ formatDate(item.updated_at) }}
-                                </td>
-                            </tr>
+                                </TableCell>
+                            </TableRow>
                             
                             <!-- Empty State -->
-                            <tr v-if="filteredItems.length === 0">
-                                <td colspan="8" class="px-4 py-12 text-center text-gray-500">
+                            <TableRow v-if="filteredItems.length === 0">
+                                <TableCell colspan="8" class="px-4 py-12 text-center text-gray-500">
                                     <Package class="h-12 w-12 mx-auto text-gray-300 mb-3" />
                                     <p class="text-sm">No items found</p>
                                     <p class="text-xs text-gray-400 mt-1">
@@ -364,14 +358,14 @@ onMounted(() => {
                                     >
                                         Clear All Filters
                                     </Button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
                 </div>
                 
                 <!-- Footer Stats -->
-                <div class="bg-gray-50 px-4 py-3 border-t border-gray-200">
+                <div class="px-4 py-3">
                     <div class="flex flex-col sm:flex-row justify-between items-center gap-2 text-sm">
                         <div class="text-gray-500">
                             Total Items: <span class="font-medium text-gray-900">{{ items.length }}</span>

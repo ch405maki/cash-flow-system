@@ -22,8 +22,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use App\Notifications\NewRequestNotification;
-use App\Helpers\MacAddressHelper;
 
+use App\Helpers\MacAddressHelper;
 use App\Services\InventoryApiService;
 
 
@@ -409,7 +409,9 @@ class RequestController extends Controller
                 ->withProperties([
                     'action' => 'release',
                     'event' => 'Items Released',
-                    'ip_address' => $httpRequest->ip(),
+                    'mac_address' => $macAddress,
+                    'user_agent' => $request->userAgent(),
+                    'ip_address' => $request->ip(),
                     'request_no' => $request->request_no,
                     'released_quantity' => $totalQuantity,
                     'inventory_synced' => true
