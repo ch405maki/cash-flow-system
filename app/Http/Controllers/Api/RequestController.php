@@ -299,22 +299,20 @@ class RequestController extends Controller
 
     public function releaseItems(HttpRequest $httpRequest, Request $request, InventoryApiService $inventoryApi)
     {
-        try {
-            DB::beginTransaction();
+        DB::beginTransaction();
 
+        try {
             $macAddress = MacAddressHelper::getClientMac($httpRequest);
 
             $validated = $httpRequest->validate([
                 'items' => 'required|array|min:1',
                 'items.*.request_detail_id' => [
                     'required',
-                    Rule::exists('request_details', 'id')->where(function ($query) use ($request) {
-                        $query->where('request_id', $request->id);
-                    }),
+                    Rule::exists('request_details', 'id')->where('request_id', $request->id)
                 ],
                 'items.*.quantity' => 'required|integer|min:1',
-                'notes' => 'nullable|string|max:1000',
-                'user_id' => 'required|exists:users,id',
+                'notes' => 'nullable|string',
+                'user_id' => 'required|exists:users,id'
             ]);
 
             $authUser = User::findOrFail($validated['user_id']);
@@ -323,7 +321,7 @@ class RequestController extends Controller
                 'request_id'   => $request->id,
                 'user_id'      => $authUser->id,
                 'release_date' => now(),
-                'notes'        => $validated['notes'] ?? null,
+                'notes'        => $validated['notes'] ?? null
             ]);
 
             $totalQuantity = 0;
@@ -340,7 +338,7 @@ class RequestController extends Controller
                 if ($item['quantity'] > $remainingQuantity) {
                     throw ValidationException::withMessages([
                         'quantity' => [
-                            "Cannot release {$item['quantity']} item(s). Only {$remainingQuantity} remaining."
+                            "Cannot release {$item['quantity']} items. Only {$remainingQuantity} available."
                         ]
                     ]);
                 }
@@ -348,39 +346,39 @@ class RequestController extends Controller
                 if (!$requestDetail->item_id) {
                     throw ValidationException::withMessages([
                         'item' => [
-                            "Item '{$requestDetail->item_description}' is not linked to inventory."
+                            "Item '{$requestDetail->item_description}' is not linked to inventory. Cannot release."
                         ]
                     ]);
                 }
 
                 /*
                 |--------------------------------------------------------------------------
-                | Inventory API Sync
+                | Inventory API
                 |--------------------------------------------------------------------------
                 */
                 $inventoryData = [
-                    'item_id'             => $requestDetail->item_id,
-                    'user_id'             => $authUser->id,
-                    'type'                => 'Out',
-                    'quantity'            => $item['quantity'],
-                    'source_destination'  => $request->department->department_name ?? 'N/A',
-                    'personnel_name'      => trim(
+                    'item_id' => $requestDetail->item_id,
+                    'user_id' => 1, // keep original since working
+                    'type' => 'Out',
+                    'quantity' => $item['quantity'],
+                    'source_destination' => $request->department->department_name ?? 'N/A',
+                    'personnel_name' => trim(
                         ($request->user->first_name ?? '') . ' ' .
                         ($request->user->last_name ?? '')
                     ),
-                    'reference_no'        => 'REL-' . now()->format('YmdHis') . '-' . $requestDetail->id,
-                    'note'                => $request->purpose ?? 'N/A',
+                    'reference_no' => 'REL-' . now()->format('YmdHis') . '-' . $requestDetail->id,
+                    'note' => $request->purpose ?? 'N/A'
                 ];
 
-                \Log::info('Inventory Payload:', $inventoryData);
+                \Log::info('Sending to inventory API:', $inventoryData);
 
                 $inventoryResult = $inventoryApi->createTransaction($inventoryData);
 
-                \Log::info('Inventory Response:', $inventoryResult);
+                \Log::info('Inventory API response:', $inventoryResult);
 
                 if (!$inventoryResult['success']) {
                     throw new \Exception(
-                        'Inventory sync failed: ' .
+                        "Inventory update failed: " .
                         ($inventoryResult['error'] ?? 'Unknown error')
                     );
                 }
@@ -391,9 +389,9 @@ class RequestController extends Controller
                 |--------------------------------------------------------------------------
                 */
                 ReleaseDetail::create([
-                    'release_id'         => $release->id,
-                    'request_detail_id'  => $requestDetail->id,
-                    'quantity'           => $item['quantity'],
+                    'release_id' => $release->id,
+                    'request_detail_id' => $item['request_detail_id'],
+                    'quantity' => $item['quantity']
                 ]);
 
                 /*
@@ -416,12 +414,12 @@ class RequestController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | Update Main Request Status
+            | Update Request Status
             |--------------------------------------------------------------------------
             */
             $this->updateRequestStatus($request);
 
-            $description = "Released {$totalQuantity} item(s) for request #{$request->request_no} by {$authUser->username}";
+            $description = "Released {$totalQuantity} items for request #{$request->request_no} by {$authUser->username}";
 
             RequestApproval::create([
                 'request_id'  => $request->id,
@@ -433,7 +431,7 @@ class RequestController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | Commit First
+            | Commit FIRST
             |--------------------------------------------------------------------------
             */
             DB::commit();
@@ -442,32 +440,32 @@ class RequestController extends Controller
             |--------------------------------------------------------------------------
             | Activity Log AFTER Commit
             |--------------------------------------------------------------------------
+            | Only change made = moved here
             */
             activity()
-                ->performedOn($request)
+                ->performedOn($release)
                 ->causedBy($authUser)
                 ->useLog('Released Items')
                 ->withProperties([
-                    'action'            => 'release',
-                    'event'             => 'Items Released',
-                    'mac_address'       => $macAddress,
-                    'user_agent'        => $httpRequest->userAgent(),
-                    'ip_address'        => $httpRequest->ip(),
-                    'request_no'        => $request->request_no,
+                    'action' => 'release',
+                    'event' => 'Items Released',
+                    'mac_address' => $macAddress,
+                    'user_agent' => $httpRequest->userAgent(),
+                    'ip_address' => $httpRequest->ip(),
+                    'request_no' => $request->request_no,
                     'released_quantity' => $totalQuantity,
-                    'inventory_synced'  => true,
-                    'release_id'        => $release->id,
+                    'inventory_synced' => true
                 ])
-                ->log($description);
+                ->log("Released {$totalQuantity} items for request #{$request->request_no} and synced with inventory");
 
             return response()->json([
                 'success' => true,
-                'message' => 'Items released successfully.',
+                'message' => 'Items released successfully and inventory updated',
                 'data' => [
                     'release' => $release->load('details'),
-                    'request' => $request->load('details'),
-                ],
-            ], 200);
+                    'request' => $request->load('details')
+                ]
+            ]);
 
         } catch (ValidationException $e) {
 
@@ -475,23 +473,24 @@ class RequestController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Validation failed.',
-                'errors'  => $e->errors(),
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
             ], 422);
 
         } catch (\Exception $e) {
 
             DB::rollBack();
 
-            \Log::error('Release Error: ' . $e->getMessage());
+            \Log::error('Release failed: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Release failed.',
-                'error'   => config('app.debug') ? $e->getMessage() : null,
+                'message' => 'Release failed: ' . $e->getMessage(),
+                'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
     }
+
     /**
      * Update request status based on released quantities
      */
