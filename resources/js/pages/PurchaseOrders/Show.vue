@@ -44,7 +44,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from 'vue-toastification'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useForm } from '@inertiajs/vue3'
-import { BellRing, X, ReceiptText,  Send , AlertCircle,Ticket ,Printer, ArrowLeft, Check, History, CheckCircle, BadgeCheck  } from 'lucide-vue-next';
+import { PackageCheck, BellRing, X, ReceiptText,  Send , AlertCircle,Ticket ,Printer, ArrowLeft, Check, History, CheckCircle, BadgeCheck  } from 'lucide-vue-next';
 import { router } from '@inertiajs/vue3';
 import PageHeader from '@/components/PageHeader.vue';
 
@@ -228,6 +228,10 @@ function openPreview(file: any) {
           subtitle="Purchase order details"
         />
         <div class="space-x-2 flex space-x-2">
+          <Button size="sm">
+            <PackageCheck />
+            Receiving Page
+          </Button>
           <Button 
               v-if="authUser.role === 'accounting'"
               variant="default" 

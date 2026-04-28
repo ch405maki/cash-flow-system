@@ -89,3 +89,4 @@ require __DIR__.'/reports.php';
 require __DIR__.'/request.php';
 require __DIR__.'/notification.php';
 require __DIR__.'/inventory.php';
+require __DIR__.'/receiving.php';
