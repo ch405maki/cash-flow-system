@@ -18,10 +18,16 @@ import {
   SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 import { useToast } from 'vue-toastification'
 import {
   ArrowLeft, PackageCheck, CheckCircle2,
-  AlertTriangle, Info, Save,
+  AlertTriangle, Info, Save, ChevronDown,
 } from 'lucide-vue-next'
 
 const toast = useToast()
@@ -110,6 +116,22 @@ const rows = ref<RowState[]>(
     dirty:              false,
   }))
 )
+
+// Track open accordion items
+const openItems = ref<number[]>([])
+
+function toggleRow(detailId: number) {
+  const index = openItems.value.indexOf(detailId)
+  if (index > -1) {
+    openItems.value.splice(index, 1)
+  } else {
+    openItems.value.push(detailId)
+  }
+}
+
+function isOpen(detailId: number) {
+  return openItems.value.includes(detailId)
+}
 
 // ── Computed helpers ─────────────────────────────────────────────
 function totalReceivedForDetail(detail: PODetail): number {
@@ -284,18 +306,28 @@ function submit() {
             v-for="(detail, index) in purchaseOrder.details"
             :key="detail.id"
           >
-            <!-- Main editable row -->
+            <!-- Main editable row - now clickable -->
             <TableRow
               :class="[
-                'transition-colors',
+                'transition-colors cursor-pointer',
                 rows[index].dirty ? 'bg-blue-50/50' : 'hover:bg-muted/30',
                 rowError(index) ? 'bg-red-50/40' : '',
+                isOpen(detail.id) ? 'border-b-0' : ''
               ]"
+              @click="toggleRow(detail.id)"
             >
-              <!-- Description -->
+              <!-- Description with chevron indicator -->
               <TableCell class="pl-6">
-                <p class="font-medium text-sm">{{ detail.item_description }}</p>
-                <p class="text-xs text-muted-foreground">{{ detail.unit }}</p>
+                <div class="flex items-center gap-2">
+                  <ChevronDown 
+                    class="h-4 w-4 transition-transform duration-200"
+                    :class="isOpen(detail.id) ? 'rotate-180' : ''"
+                  />
+                  <div>
+                    <p class="font-medium text-sm">{{ detail.item_description }}</p>
+                    <p class="text-xs text-muted-foreground">{{ detail.unit }}</p>
+                  </div>
+                </div>
               </TableCell>
 
               <!-- Ordered -->
@@ -337,8 +369,8 @@ function submit() {
                 </span>
               </TableCell>
 
-              <!-- Qty to receive (inline input) -->
-              <TableCell class="text-center">
+              <!-- Qty to receive (inline input) - stop propagation so clicking input doesn't toggle -->
+              <TableCell class="text-center" @click.stop>
                 <div class="flex flex-col items-center gap-1">
                   <Input
                     v-model="rows[index].quantity_received"
@@ -357,8 +389,8 @@ function submit() {
                 </div>
               </TableCell>
 
-              <!-- Date -->
-              <TableCell>
+              <!-- Date - stop propagation -->
+              <TableCell @click.stop>
                 <Input
                   v-model="rows[index].received_date"
                   type="date"
@@ -368,8 +400,8 @@ function submit() {
                 />
               </TableCell>
 
-              <!-- Remarks -->
-              <TableCell class="pr-6">
+              <!-- Remarks - stop propagation -->
+              <TableCell class="pr-6" @click.stop>
                 <Input
                   v-model="rows[index].remarks"
                   type="text"
@@ -381,11 +413,8 @@ function submit() {
               </TableCell>
             </TableRow>
 
-            <!-- Receiving history sub-rows -->
-            <TableRow
-              v-if="detail.receivings.length"
-              class="bg-muted/10"
-            >
+            <!-- Receiving history expanded section -->
+            <TableRow v-if="isOpen(detail.id) && detail.receivings.length" class="bg-muted/10">
               <TableCell colspan="9" class="pl-10 pb-3 pt-1">
                 <p class="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
                   Receiving History
@@ -414,7 +443,13 @@ function submit() {
                 </div>
               </TableCell>
             </TableRow>
-
+            
+            <!-- Show message if no history but row is expanded -->
+            <TableRow v-if="isOpen(detail.id) && !detail.receivings.length" class="bg-muted/10">
+              <TableCell colspan="9" class="pl-10 pb-3 pt-1">
+                <p class="text-xs text-muted-foreground italic">No receiving history yet.</p>
+              </TableCell>
+            </TableRow>
           </template>
         </TableBody>
       </Table>
