@@ -75,7 +75,7 @@ function goToCreate(poId?: number) {
 <template>
   <div class="space-x-2 flex space-x-2">
     <!-- Receiving Page -->
-    <Button size="sm">
+    <Button size="sm" @click="router.visit(`/purchase-orders/${purchaseOrder.id}/receiving`)">
       <PackageCheck />
       Receiving Page
     </Button>
