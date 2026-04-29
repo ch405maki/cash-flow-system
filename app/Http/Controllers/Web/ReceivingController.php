@@ -52,7 +52,7 @@ class ReceivingController extends Controller
             'items.*.po_detail_id'         => 'required|exists:purchase_order_details,id',
             'items.*.quantity_ordered'     => 'required|integer|min:1',
             'items.*.quantity_received'    => 'required|integer|min:0',
-            'items.*.condition'            => 'required|in:good,damaged,incomplete',
+            'items.*.condition'            => 'nullable|in:good,damaged,incomplete',
             'items.*.received_date'        => 'required|date',
             'items.*.remarks'              => 'nullable|string|max:500',
         ]);

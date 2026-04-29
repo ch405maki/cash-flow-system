@@ -96,7 +96,7 @@ interface RowState {
   condition: string
   received_date: string
   remarks: string
-  dirty: boolean         // has the user touched this row?
+  dirty: boolean
 }
 
 const rows = ref<RowState[]>(
@@ -211,22 +211,6 @@ function submit() {
           :title="`Receiving: ${purchaseOrder.po_no}`"
           :subtitle="`${purchaseOrder.payee} · ${formatDate(purchaseOrder.date)}`"
         />
-        <div class="flex items-center gap-2">
-          <Button
-            variant="default"
-            size="sm"
-            :disabled="!hasChanges || hasErrors || processing"
-            @click="submit"
-          >
-            <Save class="h-4 w-4 mr-1" />
-            {{ processing ? 'Saving...' : 'Save Received Items' }}
-          </Button>
-          <Button variant="outline" size="sm" as-child>
-            <Link href="/purchase-orders/receiving">
-              <ArrowLeft class="h-4 w-4 mr-1" /> Back
-            </Link>
-          </Button>
-        </div>
       </div>
 
       <!-- PO Meta -->
@@ -264,212 +248,176 @@ function submit() {
       </div>
 
       <!-- Inline Receiving Table -->
-      <Card>
-        <CardHeader>
-          <CardTitle class="text-base">Line Items</CardTitle>
-          <CardDescription>Edit inline, then click "Save Received Items"</CardDescription>
-        </CardHeader>
-        <CardContent class="p-0">
-          <div class="overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow class="bg-muted/30">
-                  <TableHead class="pl-6 w-[280px]">Description</TableHead>
-                  <TableHead class="text-center w-24">Ordered</TableHead>
-                  <TableHead class="text-center w-24">Received</TableHead>
-                  <TableHead class="text-center w-24">Remaining</TableHead>
-                  <TableHead class="text-center w-28">Status</TableHead>
-                  <TableHead class="text-center w-28">Qty to Receive</TableHead>
-                  <TableHead class="w-36">Condition</TableHead>
-                  <TableHead class="w-36">Date</TableHead>
-                  <TableHead class="w-52 pr-6">Remarks</TableHead>
-                </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                <template
-                  v-for="(detail, index) in purchaseOrder.details"
-                  :key="detail.id"
-                >
-                  <!-- Main editable row -->
-                  <TableRow
-                    :class="[
-                      'transition-colors',
-                      rows[index].dirty ? 'bg-blue-50/50' : 'hover:bg-muted/30',
-                      rowError(index) ? 'bg-red-50/40' : '',
-                    ]"
-                  >
-                    <!-- Description -->
-                    <TableCell class="pl-6">
-                      <p class="font-medium text-sm">{{ detail.item_description }}</p>
-                      <p class="text-xs text-muted-foreground">{{ detail.unit }}</p>
-                    </TableCell>
-
-                    <!-- Ordered -->
-                    <TableCell class="text-center text-sm font-mono">
-                      {{ detail.quantity }}
-                    </TableCell>
-
-                    <!-- Total received so far -->
-                    <TableCell class="text-center text-sm font-mono">
-                      {{ totalReceivedForDetail(detail) }}
-                    </TableCell>
-
-                    <!-- Remaining -->
-                    <TableCell class="text-center text-sm font-mono">
-                      <span :class="remaining(index) === 0 ? 'text-green-600 font-semibold' : 'text-orange-600'">
-                        {{ remaining(index) }}
-                      </span>
-                    </TableCell>
-
-                    <!-- Status badge -->
-                    <TableCell class="text-center">
-                      <span
-                        v-if="receivingStatus(detail) === 'complete'"
-                        class="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-700 border border-green-200"
-                      >
-                        <CheckCircle2 class="h-3 w-3" /> Complete
-                      </span>
-                      <span
-                        v-else-if="receivingStatus(detail) === 'partial'"
-                        class="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-200"
-                      >
-                        <AlertTriangle class="h-3 w-3" /> Partial
-                      </span>
-                      <span
-                        v-else
-                        class="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-muted text-muted-foreground border"
-                      >
-                        Pending
-                      </span>
-                    </TableCell>
-
-                    <!-- Qty to receive (inline input) -->
-                    <TableCell class="text-center">
-                      <div class="flex flex-col items-center gap-1">
-                        <Input
-                          v-model="rows[index].quantity_received"
-                          type="number"
-                          min="0"
-                          :max="remaining(index)"
-                          :disabled="remaining(index) === 0"
-                          class="w-20 text-center h-8 text-sm"
-                          :class="rowError(index) ? 'border-red-400 focus-visible:ring-red-400' : ''"
-                          placeholder="0"
-                          @input="rows[index].dirty = true"
-                        />
-                        <p v-if="rowError(index)" class="text-xs text-red-500">
-                          {{ rowError(index) }}
-                        </p>
-                      </div>
-                    </TableCell>
-
-                    <!-- Condition -->
-                    <TableCell>
-                      <Select
-                        v-model="rows[index].condition"
-                        :disabled="remaining(index) === 0"
-                        @update:model-value="rows[index].dirty = true"
-                      >
-                        <SelectTrigger class="h-8 text-xs w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem
-                            v-for="opt in conditionOptions"
-                            :key="opt.value"
-                            :value="opt.value"
-                          >
-                            <span :class="opt.class">{{ opt.label }}</span>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-
-                    <!-- Date -->
-                    <TableCell>
-                      <Input
-                        v-model="rows[index].received_date"
-                        type="date"
-                        class="h-8 text-xs w-36"
-                        :disabled="remaining(index) === 0"
-                        @change="rows[index].dirty = true"
-                      />
-                    </TableCell>
-
-                    <!-- Remarks -->
-                    <TableCell class="pr-6">
-                      <Input
-                        v-model="rows[index].remarks"
-                        type="text"
-                        placeholder="Optional remarks…"
-                        class="h-8 text-xs"
-                        :disabled="remaining(index) === 0"
-                        @input="rows[index].dirty = true"
-                      />
-                    </TableCell>
-                  </TableRow>
-
-                  <!-- Receiving history sub-rows -->
-                  <TableRow
-                    v-if="detail.receivings.length"
-                    class="bg-muted/10"
-                  >
-                    <TableCell colspan="9" class="pl-10 pb-3 pt-1">
-                      <p class="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
-                        Receiving History
-                      </p>
-                      <div class="space-y-1">
-                        <div
-                          v-for="rec in detail.receivings"
-                          :key="rec.id"
-                          class="flex items-center gap-4 text-xs text-muted-foreground"
-                        >
-                          <span class="font-mono w-24">{{ formatDate(rec.received_date) }}</span>
-                          <span class="font-semibold text-foreground">{{ rec.quantity_received }} {{ detail.unit }}</span>
-                          <span
-                            :class="{
-                              'text-green-600': rec.condition === 'good',
-                              'text-red-500':   rec.condition === 'damaged',
-                              'text-yellow-600': rec.condition === 'incomplete',
-                            }"
-                            class="capitalize"
-                          >
-                            {{ rec.condition }}
-                          </span>
-                          <span class="text-muted-foreground">by: {{ rec.receiver?.username ?? '—' }}</span>
-                          <span v-if="rec.remarks" class="italic">"{{ rec.remarks }}"</span>
-                        </div>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-
-                </template>
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      <!-- Bottom save bar (sticky feel) -->
-      <div
-        v-if="hasChanges"
-        class="flex items-center justify-between bg-blue-600 text-white rounded-lg px-6 py-3 shadow-lg"
-      >
-        <p class="text-sm font-medium">
-          {{ dirtyRows.length }} item{{ dirtyRows.length === 1 ? '' : 's' }} ready to save
-        </p>
-        <Button
-          variant="secondary"
-          size="sm"
-          :disabled="hasErrors || processing"
-          @click="submit"
-        >
-          <Save class="h-4 w-4 mr-1" />
-          {{ processing ? 'Saving...' : 'Save Now' }}
-        </Button>
+      <div class="flex justify-between items-center">
+        <PageHeader
+          title="Line Items"
+          subtitle='Edit inline, then click "Save Received Items"'
+        />
+        <div v-if="hasChanges" >
+          <Button
+            variant="default"
+            size="sm"
+            :disabled="hasErrors || processing"
+            @click="submit"
+          >
+            <Save class="h-4 w-4" />
+            {{ processing ? 'Saving...' : `Confirm Received ${dirtyRows.length} item${dirtyRows.length === 1 ? '' : 's'}` }}
+          </Button>
+        </div>
       </div>
+      <Table>
+        <TableHeader>
+          <TableRow class="bg-muted/30">
+            <TableHead class="pl-6 w-[280px]">Description</TableHead>
+            <TableHead class="text-center w-24">Ordered</TableHead>
+            <TableHead class="text-center w-24">Received</TableHead>
+            <TableHead class="text-center w-24">Remaining</TableHead>
+            <TableHead class="text-center w-28">Status</TableHead>
+            <TableHead class="text-center w-28">Qty to Receive</TableHead>
+            <TableHead class="w-36">Date</TableHead>
+            <TableHead class="w-52 pr-6">Remarks</TableHead>
+          </TableRow>
+        </TableHeader>
 
+        <TableBody>
+          <template
+            v-for="(detail, index) in purchaseOrder.details"
+            :key="detail.id"
+          >
+            <!-- Main editable row -->
+            <TableRow
+              :class="[
+                'transition-colors',
+                rows[index].dirty ? 'bg-blue-50/50' : 'hover:bg-muted/30',
+                rowError(index) ? 'bg-red-50/40' : '',
+              ]"
+            >
+              <!-- Description -->
+              <TableCell class="pl-6">
+                <p class="font-medium text-sm">{{ detail.item_description }}</p>
+                <p class="text-xs text-muted-foreground">{{ detail.unit }}</p>
+              </TableCell>
+
+              <!-- Ordered -->
+              <TableCell class="text-center text-sm font-mono">
+                {{ detail.quantity }}
+              </TableCell>
+
+              <!-- Total received so far -->
+              <TableCell class="text-center text-sm font-mono">
+                {{ totalReceivedForDetail(detail) }}
+              </TableCell>
+
+              <!-- Remaining -->
+              <TableCell class="text-center text-sm font-mono">
+                <span :class="remaining(index) === 0 ? 'text-green-600 font-semibold' : 'text-orange-600'">
+                  {{ remaining(index) }}
+                </span>
+              </TableCell>
+
+              <!-- Status badge -->
+              <TableCell class="text-center">
+                <span
+                  v-if="receivingStatus(detail) === 'complete'"
+                  class="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-700 border border-green-200"
+                >
+                  <CheckCircle2 class="h-3 w-3" /> Complete
+                </span>
+                <span
+                  v-else-if="receivingStatus(detail) === 'partial'"
+                  class="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-200"
+                >
+                  <AlertTriangle class="h-3 w-3" /> Partial
+                </span>
+                <span
+                  v-else
+                  class="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-muted text-muted-foreground border"
+                >
+                  Pending
+                </span>
+              </TableCell>
+
+              <!-- Qty to receive (inline input) -->
+              <TableCell class="text-center">
+                <div class="flex flex-col items-center gap-1">
+                  <Input
+                    v-model="rows[index].quantity_received"
+                    type="number"
+                    min="0"
+                    :max="remaining(index)"
+                    :disabled="remaining(index) === 0"
+                    class="w-20 text-center h-8 text-sm"
+                    :class="rowError(index) ? 'border-red-400 focus-visible:ring-red-400' : ''"
+                    placeholder="0"
+                    @input="rows[index].dirty = true"
+                  />
+                  <p v-if="rowError(index)" class="text-xs text-red-500">
+                    {{ rowError(index) }}
+                  </p>
+                </div>
+              </TableCell>
+
+              <!-- Date -->
+              <TableCell>
+                <Input
+                  v-model="rows[index].received_date"
+                  type="date"
+                  class="h-8 text-xs w-36"
+                  :disabled="remaining(index) === 0"
+                  @change="rows[index].dirty = true"
+                />
+              </TableCell>
+
+              <!-- Remarks -->
+              <TableCell class="pr-6">
+                <Input
+                  v-model="rows[index].remarks"
+                  type="text"
+                  placeholder="Optional remarks…"
+                  class="h-8 text-xs"
+                  :disabled="remaining(index) === 0"
+                  @input="rows[index].dirty = true"
+                />
+              </TableCell>
+            </TableRow>
+
+            <!-- Receiving history sub-rows -->
+            <TableRow
+              v-if="detail.receivings.length"
+              class="bg-muted/10"
+            >
+              <TableCell colspan="9" class="pl-10 pb-3 pt-1">
+                <p class="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+                  Receiving History
+                </p>
+                <div class="space-y-1">
+                  <div
+                    v-for="rec in detail.receivings"
+                    :key="rec.id"
+                    class="flex items-center gap-4 text-xs text-muted-foreground"
+                  >
+                    <span class="font-mono w-24">{{ formatDate(rec.received_date) }}</span>
+                    <span class="font-semibold text-foreground">{{ rec.quantity_received }} {{ detail.unit }}</span>
+                    <span
+                      :class="{
+                        'text-green-600': rec.condition === 'good',
+                        'text-red-500':   rec.condition === 'damaged',
+                        'text-yellow-600': rec.condition === 'incomplete',
+                      }"
+                      class="capitalize"
+                    >
+                      {{ rec.condition }}
+                    </span>
+                    <span class="text-muted-foreground">by: {{ rec.receiver?.username ?? '—' }}</span>  
+                    <span v-if="rec.remarks" class="italic">"{{ rec.remarks }}"</span>
+                  </div>
+                </div>
+              </TableCell>
+            </TableRow>
+
+          </template>
+        </TableBody>
+      </Table>
     </div>
   </AppLayout>
 </template>
