@@ -33,7 +33,7 @@ interface ReceivingRecord {
   condition: string
   received_date: string
   remarks: string | null
-  receiver?: { name: string }
+  receiver?: { username: string }
   created_at: string
 }
 
@@ -437,7 +437,7 @@ function submit() {
                           >
                             {{ rec.condition }}
                           </span>
-                          <span class="text-muted-foreground">by {{ rec.receiver?.name ?? '—' }}</span>
+                          <span class="text-muted-foreground">by: {{ rec.receiver?.username ?? '—' }}</span>
                           <span v-if="rec.remarks" class="italic">"{{ rec.remarks }}"</span>
                         </div>
                       </div>
