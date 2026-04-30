@@ -43,17 +43,17 @@ defineProps<{
       <table class="w-full text-sm border border-border rounded-lg mb-2">
         <tbody>
           <tr class="border-b">
-            <td class="p-2 font-medium text-muted-foreground border-r w-[200px]">COMPANY NAME:</td>
+            <td class="p-2 text-muted-foreground border-r w-[200px]">COMPANY NAME:</td>
             <td class="p-2 uppercase border-r w-2xl">{{ purchaseOrder.payee }}</td>
-            <td class="p-2 font-medium text-muted-foreground border-r w-40">P.O. NUMBER:</td>
+            <td class="p-2 text-muted-foreground border-r w-40">P.O. NUMBER:</td>
             <td class="p-2 w-40 border-r">{{ purchaseOrder.po_no }}</td>
-            <td class="p-2 w-40 font-medium text-muted-foreground border-r">P.O. DATE:</td>
+            <td class="p-2 w-40 text-muted-foreground border-r">P.O. DATE:</td>
             <td class="p-2 w-40">{{ formatDate(purchaseOrder.date) }}</td>
           </tr>
           <tr class="border-b">
-            <td class="p-2 font-medium text-muted-foreground border-r">CHECK PAYABLE TO:</td>
+            <td class="p-2 text-muted-foreground border-r">CHECK PAYABLE TO:</td>
             <td class="p-2 uppercase border-r w-2xl">{{ purchaseOrder.check_payable_to }}</td>
-            <td class="p-2 font-medium text-muted-foreground border-r">TIN:</td>
+            <td class="p-2 text-muted-foreground border-r">TIN:</td>
             <td class="p-2">{{ purchaseOrder.tin_no }}</td>
           </tr>
         </tbody>
@@ -64,14 +64,14 @@ defineProps<{
     </div>
 
     <!-- Items Table -->
-    <table class="border border-gray-200 w-full">
+    <table class="border border-gray-200 text-sm w-full">
       <thead>
         <tr class="border-b border-gray-200">
-          <th class="text-left p-2 font-medium">Quantity</th>
-          <th class="text-left p-2 font-medium">Unit/S</th>
-          <th class="text-left p-2 font-medium">Description</th>
-          <th class="text-right p-2 font-medium">Unit Price</th>
-          <th class="text-right p-2 font-medium">Amount</th>
+          <th class="text-left p-2">Quantity</th>
+          <th class="text-left p-2">Unit/S</th>
+          <th class="text-left p-2">Description</th>
+          <th class="text-right p-2">Unit Price</th>
+          <th class="text-right p-2">Amount</th>
         </tr>
       </thead>
       <tbody>
@@ -84,22 +84,22 @@ defineProps<{
           <td class="p-2">{{ item.unit }}</td>
           <td class="p-2">{{ item.item_description }}</td>
           <td class="p-2 text-right">{{ formatCurrency(item.unit_price) }}</td>
-          <td class="p-2 text-right font-medium">{{ formatCurrency(item.amount) }}</td>
+          <td class="p-2 text-right">{{ formatCurrency(item.amount) }}</td>
         </tr>
         <tr class="border-t border-gray-200">
-          <td colspan="4" class="p-2 text-right font-medium">Total</td>
-          <td class="p-2 text-right font-bold">{{ formatCurrency(purchaseOrder.amount) }}</td>
+          <td colspan="4" class="p-2 text-right">Total</td>
+          <td class="p-2 text-right font-medium">{{ formatCurrency(purchaseOrder.amount) }}</td>
         </tr>
       </tbody>
     </table>
 
-    <caption>
+    <div>
       <div class="flex items-center w-full mt-2 px-4">
         <span class="flex-grow border-t border-dashed border-gray-300"></span>
-        <span class="mx-3 text-xs font-medium">Nothing Follows</span>
+        <span class="mx-3 text-xs">Nothing Follows</span>
         <span class="flex-grow border-t border-dashed border-gray-300"></span>
       </div>
-    </caption>
+    </div>
 
     <!-- Footer -->
     <div>
