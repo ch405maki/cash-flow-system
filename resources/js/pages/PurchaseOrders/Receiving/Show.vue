@@ -5,29 +5,14 @@ import { type BreadcrumbItem } from '@/types'
 import { Head, Link, router } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { Label } from '@/components/ui/label'
 import PageHeader from '@/components/PageHeader.vue'
 import {
   Table, TableBody, TableCell,
   TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
-import {
-  Select, SelectContent, SelectItem,
-  SelectTrigger, SelectValue,
-} from '@/components/ui/select'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
 import { useToast } from 'vue-toastification'
 import {
-  ArrowLeft, PackageCheck, CheckCircle2,
-  AlertTriangle, Info, Save, ChevronDown,
+  CheckCircle2, AlertTriangle, Info, Save, ChevronDown,
 } from 'lucide-vue-next'
 
 const toast = useToast()
@@ -236,28 +221,26 @@ function submit() {
       </div>
 
       <!-- PO Meta -->
-      <Card>
-        <CardContent class="pt-4 pb-4">
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-            <div>
-              <p class="text-xs text-muted-foreground">PO Number</p>
-              <p class="font-mono font-semibold">{{ purchaseOrder.po_no }}</p>
-            </div>
-            <div>
-              <p class="text-xs text-muted-foreground">Payee</p>
-              <p class="capitalize font-medium">{{ purchaseOrder.payee }}</p>
-            </div>
-            <div>
-              <p class="text-xs text-muted-foreground">Department</p>
-              <p>{{ purchaseOrder.department?.department_name ?? '—' }}</p>
-            </div>
-            <div>
-              <p class="text-xs text-muted-foreground">Total Amount</p>
-              <p class="font-semibold">{{ formatCurrency(purchaseOrder.amount) }}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <div class="grid grid-cols-1">
+      <Table>
+        <TableBody>
+          <TableRow class="border-b">
+            <TableCell class="p-2 font-medium text-muted-foreground border-r w-32">PO NUMBER:</TableCell>
+            <TableCell class="p-2 font-mono font-semibold border-r">{{ purchaseOrder.po_no }}</TableCell>
+            <TableCell class="p-2 font-medium text-muted-foreground border-r w-32">PO DATE:</TableCell>
+            <TableCell class="p-2 border-r">{{ formatDate(purchaseOrder.date) }}</TableCell>
+            <TableCell class="p-2 font-medium text-muted-foreground border-r w-36">TOTAL AMOUNT:</TableCell>
+            <TableCell class="p-2 font-semibold">{{ formatCurrency(purchaseOrder.amount) }}</TableCell>
+          </TableRow>
+          <TableRow class="border-b">
+            <TableCell class="p-2 font-medium text-muted-foreground border-r w-32">PAYEE:</TableCell>
+            <TableCell class="p-2 uppercase border-r">{{ purchaseOrder.payee }}</TableCell>
+            <TableCell class="p-2 font-medium text-muted-foreground border-r w-32">DEPARTMENT:</TableCell>
+            <TableCell class="p-2" colspan="3">{{ purchaseOrder.department?.department_name ?? '—' }}</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </div>
 
       <!-- Hint -->
       <div class="flex items-start gap-2 text-sm text-muted-foreground bg-blue-50 border border-blue-100 rounded-lg px-4 py-3">
@@ -416,7 +399,7 @@ function submit() {
             <!-- Receiving history expanded section -->
             <TableRow v-if="isOpen(detail.id) && detail.receivings.length" class="bg-muted/10">
               <TableCell colspan="9" class="pl-10 pb-3 pt-1">
-                <p class="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+                <p class="text-xs font-semibold text-muted-foreground mb-2 tracking-wide">
                   Receiving History
                 </p>
                 <div class="space-y-1">
