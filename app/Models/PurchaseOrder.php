@@ -66,5 +66,8 @@ class PurchaseOrder extends Model
         return $this->hasOne(Voucher::class, 'po_id');
     }
 
-
+    public function receivings(): HasMany
+    {
+        return $this->hasMany(PurchaseOrderReceiving::class, 'po_id');
+    }
 }
