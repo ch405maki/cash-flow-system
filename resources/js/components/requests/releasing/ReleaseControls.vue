@@ -15,6 +15,10 @@ defineProps({
   isReleasing: {
     type: Boolean,
     default: false
+  },
+  hasInvalidQuantities: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -45,8 +49,9 @@ const toggleSelectAll = (checked: boolean) => {
         type="button" 
         @click="$emit('releaseItems')"
         size="sm"
-        :disabled="selectedItems.length === 0 || isReleasing"
+        :disabled="selectedItems.length === 0 || isReleasing || hasInvalidQuantities"
         class="bg-green-600 hover:bg-green-700"
+        :title="hasInvalidQuantities ? 'Release quantity exceeds available quantity' : ''"
       >
         <span v-if="isReleasing" class="text-xs">
           <svg class="animate-spin h-4 w-4 inline mr-1" viewBox="0 0 24 24">

@@ -210,6 +210,7 @@ class RequestController extends Controller
 
             $validated = $httpRequest->validate([
                 'details' => 'required|array|min:1',
+                'details.*.item_id' => 'nullable|integer',
                 'details.*.quantity' => 'required|numeric|min:1',
                 'details.*.unit' => 'required|string|max:20',
                 'details.*.item_description' => 'required|string|max:255',
@@ -226,6 +227,7 @@ class RequestController extends Controller
             foreach ($validated['details'] as $detail) {
                 $createdItem = $request->details()->create([
                     'request_id' => $request->id,
+                    'item_id' => $detail['item_id'] ?? null,
                     'quantity' => $detail['quantity'],
                     'unit' => $detail['unit'],
                     'item_description' => $detail['item_description']

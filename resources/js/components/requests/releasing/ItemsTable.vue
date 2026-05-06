@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { Input } from '@/components/ui/input'
-import { Package, PackageX, PackageCheck } from 'lucide-vue-next'
+import { Package, PackageX, PackageCheck, AlertCircle } from 'lucide-vue-next'
 import { Checkbox } from '@/components/ui/checkbox'
 
 const props = defineProps({
   details: {
+    type: Array,
+    required: true
+  },
+  formDetails: {
     type: Array,
     required: true
   },
@@ -14,6 +18,10 @@ const props = defineProps({
     required: true
   },
   inventoryStatus: {
+    type: Object,
+    required: true
+  },
+  validationErrors: {
     type: Object,
     required: true
   }
@@ -25,13 +33,28 @@ const emit = defineEmits([
   'removeDetail'
 ])
 
+// Get the form detail by id
+const getFormDetail = (detailId: number) => {
+  return props.formDetails.find((fd: any) => fd.id === detailId)
+}
+
+// Check if release quantity exceeds available quantity - use validationErrors from parent
+const isQuantityExceeded = (detail: any) => {
+  return props.validationErrors[detail.id] || false
+}
+
 // Check if item is fully released
 const isFullyReleased = (detail: any) => {
   return detail.released_quantity >= detail.quantity
 }
 
-// Get remaining quantity
+// Get remaining quantity (what's left to release)
 const getRemainingQuantity = (detail: any) => {
+  return detail.quantity - detail.released_quantity
+}
+
+// Get the remaining quantity for display (what user can still release)
+const getDisplayRemaining = (detail: any) => {
   return detail.quantity - detail.released_quantity
 }
 
@@ -50,7 +73,7 @@ const toggleItemSelection = (id: number, checked: boolean, index: number) => {
     const detail = props.details[index]
     const remainingQuantity = getRemainingQuantity(detail)
     if (remainingQuantity > 0) {
-      emit('update:releasedQuantity', { index, value: remainingQuantity })
+      emit('update:releasedQuantity', { id, value: remainingQuantity })
     }
   } else {
     emit('update:selectedItems', props.selectedItems.filter(itemId => itemId !== id))
@@ -103,27 +126,30 @@ const toggleItemSelection = (id: number, checked: boolean, index: number) => {
               Completed
             </div>
             <div v-else>
-              <Input
-                :id="'released-' + index"
-                type="number"
-                :modelValue="''"
-                @update:modelValue="(value) => {
-                  // Handle empty string as 0
-                  const numValue = value === '' ? 0 : Number(value)
-                  const maxValue = getRemainingQuantity(detail)
-                  const newValue = Math.min(Math.max(0, numValue), maxValue)
-                  emit('update:releasedQuantity', { index, value: newValue })
-                }"
-                :max="getRemainingQuantity(detail)"
-                min="0"
-                step="1"
-                :disabled="!selectedItems.includes(detail.id)"
-                placeholder="0"
-                class="border border-gray-300 rounded text-xs h-8 w-full"
-                :class="{
-                  'border-green-500 focus:ring-green-500': detail.released_quantity === getRemainingQuantity(detail) && detail.released_quantity > 0
-                }"
-              />
+              <div class="relative">
+                <Input
+                  :id="'released-' + index"
+                  type="number"
+                  :modelValue="getFormDetail(detail.id)?.release_now ?? ''"
+                  @update:modelValue="(value) => {
+                    // Allow any value - validation will show alert if invalid
+                    const numValue = value === '' ? 0 : Number(value)
+                    emit('update:releasedQuantity', { id: detail.id, value: numValue })
+                  }"
+                  min="0"
+                  step="1"
+                  :disabled="!selectedItems.includes(detail.id)"
+                  placeholder="0"
+                  class="border border-gray-300 rounded text-xs h-8 w-full"
+                  :class="{
+                    'border-green-500 focus:ring-green-500': (getFormDetail(detail.id)?.release_now > 0) && (getFormDetail(detail.id)?.release_now === getRemainingQuantity(detail)),
+                    'border-red-500 focus:ring-red-500 bg-red-50': isQuantityExceeded(detail)
+                  }"
+                />
+              </div>
+              <div v-if="isQuantityExceeded(detail) && selectedItems.includes(detail.id)" class="text-xs text-red-500 mt-1">
+                <p class="flex gap-1 items-center"><AlertCircle  class="h-3 w-3 text-red-500" />Exceeds quantity</p>
+              </div>
             </div>
           </TableCell>
 

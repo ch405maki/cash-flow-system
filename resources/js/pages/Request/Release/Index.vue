@@ -5,7 +5,7 @@ import { Head, Link } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 import { useToast } from 'vue-toastification'
 import axios from 'axios'
-import { ref } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import RequestInfoTable from '@/components/requests/releasing/RequestInfoTable.vue'
 import RequestStatusBadge from '@/components/requests/releasing/RequestStatusBadge.vue'
 import ItemsTable from '@/components/requests/releasing/ItemsTable.vue'
@@ -15,22 +15,10 @@ import { ArrowLeft } from 'lucide-vue-next';
 const toast = useToast()
 
 const props = defineProps({
-  request: {
-    type: Object,
-    required: true,
-  },
-  departments: {
-    type: Array,
-    required: true,
-  },
-  current_user: {
-    type: Object,
-    required: true,
-  },
-  inventoryStatus: { 
-    type: Object,
-    required: true,
-  },
+  request: { type: Object, required: true },
+  departments: { type: Array, required: true },
+  current_user: { type: Object, required: true },
+  inventoryStatus: { type: Object, required: true },
 })
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -41,101 +29,108 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const selectedItems = ref<number[]>([])
 const isReleasing = ref(false)
-const processing = ref(false)
 
-const form = ref({
+const form = reactive({
   details: props.request.details.map(detail => ({
     id: detail.id,
     quantity: detail.quantity,
     released_quantity: detail.released_quantity || 0,
+    release_now: 0,
     unit: detail.unit,
     item_description: detail.item_description
   }))
 })
 
-// Methods remain the same as in your original file
-const submit = async () => { /* ... */ }
-const addDetail = () => { /* ... */ }
-const removeDetail = (index: number) => { /* ... */ }
+// Simple validation: returns object with item IDs as keys and boolean (invalid or not) as values
+const validationErrors = computed(() => {
+  const errors: Record<number, boolean> = {}
+  form.details.forEach(d => {
+    if (selectedItems.value.includes(d.id)) {
+      const remaining = d.quantity - d.released_quantity
+      errors[d.id] = d.release_now > remaining || d.release_now <= 0
+    } else {
+      errors[d.id] = false
+    }
+  })
+  return errors
+})
+
+// Check if any selected item has invalid quantity
+const hasInvalidQuantities = computed(() => {
+  return Object.values(validationErrors.value).some(v => v === true)
+})
+
+const updateReleasedQuantity = ({ id, value }: { id: number, value: number }) => {
+  const detail = form.details.find(d => d.id === id)
+  if (detail) {
+    detail.release_now = value
+    // validationErrors will auto-update via computed
+  }
+}
+
+const toggleSelectAll = ({ checked, shouldAutoFill }: { checked: boolean, shouldAutoFill?: boolean }) => {
+  if (checked) {
+    selectedItems.value = form.details.map(d => d.id)
+    if (shouldAutoFill) {
+      form.details.forEach(d => {
+        const remaining = d.quantity - d.released_quantity
+        d.release_now = remaining > 0 ? remaining : 0
+      })
+    }
+  } else {
+    selectedItems.value = []
+    form.details.forEach(d => { d.release_now = 0 })
+  }
+}
+
 const releaseItems = async () => {
   if (selectedItems.value.length === 0) {
-    toast.warning('Please select at least one item to release', {
-      timeout: 3000
-    })
+    toast.warning('Please select at least one item to release', { timeout: 3000 })
     return
   }
 
-  // Prepare items to release
-  const itemsToRelease = form.value.details
-    .filter(detail => selectedItems.value.includes(detail.id))
-    .map(item => ({
-      request_detail_id: item.id,
-      quantity: Number(item.released_quantity)
-    }));
-
-  if (itemsToRelease.some(item => item.quantity <= 0)) {
-    toast.error('Release quantity must be greater than 0');
-    return;
+  if (hasInvalidQuantities.value) {
+    toast.error('Cannot release: some quantities exceed available amount or are invalid')
+    return
   }
 
-  isReleasing.value = true;
+  const itemsToRelease = form.details
+    .filter(d => selectedItems.value.includes(d.id))
+    .map(d => ({
+      request_detail_id: d.id,
+      quantity: Number(d.release_now)
+    }))
+
+  if (itemsToRelease.some(item => item.quantity <= 0)) {
+    toast.error('Release quantity must be greater than 0')
+    return
+  }
+
+  isReleasing.value = true
   
   try {
     const response = await axios.post(`/api/requests/${props.request.id}/release`, {
       items: itemsToRelease,
       notes: 'Items released from request',
       user_id: props.current_user.id,
-    });
+    })
 
-    toast.success('Items released successfully');
-
-    // Clear selection after successful release
-    selectedItems.value = [];
-    
-    // Refresh the page to show updated status and inventory
-    setTimeout(() => {
-      window.location.reload();
-    }, 1000); // Delay reload to let user see success message
+    toast.success('Items released successfully')
+    selectedItems.value = []
+    setTimeout(() => { window.location.reload() }, 1000)
     
   } catch (error: any) {
-    console.error('Release error:', error);
-    
-    let errorMessage = 'Failed to release items';
+    console.error('Release error:', error)
+    let errorMessage = 'Failed to release items'
     if (error.response?.data?.errors?.quantity) {
-      errorMessage = error.response.data.errors.quantity.join(', ');
+      errorMessage = error.response.data.errors.quantity.join(', ')
     } else if (error.response?.data?.message) {
-      errorMessage = error.response.data.message;
+      errorMessage = error.response.data.message
     }
-
-    toast.error(errorMessage);
+    toast.error(errorMessage)
   } finally {
-    isReleasing.value = false;
+    isReleasing.value = false
   }
-};
-
-const toggleSelectAll = ({ checked, shouldAutoFill }: { checked: boolean, shouldAutoFill?: boolean }) => {
-  if (checked) {
-    // Select all item IDs
-    selectedItems.value = form.value.details.map(detail => detail.id)
-    
-    // Auto-fill all release quantities with remaining quantities
-    if (shouldAutoFill) {
-      form.value.details.forEach((detail, index) => {
-        const remainingQuantity = detail.quantity - detail.released_quantity
-        if (remainingQuantity > 0) {
-          form.value.details[index].released_quantity = remainingQuantity
-        }
-      })
-    }
-  } else {
-    // Deselect all
-    selectedItems.value = []
-  }
-}
-
-
-const updateReleasedQuantity = ({ index, value }: { index: number, value: number }) => {
-  form.value.details[index].released_quantity = value
 }
 </script>
 
@@ -166,8 +161,10 @@ const updateReleasedQuantity = ({ index, value }: { index: number, value: number
         <form @submit.prevent="submit" class="space-y-4">
           <ItemsTable
             :details="props.request.details"
+            :form-details="form.details"
             :selected-items="selectedItems"
             :inventory-status="inventoryStatus"
+            :validation-errors="validationErrors"
             @update:selectedItems="(items) => selectedItems = items"
             @update:releasedQuantity="updateReleasedQuantity"
             @removeDetail="removeDetail"
@@ -177,6 +174,7 @@ const updateReleasedQuantity = ({ index, value }: { index: number, value: number
             :selected-items="selectedItems"
             :details="form.details"
             :is-releasing="isReleasing"
+            :has-invalid-quantities="hasInvalidQuantities"
             @toggleSelectAll="toggleSelectAll"
             @releaseItems="releaseItems"
           >
