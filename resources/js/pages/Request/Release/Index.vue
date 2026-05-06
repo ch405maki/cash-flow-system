@@ -84,6 +84,9 @@ const toggleSelectAll = ({ checked, shouldAutoFill }: { checked: boolean, should
 }
 
 const releaseItems = async () => {
+  console.log('Selected items:', selectedItems.value)
+  console.log('Form details:', form.details)
+
   if (selectedItems.value.length === 0) {
     toast.warning('Please select at least one item to release', { timeout: 3000 })
     return
@@ -101,6 +104,8 @@ const releaseItems = async () => {
       quantity: Number(d.release_now)
     }))
 
+  console.log('Items to release:', itemsToRelease)
+
   if (itemsToRelease.some(item => item.quantity <= 0)) {
     toast.error('Release quantity must be greater than 0')
     return
@@ -115,6 +120,7 @@ const releaseItems = async () => {
       user_id: props.current_user.id,
     })
 
+    console.log('Release response:', response.data)
     toast.success('Items released successfully')
     selectedItems.value = []
     setTimeout(() => { window.location.reload() }, 1000)
