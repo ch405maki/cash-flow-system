@@ -29,7 +29,7 @@ const props = defineProps({
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Dashboard', href: '/dashboard' },
   { title: 'Request', href: '/request' },
-  { title: `${props.request.request_no}`, href: '' },
+  // { title: `${props.request.request_no}`, href: '' },
 ]
 
 // ── STATE ─────────────────────────────────────────────
