@@ -31,18 +31,43 @@ class PurchaseOrderController extends Controller
         $query = PurchaseOrder::with(['user', 'department', 'account', 'details'])
                     ->latest();
 
+        // Define valid statuses for each role
+        $validStatuses = [];
+        
         if ($user->role === 'purchasing') {
-            // Purchasing can see all statuses, but filter if specific status requested
-            if ($status) {
-                if ($status === 'approved') {
-                    // Include both approved and voucherCreated
-                    $query->whereIn('status', ['approved', 'voucherCreated']);
-                } elseif (in_array($status, ['draft', 'forEOD', 'rejected'])) {
-                    $query->where('status', $status);
+            $validStatuses = ['approved', 'draft', 'forEOD', 'rejected'];
+            
+            if ($request->filled('status')) {
+                if (in_array($status, $validStatuses)) {
+                    if ($status === 'approved') {
+                        $query->whereIn('status', ['approved', 'voucherCreated']);
+                    } else {
+                        $query->where('status', $status);
+                    }
+                } else {
+                    // Invalid status parameter - return empty result
+                    $query->whereRaw('1 = 0');
                 }
             }
+            // If no status parameter, show all
+            
+        } elseif ($user->role === 'property_custodian') {
+            $validStatuses = ['approved'];
+            
+            if ($request->filled('status')) {
+                if (in_array($status, $validStatuses)) {
+                    $query->whereIn('status', ['approved', 'voucherCreated']);
+                } else {
+                    // Invalid status parameter - return empty result
+                    $query->whereRaw('1 = 0');
+                }
+            } else {
+                // Default show approved and voucherCreated
+                $query->whereIn('status', ['approved', 'voucherCreated']);
+            }
+            
         } else {
-            // Non-purchasing users can only see 'forEOD' status
+            // Other roles: only show forEOD
             $query->where('status', 'forEOD');
         }
 

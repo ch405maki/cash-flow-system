@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Release extends Model
 {
     protected $fillable = [
-        'request_id', 'user_id', 'release_date', 'notes'
+        'request_id', 'user_id', 'release_date', 'notes', 'signature_image', 'signed_by', 'signed_at'
     ];
 
     public function request(): BelongsTo

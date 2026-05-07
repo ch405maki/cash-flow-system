@@ -21,7 +21,8 @@ import {
   ShieldCheck,
   Building2,
   PencilLine,
-  Logs 
+  Logs,
+  PackageCheck
 } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
@@ -162,6 +163,14 @@ const custodianNavItems: NavItem[] = [
     href: '/inventory',
     icon: Package,
   },
+];
+
+const receivingNavItems: NavItem[] = [
+  {
+    title: 'Receiving',
+    href: '/receiving?status=approved',
+    icon: PackageCheck,
+  }
 ];
 
 const custodianApprovalItems: NavItem[] = [
@@ -548,6 +557,7 @@ const handleStateUpdate = (groupId: string, itemId: string, isOpen: boolean) => 
           <div v-if="user?.role === 'property_custodian'">
             <NavMain :items="custodianNavItems" group-label="Navigation"/>
             <NavMain :items="custodianApprovalItems" group-label="Request for Purchase"/>
+            <NavMain :items="receivingNavItems" group-label="Recieving page"/>
             <div v-if="user?.is_petty_cash === 1">
               <NavMain 
                 :items="pettyCashNavItems" 

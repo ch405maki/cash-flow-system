@@ -26,6 +26,7 @@ use App\Models\User;
 use App\Models\RequestApproval;
 use App\Models\ReleaseDetail;
 
+use App\Helpers\MacAddressHelper;
 use App\Services\InventoryApiService;
 
 class RequestController extends Controller
@@ -94,7 +95,7 @@ class RequestController extends Controller
         return Inertia::render('Request/Show', [
             'request' => $request,
             'accounts' => Account::all(['id', 'account_title']),
-            'inventoryStatus' => $inventoryStatus, // Pass to frontend
+            'inventoryStatus' => $inventoryStatus,
             'user' => [
                 'id' => $user->id,
                 'role' => $user->role,
@@ -230,18 +231,22 @@ class RequestController extends Controller
             }
         }
 
+        $authUser = auth()->user();
         return Inertia::render('Request/Release/Index', [
             'request' => $request,
             'departments' => Department::all(),
             'inventoryStatus' => $inventoryStatus, 
             'current_user' => [
-                'id' => auth()->id(),
+                'id' => $authUser->id,
+                'name' => $authUser->name,
             ]
         ]);
     }
 
     public function updateStatus(HttpRequest $httpRequest, Request $request)
     {
+        $macAddress = MacAddressHelper::getClientMac($httpRequest);
+
         $validated = $httpRequest->validate([
             'status' => 'required|in:approved,rejected,propertyCustodian,to_order,released',
             'password' => 'required_if:status,approved,propertyCustodian,to_order,released',
@@ -352,6 +357,8 @@ class RequestController extends Controller
             ->withProperties([
                 'action' => 'status_update',
                 'event' => 'Status Updated',
+                'mac_address' => $macAddress,
+                'user_agent' => $httpRequest->userAgent(),
                 'ip_address' => $httpRequest->ip(),
                 'old_status' => $oldStatus,
                 'new_status' => $validated['status'],

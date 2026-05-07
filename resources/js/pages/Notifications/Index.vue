@@ -174,9 +174,9 @@ const deleteNotification = (notification) => {
                 <TableBody>
                     <template v-if="filteredNotifications.length === 0">
                         <TableRow>
-                            <TableCell  class="h-32 text-center">
+                            <TableCell colspan="3"  class="h-32 text-center">
                                 <div class="flex flex-col items-center justify-center text-muted-foreground">
-                                    <Bell class="h-8 w-8 mb-2" />
+                                    <Bell class="mb-2" />
                                     <p>No notifications</p>
                                     <p class="text-sm">
                                         {{ activeTab === 'unread' ? 'You have no unread notifications' : 'No notifications to show' }}

@@ -22,9 +22,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use App\Notifications\NewRequestNotification;
-use App\Helpers\MacAddressHelper;
 
+use App\Helpers\MacAddressHelper;
 use App\Services\InventoryApiService;
+use Carbon\Carbon;
 
 
 use Inertia\Inertia;
@@ -210,6 +211,7 @@ class RequestController extends Controller
 
             $validated = $httpRequest->validate([
                 'details' => 'required|array|min:1',
+                'details.*.item_id' => 'nullable|integer',
                 'details.*.quantity' => 'required|numeric|min:1',
                 'details.*.unit' => 'required|string|max:20',
                 'details.*.item_description' => 'required|string|max:255',
@@ -226,6 +228,7 @@ class RequestController extends Controller
             foreach ($validated['details'] as $detail) {
                 $createdItem = $request->details()->create([
                     'request_id' => $request->id,
+                    'item_id' => $detail['item_id'] ?? null,
                     'quantity' => $detail['quantity'],
                     'unit' => $detail['unit'],
                     'item_description' => $detail['item_description']
@@ -300,36 +303,51 @@ class RequestController extends Controller
     public function releaseItems(HttpRequest $httpRequest, Request $request, InventoryApiService $inventoryApi)
     {
         DB::beginTransaction();
+
         try {
+            $macAddress = MacAddressHelper::getClientMac($httpRequest);
+
             $validated = $httpRequest->validate([
-                'items' => 'required|array|min:1',
-                'items.*.request_detail_id' => [
+                'items'                          => 'required|array|min:1',
+                'items.*.request_detail_id'      => [
                     'required',
                     Rule::exists('request_details', 'id')->where('request_id', $request->id)
                 ],
-                'items.*.quantity' => 'required|integer|min:1',
-                'notes' => 'nullable|string',
-                'user_id' => 'required|exists:users,id'
+                'items.*.quantity'               => 'required|integer|min:1',
+                'notes'                          => 'nullable|string',
+                'user_id'                        => 'required|exists:users,id',
+                'signature'                      => 'nullable|array',
+                'signature.image'                => 'nullable|string',
+                'signature.signer_id'            => 'nullable|integer',
+                'signature.signer_name'          => 'nullable|string',
+                'signature.signed_at'            => 'nullable|date'
             ]);
 
             $authUser = User::findOrFail($validated['user_id']);
 
+            $signatureData = $validated['signature'] ?? null;
+
             $release = Release::create([
-                'request_id' => $request->id,
-                'user_id' => $authUser->id,
-                'release_date' => now(),
-                'notes' => $validated['notes'] ?? null
+                'request_id'      => $request->id,
+                'user_id'         => $authUser->id,
+                'release_date'    => now(),
+                'notes'           => $validated['notes'] ?? null,
+                'signature_image' => $signatureData['image'] ?? null,
+                'signed_by'       => $signatureData['signer_name'] ?? null,
+                'signed_at'       => $signatureData['signed_at'] ? \Carbon\Carbon::parse($signatureData['signed_at']) : null,
             ]);
 
-            $totalQuantity = 0;
+            $totalQuantity    = 0;
+            $inventorySynced  = 0;
+            $inventorySkipped = 0;
 
             foreach ($validated['items'] as $item) {
+
                 $requestDetail = RequestDetail::where('id', $item['request_detail_id'])
                     ->where('request_id', $request->id)
                     ->lockForUpdate()
                     ->firstOrFail();
 
-                // Calculate remaining quantity
                 $remainingQuantity = $requestDetail->quantity - $requestDetail->released_quantity;
 
                 if ($item['quantity'] > $remainingQuantity) {
@@ -340,107 +358,159 @@ class RequestController extends Controller
                     ]);
                 }
 
-                // CHECK IF ITEM HAS INVENTORY ID
-                if (!$requestDetail->item_id) {
-                    throw ValidationException::withMessages([
-                        'item' => [
-                            "Item '{$requestDetail->item_description}' is not linked to inventory. Cannot release."
-                        ]
-                    ]);
+                /*
+                |--------------------------------------------------------------------------
+                | Inventory API — only if item is linked
+                |--------------------------------------------------------------------------
+                */
+                if ($requestDetail->item_id) {
+                    $inventoryData = [
+                        'item_id'            => $requestDetail->item_id,
+                        'user_id'            => 1,
+                        'type'               => 'Out',
+                        'quantity'           => $item['quantity'],
+                        'source_destination' => $request->department->department_name ?? 'N/A',
+                        'personnel_name'     => trim(
+                            ($request->user->first_name ?? '') . ' ' .
+                            ($request->user->last_name ?? '')
+                        ),
+                        'reference_no'       => 'REL-' . now()->format('YmdHis') . '-' . $requestDetail->id,
+                        'note'               => $request->purpose ?? 'N/A'
+                    ];
+
+                    \Log::info('Sending to inventory API:', $inventoryData);
+
+                    $inventoryResult = $inventoryApi->createTransaction($inventoryData);
+
+                    \Log::info('Inventory API response:', $inventoryResult);
+
+                    if (!$inventoryResult['success']) {
+                        throw new \Exception(
+                            "Inventory update failed for '{$requestDetail->item_description}': " .
+                            ($inventoryResult['error'] ?? 'Unknown error')
+                        );
+                    }
+
+                    $inventorySynced++;
+
+                } else {
+                    // Not linked to inventory — release proceeds, sync skipped
+                    \Log::info("Item '{$requestDetail->item_description}' (detail #{$requestDetail->id}) has no inventory link. Skipping inventory sync.");
+                    $inventorySkipped++;
                 }
 
-                // CALL INVENTORY API FOR DEDUCTION
-                $inventoryData = [
-                    'item_id' => $requestDetail->item_id,
-                    'user_id' => 1, // Hardcoded as requested
-                    'type' => 'Out',
-                    'quantity' => $item['quantity'],
-                    'source_destination' => $request->department->department_name ?? 'N/A',
-                    'personnel_name' => trim(($request->user->first_name ?? '') . ' ' . ($request->user->last_name ?? '')),
-                    'reference_no' => 'REL-' . now()->format('Ymd'), // Auto-generate
-                    'note' => $request->purpose ?? 'N/A'
-                ];
-                
-                // Use the service to create transaction
-                $inventoryResult = $inventoryApi->createTransaction($inventoryData);
-                
-                if (!$inventoryResult['success']) {
-                    throw new \Exception("Inventory update failed: " . $inventoryResult['error']);
-                }
-
+                /*
+                |--------------------------------------------------------------------------
+                | Save Release Detail
+                |--------------------------------------------------------------------------
+                */
                 ReleaseDetail::create([
-                    'release_id' => $release->id,
+                    'release_id'        => $release->id,
                     'request_detail_id' => $item['request_detail_id'],
-                    'quantity' => $item['quantity']
+                    'quantity'          => $item['quantity']
                 ]);
 
-                // Update request detail
+                /*
+                |--------------------------------------------------------------------------
+                | Update Request Detail
+                |--------------------------------------------------------------------------
+                */
                 $requestDetail->increment('released_quantity', $item['quantity']);
-                
-                // Update tracking status
-                $newReleasedTotal = $requestDetail->released_quantity;
-                if ($newReleasedTotal >= $requestDetail->quantity) {
-                    $requestDetail->tracking_status = 'completed';
-                } else {
-                    $requestDetail->tracking_status = 'partial';
-                }
+                $requestDetail->refresh();
+
+                $requestDetail->tracking_status =
+                    $requestDetail->released_quantity >= $requestDetail->quantity
+                        ? 'completed'
+                        : 'partial';
+
                 $requestDetail->save();
 
                 $totalQuantity += $item['quantity'];
             }
 
+            /*
+            |--------------------------------------------------------------------------
+            | Update Request Status
+            |--------------------------------------------------------------------------
+            */
             $this->updateRequestStatus($request);
 
             $description = "Released {$totalQuantity} items for request #{$request->request_no} by {$authUser->username}";
 
+            if ($inventorySkipped > 0) {
+                $description .= " ({$inventorySkipped} item(s) not linked to inventory, skipped sync)";
+            }
+
             RequestApproval::create([
-                'request_id' => $request->id,
-                'user_id' => $authUser->id,
-                'status' => 'released',
+                'request_id'  => $request->id,
+                'user_id'     => $authUser->id,
+                'status'      => 'released',
                 'approved_at' => now(),
-                'remarks' => $description,
+                'remarks'     => $description,
             ]);
 
-            // Activity logging
+            /*
+            |--------------------------------------------------------------------------
+            | Commit FIRST
+            |--------------------------------------------------------------------------
+            */
+            DB::commit();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Activity Log AFTER Commit
+            |--------------------------------------------------------------------------
+            */
             activity()
                 ->performedOn($release)
                 ->causedBy($authUser)
                 ->useLog('Released Items')
                 ->withProperties([
-                    'action' => 'release',
-                    'event' => 'Items Released',
-                    'ip_address' => $httpRequest->ip(),
-                    'request_no' => $request->request_no,
-                    'released_quantity' => $totalQuantity,
-                    'inventory_synced' => true
+                    'action'             => 'release',
+                    'event'              => 'Items Released',
+                    'mac_address'        => $macAddress,
+                    'user_agent'         => $httpRequest->userAgent(),
+                    'ip_address'         => $httpRequest->ip(),
+                    'request_no'         => $request->request_no,
+                    'released_quantity'  => $totalQuantity,
+                    'inventory_synced'   => $inventorySynced,
+                    'inventory_skipped'  => $inventorySkipped,
                 ])
-                ->log("Released {$totalQuantity} items for request #{$request->request_no} and synced with inventory");
-
-            DB::commit();
+                ->log("Released {$totalQuantity} items for request #{$request->request_no}. Inventory synced: {$inventorySynced}, skipped (unlinked): {$inventorySkipped}");
 
             return response()->json([
                 'success' => true,
-                'message' => 'Items released successfully and inventory updated',
+                'message' => $inventorySkipped > 0
+                    ? "Items released successfully. {$inventorySkipped} item(s) were not synced to inventory (no link)."
+                    : 'Items released successfully and inventory updated',
                 'data' => [
-                    'release' => $release->load('details'),
-                    'request' => $request->load('details')
+                    'release'            => $release->load('details'),
+                    'request'            => $request->load('details'),
+                    'inventory_synced'   => $inventorySynced,
+                    'inventory_skipped'  => $inventorySkipped,
                 ]
             ]);
 
         } catch (ValidationException $e) {
+
             DB::rollBack();
+
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $e->errors()
+                'errors'  => $e->errors()
             ], 422);
+
         } catch (\Exception $e) {
+
             DB::rollBack();
+
             \Log::error('Release failed: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Release failed: ' . $e->getMessage(),
-                'error' => config('app.debug') ? $e->getMessage() : null
+                'error'   => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
     }

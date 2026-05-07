@@ -48,6 +48,7 @@ const form = ref({
   purpose: props.request.purpose || '',
   details: props.request.details.map(detail => ({
     id: detail.id,
+    item_id: detail.item_id || null,
     quantity: detail.quantity,
     released_quantity: detail.released_quantity || 0,
     unit: detail.unit,
@@ -64,6 +65,7 @@ const submit = async () => {
     
     const response = await axios.put(`/api/requests/${props.request.id}/items`, {
       details: form.value.details.map(item => ({
+        item_id: item.item_id || null,
         quantity: Number(item.quantity),
         unit: item.unit,
         item_description: item.item_description
@@ -148,6 +150,7 @@ const cancelEditPurpose = () => {
 
 const addDetail = () => {
   form.value.details.push({
+    item_id: null,
     quantity: 1,
     unit: 'pcs',
     item_description: '',
