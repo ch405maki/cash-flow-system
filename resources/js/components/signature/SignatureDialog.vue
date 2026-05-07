@@ -50,7 +50,6 @@ const resetState = () => {
   step.value = 'connecting'
   capturedSignature.value = null
   localError.value = ''
-  showPreview.value = false
 }
 
 const initPad = async () => {

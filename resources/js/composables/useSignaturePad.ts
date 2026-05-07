@@ -189,37 +189,40 @@ export function useSignaturePad() {
           })
         }
         
-        // Initial delay before first try, then stop signature then get image
+        // Wait for device to finish processing, then stop and get image
         setTimeout(() => {
-          // First stop the signature capture
-          defaults.stopSignature()
-            .then(() => {
-              console.log('Signature capture stopped')
-            })
-            .catch((err: any) => {
-              console.log('Stop signature warning (may already stopped):', err?.returnCode)
-            })
-            .finally(() => {
-              // Then try to get image
-              tryGetImage()
-                .then((imageResult: any) => {
-                  console.log('Signature image received, returnCode:', imageResult?.returnCode)
-                  isSigning.value = false
-                  window.onerror = originalOnError
-                  resolve({
-                    imageData: imageResult.file,
-                    signaturePoints: null,
-                    signatureTime: Date.now()
-                  })
+          // Stop signature after short delay (device needs time to process confirmation)
+          setTimeout(() => {
+            defaults.stopSignature()
+              .then(() => {
+                console.log('Signature capture stopped')
+              })
+              .catch((err: any) => {
+                console.log('Stop signature warning:', err?.returnCode)
+              })
+          }, 300)
+
+          // Try to get image after ~600ms total (gives device time to stop)
+          setTimeout(() => {
+            tryGetImage()
+              .then((imageResult: any) => {
+                console.log('Signature image received, returnCode:', imageResult?.returnCode)
+                isSigning.value = false
+                window.onerror = originalOnError
+                resolve({
+                  imageData: imageResult.file,
+                  signaturePoints: null,
+                  signatureTime: Date.now()
                 })
-                .catch((err: any) => {
-                  console.error('Failed to get signature:', err)
-                  isSigning.value = false
-                  window.onerror = originalOnError
-                  reject(new Error(err?.errorMessage || err?.message || 'Failed to get signature'))
-                })
-            })
-        }, 500) // Shorter initial delay since we call stop first
+              })
+              .catch((err: any) => {
+                console.error('Failed to get signature:', err)
+                isSigning.value = false
+                window.onerror = originalOnError
+                reject(new Error(err?.errorMessage || err?.message || 'Failed to get signature'))
+              })
+          }, 600)
+        }, 500)
       }
 
       defaults.handleCancelSignature = () => {
