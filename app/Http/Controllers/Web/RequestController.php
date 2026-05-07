@@ -231,12 +231,14 @@ class RequestController extends Controller
             }
         }
 
+        $authUser = auth()->user();
         return Inertia::render('Request/Release/Index', [
             'request' => $request,
             'departments' => Department::all(),
             'inventoryStatus' => $inventoryStatus, 
             'current_user' => [
-                'id' => auth()->id(),
+                'id' => $authUser->id,
+                'name' => $authUser->name,
             ]
         ]);
     }

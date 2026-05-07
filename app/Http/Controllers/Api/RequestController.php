@@ -25,6 +25,7 @@ use App\Notifications\NewRequestNotification;
 
 use App\Helpers\MacAddressHelper;
 use App\Services\InventoryApiService;
+use Carbon\Carbon;
 
 
 use Inertia\Inertia;
@@ -314,16 +315,26 @@ class RequestController extends Controller
                 ],
                 'items.*.quantity'               => 'required|integer|min:1',
                 'notes'                          => 'nullable|string',
-                'user_id'                        => 'required|exists:users,id'
+                'user_id'                        => 'required|exists:users,id',
+                'signature'                      => 'nullable|array',
+                'signature.image'                => 'nullable|string',
+                'signature.signer_id'            => 'nullable|integer',
+                'signature.signer_name'          => 'nullable|string',
+                'signature.signed_at'            => 'nullable|date'
             ]);
 
             $authUser = User::findOrFail($validated['user_id']);
 
+            $signatureData = $validated['signature'] ?? null;
+
             $release = Release::create([
-                'request_id'   => $request->id,
-                'user_id'      => $authUser->id,
-                'release_date' => now(),
-                'notes'        => $validated['notes'] ?? null
+                'request_id'      => $request->id,
+                'user_id'         => $authUser->id,
+                'release_date'    => now(),
+                'notes'           => $validated['notes'] ?? null,
+                'signature_image' => $signatureData['image'] ?? null,
+                'signed_by'       => $signatureData['signer_name'] ?? null,
+                'signed_at'       => $signatureData['signed_at'] ? \Carbon\Carbon::parse($signatureData['signed_at']) : null,
             ]);
 
             $totalQuantity    = 0;

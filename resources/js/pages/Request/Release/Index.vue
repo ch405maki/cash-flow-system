@@ -6,7 +6,7 @@ import { Head, Link } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 import { useToast } from 'vue-toastification'
 import axios from 'axios'
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 
 import RequestInfoTable from '@/components/requests/releasing/RequestInfoTable.vue'
 import RequestStatusBadge from '@/components/requests/releasing/RequestStatusBadge.vue'
@@ -49,30 +49,34 @@ const form = reactive({
   })),
 })
 
-// ── VALIDATION ────────────────────────────────────────
-const validationErrors = computed(() => {
-  const errors: Record<number, boolean> = {}
+// ── VALIDATION (explicit reactive) ──────────────────
+const validationErrors = reactive<Record<number, boolean>>({})
 
-  form.details.forEach((d: any) => {
-    if (selectedItems.value.includes(d.id)) {
-      const remaining = d.quantity - d.released_quantity
-      errors[d.id] = d.release_now > remaining || d.release_now <= 0
-    } else {
-      errors[d.id] = false
-    }
-  })
+const updateValidationForItem = (detail: any) => {
+  if (selectedItems.value.includes(detail.id)) {
+    const remaining = (Number(detail.quantity) || 0) - (Number(detail.released_quantity) || 0)
+    validationErrors[detail.id] = detail.release_now > remaining || detail.release_now <= 0
+  } else {
+    validationErrors[detail.id] = false
+  }
+}
 
-  return errors
-})
+// Update validation when selection changes
+watch(selectedItems, () => {
+  form.details.forEach((d: any) => updateValidationForItem(d))
+}, { deep: true })
 
 const hasInvalidQuantities = computed(() =>
-  Object.values(validationErrors.value).some(v => v === true)
+  Object.values(validationErrors).some(v => v === true)
 )
 
 // ── UPDATE QUANTITY ───────────────────────────────────
 const updateReleasedQuantity = ({ id, value }: { id: number; value: number }) => {
   const detail = form.details.find((d: any) => d.id === id)
-  if (detail) detail.release_now = value
+  if (detail) {
+    detail.release_now = value
+    updateValidationForItem(detail)
+  }
 }
 
 // ── SELECT ALL ────────────────────────────────────────
@@ -84,11 +88,17 @@ const toggleSelectAll = ({ checked, shouldAutoFill }: { checked: boolean; should
       form.details.forEach((d: any) => {
         const remaining = d.quantity - d.released_quantity
         d.release_now = remaining > 0 ? remaining : 0
+        updateValidationForItem(d)
       })
+    } else {
+      form.details.forEach((d: any) => updateValidationForItem(d))
     }
   } else {
     selectedItems.value = []
-    form.details.forEach((d: any) => (d.release_now = 0))
+    form.details.forEach((d: any) => {
+      d.release_now = 0
+      updateValidationForItem(d)
+    })
   }
 }
 

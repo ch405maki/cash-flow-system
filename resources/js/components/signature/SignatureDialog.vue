@@ -11,9 +11,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { Loader2, CheckCircle2, XCircle, PenLine, ShieldCheck } from 'lucide-vue-next'
+import { Loader2, CheckCircle2, XCircle, PenLine, ShieldCheck, Eye } from 'lucide-vue-next'
 
-// ── Props / Emits ────────────────────────────────────────────────────────────
 const props = defineProps<{
   open: boolean
   requestNo: string
@@ -26,29 +25,16 @@ const emit = defineEmits<{
   (e: 'cancelled'): void
 }>()
 
-// ── Composable ───────────────────────────────────────────────────────────────
-const { 
-  isConnected, 
-  isPadOpen, 
-  isSigning, 
-  error, 
-  padInfo, 
-  connect, 
-  startSigning, 
-  cancelSigning, 
-  disconnect 
-} = useSignaturePad()
+const { isConnected, isPadOpen, isSigning, error, padInfo, connect, startSigning, cancelSigning, disconnect } = useSignaturePad()
 
-// ── Local state ──────────────────────────────────────────────────────────────
 type DialogStep = 'connecting' | 'opening' | 'ready' | 'signing' | 'preview' | 'error'
 const step = ref<DialogStep>('connecting')
 const capturedSignature = ref<SignatureResult | null>(null)
 const localError = ref('')
+const showPreview = ref(true)
 
-// ── Lifecycle: init when dialog opens ────────────────────────────────────────
 watch(() => props.open, async (opened) => {
   if (!opened) {
-    // Clean up when dialog closes
     if (step.value === 'signing') {
       cancelSigning()
     }
@@ -64,6 +50,7 @@ const resetState = () => {
   step.value = 'connecting'
   capturedSignature.value = null
   localError.value = ''
+  showPreview.value = false
 }
 
 const initPad = async () => {
@@ -80,7 +67,6 @@ const initPad = async () => {
   }
 }
 
-// ── Actions ──────────────────────────────────────────────────────────────────
 const beginSigning = async () => {
   step.value = 'signing'
   localError.value = ''
@@ -99,11 +85,6 @@ const beginSigning = async () => {
       step.value = 'error'
     }
   }
-}
-
-const retrySign = () => {
-  capturedSignature.value = null
-  step.value = 'ready'
 }
 
 const confirmRelease = () => {
@@ -152,13 +133,6 @@ const closeDialog = () => {
           <p class="text-xs text-muted-foreground">Make sure signotec service is running</p>
         </div>
 
-        <!-- Opening State -->
-        <div v-else-if="step === 'opening'" class="flex flex-col items-center gap-3">
-          <Loader2 class="w-10 h-10 animate-spin text-muted-foreground" />
-          <p class="text-sm text-muted-foreground">Opening signature pad...</p>
-          <p class="text-xs text-muted-foreground">Please wait...</p>
-        </div>
-
         <!-- Ready State -->
         <div v-else-if="step === 'ready'" class="flex flex-col items-center gap-4">
           <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
@@ -167,7 +141,7 @@ const closeDialog = () => {
           <div class="text-center">
             <p class="font-medium">Pad ready</p>
             <p v-if="padInfo" class="text-sm text-muted-foreground mt-1">
-              {{ padInfo.padType || 'Sigma USB' }} · SN: {{ padInfo.serialNumber || '1000401383' }}
+              {{ padInfo.padType || 'Sigma USB' }} · Ready
             </p>
           </div>
           <p class="text-sm text-center text-muted-foreground px-4">
@@ -190,22 +164,39 @@ const closeDialog = () => {
         </div>
 
         <!-- Preview State -->
-        <div v-else-if="step === 'preview'" class="flex flex-col items-center gap-4">
+        <div v-else-if="step === 'preview'" class="flex flex-col items-center gap-4 w-full">
           <div class="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 font-medium">
             <CheckCircle2 class="w-4 h-4" />
             Signature captured
           </div>
-          <div class="w-full border rounded-lg overflow-hidden bg-white dark:bg-zinc-900 p-2">
-            <img
-              v-if="capturedSignature?.imageData"
-              :src="`data:image/png;base64,${capturedSignature.imageData}`"
-              alt="Captured signature"
-              class="w-full h-32 object-contain"
-            />
-            <div v-else class="h-32 flex items-center justify-center text-sm text-muted-foreground">
-              No image data
+          
+          <!-- Signature Preview -->
+          <div class="w-full border rounded-lg overflow-hidden bg-white dark:bg-zinc-900 p-4">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-sm font-medium">Signature Preview</span>
+              <Button variant="ghost" size="sm" @click="showPreview = !showPreview">
+                <Eye class="w-4 h-4 mr-1" />
+                {{ showPreview ? 'Hide' : 'Show' }}
+              </Button>
             </div>
+            <div v-if="showPreview && capturedSignature?.imageData" class="border rounded bg-gray-50 p-2">
+              <img
+                :src="`data:image/png;base64,${capturedSignature.imageData}`"
+                alt="Captured signature"
+                class="w-full h-auto max-h-40 object-contain"
+              />
+            </div>
+            <div v-else class="text-center text-sm text-muted-foreground py-4">
+              Click "Show" to preview signature
+            </div>
+            <p class="text-xs text-muted-foreground text-center mt-3">
+              Signed by: <span class="font-medium">{{ signerName }}</span>
+            </p>
+            <p class="text-xs text-muted-foreground text-center">
+              Date & Time: {{ new Date().toLocaleString() }}
+            </p>
           </div>
+          
           <p class="text-xs text-muted-foreground text-center">
             Review your signature above. Click <span class="font-medium">Confirm & Release</span> to proceed
             or <span class="font-medium">Re-sign</span> to redo it.
@@ -222,19 +213,16 @@ const closeDialog = () => {
             <p>• Make sure signotec service is running</p>
             <p>• Check pad is connected via USB</p>
             <p>• Verify drivers are installed</p>
-            <p>• Try restarting the service</p>
           </div>
         </div>
       </div>
 
       <DialogFooter class="gap-2 sm:gap-2">
-        <!-- Error: retry connect -->
         <template v-if="step === 'error'">
           <Button variant="outline" @click="closeDialog">Cancel</Button>
           <Button @click="initPad">Retry Connection</Button>
         </template>
 
-        <!-- Ready: start signing -->
         <template v-else-if="step === 'ready'">
           <Button variant="outline" @click="closeDialog">Cancel</Button>
           <Button @click="beginSigning">
@@ -243,23 +231,20 @@ const closeDialog = () => {
           </Button>
         </template>
 
-        <!-- Signing: only cancel -->
         <template v-else-if="step === 'signing'">
           <Button variant="outline" @click="cancelSigning(); step = 'ready'">
             Cancel Signing
           </Button>
         </template>
 
-        <!-- Preview: re-sign or confirm -->
         <template v-else-if="step === 'preview'">
-          <Button variant="outline" @click="retrySign">Re-sign</Button>
+          <Button variant="outline" @click="step = 'ready'">Re-sign</Button>
           <Button @click="confirmRelease">
             <CheckCircle2 class="w-4 h-4 mr-2" />
             Confirm &amp; Release
           </Button>
         </template>
 
-        <!-- Connecting/Opening: show cancel only -->
         <template v-else>
           <Button variant="outline" @click="closeDialog">Cancel</Button>
         </template>
