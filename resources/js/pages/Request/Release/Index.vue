@@ -157,7 +157,7 @@ const releaseItems = () => {
 }
 
 // ── STEP 2: AFTER SIGNATURE → RELEASE ────────────────
-const handleSignatureConfirmed = async (signature: SignatureResult) => {
+const handleSignatureConfirmed = async (signature: SignatureResult, signerName: string) => {
   if (!signature?.imageData) {
     toast.error('Signature is required')
     return
@@ -181,7 +181,7 @@ const handleSignatureConfirmed = async (signature: SignatureResult) => {
       signature: {
         image: signature.imageData,
         signer_id: props.current_user.id,
-        signer_name: props.current_user.name,
+        signer_name: signerName,
         signed_at: new Date().toISOString(),
       },
     })
@@ -204,8 +204,7 @@ const handleSignatureConfirmed = async (signature: SignatureResult) => {
 // ── HANDLE SIGNATURE CANCELLED ───────────────────────
 const handleSignatureCancelled = () => {
   signatureDialogOpen.value = false
-  toast.info('Signature cancelled', { timeout: 3000 })
-}
+  }
 </script>
 
 <template>
@@ -274,7 +273,7 @@ const handleSignatureCancelled = () => {
   <SignatureDialog
     v-model:open="signatureDialogOpen"
     :request-no="request.request_no"
-    :signer-name="current_user?.name || 'Unknown User'"
+    :signer-name="request.user?.first_name + ' ' + request.user?.last_name || 'Unknown User'"
     @confirmed="handleSignatureConfirmed"
     @cancelled="handleSignatureCancelled"
   />

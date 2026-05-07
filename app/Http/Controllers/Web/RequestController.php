@@ -95,7 +95,7 @@ class RequestController extends Controller
         return Inertia::render('Request/Show', [
             'request' => $request,
             'accounts' => Account::all(['id', 'account_title']),
-            'inventoryStatus' => $inventoryStatus, // Pass to frontend
+            'inventoryStatus' => $inventoryStatus,
             'user' => [
                 'id' => $user->id,
                 'role' => $user->role,

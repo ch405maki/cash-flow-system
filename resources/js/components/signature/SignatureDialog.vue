@@ -3,6 +3,7 @@
 import { ref, watch } from 'vue'
 import { useSignaturePad, type SignatureResult } from '@/composables/useSignaturePad'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Dialog,
   DialogContent,
@@ -21,7 +22,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:open', val: boolean): void
-  (e: 'confirmed', signature: SignatureResult): void
+  (e: 'confirmed', signature: SignatureResult, signerName: string): void
   (e: 'cancelled'): void
 }>()
 
@@ -32,6 +33,7 @@ const step = ref<DialogStep>('connecting')
 const capturedSignature = ref<SignatureResult | null>(null)
 const localError = ref('')
 const showPreview = ref(true)
+const editableSignerName = ref('')
 
 watch(() => props.open, async (opened) => {
   if (!opened) {
@@ -50,6 +52,7 @@ const resetState = () => {
   step.value = 'connecting'
   capturedSignature.value = null
   localError.value = ''
+  editableSignerName.value = props.signerName
 }
 
 const initPad = async () => {
@@ -71,7 +74,7 @@ const beginSigning = async () => {
   localError.value = ''
   
   try {
-    const promptText = `Release request ${props.requestNo}\nSigner: ${props.signerName}`
+    const promptText = `Release request ${props.requestNo}\nSigner: ${editableSignerName.value}`
     const result = await startSigning(promptText)
     capturedSignature.value = result
     step.value = 'preview'
@@ -92,7 +95,7 @@ const confirmRelease = () => {
     step.value = 'error'
     return
   }
-  emit('confirmed', capturedSignature.value)
+  emit('confirmed', capturedSignature.value, editableSignerName.value)
   closeDialog()
 }
 
@@ -142,6 +145,14 @@ const closeDialog = () => {
             <p v-if="padInfo" class="text-sm text-muted-foreground mt-1">
               {{ padInfo.padType || 'Sigma USB' }} · Ready
             </p>
+          </div>
+          <div class="w-full max-w-xs">
+            <label class="text-xs text-muted-foreground">Signer Name</label>
+            <Input 
+              v-model="editableSignerName" 
+              class="mt-1"
+              placeholder="Enter signer name"
+            />
           </div>
           <p class="text-sm text-center text-muted-foreground px-4">
             Click <span class="font-medium">Start Signing</span> then write your signature
