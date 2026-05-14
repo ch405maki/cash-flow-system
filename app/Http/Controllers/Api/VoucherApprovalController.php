@@ -3,29 +3,23 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-
+use App\Actions\Approvals\VerifyPassword;
 use App\Models\Voucher;
-use App\Models\VoucherDetail;
-use App\Models\Account;
-use App\Models\Signatory;
 use App\Models\User;
-use Illuminate\Http\JsonResponse;
+use App\Models\VoucherApproval;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
-use App\Models\PurchaseOrder;
-use App\Models\VoucherApproval;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Storage;
-
-use Illuminate\Database\QueryException;
-use App\Services\ActivityLogger;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
-class VoucherApprovalController extends Controller {
-    
+class VoucherApprovalController extends Controller
+{
+    public function __construct(
+        protected VerifyPassword $verifyPassword
+    ) {}
+
     public function index()
     {
         $user = Auth::user();
@@ -34,7 +28,7 @@ class VoucherApprovalController extends Controller {
             'vouchers' => Voucher::with(['user', 'details'])
                                 ->whereIn('status', ['forAudit'])
                                 ->get(),
-            'accounts' => Account::all(),
+            'accounts' => \App\Models\Account::all(),
             'authUser' => [
                 'id' => $user->id,
                 'role' => $user->role,
@@ -43,7 +37,7 @@ class VoucherApprovalController extends Controller {
         ]);
     }
 
-    public function auditreview($id, Request $request) 
+    public function auditreview($id, Request $request)
     {
         $request->validate([
             'password' => 'required',
@@ -52,17 +46,13 @@ class VoucherApprovalController extends Controller {
         ]);
 
         $user = Auth::user();
-
-        if (!Hash::check($request->password, $user->password)) {
-            return back()->withErrors(['password' => 'Incorrect password']);
-        }
+        $this->verifyPassword->execute($request->password, $user);
 
         $voucher = Voucher::findOrFail($id);
 
         if ($voucher->status === 'forCheck') {
             return back()->withErrors(['status' => 'Voucher is already approved for check releasing']);
         }
-
         if ($voucher->status === 'rejected') {
             return back()->withErrors(['status' => 'Voucher is already rejected']);
         }
@@ -74,71 +64,12 @@ class VoucherApprovalController extends Controller {
             ? 'Voucher approved successfully'
             : 'Voucher rejected successfully';
 
-        DB::transaction(function () use ($voucher, $newStatus, $user, $action, $comment) {
-            // Update voucher status + audited_by field
-            $voucher->update([
-                'status' => $newStatus,
-                'audited_by' => $user->id, // store who approved/rejected
-            ]);
+        DB::transaction(function () use ($voucher, $newStatus, $user, $action, $comment, $request) {
+            $this->applyVoucherStatus($voucher, $newStatus, $user, $comment, $request);
 
-            // Create approval log in voucher_approvals table
-            VoucherApproval::create([
-                'voucher_id' => $voucher->id,
-                'user_id' => $user->id,
-                'status' => $newStatus,
-                'remarks' => "Voucher: {$voucher->voucher_no} updated to {$newStatus}" 
-                            . ($comment ? " | Comment: {$comment}" : ""),
-                'approved_at' => now(),
-            ]);
-
-            // ===== NOTIFICATION BACK TO CREATOR =====
-            // Only notify if approved
             if ($action === 'approve') {
-                $creator = User::find($voucher->user_id);
-                
-                if ($creator) {
-                    DB::table('notifications')->insert([
-                        'id' => (string) \Illuminate\Support\Str::uuid(),
-                        'type' => 'VoucherApproved',
-                        'notifiable_type' => 'App\Models\User',
-                        'notifiable_id' => $creator->id,
-                        'data' => json_encode([
-                            'voucher_id' => $voucher->id,
-                            'title' => 'Voucher Approved',
-                            'voucher_no' => $voucher->voucher_no,
-                            'amount' => number_format($voucher->check_amount, 2),
-                            'payee' => $voucher->payee,
-                            'approved_by' => $user->name,
-                            'status' => $newStatus,
-                            'message' => "Your voucher #{$voucher->voucher_no} for {$voucher->payee} (₱" . number_format($voucher->check_amount, 2) . ") has been approved and is now ready for check processing",
-                            'link' => route('vouchers.view', $voucher->id),
-                            'comment' => $comment,
-                        ]),
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
+                $this->notifyVoucherCreator($voucher, $user, $comment, 'VoucherApproved', 'Voucher Approved');
             }
-            // ===== END NOTIFICATIONS =====
-
-            // Activity log with all details
-            $logMessage = "Voucher {$voucher->voucher_no} updated to {$newStatus} by {$user->name}";
-            if ($comment) {
-                $logMessage .= " | Comment: {$comment}";
-            }
-
-            ActivityLogger::make($request)
-                ->on($voucher)
-                ->by($user)
-                ->with([
-                    'voucher_no' => $voucher->voucher_no,
-                    'action' => $action,
-                    'new_status' => $newStatus,
-                    'comment' => $comment,
-                    'audited_by' => $user->id,
-                ])
-                ->logName('Voucher Update')
-                ->log($logMessage);
         });
 
         return back()->with([
@@ -147,7 +78,7 @@ class VoucherApprovalController extends Controller {
         ]);
     }
 
-    public function auditreturn($id, Request $request) 
+    public function auditreturn($id, Request $request)
     {
         $request->validate([
             'password' => 'required',
@@ -156,17 +87,13 @@ class VoucherApprovalController extends Controller {
         ]);
 
         $user = Auth::user();
-
-        if (!Hash::check($request->password, $user->password)) {
-            return back()->withErrors(['password' => 'Incorrect password']);
-        }
+        $this->verifyPassword->execute($request->password, $user);
 
         $voucher = Voucher::findOrFail($id);
 
         if ($voucher->status === 'return') {
             return back()->withErrors(['status' => 'Voucher is already return for review']);
         }
-
         if ($voucher->status === 'rejected') {
             return back()->withErrors(['status' => 'Voucher is already rejected']);
         }
@@ -178,76 +105,89 @@ class VoucherApprovalController extends Controller {
             ? 'Voucher return for review successfully'
             : 'Voucher rejected successfully';
 
-        DB::transaction(function () use ($voucher, $newStatus, $user, $action, $comment) {
-            // Update voucher status + audited_by field
-            $voucher->update([
-                'status' => $newStatus,
-                'audited_by' => $user->id, // store who approved/rejected
-            ]);
+        DB::transaction(function () use ($voucher, $newStatus, $user, $action, $comment, $request) {
+            $this->applyVoucherStatus($voucher, $newStatus, $user, $comment, $request);
 
-            // Create approval log in voucher_approvals table
-            VoucherApproval::create([
-                'voucher_id' => $voucher->id,
-                'user_id' => $user->id,
-                'status' => $newStatus,
-                'remarks' => "Voucher: {$voucher->voucher_no} updated to {$newStatus}" 
-                            . ($comment ? " | Comment: {$comment}" : ""),
-                'approved_at' => now(),
-            ]);
-
-            // ===== NOTIFICATION BACK TO CREATOR =====
-            $creator = User::find($voucher->user_id);
-            
-            if ($creator) {
-                if ($action === 'return') {
-                    // Notify for return
-                    DB::table('notifications')->insert([
-                        'id' => (string) \Illuminate\Support\Str::uuid(),
-                        'type' => 'VoucherReturned',
-                        'notifiable_type' => 'App\Models\User',
-                        'notifiable_id' => $creator->id,
-                        'data' => json_encode([
-                            'voucher_id' => $voucher->id,
-                            'title' => 'Voucher Returned for Review',
-                            'voucher_no' => $voucher->voucher_no,
-                            'amount' => number_format($voucher->check_amount, 2),
-                            'payee' => $voucher->payee,
-                            'returned_by' => $user->name,
-                            'status' => $newStatus,
-                            'message' => "Your voucher #{$voucher->voucher_no} for {$voucher->payee} (₱" . number_format($voucher->check_amount, 2) . ") has been returned for review" . ($comment ? ": {$comment}" : ""),
-                            'link' => route('vouchers.view', $voucher->id),
-                            'comment' => $comment,
-                        ]),
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
+            if ($action === 'return') {
+                $this->notifyVoucherCreator($voucher, $user, $comment, 'VoucherReturned', 'Voucher Returned for Review');
             }
-            // ===== END NOTIFICATIONS =====
-
-            // Activity log with all details
-            $logMessage = "Voucher {$voucher->voucher_no} updated to {$newStatus} by {$user->name}";
-            if ($comment) {
-                $logMessage .= " | Comment: {$comment}";
-            }
-
-            ActivityLogger::make($request)
-                ->on($voucher)
-                ->by($user)
-                ->with([
-                    'voucher_no' => $voucher->voucher_no,
-                    'action' => $action,
-                    'new_status' => $newStatus,
-                    'comment' => $comment,
-                    'audited_by' => $user->id,
-                ])
-                ->logName('Voucher Update')
-                ->log($logMessage);
         });
 
         return back()->with([
             'success' => $message,
             'voucher' => $voucher->fresh()
         ]);
+    }
+
+    protected function applyVoucherStatus(Voucher $voucher, string $newStatus, User $user, ?string $comment, Request $request): void
+    {
+        $voucher->update([
+            'status' => $newStatus,
+            'audited_by' => $user->id,
+        ]);
+
+        VoucherApproval::create([
+            'voucher_id' => $voucher->id,
+            'user_id' => $user->id,
+            'status' => $newStatus,
+            'remarks' => "Voucher: {$voucher->voucher_no} updated to {$newStatus}"
+                . ($comment ? " | Comment: {$comment}" : ""),
+            'approved_at' => now(),
+        ]);
+
+        $logMessage = "Voucher {$voucher->voucher_no} updated to {$newStatus} by {$user->name}"
+            . ($comment ? " | Comment: {$comment}" : "");
+
+        ActivityLogger::make($request)
+            ->on($voucher)
+            ->by($user)
+            ->with([
+                'voucher_no' => $voucher->voucher_no,
+                'new_status' => $newStatus,
+                'comment' => $comment,
+                'audited_by' => $user->id,
+            ])
+            ->logName('Voucher Update')
+            ->log($logMessage);
+    }
+
+    protected function notifyVoucherCreator(Voucher $voucher, User $user, ?string $comment, string $type, string $title): void
+    {
+        $creator = User::find($voucher->user_id);
+        if (!$creator) {
+            return;
+        }
+
+        DB::table('notifications')->insert([
+            'id' => (string) Str::uuid(),
+            'type' => $type,
+            'notifiable_type' => 'App\Models\User',
+            'notifiable_id' => $creator->id,
+            'data' => json_encode([
+                'voucher_id' => $voucher->id,
+                'title' => $title,
+                'voucher_no' => $voucher->voucher_no,
+                'amount' => number_format($voucher->check_amount, 2),
+                'payee' => $voucher->payee,
+                'approved_by' => $user->name,
+                'status' => $voucher->status,
+                'message' => $this->buildNotificationMessage($voucher, $user, $type, $comment),
+                'link' => route('vouchers.view', $voucher->id),
+                'comment' => $comment,
+            ]),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    protected function buildNotificationMessage(Voucher $voucher, User $user, string $type, ?string $comment): string
+    {
+        $amount = "₱" . number_format($voucher->check_amount, 2);
+
+        return match ($type) {
+            'VoucherApproved' => "Your voucher #{$voucher->voucher_no} for {$voucher->payee} ({$amount}) has been approved and is now ready for check processing",
+            'VoucherReturned' => "Your voucher #{$voucher->voucher_no} for {$voucher->payee} ({$amount}) has been returned for review" . ($comment ? ": {$comment}" : ""),
+            default => "Voucher #{$voucher->voucher_no} status updated to {$voucher->status}",
+        };
     }
 }

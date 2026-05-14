@@ -255,8 +255,7 @@ class RequestToOrderController extends Controller
             return back()->withErrors(['status' => 'Already approved']);
         }
 
-        DB::transaction(function () use ($order, $user) {
-            // 1. Update the request-to-order status
+        DB::transaction(function () use ($order, $user, $request) {
             $order->update(['status' => 'forPO']);
 
             // 2. Record the approval
@@ -354,8 +353,7 @@ class RequestToOrderController extends Controller
             return back()->withErrors(['status' => 'Already sent for EOD approval']);
         }
 
-        DB::transaction(function () use ($order, $user) {
-            // 1. Update order status
+        DB::transaction(function () use ($order, $user, $request) {
             $order->update(['status' => 'forEOD']);
 
             // 2. Create approval record (pending)

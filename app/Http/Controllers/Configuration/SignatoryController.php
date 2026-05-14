@@ -3,60 +3,53 @@
 namespace App\Http\Controllers\Configuration;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Configuration\StoreSignatoryRequest;
+use App\Http\Requests\Configuration\UpdateSignatoryRequest;
 use App\Models\Signatory;
-use App\Services\ActivityLogger;
+use App\Services\ConfigurationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class SignatoryController extends Controller
 {
+    public function __construct(
+        protected ConfigurationService $configService
+    ) {}
+
     public function index()
     {
-        $signatories = Signatory::all();
         return Inertia::render('Configuration/Signatory', [
-            'signatories' => $signatories
+            'signatories' => Signatory::all()
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreSignatoryRequest $request)
     {
-        $validated = $request->validate([
-            'full_name' => 'required|string|max:255',
-            'position' => 'required|string|max:255',
-            'status' => 'required|in:active,inactive',
-        ]);
-
-        $signatory = Signatory::create($validated);
-
-        ActivityLogger::make($request)
-            ->log("Signatory \"{$signatory->full_name}\" created");
+        $signatory = $this->configService->create(
+            Signatory::class,
+            $request->validated(),
+            $request,
+            'full_name'
+        );
 
         return response()->json($signatory, 201);
     }
 
-    public function update(Request $request, Signatory $signatory)
+    public function update(UpdateSignatoryRequest $request, Signatory $signatory)
     {
-        $validated = $request->validate([
-            'full_name' => 'required|string|max:255',
-            'position' => 'required|string|max:255',
-            'status' => 'required|in:active,inactive',
-        ]);
-
-        $signatory->update($validated);
-
-        ActivityLogger::make($request)
-            ->log("Signatory \"{$signatory->full_name}\" updated");
+        $signatory = $this->configService->update(
+            $signatory,
+            $request->validated(),
+            $request,
+            'full_name'
+        );
 
         return response()->json($signatory);
     }
 
     public function destroy(Request $request, Signatory $signatory)
     {
-        $name = $signatory->full_name;
-        $signatory->delete();
-
-        ActivityLogger::make($request)
-            ->log("Signatory \"{$name}\" deleted");
+        $this->configService->delete($signatory, $request, 'full_name');
 
         return response()->json(null, 204);
     }

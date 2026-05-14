@@ -3,74 +3,33 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-
+use App\Http\Requests\StoreVoucherRequest;
+use App\Http\Requests\UpdateVoucherRequest;
 use App\Models\PurchaseOrder;
 use App\Models\Voucher;
 use App\Models\VoucherDetail;
 use App\Models\Account;
-use App\Models\Signatory;
 use App\Models\User;
 use App\Models\VoucherApproval;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
-use Illuminate\Database\QueryException;
-use Inertia\Inertia;
-use Illuminate\Support\Facades\Storage;
-use App\Models\DistributionExpense;
-use App\Models\PettyCash;
+use Illuminate\Support\Str;
 use App\Services\ActivityLogger;
 
 class VoucherController extends Controller
 {
     // voucher store start
-    public function store(Request $request): JsonResponse
+    public function store(StoreVoucherRequest $request): JsonResponse
     {
         try {
-            $validationRules = [
-                'po_id' => 'nullable|exists:purchase_orders,id',
-                'voucher_no' => 'required|string|unique:vouchers,voucher_no',
-                'issue_date' => 'nullable|date',
-                'tin_no' => 'nullable|string',
-                'payment_date' => 'nullable|date',
-                'delivery_date' => 'nullable|date',
-                'voucher_date' => 'required|date',
-                'purpose' => 'required|string|max:500',
-                'payee' => 'required|string|max:255',
-                'check_no' => 'nullable|string|max:500',
-                'check_payable_to' => 'required|string|max:500',
-                'check_amount' => 'required|numeric|min:0',
-                'status' => 'required|in:forAudit,forCheck,rejected,draft',
-                'type' => 'required|in:cash,salary',
-                'user_id' => 'required|exists:users,id',
-                'check' => 'required|array|min:1',
-                'check.*.amount' => 'required|numeric|min:0',
-                'check.*.rate' => 'nullable|numeric|min:0',
-                'check.*.hours' => 'nullable|numeric|min:0',
-                'check.*.charging_tag' => 'nullable|in:C,D',
-                'check.*.account_id' => 'required|exists:accounts,id',
-            ];
+            $validated = $request->validated();
 
-            $validator = Validator::make($request->all(), $validationRules);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
-            return DB::transaction(function () use ($request, $validator) {
-                $validated = $validator->validated();
-
-                // Create voucher with optional PO reference
-                $voucherData = [
-                    'po_id' => $validated['po_id'] ?? null,  
+            return DB::transaction(function () use ($validated, $request) {
+                $voucher = Voucher::create([
+                    'po_id' => $validated['po_id'] ?? null,
                     'voucher_no' => $validated['voucher_no'],
                     'issue_date' => $validated['issue_date'] ?? null,
                     'tin_no' => $validated['tin_no'] ?? null,
@@ -85,10 +44,9 @@ class VoucherController extends Controller
                     'status' => $validated['status'],
                     'type' => $validated['type'],
                     'user_id' => $validated['user_id'],
-                ];
+                ]);
 
-                $voucher = Voucher::create($voucherData);  
-                $creatorUser = User::find($validated['user_id']); 
+                $creatorUser = User::find($validated['user_id']);
 
                 // Create details if salary voucher
                 if (!empty($validated['check'])) {
@@ -108,55 +66,9 @@ class VoucherController extends Controller
                         ->update(['status' => 'voucherCreated']);
                 }
 
-                // ===== NOTIFICATION FOR AUDIT ROLE =====
-                
-                // 1. Notify the creator
-                DB::table('notifications')->insert([
-                    'id' => (string) \Illuminate\Support\Str::uuid(),
-                    'type' => 'Voucher',
-                    'notifiable_type' => 'App\Models\User',
-                    'notifiable_id' => $validated['user_id'],
-                    'data' => json_encode([
-                        'voucher_id' => $voucher->id,
-                        'title' => 'Voucher Created',
-                        'voucher_no' => $voucher->voucher_no,
-                        'amount' => $voucher->check_amount,
-                        'payee' => $voucher->payee,
-                        'status' => $voucher->status,
-                        'message' => "Voucher #{$voucher->voucher_no} has been created and sent for audit",
-                        'link' => route('vouchers.view', $voucher->id),
-                    ]),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                // 2. Notify users with AUDIT role
-                $auditors = User::where('role', 'audit')->get();
-
-                foreach ($auditors as $auditor) {
-                    DB::table('notifications')->insert([
-                        'id' => (string) \Illuminate\Support\Str::uuid(),
-                        'type' => 'VoucherForAudit',
-                        'notifiable_type' => 'App\Models\User',
-                        'notifiable_id' => $auditor->id,
-                        'data' => json_encode([
-                            'voucher_id' => $voucher->id,
-                            'title' => 'Voucher Ready for Audit',
-                            'voucher_no' => $voucher->voucher_no,
-                            'amount' => number_format($voucher->check_amount, 2),
-                            'payee' => $voucher->payee,
-                            'created_by' => $creatorUser?->name ?? 'Unknown',
-                            'type' => $voucher->type,
-                            'status' => $voucher->status,
-                            'message' => "Voucher #{$voucher->voucher_no} for {$voucher->payee} (₱" . number_format($voucher->check_amount, 2) . ") requires your audit review",
-                            'link' => route('vouchers.view', $voucher->id),
-                        ]),
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-                // ===== END NOTIFICATIONS =====
-                // ===== END NOTIFICATIONS =====
+                // Notifications
+                $this->notifyCreator($voucher, $validated['user_id']);
+                $auditorCount = $this->notifyAuditors($voucher, $creatorUser);
 
                 // Log activity
                 ActivityLogger::make($request)
@@ -184,13 +96,13 @@ class VoucherController extends Controller
                     'message' => 'Voucher created successfully',
                     'data' => $voucher->load(['user', 'details', 'purchaseOrder']),
                     'voucher_no' => $validated['voucher_no'],
-                    'items_count' => $validated['type'] === 'salary' 
-                        ? count($validated['check']) 
+                    'items_count' => $validated['type'] === 'salary'
+                        ? count($validated['check'])
                         : 0,
                     'po_id' => $validated['po_id'] ?? null,
                     'notifications_sent' => [
                         'creator' => true,
-                        'auditors' => $auditors->count()
+                        'auditors' => $auditorCount,
                     ]
                 ], 201);
             });
@@ -204,47 +116,15 @@ class VoucherController extends Controller
         }
     }
 
-    public function update(Request $request, Voucher $voucher): JsonResponse
+    public function update(UpdateVoucherRequest $request, Voucher $voucher): JsonResponse
     {
         return DB::transaction(function () use ($request, $voucher) {
-            $validated = $request->validate([
-                'voucher_no' => [
-                    'required',
-                    'string',
-                    Rule::unique('vouchers', 'voucher_no')->ignore($voucher->id),
-                ],
-                'issue_date' => 'nullable|date',
-                'payment_date' => 'nullable|date',
-                'check_date' => 'nullable|date',
-                'delivery_date' => 'nullable|date',
-                'voucher_date' => 'required|date',
-                'purpose' => 'required|string|max:500',
-                'payee' => 'required|string|max:255',
-                'check_no' => 'nullable|string|max:500',
-                'tin_no' => 'nullable|string|max:500',
-                'remarks' => 'nullable|string|max:500',
-                'check_payable_to' => 'required|string|max:500',
-                'check_amount' => 'required|numeric|min:0',
-                'status' => 'required|in:forAudit,forCheck,rejected,draft,return',
-                'type' => 'required|in:cash,salary',
-                'user_id' => 'required|exists:users,id',
-                'check' => 'nullable|array',
-                'check.*.amount' => 'nullable|numeric|min:0',
-                'check.*.rate' => 'nullable|numeric|min:0',
-                'check.*.hours' => 'nullable|numeric|min:0|max:24',
-                'check.*.charging_tag' => 'nullable|in:C,D',
-                'check.*.account_id' => 'required_with:check.*|exists:accounts,id',
-            ]);
+            $validated = $request->validated();
 
-            // Lock the voucher number to the existing value
-            // $validated['voucher_no'] = $voucher->voucher_no;
-
-            // Automatically update status if check number is present
             if (!empty($validated['check_no'])) {
                 $validated['status'] = 'unreleased';
             }
 
-            // Apply updates
             $voucher->update($validated);
 
             $this->validateCashVoucherAmount($validated);
@@ -596,6 +476,58 @@ class VoucherController extends Controller
             'success' => true,
             'voucher_number' => $voucherNumber
         ]);
+    }
+
+    protected function notifyCreator(Voucher $voucher, int $userId): void
+    {
+        DB::table('notifications')->insert([
+            'id' => (string) Str::uuid(),
+            'type' => 'Voucher',
+            'notifiable_type' => 'App\Models\User',
+            'notifiable_id' => $userId,
+            'data' => json_encode([
+                'voucher_id' => $voucher->id,
+                'title' => 'Voucher Created',
+                'voucher_no' => $voucher->voucher_no,
+                'amount' => $voucher->check_amount,
+                'payee' => $voucher->payee,
+                'status' => $voucher->status,
+                'message' => "Voucher #{$voucher->voucher_no} has been created and sent for audit",
+                'link' => route('vouchers.view', $voucher->id),
+            ]),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    protected function notifyAuditors(Voucher $voucher, ?User $creatorUser): int
+    {
+        $auditors = User::where('role', 'audit')->get();
+
+        foreach ($auditors as $auditor) {
+            DB::table('notifications')->insert([
+                'id' => (string) Str::uuid(),
+                'type' => 'VoucherForAudit',
+                'notifiable_type' => 'App\Models\User',
+                'notifiable_id' => $auditor->id,
+                'data' => json_encode([
+                    'voucher_id' => $voucher->id,
+                    'title' => 'Voucher Ready for Audit',
+                    'voucher_no' => $voucher->voucher_no,
+                    'amount' => number_format($voucher->check_amount, 2),
+                    'payee' => $voucher->payee,
+                    'created_by' => $creatorUser?->name ?? 'Unknown',
+                    'type' => $voucher->type,
+                    'status' => $voucher->status,
+                    'message' => "Voucher #{$voucher->voucher_no} for {$voucher->payee} (₱" . number_format($voucher->check_amount, 2) . ") requires your audit review",
+                    'link' => route('vouchers.view', $voucher->id),
+                ]),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return $auditors->count();
     }
 
         /**

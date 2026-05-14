@@ -55,6 +55,11 @@ class ActivityLogger
         return $this;
     }
 
+    public function withMacAddress(): self
+    {
+        return $this;
+    }
+
     public function log(string $description): void
     {
         $properties = $this->buildProperties();

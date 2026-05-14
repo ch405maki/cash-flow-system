@@ -3,56 +3,53 @@
 namespace App\Http\Controllers\Configuration;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Configuration\StoreAccountRequest;
+use App\Http\Requests\Configuration\UpdateAccountRequest;
 use App\Models\Account;
-use App\Services\ActivityLogger;
+use App\Services\ConfigurationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class AccountController extends Controller
 {
+    public function __construct(
+        protected ConfigurationService $configService
+    ) {}
+
     public function index()
     {
-        $accounts = Account::all();
         return Inertia::render('Configuration/Accounts', [
-            'accounts' => $accounts
+            'accounts' => Account::all()
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreAccountRequest $request)
     {
-        $validated = $request->validate([
-            'account_title' => 'required|string|max:255|unique:accounts',
-        ]);
-
-        $account = Account::create($validated);
-
-        ActivityLogger::make($request)
-            ->log("Account \"{$account->account_title}\" created");
+        $account = $this->configService->create(
+            Account::class,
+            $request->validated(),
+            $request,
+            'account_title'
+        );
 
         return response()->json($account, 201);
     }
 
-    public function update(Request $request, Account $account)
+    public function update(UpdateAccountRequest $request, Account $account)
     {
-        $validated = $request->validate([
-            'account_title' => 'required|string|max:255|unique:accounts,account_title,'.$account->id,
-        ]);
-
-        $account->update($validated);
-
-        ActivityLogger::make($request)
-            ->log("Account \"{$account->account_title}\" updated");
+        $account = $this->configService->update(
+            $account,
+            $request->validated(),
+            $request,
+            'account_title'
+        );
 
         return response()->json($account);
     }
 
     public function destroy(Request $request, Account $account)
     {
-        $title = $account->account_title;
-        $account->delete();
-
-        ActivityLogger::make($request)
-            ->log("Account \"{$title}\" deleted");
+        $this->configService->delete($account, $request, 'account_title');
 
         return response()->json(null, 204);
     }

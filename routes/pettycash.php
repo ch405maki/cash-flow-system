@@ -14,7 +14,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/petty-cash', [PettyCashController::class, 'store'])->name('petty-cash.store');
     Route::get('/petty-cash/{pettyCash}/edit', [PettyCashController::class, 'edit'])->name('petty-cash.edit');
     Route::put('/petty-cash/{pettyCash}', [PettyCashController::class, 'update'])->name('petty-cash.update');
-    Route::delete('/petty-cash-items/{item}', [PettyCashItemController::class, 'destroy']);
+    Route::delete('/petty-cash-items/{item}', [PettyCashController::class, 'destroy']);
     Route::put('/petty-cash/{id}/submit', [PettyCashController::class, 'submit'])->name('petty-cash.submit');
     Route::get('petty-cash/{pettyCash}/view', [PettyCashController::class, 'view'])->name('petty-cash.view');
 
