@@ -6,6 +6,7 @@ use App\Models\Canvas;
 use App\Models\CanvasFile;
 use App\Models\CanvasApproval;
 use App\Models\CanvasSelectedFile;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -137,6 +138,10 @@ class CanvasController extends Controller
             ]);
         }
 
+        ActivityLogger::make($request)
+            ->on($canvas)
+            ->log("Canvas #{$canvas->id} created");
+
         return redirect()->route('canvas.index')
             ->with('success', 'Canvas submitted with files!');
     }
@@ -222,6 +227,10 @@ class CanvasController extends Controller
         else {
             $canvas->update($validated);
         }
+
+        ActivityLogger::make($request)
+            ->on($canvas)
+            ->log("Canvas #{$canvas->id} status changed to {$canvas->status}");
 
         return back()->with('success', 'Canvas updated successfully');
     }

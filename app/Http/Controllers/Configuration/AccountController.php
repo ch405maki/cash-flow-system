@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Configuration;
 
 use App\Http\Controllers\Controller;
 use App\Models\Account;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -25,6 +26,9 @@ class AccountController extends Controller
 
         $account = Account::create($validated);
 
+        ActivityLogger::make($request)
+            ->log("Account \"{$account->account_title}\" created");
+
         return response()->json($account, 201);
     }
 
@@ -36,12 +40,20 @@ class AccountController extends Controller
 
         $account->update($validated);
 
+        ActivityLogger::make($request)
+            ->log("Account \"{$account->account_title}\" updated");
+
         return response()->json($account);
     }
 
-    public function destroy(Account $account)
+    public function destroy(Request $request, Account $account)
     {
+        $title = $account->account_title;
         $account->delete();
+
+        ActivityLogger::make($request)
+            ->log("Account \"{$title}\" deleted");
+
         return response()->json(null, 204);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -199,6 +200,10 @@ class PettyCashController extends Controller
             ]);
         }
 
+        ActivityLogger::make($request)
+            ->on($pettyCash)
+            ->log("Petty cash voucher #{$pettyCash->pcv_no} created");
+
         return back()->with('success', 'Petty cash voucher created successfully.');
     }
 
@@ -297,6 +302,10 @@ class PettyCashController extends Controller
             }
         }
 
+        ActivityLogger::make($request)
+            ->on($pettyCash)
+            ->log("Petty cash voucher #{$pettyCash->pcv_no} updated");
+
         // Return Inertia response with flash message
         return redirect()->back()->with([
             'success' => 'Petty cash voucher updated successfully.',
@@ -305,12 +314,17 @@ class PettyCashController extends Controller
         ]);
     }
 
-    public function destroy(PettyCashItem $item)
+    public function destroy(Request $request, PettyCashItem $item)
     {
         if ($item->receipt) {
             \Storage::disk('public')->delete($item->receipt);
         }
+        $pettyCash = $item->pettyCash;
         $item->delete();
+
+        ActivityLogger::make($request)
+            ->on($pettyCash)
+            ->log("Petty cash item deleted from voucher #{$pettyCash->pcv_no}");
 
         return back()->with('success', 'Item deleted successfully.');
     }
@@ -348,7 +362,11 @@ class PettyCashController extends Controller
         // Assign fund_amount to fund_balance initially
         $validated['fund_balance'] = $validated['fund_amount'];
 
-        PettyCashFund::create($validated);
+        $fund = PettyCashFund::create($validated);
+
+        ActivityLogger::make($request)
+            ->on($fund)
+            ->log("Petty cash fund of ₱{$validated['fund_amount']} assigned to user #{$validated['user_id']}");
 
         return redirect()->back()->with('success', 'Petty Cash Fund assigned successfully.');
     }
@@ -396,6 +414,10 @@ class PettyCashController extends Controller
         $pettyCash->status = 'submitted';
         $pettyCash->updated_at = now();
         $pettyCash->save();
+
+        ActivityLogger::make($request)
+            ->on($pettyCash)
+            ->log("Petty cash voucher #{$pettyCash->pcv_no} submitted for audit");
 
         return redirect()->back()->with('success', 'Petty Cash submitted for audit.');
     }

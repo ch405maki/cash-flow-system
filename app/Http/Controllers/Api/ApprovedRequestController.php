@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -50,6 +51,10 @@ class ApprovedRequestController extends Controller
                     ->where('request_id', $request->id)
                     ->update(['tagging' => $taggingValue]);
             }
+
+            ActivityLogger::make($httpRequest)
+                ->on($request)
+                ->log("Tagging updated for request #{$request->id}");
 
             return response()->json(['message' => 'Tagging updated successfully']);
             

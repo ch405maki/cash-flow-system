@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Configuration;
 
 use App\Http\Controllers\Controller;
 use App\Models\Department;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -26,6 +27,9 @@ class DepartmentController extends Controller
 
         $department = Department::create($validated);
 
+        ActivityLogger::make($request)
+            ->log("Department \"{$department->department_name}\" created");
+
         return response()->json($department, 201);
     }
 
@@ -38,12 +42,20 @@ class DepartmentController extends Controller
 
         $department->update($validated);
 
+        ActivityLogger::make($request)
+            ->log("Department \"{$department->department_name}\" updated");
+
         return response()->json($department);
     }
 
-    public function destroy(Department $department)
+    public function destroy(Request $request, Department $department)
     {
+        $name = $department->department_name;
         $department->delete();
+
+        ActivityLogger::make($request)
+            ->log("Department \"{$name}\" deleted");
+
         return response()->json(null, 204);
     }
 }

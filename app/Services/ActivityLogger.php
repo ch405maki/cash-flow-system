@@ -13,7 +13,6 @@ class ActivityLogger
     protected ?string $logName = null;
     protected array $properties = [];
     protected ?string $description = null;
-    protected bool $withMacAddress = false;
     protected ?Request $httpRequest = null;
 
     public function __construct(?Request $request = null)
@@ -56,19 +55,18 @@ class ActivityLogger
         return $this;
     }
 
-    public function withMacAddress(): self
-    {
-        $this->withMacAddress = true;
-        return $this;
-    }
-
     public function log(string $description): void
     {
         $properties = $this->buildProperties();
         $causer = $this->causer ?? auth()->user();
 
-        activity()
-            ->performedOn($this->subject)
+        $activity = activity();
+
+        if ($this->subject) {
+            $activity->performedOn($this->subject);
+        }
+
+        $activity
             ->causedBy($causer)
             ->useLog($this->logName)
             ->withProperties($properties)
@@ -86,7 +84,7 @@ class ActivityLogger
             if (!isset($properties['user_agent'])) {
                 $properties['user_agent'] = $this->httpRequest->userAgent();
             }
-            if ($this->withMacAddress && !isset($properties['mac_address'])) {
+            if (!isset($properties['mac_address'])) {
                 $properties['mac_address'] = MacAddressHelper::getClientMac($this->httpRequest);
             }
         }

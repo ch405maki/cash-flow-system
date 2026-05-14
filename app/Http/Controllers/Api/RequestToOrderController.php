@@ -428,6 +428,11 @@ class RequestToOrderController extends Controller
         }
 
         $order->update(['status' => 'rejected']);
+
+        ActivityLogger::make($request)
+            ->on($order)
+            ->log("Order #{$order->order_no} rejected by {$user->username}");
+
         return back()->with('success', 'Request approved');
     }
 }

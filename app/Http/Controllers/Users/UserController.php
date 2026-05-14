@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Users;
 use App\Http\Controllers\Controller;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Imports\UsersImport;
@@ -75,6 +76,9 @@ class UserController extends Controller
             // Load relationships for response
             $user->load(['department', 'access', 'profilePicture']);
 
+            ActivityLogger::make($request)
+                ->log("User \"{$user->username}\" created");
+
             return response()->json([
                 'success' => true,
                 'message' => 'User created successfully',
@@ -133,6 +137,9 @@ class UserController extends Controller
 
             Excel::import(new UsersImport, $request->file('file'));
 
+            ActivityLogger::make($request)
+                ->log("Users uploaded via file \"{$request->file('file')->getClientOriginalName()}\"");
+
             return response()->json(['message' => 'Users uploaded successfully!'], 200);
         } catch (\Illuminate\Database\QueryException $e) {
             // Handle database errors (e.g., duplicate entry)
@@ -183,6 +190,9 @@ class UserController extends Controller
 
             $user->update($validated);
 
+            ActivityLogger::make($request)
+                ->log("User \"{$user->username}\" updated");
+
             return response()->json([
                 'message' => 'User updated successfully!',
                 'user' => $user->load('department', 'access')
@@ -214,6 +224,9 @@ class UserController extends Controller
             $user->update([
                 'password' => Hash::make($validated['password']),
             ]);
+
+            ActivityLogger::make($request)
+                ->log("Password updated for user \"{$user->username}\"");
 
             return response()->json([
                 'message' => 'Password updated successfully!',
@@ -250,6 +263,9 @@ class UserController extends Controller
             // Update user status
             $user->update($validated);
 
+            ActivityLogger::make($request)
+                ->log("User \"{$user->username}\" status changed to {$validated['status']}");
+
             return response()->json(['message' => 'User status updated successfully!', 'user' => $user], 200);
         } catch (ValidationException $e) {
             \Log::error('Validation failed:', $e->errors());
@@ -260,7 +276,7 @@ class UserController extends Controller
         }
     }
 
-    public function destroy($id): JsonResponse
+    public function destroy(Request $request, $id): JsonResponse
     {
         $user = User::find($id);
 
@@ -268,7 +284,11 @@ class UserController extends Controller
             return response()->json(['error' => 'User not found'], 404);
         }
 
+        $username = $user->username;
         $user->delete();
+
+        ActivityLogger::make($request)
+            ->log("User \"{$username}\" deleted");
 
         return response()->json(['message' => 'User deleted successfully'], 200);
     }

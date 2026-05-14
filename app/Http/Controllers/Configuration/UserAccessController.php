@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Configuration;
 
 use App\Http\Controllers\Controller;
 use App\Models\Access;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -26,6 +27,9 @@ class UserAccessController extends Controller
 
         $access = Access::create($validated);
 
+        ActivityLogger::make($request)
+            ->log("Access \"{$access->program_name}\" created");
+
         return response()->json($access, 201);
     }
 
@@ -38,12 +42,20 @@ class UserAccessController extends Controller
 
         $access->update($validated);
 
+        ActivityLogger::make($request)
+            ->log("Access \"{$access->program_name}\" updated");
+
         return response()->json($access);
     }
 
-    public function destroy(Access $access)
+    public function destroy(Request $request, Access $access)
     {
+        $accessName = $access->program_name;
         $access->delete();
+
+        ActivityLogger::make($request)
+            ->log("Access \"{$accessName}\" deleted");
+
         return response()->json(null, 204);
     }
 }

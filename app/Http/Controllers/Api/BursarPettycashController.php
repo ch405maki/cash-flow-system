@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\PettyCash;
@@ -55,6 +56,10 @@ class BursarPettycashController extends Controller
             'approved_at'   => now(),
         ]);
 
+        ActivityLogger::make($request)
+            ->on($pettyCash)
+            ->log("Petty cash voucher #{$pettyCash->pcv_no} released by bursar");
+
         return redirect()->route('bursar.petty-cash.index')
             ->with('success', 'Petty Cash released successfully and deducted from fund.');
     }
@@ -79,6 +84,10 @@ class BursarPettycashController extends Controller
             'remarks'       => $remarks,
             'approved_at'   => now(),
         ]);
+
+        ActivityLogger::make($request)
+            ->on($pettyCash)
+            ->log("Cash advance released for voucher #{$pettyCash->pcv_no}");
 
         return redirect()->route('petty-cash.index')
             ->with('success', 'Petty Cash released successfully and deducted from fund.');

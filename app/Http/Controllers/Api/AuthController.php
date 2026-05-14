@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\ApiLoginRequest;
+use App\Services\ActivityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -19,6 +20,10 @@ class AuthController extends Controller
 
         $token = $user->createToken($tokenName);
 
+        ActivityLogger::make($request)
+            ->on($user)
+            ->log("User \"{$user->username}\" logged in (API token: {$tokenName})");
+
         return response()->json([
             'success' => true,
             'message' => 'Authenticated successfully',
@@ -32,7 +37,12 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        $user->currentAccessToken()->delete();
+
+        ActivityLogger::make($request)
+            ->on($user)
+            ->log("User \"{$user->username}\" logged out (API token revoked)");
 
         return response()->json([
             'success' => true,
@@ -42,7 +52,12 @@ class AuthController extends Controller
 
     public function logoutAll(Request $request): JsonResponse
     {
-        $request->user()->tokens()->delete();
+        $user = $request->user();
+        $user->tokens()->delete();
+
+        ActivityLogger::make($request)
+            ->on($user)
+            ->log("User \"{$user->username}\" revoked all API tokens");
 
         return response()->json([
             'success' => true,
@@ -78,6 +93,10 @@ class AuthController extends Controller
             'password' => Hash::make($validated['new_password']),
         ]);
 
+        ActivityLogger::make($request)
+            ->on($user)
+            ->log("Password changed for user \"{$user->username}\" (API)");
+
         return response()->json([
             'success' => true,
             'message' => 'Password updated successfully',
@@ -104,6 +123,10 @@ class AuthController extends Controller
         }
 
         $token->delete();
+
+        ActivityLogger::make($request)
+            ->on($request->user())
+            ->log("API token #{$token->id} revoked for user \"{$request->user()->username}\"");
 
         return response()->json([
             'success' => true,

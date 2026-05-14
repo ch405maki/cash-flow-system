@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use App\Models\PettyCash;
 use App\Models\PettyCashApproval;
@@ -30,6 +31,10 @@ class PettyCashApprovalController extends Controller
             'approved_at'   => now(),
         ]);
 
+        ActivityLogger::make($request)
+            ->on($pettyCash)
+            ->log("Petty cash voucher #{$pettyCash->pcv_no} audited and approved");
+
         return back()->with('success', 'Approval saved successfully!');
     }
 
@@ -51,6 +56,10 @@ class PettyCashApprovalController extends Controller
             'remarks'       => $request->input('remarks', ''),
             'approved_at'   => now(),
         ]);
+
+        ActivityLogger::make($request)
+            ->on($pettyCash)
+            ->log("Petty cash voucher #{$pettyCash->pcv_no} returned by audit");
 
         return back()->with('success', 'Approval saved successfully!');
     }
@@ -74,6 +83,10 @@ class PettyCashApprovalController extends Controller
             'approved_at'   => now(),
         ]);
 
+        ActivityLogger::make($request)
+            ->on($pettyCash)
+            ->log("Petty cash liquidation approved for voucher #{$pettyCash->pcv_no}");
+
         return back()->with('success', 'Approval saved successfully!');
     }
 
@@ -95,6 +108,10 @@ class PettyCashApprovalController extends Controller
             'remarks'       => $request->input('remarks', ''),
             'approved_at'   => now(),
         ]);
+
+        ActivityLogger::make($request)
+            ->on($pettyCash)
+            ->log("Petty cash voucher #{$pettyCash->pcv_no} audit remarks added");
 
         return back()->with('success', 'Approval saved successfully!');
     }
