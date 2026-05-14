@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use App\Models\Request as PurchaseRequest;
+use App\Services\ActivityLogger;
 use Inertia\Inertia;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
@@ -201,10 +202,9 @@ class PurchaseOrderController extends Controller
 
                 $purchaseOrder->update(['canvas_id' => $canvas->id]);
 
-                activity()
-                    ->performedOn($canvas)
-                    ->causedBy(auth()->user())
-                    ->withProperties([
+                ActivityLogger::make($request)
+                    ->on($canvas)
+                    ->with([
                         'file_name' => $file->getClientOriginalName(),
                         'po_id' => $purchaseOrder->id,
                     ])
@@ -220,10 +220,9 @@ class PurchaseOrderController extends Controller
                         'purchase_order_id' => $purchaseOrder->id,
                     ]);
 
-                    activity()
-                        ->performedOn($canvas)
-                        ->causedBy(auth()->user())
-                        ->withProperties([
+                    ActivityLogger::make($request)
+                        ->on($canvas)
+                        ->with([
                             'linked_po' => $purchaseOrder->po_no,
                             'canvas_id' => $canvas->id,
                             'approval_id' => 1,
@@ -233,15 +232,14 @@ class PurchaseOrderController extends Controller
             }
 
             // Activity log for PO
-            activity()
-                ->performedOn($purchaseOrder)
-                ->causedBy(auth()->user())
-                ->useLog('PO Created')
-                ->withProperties([
+            ActivityLogger::make($request)
+                ->on($purchaseOrder)
+                ->with([
                     'po_no' => $purchaseOrder->po_no,
                     'amount' => $validated['amount'],
                     'department_id' => $validated['department_id'],
                 ])
+                ->logName('PO Created')
                 ->log('Created purchase order');
 
             // Approval entry creation
@@ -296,24 +294,22 @@ class PurchaseOrderController extends Controller
                     ]);
                     
                     // Log canvas update
-                    activity()
-                        ->performedOn($canvas)
-                        ->causedBy(auth()->user())
+                    ActivityLogger::make($request)
+                        ->on($canvas)
                         ->log("Canvas status updated to submitted");
                 }
             }
 
             // Activity log for PO
-            activity()
-                ->performedOn($purchaseOrder)
-                ->causedBy(auth()->user())
-                ->useLog('Approval')
-                ->withProperties([
+            ActivityLogger::make($request)
+                ->on($purchaseOrder)
+                ->with([
                     'po_no' => $purchaseOrder->po_no,
                     'old_status' => $oldStatus,
                     'new_status' => $validated['status'],
                     'remarks' => $validated['remarks'] ?? null,
                 ])
+                ->logName('Approval')
                 ->log("Status changed to {$validated['status']}");
 
             // Approval entry creation

@@ -18,6 +18,7 @@ use App\Models\User;
 
 use App\Models\Department;
 use App\Models\PurchaseOrderDetail;
+use App\Services\ActivityLogger;
 
 class RequestToOrderController extends Controller
 {
@@ -126,15 +127,15 @@ class RequestToOrderController extends Controller
             ]);
 
             // 4. Log the creation action
-            activity()
-                ->performedOn($order)
-                ->causedBy($authUser)
-                ->useLog('RequestToOrder')
-                ->withProperties([
+            ActivityLogger::make($request)
+                ->on($order)
+                ->by($authUser)
+                ->with([
                     'order_no' => $order->order_no,
                     'notes' => $order->notes,
                     'items_count' => count($validated['items']),
                 ])
+                ->logName('RequestToOrder')
                 ->log("Request to Order #{$order->order_no} created by {$authUser->username}");
         });
 
@@ -183,15 +184,15 @@ class RequestToOrderController extends Controller
             ]);
 
             // 4. Log activity
-            activity()
-                ->performedOn($order)
-                ->causedBy($authUser)
-                ->useLog('RequestToOrder')
-                ->withProperties([
+            ActivityLogger::make()
+                ->on($order)
+                ->by($authUser)
+                ->with([
                     'order_no' => $order->order_no,
                     'notes' => $order->notes,
                     'items_count' => count($validated['items']),
                 ])
+                ->logName('RequestToOrder')
                 ->log("Manual Request to Order #{$order->order_no} created by {$authUser->username}");
         });
 
@@ -322,13 +323,13 @@ class RequestToOrderController extends Controller
             // ===== END NOTIFICATIONS =====
 
             // 3. Log activity
-            activity()
-                ->performedOn($order)
-                ->causedBy($user)
-                ->useLog('RequestToOrder')
-                ->withProperties([
+            ActivityLogger::make($request)
+                ->on($order)
+                ->by($user)
+                ->with([
                     'order_no' => $order->order_no,
                 ])
+                ->logName('RequestToOrder')
                 ->log("Order #{$order->order_no} approved by {$user->username}");
         });
 
@@ -399,13 +400,13 @@ class RequestToOrderController extends Controller
             // ===== END NOTIFICATIONS =====
 
             // 3. Log the activity
-            activity()
-                ->performedOn($order)
-                ->causedBy($user)
-                ->useLog('RequestToOrder')
-                ->withProperties([
+            ActivityLogger::make($request)
+                ->on($order)
+                ->by($user)
+                ->with([
                     'order_no' => $order->order_no,
                 ])
+                ->logName('RequestToOrder')
                 ->log("Order #{$order->order_no} submitted for EOD by {$user->username}");
         });
 

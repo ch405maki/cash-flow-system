@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use App\Notifications\NewRequestNotification;
 use App\Models\Request;
+use App\Services\ActivityLogger;
 
 class RequestToOrderReleaseController extends Controller
 {
@@ -135,15 +136,15 @@ class RequestToOrderReleaseController extends Controller
                 ]);
 
                 // Log activity
-                activity()
-                    ->performedOn($release)
-                    ->causedBy(Auth::user())
-                    ->useLog('RequestToOrderRelease')
-                    ->withProperties([
+                ActivityLogger::make($request)
+                    ->on($release)
+                    ->by(Auth::user())
+                    ->with([
                         'order_no' => $order->order_no,
                         'detail_id' => $detail->id,
                         'released_quantity' => $item['quantity'],
                     ])
+                    ->logName('RequestToOrderRelease')
                     ->log("Released {$item['quantity']} units for item: {$detail->item_description}");
             }
 
@@ -171,11 +172,11 @@ class RequestToOrderReleaseController extends Controller
             if ($allReleased) {
                 $order->update(['status' => 'completed']);
 
-                activity()
-                    ->performedOn($order)
-                    ->causedBy(Auth::user())
-                    ->useLog('RequestToOrder')
-                    ->withProperties(['order_no' => $order->order_no])
+                ActivityLogger::make($request)
+                    ->on($order)
+                    ->by(Auth::user())
+                    ->with(['order_no' => $order->order_no])
+                    ->logName('RequestToOrder')
                     ->log('RequestToOrder marked as completed after full release');
             }
         });

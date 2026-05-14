@@ -26,7 +26,7 @@ use App\Models\User;
 use App\Models\RequestApproval;
 use App\Models\ReleaseDetail;
 
-use App\Helpers\MacAddressHelper;
+use App\Services\ActivityLogger;
 use App\Services\InventoryApiService;
 
 class RequestController extends Controller
@@ -245,8 +245,6 @@ class RequestController extends Controller
 
     public function updateStatus(HttpRequest $httpRequest, Request $request)
     {
-        $macAddress = MacAddressHelper::getClientMac($httpRequest);
-
         $validated = $httpRequest->validate([
             'status' => 'required|in:approved,rejected,propertyCustodian,to_order,released',
             'password' => 'required_if:status,approved,propertyCustodian,to_order,released',
@@ -350,22 +348,18 @@ class RequestController extends Controller
         // ===== END NOTIFICATIONS =====
 
         // Log activity
-        activity()
-            ->performedOn($request)
-            ->causedBy($authUser)
-            ->useLog('Status Updated')
-            ->withProperties([
-                'action' => 'status_update',
-                'event' => 'Status Updated',
-                'mac_address' => $macAddress,
-                'user_agent' => $httpRequest->userAgent(),
-                'ip_address' => $httpRequest->ip(),
+        ActivityLogger::make($httpRequest)
+            ->on($request)
+            ->by($authUser)
+            ->withMacAddress()
+            ->with([
                 'old_status' => $oldStatus,
                 'new_status' => $validated['status'],
                 'changed_by' => $authUser->username,
                 'changed_by_role' => $authUser->role,
                 'request_no' => $request->request_no,
             ])
+            ->logName('Status Updated')
             ->log($description);
 
         return back()->with('success', 'Request status updated successfully');

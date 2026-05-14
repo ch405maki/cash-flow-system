@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use App\Notifications\NewRequestNotification;
+use App\Services\ActivityLogger;
 
 use App\Helpers\MacAddressHelper;
 use App\Services\InventoryApiService;
@@ -106,8 +107,7 @@ class RequestController extends Controller
 
             // Log the creation with full details
             $creatorUser = User::find($validated['user_id']);
-            $creator = $creatorUser?->username ?? 'system';
-            $description = "Request #{$validated['request_no']} was created by {$creator}";
+            $description = "Request #{$validated['request_no']} was created by " . ($creatorUser?->username ?? 'system');
 
             RequestApproval::create([
                 'request_id' => $requestModel->id,
@@ -117,21 +117,17 @@ class RequestController extends Controller
                 'approved_at' => now(),
             ]);
 
-            activity()
-                ->performedOn($requestModel)
-                ->causedBy($creatorUser)
-                ->useLog('Request Created')
-                ->withProperties([
-                    'action' => 'create',
-                    'event' => 'Request Created',
-                    'mac_address' => $macAddress,
-                    'user_agent' => $request->userAgent(),
-                    'ip_address' => $request->ip(),
-                    'request_data' => $validated, 
+            ActivityLogger::make($request)
+                ->on($requestModel)
+                ->by($creatorUser)
+                ->withMacAddress()
+                ->with([
+                    'request_data' => $validated,
                     'items_count' => count($validated['items']),
                     'department' => $requestModel->department->name,
                     'request_no' => $validated['request_no'],
                 ])
+                ->logName('Request Created')
                 ->log($description);
 
             // Create request details
@@ -305,8 +301,6 @@ class RequestController extends Controller
         DB::beginTransaction();
 
         try {
-            $macAddress = MacAddressHelper::getClientMac($httpRequest);
-
             $validated = $httpRequest->validate([
                 'items'                          => 'required|array|min:1',
                 'items.*.request_detail_id'      => [
@@ -461,21 +455,17 @@ class RequestController extends Controller
             | Activity Log AFTER Commit
             |--------------------------------------------------------------------------
             */
-            activity()
-                ->performedOn($release)
-                ->causedBy($authUser)
-                ->useLog('Released Items')
-                ->withProperties([
-                    'action'             => 'release',
-                    'event'              => 'Items Released',
-                    'mac_address'        => $macAddress,
-                    'user_agent'         => $httpRequest->userAgent(),
-                    'ip_address'         => $httpRequest->ip(),
-                    'request_no'         => $request->request_no,
-                    'released_quantity'  => $totalQuantity,
-                    'inventory_synced'   => $inventorySynced,
-                    'inventory_skipped'  => $inventorySkipped,
+            ActivityLogger::make($httpRequest)
+                ->on($release)
+                ->by($authUser)
+                ->withMacAddress()
+                ->with([
+                    'request_no'        => $request->request_no,
+                    'released_quantity' => $totalQuantity,
+                    'inventory_synced'  => $inventorySynced,
+                    'inventory_skipped' => $inventorySkipped,
                 ])
+                ->logName('Released Items')
                 ->log("Released {$totalQuantity} items for request #{$request->request_no}. Inventory synced: {$inventorySynced}, skipped (unlinked): {$inventorySkipped}");
 
             return response()->json([
@@ -560,16 +550,15 @@ class RequestController extends Controller
             $request->update(['status' => $newStatus]);
             
             // Log the status change
-            activity()
-                ->performedOn($request)
-                ->causedBy(auth()->user())
-                ->useLog('Request Status Update')
-                ->withProperties([
+            ActivityLogger::make()
+                ->on($request)
+                ->with([
                     'old_status' => $oldStatus,
                     'new_status' => $newStatus,
                     'total_quantity' => $details->sum('quantity'),
-                    'total_released' => $details->sum('released_quantity')
+                    'total_released' => $details->sum('released_quantity'),
                 ])
+                ->logName('Request Status Update')
                 ->log("Request status automatically updated from {$oldStatus} to {$newStatus}");
         }
     }

@@ -21,6 +21,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 
 use Illuminate\Database\QueryException;
+use App\Services\ActivityLogger;
 use Inertia\Inertia;
 
 class VoucherApprovalController extends Controller {
@@ -126,17 +127,17 @@ class VoucherApprovalController extends Controller {
                 $logMessage .= " | Comment: {$comment}";
             }
 
-            activity()
-                ->performedOn($voucher)
-                ->causedBy($user)
-                ->useLog('Voucher Update')
-                ->withProperties([
+            ActivityLogger::make($request)
+                ->on($voucher)
+                ->by($user)
+                ->with([
                     'voucher_no' => $voucher->voucher_no,
                     'action' => $action,
                     'new_status' => $newStatus,
                     'comment' => $comment,
                     'audited_by' => $user->id,
                 ])
+                ->logName('Voucher Update')
                 ->log($logMessage);
         });
 
@@ -230,17 +231,17 @@ class VoucherApprovalController extends Controller {
                 $logMessage .= " | Comment: {$comment}";
             }
 
-            activity()
-                ->performedOn($voucher)
-                ->causedBy($user)
-                ->useLog('Voucher Update')
-                ->withProperties([
+            ActivityLogger::make($request)
+                ->on($voucher)
+                ->by($user)
+                ->with([
                     'voucher_no' => $voucher->voucher_no,
                     'action' => $action,
                     'new_status' => $newStatus,
                     'comment' => $comment,
                     'audited_by' => $user->id,
                 ])
+                ->logName('Voucher Update')
                 ->log($logMessage);
         });
 

@@ -24,6 +24,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 use App\Models\DistributionExpense;
 use App\Models\PettyCash;
+use App\Services\ActivityLogger;
 
 class VoucherController extends Controller
 {
@@ -158,16 +159,16 @@ class VoucherController extends Controller
                 // ===== END NOTIFICATIONS =====
 
                 // Log activity
-                activity()
-                    ->performedOn($voucher)
-                    ->causedBy($creatorUser)
-                    ->useLog('Voucher Created')
-                    ->withProperties([
+                ActivityLogger::make($request)
+                    ->on($voucher)
+                    ->by($creatorUser)
+                    ->with([
                         'voucher_no' => $voucher->voucher_no,
                         'check_amount' => $voucher->check_amount,
                         'check_payable_to' => $voucher->check_payable_to,
                         'type' => $voucher->type,
                     ])
+                    ->logName('Voucher Created')
                     ->log("Created Voucher {$voucher->voucher_no}");
 
                 // Create approval entry
@@ -415,12 +416,10 @@ class VoucherController extends Controller
             ]);
 
             // Activity log
-            activity()
-                ->performedOn($voucher)
-                ->causedBy($user)
-                ->useLog('Voucher Receipt Upload')
-                ->withProperties([
-                    'voucher_id' => $voucher->id,
+            ActivityLogger::make($request)
+                ->on($voucher)
+                ->by($user)
+                ->with([
                     'voucher_no' => $voucher->voucher_no,
                     'receipt' => 'receipts/' . $filename,
                     'issue_date' => $validated['issue_date'],
@@ -428,6 +427,7 @@ class VoucherController extends Controller
                     'remarks' => $validated['remarks'],
                     'status' => 'completed',
                 ])
+                ->logName('Voucher Receipt Upload')
                 ->log("Uploaded receipt and completed voucher {$voucher->voucher_no}");
 
             return $this->successResponse(
@@ -472,17 +472,16 @@ class VoucherController extends Controller
                 'approved_at' => now(),
             ]);
 
-            activity()
-                ->performedOn($voucher)
-                ->causedBy($user)
-                ->useLog('Voucher Update')
-                ->withProperties([
-                    'voucher_id' => $voucher->id,
+            ActivityLogger::make($request)
+                ->on($voucher)
+                ->by($user)
+                ->with([
                     'voucher_no' => $voucher->voucher_no,
                     'check_no' => $validated['check_no'],
                     'check_date' => $validated['check_date'],
-                    'status' => 'unreleased'
+                    'status' => 'unreleased',
                 ])
+                ->logName('Voucher Update')
                 ->log("Added check details for {$voucher->voucher_no}");
 
             return $this->successResponse(
