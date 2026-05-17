@@ -1,82 +1,4 @@
-<template>
-<!-- class="hidden" -->
-<div class="hidden">
-    <div ref="printableArea" class="printable-area bg-white p-8">
-        <!-- Header -->
-        <Header text='STOCK ISSUANCE FORM' :bordered='false' />
-
-        <!-- Issued To Information -->
-        <div class="flex justify-between text-sm mb-6">
-            <div>
-                <p><strong>Issued To:</strong> {{ request.department?.department_name }}</p>
-            </div>
-            <div>
-                <p><strong>Request Date:</strong> {{ formatDate(request.request_date) }}</p>
-            </div>
-        </div>
-
-        <!-- Released Items Table -->
-        <table class="w-full border-collapse border border-gray-300 text-sm">
-            <thead>
-            <tr class="bg-gray-200">
-                <th class="border border-gray-300 px-3 py-2 text-center w-12">#</th>
-                <th class="border border-gray-300 px-3 py-2 text-center">Quantity</th>
-                <th class="border border-gray-300 px-3 py-2 text-center">Unit</th>
-                <th class="border border-gray-300 px-3 py-2 text-left">Description</th>
-                <th class="border border-gray-300 px-3 py-2 text-left">Remarks</th>
-            </tr>
-            </thead>
-            <tbody>
-            <template v-for="(release, releaseIndex) in request.releases" :key="release.id">
-                <tr 
-                v-for="(detail, index) in release.details" 
-                :key="detail.id"
-                class="hover:bg-gray-50"
-                >
-                <td class="border border-gray-300 px-3 py-2 text-center">
-                    {{ index + 1 }}
-                </td>
-                <td class="border border-gray-300 px-3 py-2 text-center">
-                    {{ detail.quantity }}
-                    </td>
-                    <td class="border border-gray-300 px-3 py-2 text-center">
-                        {{ getItemUnit(detail) }}
-                    </td>
-                    <td class="border border-gray-300 px-3 py-2">
-                    {{ getItemDescription(detail) }}
-                    </td>
-                <td class="border border-gray-300 px-3 py-2">
-                    
-                </td>
-                </tr>
-            </template>
-            
-            <tr v-if="!request.releases || request.releases.length === 0 || getAllReleasedItems().length === 0">
-                <td colspan="5" class="border border-gray-300 px-3 py-4 text-center text-gray-500">
-                No items have been released yet.
-                </td>
-            </tr>
-            </tbody>
-        </table>
-        
-
-        <!-- Signatures -->
-        <div class="mt-16 flex items-center justify-between px-4">
-            <div class="text-center">
-                <div class="pt-2 mx-auto">
-                    <p class="text-sm font-semibold">Prepared By : <span class="border-b-2 border-gray-400">{{ getLatestRelease()?.user?.first_name }} {{ getLatestRelease()?.user?.last_name }}</span></p>
-                </div>
-            </div>
-            <div class="text-center">
-            <div class="mt-12 pt-2 mx-auto">
-                <p class="text-sm font-semibold">Received By : <span class="border-b-2 border-gray-400"></span></p>
-            </div>
-            </div>
-        </div>
-    </div>
-</div>
-</template>
-
+<!-- resources\js\components\printables\ReleasedItemsPrint.vue -->
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import Header from '@/components/reports/header/formHeder.vue'
@@ -100,6 +22,9 @@ interface Release {
   id: number
   release_date: string
   notes?: string
+  signature_image?: string
+  signed_by?: string
+  signed_at?: string
   user: {
     id: number
     first_name: string
@@ -228,6 +153,97 @@ defineExpose({
   printArea
 })
 </script>
+
+<template>
+<!-- class="hidden" -->
+<div class="hidden">
+    <div ref="printableArea" class="printable-area bg-white p-8">
+        <!-- Header -->
+        <Header text='STOCK ISSUANCE FORM' :bordered='false' />
+
+        <!-- Issued To Information -->
+        <div class="flex justify-between text-sm mb-6">
+            <div>
+                <p><strong>Issued To:</strong> {{ request.department?.department_name }}</p>
+            </div>
+            <div>
+                <p><strong>Request Date:</strong> {{ formatDate(request.request_date) }}</p>
+            </div>
+        </div>
+
+        <!-- Released Items Table -->
+        <table class="w-full border-collapse border border-gray-300 text-sm">
+            <thead>
+            <tr class="bg-gray-200">
+                <th class="border border-gray-300 px-3 py-2 text-center w-12">#</th>
+                <th class="border border-gray-300 px-3 py-2 text-center">Quantity</th>
+                <th class="border border-gray-300 px-3 py-2 text-center">Unit</th>
+                <th class="border border-gray-300 px-3 py-2 text-left">Description</th>
+                <th class="border border-gray-300 px-3 py-2 text-left">Remarks</th>
+            </tr>
+            </thead>
+            <tbody>
+            <template v-for="(release, releaseIndex) in request.releases" :key="release.id">
+                <tr 
+                v-for="(detail, index) in release.details" 
+                :key="detail.id"
+                class="hover:bg-gray-50"
+                >
+                <td class="border border-gray-300 px-3 py-2 text-center">
+                    {{ index + 1 }}
+                </td>
+                <td class="border border-gray-300 px-3 py-2 text-center">
+                    {{ detail.quantity }}
+                    </td>
+                    <td class="border border-gray-300 px-3 py-2 text-center">
+                        {{ getItemUnit(detail) }}
+                    </td>
+                    <td class="border border-gray-300 px-3 py-2">
+                    {{ getItemDescription(detail) }}
+                    </td>
+                <td class="border border-gray-300 px-3 py-2">
+                    
+                </td>
+                </tr>
+            </template>
+            
+            <tr v-if="!request.releases || request.releases.length === 0 || getAllReleasedItems().length === 0">
+                <td colspan="5" class="border border-gray-300 px-3 py-4 text-center text-gray-500">
+                No items have been released yet.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        
+
+        <!-- Signatures -->
+        <div class="mt-16 flex items-center justify-between px-4">
+            <div class="text-center">
+                <div class="pt-2 mx-auto">
+                    <p class="text-sm font-semibold">Prepared By : <span class="border-b-2 border-gray-400">{{ getLatestRelease()?.user?.first_name }} {{ getLatestRelease()?.user?.last_name }}</span></p>
+                </div>
+            </div>
+            <div class="relative text-center">
+                <!-- Signature overlay -->
+                <div v-if="getLatestRelease()?.signature_image" class="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                    <img 
+                        :src="'data:image/png;base64,' + getLatestRelease()?.signature_image" 
+                        alt="Signature" 
+                        class="h-16 max-w-32 object-contain opacity-90"
+                    />
+                </div>
+                
+                <!-- Received By text (underneath) -->
+                <div class="mt-2 pt-2 mx-auto">
+                    <p class="text-sm font-semibold">
+                        Received By: <span class="border-b-2 border-gray-400 px-2">{{ getLatestRelease()?.signed_by }}</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</template>
 
 <style scoped>
 @media print {
