@@ -34,7 +34,8 @@ jobs:
           sudo chown -R mmanuel:apache /var/www/cash-flow-system
           sudo chmod -R 775 /var/www/cash-flow-system/storage /var/www/cash-flow-system/bootstrap/cache
 
-          # Restart Apache
-          sudo systemctl restart httpd
+          # Restart nginx
+          sudo systemctl restart php-fpm
+          sudo systemctl restart nginx
 
           echo "✅ Deployment complete!"
