@@ -48,22 +48,24 @@ class RequestController extends Controller
             $macAddress = MacAddressHelper::getClientMac($request);
             $validated = $request->validated();
 
+            $creatorUser = Auth::user();
+            $userId = $creatorUser->id;
+
             $validated['request_no'] = $this->generateRequestNumber->execute();
             $validated['request_date'] = now();
+            $validated['user_id'] = $userId;
 
             $requestModel = Request::create(collect($validated)->except('items')->toArray());
 
-            $creatorUser = User::find($validated['user_id']);
-
             // Notifications
-            $this->notifyRequestCreator($requestModel, $validated['user_id']);
-            $this->notifyRequestApprovers($requestModel, $validated['department_id'], $validated['user_id'], $creatorUser);
+            $this->notifyRequestCreator($requestModel, $userId);
+            $this->notifyRequestApprovers($requestModel, $validated['department_id'], $userId, $creatorUser);
 
             $description = "Request #{$validated['request_no']} was created by " . ($creatorUser?->username ?? 'system');
 
             RequestApproval::create([
                 'request_id' => $requestModel->id,
-                'user_id' => $validated['user_id'],
+                'user_id' => $userId,
                 'status' => $validated['status'],
                 'remarks' => $description,
                 'approved_at' => now(),

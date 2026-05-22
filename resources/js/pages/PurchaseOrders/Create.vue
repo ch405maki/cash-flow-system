@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from 'vue-toastification';
-import axios from 'axios';
+import { purchaseOrderService } from '@/services/purchaseOrderService';
 import { ref } from 'vue';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
@@ -213,15 +213,15 @@ const submitForm = async () => {
       };
     }
 
-    const response = await axios.post('/api/purchase-orders', payload, config);
+    const response = await purchaseOrderService.create(payload, config);
 
     toast.success('Purchase Order created successfully!');
-    window.location.href = `/purchase-orders/${response.data.id}`;
+    window.location.href = `/purchase-orders/${response.id}`;
   } catch (error) {
-    if (axios.isAxiosError(error) && error.response) {
-      toast.error(error.response.data.message || 'Failed to create Purchase Order');
+    if (error.response?.data?.message) {
+      toast.error(error.response.data.message);
     } else {
-      toast.error('An unexpected error occurred');
+      toast.error('Failed to create Purchase Order');
     }
     console.error(error);
   }

@@ -1,201 +1,125 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
 import { ref } from 'vue';
-import axios from 'axios';
+import { Button } from '@/components/ui/button';
 import { useToast } from 'vue-toastification';
+import DataTable from '@/components/common/DataTable.vue';
+import CrudDialog from '@/components/common/CrudDialog.vue';
+import ConfirmDeleteDialog from '@/components/common/ConfirmDeleteDialog.vue';
+import { usePagination } from '@/composables/usePagination';
+import { configurationService } from '@/services/configurationService';
+import type { Column } from '@/components/common/DataTable.vue';
 
-interface Access {
-    id: number;
-    program_name: string;
-    access_level: string;
-}
+interface Access { id: number; program_name: string; access_level: string }
 
-const props = defineProps<{
-    accesses: Access[];
-}>();
+const props = defineProps<{ accesses: Access[] }>();
 
 const toast = useToast();
-const accesses = ref<Access[]>(props.accesses);
-const newAccess = ref({
-    program_name: '',
-    access_level: ''
-});
-const editingAccess = ref<Partial<Access> | null>(null);
-const isDialogOpen = ref(false);
-const editingAccessId = ref<number | null>(null);
+const items = ref<Access[]>(props.accesses);
+const createForm = ref({ program_name: '', access_level: '' });
+const editForm = ref<Partial<Access>>({});
+const showCreate = ref(false);
+const showEdit = ref(false);
 
-const createAccess = async () => {
-    try {
-        const response = await axios.post('/api/configuration/access', newAccess.value);
-        accesses.value.push(response.data);
-        newAccess.value = { program_name: '', access_level: '' };
-        isDialogOpen.value = false;
+const columns: Column[] = [
+    { key: 'id', label: 'ID' },
+    { key: 'program_name', label: 'Program Name' },
+    { key: 'access_level', label: 'Access Level' },
+];
+
+const { paginatedItems, currentPage, totalPages, hasPrevPage, hasNextPage, prevPage, nextPage } = usePagination(items, 20);
+
+async function handleCreate() {
+    const data = await configurationService.create<Access>('access', createForm.value);
+    if (data) {
+        items.value.push(data);
+        createForm.value = { program_name: '', access_level: '' };
+        showCreate.value = false;
         toast.success('Access level created successfully');
-    } catch (error) {
-        toast.error('Failed to create access level');
     }
-};
+}
 
-const updateAccess = async () => {
-    if (!editingAccess.value?.id) return;
+function openEdit(item: Access) {
+    editForm.value = { ...item };
+    showEdit.value = true;
+}
 
-    try {
-        const response = await axios.put(`/api/configuration/access/${editingAccess.value.id}`, editingAccess.value);
-        const index = accesses.value.findIndex(a => a.id === editingAccess.value?.id);
-        if (index !== -1) {
-            accesses.value[index] = response.data;
-        }
-        editingAccess.value = null;
-        editingAccessId.value = null; 
+async function handleUpdate() {
+    if (!editForm.value?.id) return;
+    const data = await configurationService.update<Access>('access', editForm.value.id, editForm.value);
+    if (data) {
+        const idx = items.value.findIndex(a => a.id === data.id);
+        if (idx !== -1) items.value[idx] = data;
+        editForm.value = {};
+        showEdit.value = false;
         toast.success('Access level updated successfully');
-    } catch (error) {
-        toast.error('Failed to update access level');
     }
-};
+}
 
-
-const deleteAccess = async (id: number) => {
-    try {
-        await axios.delete(`/api/configuration/access/${id}`);
-        accesses.value = accesses.value.filter(a => a.id !== id);
-        toast.success('Access level deleted successfully');
-    } catch (error) {
-        toast.error('Failed to delete access level');
-    }
-};
-
-const openEditDialog = (access: Access) => {
-    editingAccess.value = { ...access };
-    editingAccessId.value = access.id;
-};
-
-
+async function handleDelete(id: number) {
+    await configurationService.delete('access', id);
+    items.value = items.value.filter(a => a.id !== id);
+    toast.success('Access level deleted successfully');
+}
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Dashboard', href: '/dashboard' },
-  { title: 'Access Management', href: '#' },
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Access Management', href: '#' },
 ];
 </script>
 
 <template>
     <Head title="User Access" />
     <AppLayout :breadcrumbs="breadcrumbs">
-            <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-semibold">Access Management</h2>
-                    <Dialog v-model:open="isDialogOpen">
-                        <DialogTrigger as-child>
-                            <Button variant="default">Add New Access</Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Add New Access Level</DialogTitle>
-                                <DialogDescription>
-                                    Create a new program access level for users.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div class="grid gap-4 py-4">
-                                <div class="grid grid-cols-4 items-center gap-4">
-                                    <label for="program_name" class="text-right">Program Name</label>
-                                    <Input 
-                                        id="program_name" 
-                                        v-model="newAccess.program_name" 
-                                        class="col-span-3" 
-                                    />
-                                </div>
-                                <div class="grid grid-cols-4 items-center gap-4">
-                                    <label for="access_level" class="text-right">Access Level</label>
-                                    <Input 
-                                        id="access_level" 
-                                        v-model="newAccess.access_level" 
-                                        class="col-span-3" 
-                                    />
-                                </div>
-                            </div>
-                            <DialogFooter>
-                                <Button type="submit" @click="createAccess">Save</Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                </div>
-
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>ID</TableHead>
-                            <TableHead>Access Level</TableHead>
-                            <TableHead class="text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        <TableRow v-for="access in accesses" :key="access.id">
-                            <TableCell>{{ access.id }}</TableCell>
-                            <TableCell>{{ access.access_level }}</TableCell>
-                            <TableCell class="text-right">
-                                <div class="flex gap-2 justify-end">
-                                    <Dialog :open="editingAccessId === access.id" @update:open="val => { if (!val) editingAccessId = null }">
-                                        <DialogTrigger as-child>
-                                            <Button 
-                                                variant="outline" 
-                                                size="sm" 
-                                                @click="openEditDialog(access)"
-                                            >
-                                                Edit
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent v-if="editingAccess">
-                                            <DialogHeader>
-                                                <DialogTitle>Edit Access Level</DialogTitle>
-                                            </DialogHeader>
-                                            <div class="grid gap-4 py-4">
-                                                <div class="grid grid-cols-4 items-center gap-4">
-                                                    <label for="edit-program_name" class="text-right">Program Name</label>
-                                                    <Input 
-                                                        id="edit-program_name" 
-                                                        v-model="editingAccess.program_name" 
-                                                        class="col-span-3" 
-                                                    />
-                                                </div>
-                                                <div class="grid grid-cols-4 items-center gap-4">
-                                                    <label for="edit-access_level" class="text-right">Access Level</label>
-                                                    <Input 
-                                                        id="edit-access_level" 
-                                                        v-model="editingAccess.access_level" 
-                                                        class="col-span-3" 
-                                                    />
-                                                </div>
-                                            </div>
-                                            <DialogFooter>
-                                                <Button type="submit" @click="updateAccess">Save Changes</Button>
-                                            </DialogFooter>
-                                        </DialogContent>
-                                    </Dialog>
-                                    <Button 
-                                        variant="destructive" 
-                                        size="sm" 
-                                        @click="deleteAccess(access.id)"
-                                    >
-                                        Delete
-                                    </Button>
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
+        <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold">User Access Management</h2>
+                <CrudDialog
+                    title="Add New Access Level"
+                    description="Create a new access level for your organization."
+                    :fields="[
+                        { key: 'program_name', label: 'Program Name', type: 'text', placeholder: 'Enter program name' },
+                        { key: 'access_level', label: 'Access Level', type: 'text', placeholder: 'Enter access level' },
+                    ]"
+                    v-model="createForm"
+                    v-model:open="showCreate"
+                    trigger-label="Add New Access Level"
+                    @save="handleCreate"
+                />
             </div>
+
+            <CrudDialog
+                title="Edit Access Level"
+                :fields="[
+                    { key: 'program_name', label: 'Program Name', type: 'text' },
+                    { key: 'access_level', label: 'Access Level', type: 'text' },
+                ]"
+                v-model="editForm"
+                v-model:open="showEdit"
+                :is-editing="true"
+                save-label="Save Changes"
+                @save="handleUpdate"
+            />
+
+            <DataTable :columns="columns" :data="paginatedItems">
+                <template #actions="{ item }">
+                    <div class="flex gap-2 justify-end">
+                        <Button variant="outline" size="sm" @click="openEdit(item)">Edit</Button>
+                        <ConfirmDeleteDialog item-name="this access level" @confirm="handleDelete(item.id)" />
+                    </div>
+                </template>
+                <template #pagination>
+                    <div class="flex items-center justify-between mt-4">
+                        <p class="text-sm text-muted-foreground">Page {{ currentPage }} of {{ totalPages }}</p>
+                        <div class="flex gap-2">
+                            <Button variant="outline" size="sm" :disabled="!hasPrevPage" @click="prevPage">Previous</Button>
+                            <Button variant="outline" size="sm" :disabled="!hasNextPage" @click="nextPage">Next</Button>
+                        </div>
+                    </div>
+                </template>
+            </DataTable>
+        </div>
     </AppLayout>
 </template>

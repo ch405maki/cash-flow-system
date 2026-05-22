@@ -5,7 +5,7 @@ import { type BreadcrumbItem } from '@/types'
 import { Head, Link } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 import { useToast } from 'vue-toastification'
-import axios from 'axios'
+import { requestService } from '@/services/requestService'
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 
 import RequestInfoTable from '@/components/requests/releasing/RequestInfoTable.vue'
@@ -173,7 +173,7 @@ const handleSignatureConfirmed = async (signature: SignatureResult, signerName: 
   isReleasing.value = true
 
   try {
-    await axios.post(`/api/requests/${props.request.id}/release`, {
+    await requestService.release(props.request.id, {
       items: itemsToRelease,
       notes: 'Items released from request',
       user_id: props.current_user.id,

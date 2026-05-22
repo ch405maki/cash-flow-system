@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
-import RequestForm from '@/components/requests/RequestForm.vue';
 import RequestTable from '@/components/requests/RequestTable.vue';
 import { type BreadcrumbItem } from '@/types';
 import { router } from '@inertiajs/vue3'
@@ -16,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Filter, PlusCircle } from 'lucide-vue-next'
+import { Filter } from 'lucide-vue-next'
 
 const breadcrumbs: BreadcrumbItem[] = [
   {

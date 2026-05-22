@@ -5,7 +5,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import axios from 'axios';
+import { requestService } from '@/services/requestService';
 import { ref } from 'vue';
 import { Trash2, Edit, Save, X } from 'lucide-vue-next';
 import {
@@ -63,27 +63,16 @@ const submit = async () => {
   try {
     console.log('Submitting:', JSON.stringify(form.value.details, null, 2));
     
-    const response = await axios.put(`/api/requests/${props.request.id}/items`, {
-      details: form.value.details.map(item => ({
-        item_id: item.item_id || null,
-        quantity: Number(item.quantity),
-        unit: item.unit,
-        item_description: item.item_description
-      }))
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    });
+    const response = await requestService.updateItems(props.request.id, form.value.details.map(item => ({
+      item_id: item.item_id || null,
+      quantity: Number(item.quantity),
+      unit: item.unit,
+      item_description: item.item_description
+    })));
 
-    console.log('Response:', response.data);
-    
-    toast.success(response.data.message || 'Request items updated successfully');
+    toast.success(response.message || 'Request items updated successfully');
 
   } catch (error) {
-    console.error('Error:', error.response ? error.response.data : error.message);
-    
     if (error.response?.data?.errors) {
       toast({
         title: 'Validation Error',
@@ -107,14 +96,7 @@ const submit = async () => {
 // Add purpose update function
 const updatePurpose = async () => {
   try {
-    const response = await axios.put(`/api/requests/${props.request.id}/purpose`, {
-      purpose: form.value.purpose
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    });
+    await requestService.updatePurpose(props.request.id, form.value.purpose);
 
     toast.success('Purpose updated successfully');
     isEditingPurpose.value = false;
@@ -207,14 +189,13 @@ const releaseItems = async () => {
         quantity: Number(item.released_quantity) // Ensure number type
       }));
 
-    const response = await axios.post(`/api/requests/${props.request.id}/release`, {
+    const response = await requestService.release(props.request.id, {
       items: itemsToRelease,
       notes: 'Items released from request'
     });
 
-    // Update local state
     form.value.details = form.value.details.map(detail => {
-      const updated = response.data.data.request.details.find(d => d.id === detail.id);
+      const updated = response.data.request.details.find(d => d.id === detail.id);
       return updated ? {
         ...detail,
         released_quantity: Number(updated.released_quantity)

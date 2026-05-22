@@ -17,7 +17,6 @@ class StoreRequestRequest extends FormRequest
             'purpose' => 'required|string|max:500',
             'status' => 'required|in:pending,approved,rejected',
             'department_id' => 'required|exists:departments,id',
-            'user_id' => 'required|exists:users,id',
             'items' => 'required|array|min:1',
             'items.*.item_id' => 'nullable|integer',
             'items.*.quantity' => 'required|numeric|min:1',

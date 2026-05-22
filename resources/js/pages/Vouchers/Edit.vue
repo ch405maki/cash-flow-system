@@ -2,7 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { useToast } from 'vue-toastification'
-import axios from 'axios'
+import { voucherService } from '@/services/voucherService'
 import { computed } from 'vue'
 import { type BreadcrumbItem } from '@/types';
 import { router } from '@inertiajs/vue3';
@@ -111,19 +111,10 @@ const handleFileSelected = async (file) => {
         const formData = new FormData();
         formData.append('receipt', file);
         
-        const response = await axios.post(
-            `/api/vouchers/${voucher.id}/receipt`,
-            formData,
-            {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            }
-        );
+        const response = await voucherService.uploadReceipt(voucher.id, formData);
         
-        toast.success(response.data.message);
-        // Optionally update local state if needed
-        form.receipt = response.data.data.receipt_path;
+        toast.success(response.message);
+        form.receipt = response.data.receipt_path;
     } catch (error) {
         if (error.response?.data?.errors) {
             Object.values(error.response.data.errors).forEach((msg) => {
@@ -145,8 +136,8 @@ async function updateVoucher() {
             toast.error('Duplicate account entries with the same name detected.');
             return;
         }
-        const response = await axios.put(`/api/vouchers/${voucher.id}`, form);
-        toast.success(response.data.message || 'Voucher updated successfully');
+        const response = await voucherService.update(voucher.id, form);
+        toast.success(response.message || 'Voucher updated successfully');
         router.visit('/vouchers');
     } catch (error) {
         if (error.response?.data?.errors) {

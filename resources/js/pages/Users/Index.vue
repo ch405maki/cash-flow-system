@@ -7,9 +7,8 @@
   import { Button } from "@/components/ui/button";
   import { Input } from '@/components/ui/input'
   import { Upload } from "lucide-vue-next";
-  import axios from "axios";
-  import type { AxiosError } from "axios";
   import { useToast } from "vue-toastification";
+  import { userService } from '@/services/userService';
   
   // Define the User type
   interface User {
@@ -77,29 +76,20 @@ console.log('Access Levels:', props.accessLevels);
       formData.append("file", file);
   
       try {
-        const response = await axios.post("/api/upload-users", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
-  
-        toast.success(response.data.message);
+        const response = await userService.uploadBulk(file);
+
+        toast.success(response.message);
         setTimeout(() => location.reload(), 2000);
-      } catch (err: unknown) {
-        const error = err as AxiosError;
-        if (error.response && error.response.data) {
-          const status: number = error.response.status;
-          const errorMessage: string = (error.response.data as any).message || "An error occurred.";
-  
-          if (status === 422) {
-            toast.error(`Validation Error: ${errorMessage}`);
-          } else if (status === 500) {
-            toast.error("Server Error: Please check your file data.");
-          } else {
-            toast.error(errorMessage);
-          }
+      } catch (error: any) {
+        const status = error.response?.status;
+        const errorMessage = error.response?.data?.message || "An error occurred.";
+
+        if (status === 422) {
+          toast.error(`Validation Error: ${errorMessage}`);
+        } else if (status === 500) {
+          toast.error("Server Error: Please check your file data.");
         } else {
-          toast.error("Network error. Please try again.");
+          toast.error(errorMessage);
         }
       } finally {
         loading.value = false;

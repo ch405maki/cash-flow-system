@@ -30,8 +30,8 @@ const inventoryProducts = ref<Array<{id: number, product_code: string, name: str
 const isLoadingProducts = ref(false);
 
 interface RequestItem {
-  item_id?: number;        // NEW: Store inventory item ID
-  product_code?: string;   // NEW: Store product code
+  item_id?: number;
+  product_code?: string;
   quantity: number;
   unit: string;
   item_description: string;
@@ -77,7 +77,6 @@ const form = ref({
   purpose: '',
   status: 'pending',
   department_id: props.authUser.department_id,
-  user_id: props.authUser.id,
   items: [] as RequestItem[],
 });
 
@@ -180,7 +179,6 @@ const submitRequest = async () => {
       purpose: '',
       status: 'pending',
       department_id: props.authUser.department_id,
-      user_id: props.authUser.id,
       items: []
     };
     resetNewItem();
