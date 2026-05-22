@@ -16,7 +16,7 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
+import StatusBadge from '@/components/StatusBadge.vue';
 
 const breadcrumbs = [
   { title: 'Dashboard', href: '/dashboard' },
@@ -81,19 +81,6 @@ const pageConfig = computed(() => {
   return configs[props.pageType] || configs.index
 })
 
-function getStatusVariant(status: string) {
-  switch (status.toLowerCase()) {
-    case 'pending':
-      return 'secondary' 
-    case 'approved':
-      return 'success'
-    case 'rejected':
-      return 'destructive'
-    default:
-      return 'default'
-  }
-}
-
 function goToShowRequest(requestId: number) {
   router.get(`/request/show/${requestId}`)
 }
@@ -129,10 +116,10 @@ function formatDate(dateStr: string): string {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Order No</TableHead>
-              <TableHead>Date Request</TableHead>
-              <TableHead>Notes</TableHead>
-              <TableHead class="w-[100px]">Status</TableHead>
+              <TableHead class="w-[240px]">Order No</TableHead>
+              <TableHead class="w-[140px]">Date Request</TableHead>
+              <TableHead class="w-[540px]">Notes</TableHead>
+              <TableHead class="w-[140px] text-right">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -140,13 +127,11 @@ function formatDate(dateStr: string): string {
               <TableCell class="font-medium">{{ request.order_no }}</TableCell>
               <TableCell>{{ formatDate(request.order_date) }}</TableCell>
               <TableCell>{{ request.notes }}</TableCell>
-              <TableCell>
-                <Badge
-                  :variant="getStatusVariant(request.status)"
-                  class="capitalize"
-                >
-                  {{ request.status }}
-                </Badge>
+              <TableCell class="text-right">
+                <StatusBadge
+                  :status="request.status"
+                  show-icon
+                />
               </TableCell>
             </TableRow>
           </TableBody>
