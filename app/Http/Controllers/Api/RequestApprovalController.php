@@ -25,12 +25,13 @@ class RequestApprovalController extends Controller
             ->whereIn('status', ['forEOD'])
             ->get();
 
-        return Inertia::render('Request/ForApproval/Index', [
+        return Inertia::render('PurchaseRequest/Index', [
             'requests' => $requests,
             'authUser' => [
                 'id' => $user->id,
                 'role' => $user->role,
             ],
+            'pageType' => 'for-approval',
         ]);
     }
 
@@ -42,12 +43,13 @@ class RequestApprovalController extends Controller
             ->whereIn('status', ['forEOD', 'forPO'])
             ->get();
 
-        return Inertia::render('Request/ForApproval/Index', [
+        return Inertia::render('PurchaseRequest/Index', [
             'requests' => $requests,
             'authUser' => [
                 'id' => $user->id,
                 'role' => $user->role,
             ],
+            'pageType' => 'on-process',
         ]);
     }
 }

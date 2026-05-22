@@ -34,7 +34,7 @@ class RequestToOrderController extends Controller
             ->whereIn('status', [ 'to_order'])
             ->get();
 
-        return Inertia::render('Request/Order/Index', [
+        return Inertia::render('PurchaseRequest/Index', [
             'requests' => $requests,
             'forOrders' => $forOrders,
             'authUser' => [
@@ -51,7 +51,7 @@ class RequestToOrderController extends Controller
             ->where('status', 'to_order')
             ->get();
 
-        return Inertia::render('Request/Order/Create', [
+        return Inertia::render('PurchaseRequest/Create', [
             'requests' => $requests
         ]);
     }
@@ -72,7 +72,7 @@ class RequestToOrderController extends Controller
             ->where('status', 'to_order')
             ->get();
 
-        return Inertia::render('Request/Order/ListToOrder', [
+        return Inertia::render('PurchaseRequest/ListToOrder', [
             'requests' => $requests
         ]);
     }
@@ -229,7 +229,7 @@ class RequestToOrderController extends Controller
             'approvals.user',
         ])->findOrFail($id);
 
-        return Inertia::render('Request/Order/Show', [
+        return Inertia::render('PurchaseRequest/Show', [
             'requestOrder' => $requestOrder,
             'authUser' => [
                 'id' => $user->id,

@@ -2,6 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Head } from '@inertiajs/vue3'
 import { router } from '@inertiajs/vue3'
+import { computed } from 'vue'
 import { CirclePlus , ListChecks } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
 import { FileText } from 'lucide-vue-next'
@@ -43,6 +44,41 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  authUser: {
+    type: Array,
+    default: () => [],
+  },
+  pageType: {
+    type: String,
+    default: 'index',
+  },
+})
+
+const pageConfig = computed(() => {
+  const configs = {
+    index: {
+      title: 'Purchase Request List',
+      subtitle: 'View Request information and status',
+      showActions: true,
+      emptyTitle: 'No request to order found',
+      emptyDesc: 'On process requests will appear here',
+    },
+    'for-approval': {
+      title: 'For Approval',
+      subtitle: 'Purchase requests pending review',
+      showActions: false,
+      emptyTitle: 'No pending request to order found',
+      emptyDesc: 'Request to order for approval from Property Custodian will appear here',
+    },
+    'on-process': {
+      title: 'On Process',
+      subtitle: 'Purchase requests currently being processed',
+      showActions: false,
+      emptyTitle: 'No request to order found',
+      emptyDesc: 'On process requests will appear here',
+    },
+  }
+  return configs[props.pageType] || configs.index
 })
 
 function getStatusVariant(status: string) {
@@ -73,16 +109,16 @@ function formatDate(dateStr: string): string {
 </script>
 
 <template>
-  <Head title="Purchase Request List" />
+  <Head :title="pageConfig.title" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
       <div class="flex justify-between items-center">
         <PageHeader 
-          title="Purchase Request List" 
-          subtitle="View Request information and status"
+          :title="pageConfig.title" 
+          :subtitle="pageConfig.subtitle"
         />
-        <div class="space-x-2 items-center">
+        <div v-if="pageConfig.showActions" class="space-x-2 items-center">
           <Button variant="outline" @click="goToList" class="h-8"><ListChecks /> List to Purchase</Button>
           <Button @click="goToCreate" class="h-8"><CirclePlus />Create New Purchase</Button>
         </div>
@@ -119,8 +155,8 @@ function formatDate(dateStr: string): string {
 
       <div v-else-if="requests" class="flex h-48 flex-col items-center justify-center rounded-xl border">
         <FileText class="h-8 w-8 text-muted-foreground" />
-        <p class="mt-2 text-sm text-muted-foreground">No request to order found</p>
-        <p class="text-xs text-muted-foreground">On process requests will appear here</p>
+        <p class="mt-2 text-sm text-muted-foreground">{{ pageConfig.emptyTitle }}</p>
+        <p class="text-xs text-muted-foreground">{{ pageConfig.emptyDesc }}</p>
       </div>
     </div>
   </AppLayout>
