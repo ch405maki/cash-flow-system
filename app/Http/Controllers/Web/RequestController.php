@@ -54,6 +54,7 @@ class RequestController extends Controller
                 'role' => $user->role,
                 'department_id' => $user->department_id,
             ],
+            'pageType' => 'index',
         ]);
     }
 
@@ -146,7 +147,7 @@ class RequestController extends Controller
             ->where('department_id', $user->department_id)
             ->get();
 
-        return Inertia::render('Request/Released', [
+        return Inertia::render('Request/Index', [
             'requests' => $requests,
             'departments' => Department::all(),
             'authUser' => [
@@ -154,6 +155,7 @@ class RequestController extends Controller
                 'role' => $user->role,
                 'department_id' => $user->department_id,
             ],
+            'pageType' => 'released',
         ]);
     }
 
@@ -166,7 +168,7 @@ class RequestController extends Controller
             ->where('department_id', $user->department_id)
             ->get();
 
-        return Inertia::render('Request/ToReceive', [
+        return Inertia::render('Request/Index', [
             'requests' => $requests,
             'departments' => Department::all(),
             'authUser' => [
@@ -174,6 +176,7 @@ class RequestController extends Controller
                 'role' => $user->role,
                 'department_id' => $user->department_id,
             ],
+            'pageType' => 'to-receive',
         ]);
     }
 
@@ -186,7 +189,7 @@ class RequestController extends Controller
             ->where('department_id', $user->department_id)
             ->get();
 
-        return Inertia::render('Request/Rejected', [
+        return Inertia::render('Request/Index', [
             'requests' => $requests,
             'departments' => Department::all(),
             'authUser' => [
@@ -194,6 +197,7 @@ class RequestController extends Controller
                 'role' => $user->role,
                 'department_id' => $user->department_id,
             ],
+            'pageType' => 'rejected',
         ]);
     }
 
