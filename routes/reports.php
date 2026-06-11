@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Report\RequestReportController;
-use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Web\ReportController;
 
 
 // Report Route 

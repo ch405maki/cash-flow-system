@@ -3,10 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-use App\Http\Controllers\Api\PettyCashController;
-use App\Http\Controllers\Api\AuditPettyCashController;
-use App\Http\Controllers\Api\PettyCashApprovalController;
-use App\Http\Controllers\Api\BursarPettycashController;
+use App\Http\Controllers\Web\PettyCashController;
+use App\Http\Controllers\Web\AuditPettyCashController;
+use App\Http\Controllers\Web\PettyCashApprovalController;
+use App\Http\Controllers\Web\BursarPettycashController;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/petty-cash', [PettyCashController::class, 'index'])->name('petty-cash.index');

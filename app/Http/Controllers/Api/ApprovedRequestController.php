@@ -5,38 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request as HttpRequest;
-use Illuminate\Support\Facades\Auth;
-use Inertia\Inertia;
 use App\Models\Request;
 use App\Models\RequestDetail;
-use App\Models\Department;
-use App\Models\PurchaseOrderDetail;
-use App\Models\Account;
-use App\Models\RequestToOrder;
-use App\Http\Requests\StoreRequestToOrderRequest;
 
 class ApprovedRequestController extends Controller
 {
-
-    public function index()
-    {
-        $requests = RequestToOrder::with('details')
-            ->where('status', 'forPO')
-            ->get();
-
-        return Inertia::render('Request/Approved/Index', [
-            'requests' => $requests,
-        ]);
-    }
-
-
-    public function show(request $request)
-    {
-        return Inertia::render('Request/Approved/Show', [
-            'request' => $request->load(['user', 'department', 'details']),
-            'accounts' => Account::all(['id', 'account_title']),
-        ]);
-    }
 
      public function updateTagging(Request $request, HttpRequest $httpRequest)
     {

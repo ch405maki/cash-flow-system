@@ -5,7 +5,7 @@ use App\Http\Controllers\Configuration\UserAccessController;
 use App\Http\Controllers\Configuration\DepartmentController;
 use App\Http\Controllers\Configuration\SignatoryController;
 use App\Http\Controllers\Configuration\AccountController;
-use App\Http\Controllers\Api\ProfilePictureController;
+use App\Http\Controllers\Web\ProfilePictureController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 

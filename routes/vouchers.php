@@ -4,10 +4,10 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 use App\Http\Controllers\Web\VoucherController;
-use App\Http\Controllers\Api\ApprovedVoucherController;
-use App\Http\Controllers\Api\VoucherApprovalController;
-use App\Http\Controllers\Api\ApprovedPurchaseOrderController;
-use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Web\ApprovedVoucherController;
+use App\Http\Controllers\Web\VoucherApprovalController;
+use App\Http\Controllers\Web\ApprovedPurchaseOrderController;
+use App\Http\Controllers\Web\ReportController;
 
 // Voucher Route
 Route::middleware(['auth', 'verified'])->group(function () {

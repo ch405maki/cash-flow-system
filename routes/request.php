@@ -4,10 +4,10 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 use App\Http\Controllers\Web\RequestController;
-use App\Http\Controllers\Api\RequestApprovalController;
-use App\Http\Controllers\Api\RequestToOrderController;
-use App\Http\Controllers\Api\ApprovedRequestController;
-use App\Http\Controllers\Api\RequestToOrderReleaseController;
+use App\Http\Controllers\Web\RequestApprovalController;
+use App\Http\Controllers\Web\RequestToOrderController;
+use App\Http\Controllers\Web\ApprovedRequestController;
+use App\Http\Controllers\Web\RequestToOrderReleaseController;
 
 // Request Route
 Route::middleware(['auth', 'verified'])->group(function () {

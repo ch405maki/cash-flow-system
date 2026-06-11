@@ -4,18 +4,9 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Users\UserController;
-use App\Http\Controllers\Api\DepartmentController;
-use App\Http\Controllers\Api\AccessController;
-use App\Http\Controllers\Api\AccountController;
-use App\Http\Controllers\Api\SignatoryController;
-use App\Http\Controllers\Api\PurchaseOrderController;
-use App\Http\Controllers\Api\CanvasController;
-use App\Http\Controllers\Api\ActivityLogController;
-use App\Http\Controllers\Api\ProfilePictureController;
-use App\Http\Controllers\NotificationController;
-
-// web
+use App\Http\Controllers\Web\PurchaseOrderController;
+use App\Http\Controllers\Web\CanvasController;
+use App\Http\Controllers\Web\ActivityLogController;
 use App\Http\Controllers\Web\DashboardController;
 
 use App\Models\User;
@@ -51,6 +42,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/canvas/{canvas}', [CanvasController::class, 'show'])->name('canvas.show');
     Route::get('/canvases/{canvas}/download', [CanvasController::class, 'downloadAll'])->name('canvas.download.all');
     Route::get('/canvases/{canvas}/download/{file}', [CanvasController::class, 'downloadFile'])->name('canvas.download.file');
+    Route::get('/canvas/{canvas}/files/{file}/preview', [CanvasController::class, 'preview'])->name('canvas.preview.file');
     Route::patch('/canvas/{canvas}', [CanvasController::class, 'update'])->name('canvas.update');
 });
 
