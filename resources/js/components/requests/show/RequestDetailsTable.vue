@@ -2,7 +2,7 @@
 import { Table, TableBody, TableRow, TableCell } from '@/components/ui/table'
 import StatusBadge from '@/components/StatusBadge.vue';
 
-const props = defineProps<{ request: any }>()
+defineProps<{ request: any }>()
 
 </script>
 
@@ -14,18 +14,16 @@ const props = defineProps<{ request: any }>()
         <TableCell class="border-r p-2">{{ request.request_no }}</TableCell>
         <TableCell class="border-r p-2 w-32">Status:</TableCell>
         <TableCell class="border-r p-2">
-          <StatusBadge 
-              :status="request.status"
-              show-icon
-              size="md"
-            />
+          <slot name="status-badge">
+            <StatusBadge :status="request.status" show-icon size="md" />
+          </slot>
         </TableCell>
       </TableRow>
       <TableRow>
         <TableCell class="border-r p-2">Department:</TableCell>
-        <TableCell class="border p-2">{{ request.department.department_name || 'N/A' }}</TableCell>
+        <TableCell class="border-r p-2">{{ request.department?.department_name || 'N/A' }}</TableCell>
         <TableCell class="border-r p-2">Requested By:</TableCell>
-        <TableCell class="border p-2">{{ request.user.first_name }} {{ request.user.last_name }}</TableCell>
+        <TableCell class="border-r p-2">{{ request.user?.first_name }} {{ request.user?.last_name }}</TableCell>
       </TableRow>
       <TableRow>
         <TableCell class="border-r p-2">Purpose:</TableCell>

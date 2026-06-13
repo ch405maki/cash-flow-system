@@ -10,8 +10,8 @@ import { useToast } from 'vue-toastification';
 
 import ItemsTable from '@/components/requests/releasing/ItemsTable.vue';
 import ReleaseControls from '@/components/requests/releasing/ReleaseControls.vue';
-import RequestInfoTable from '@/components/requests/releasing/RequestInfoTable.vue';
-import RequestStatusBadge from '@/components/requests/releasing/RequestStatusBadge.vue';
+import RequestDetailsTable from '@/components/requests/show/RequestDetailsTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import SignatureDialog from '@/components/signature/SignatureDialog.vue';
 
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,7 +25,6 @@ const props = defineProps({
 });
 
 const request = ref<any>(null);
-const departments = ref<any[]>([]);
 const inventoryStatus = ref<any>({});
 const currentUser = ref<any>(null);
 const loading = ref(true);
@@ -115,7 +114,6 @@ const fetchReleaseData = async () => {
     try {
         const response = await requestService.releaseData(props.requestId);
         request.value = response.data.request;
-        departments.value = response.data.departments;
         inventoryStatus.value = response.data.inventoryStatus;
         currentUser.value = response.data.current_user;
         updateFormFromRequest();
@@ -254,11 +252,7 @@ const handleSignatureCancelled = () => {
                     </Link>
                 </div>
 
-                <RequestInfoTable :request="request">
-                    <template #status-badge>
-                        <RequestStatusBadge :status="request.status" />
-                    </template>
-                </RequestInfoTable>
+                <RequestDetailsTable :request="request" />
 
                 <div class="pb-6 pt-4">
                     <h1 class="text-xl font-bold">Release Items</h1>

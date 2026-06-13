@@ -8,12 +8,9 @@ import {
   TableCell,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { defineProps } from 'vue'
-import { router } from '@inertiajs/vue3'
-import { FilePenLine, Eye  } from 'lucide-vue-next';
-import { usePage } from '@inertiajs/vue3';
-import { FileText } from 'lucide-vue-next'
-
+import { router, usePage } from '@inertiajs/vue3'
+import { FilePenLine, Eye, FileText } from 'lucide-vue-next';
+import StatusBadge from '@/components/StatusBadge.vue';
 
 const props = defineProps<{
   requests: Array<any>
@@ -74,18 +71,7 @@ function formatDate(dateStr: string): string {
           <TableCell>{{ request.department?.department_name }}</TableCell>
           <TableCell>{{ getFullName(request.user) }}</TableCell>
           <TableCell>
-            <span
-              class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize"
-              :class="{
-                'bg-indigo-100 text-indigo-800': request.status === 'partially_released',
-                'bg-orange-100 text-orange-800': request.status === 'request to order',
-                'bg-yellow-100 text-yellow-800': request.status === 'pending',
-                'bg-green-100 text-green-800': request.status === 'approved',
-                'bg-red-100 text-red-800': request.status === 'rejected',
-              }"
-            >
-              {{ request.status }}
-            </span>
+            <StatusBadge :status="request.status" show-icon size="md" />
           </TableCell>
           <TableCell class="text-right space-x-2">
             <Button

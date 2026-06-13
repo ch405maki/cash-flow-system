@@ -8,7 +8,7 @@ import { formatDateTime } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { CirclePlus, Trash, ShoppingBasket, Send, ChevronLeft, Check, ChevronsUpDown } from 'lucide-vue-next';
+import { Trash, ShoppingBasket, Send, ChevronLeft, Check, ChevronsUpDown } from 'lucide-vue-next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from '@/components/ui/table';
 import PageHeader from '@/components/PageHeader.vue';

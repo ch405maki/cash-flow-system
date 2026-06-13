@@ -47,9 +47,7 @@ const isQuantityExceeded = (detail: any) => {
 const isFullyReleased = (detail: any) => {
   const releasedQty = Number(detail.released_quantity) || 0
   const totalQty = Number(detail.quantity) || 0
-  const fullyReleased = releasedQty >= totalQty
-  console.log('isFullyReleased:', detail.id, 'released_qty:', releasedQty, 'qty:', totalQty, 'result:', fullyReleased)
-  return fullyReleased
+    return releasedQty >= totalQty
 }
 
 // Get remaining quantity (what's left to release)

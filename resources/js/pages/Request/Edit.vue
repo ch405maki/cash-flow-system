@@ -7,16 +7,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { requestService } from '@/services/requestService';
 import { ref, onMounted } from 'vue';
-import { Trash2, Edit, Save, X } from 'lucide-vue-next';
+import { Trash2, Edit } from 'lucide-vue-next';
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import StatusBadge from '@/components/StatusBadge.vue';
 import { useToast } from "vue-toastification";
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -270,18 +270,7 @@ const toggleSelectAll = (checked: boolean) => {
                   <TableCell class="border-r p-2">{{ request.request_no }}</TableCell>
                   <TableCell class="border-r p-2 w-32">Status: </TableCell>
                   <TableCell class="p-2 capitalize">
-                  <span 
-                  class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize"
-                  :class="{
-                          'bg-indigo-100 text-indigo-800': request.status === 'partially_released',
-                          'bg-orange-100 text-orange-800 ': request.status === 'request to order',
-                          'bg-green-100 text-green-700': request.status === 'released',
-                          'bg-yellow-100 text-yellow-800': request.status === 'pending',
-                          'bg-green-100 text-green-800': request.status === 'approved',
-                          'bg-red-100 text-red-800': request.status === 'rejected',
-                      }">
-                      {{ request.status }}
-                  </span>
+                  <StatusBadge :status="request.status" show-icon size="md" />
                   </TableCell>
               </TableRow>
               <TableRow>

@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button'
 import { FileText } from 'lucide-vue-next'
 import {
   Table,
-  TableCaption,
   TableHeader,
   TableBody,
   TableRow,
@@ -41,19 +40,6 @@ function goToCanvas() {
 
 function viewRequest(id: number) {
   router.visit(`/request-to-order/${id}`) 
-}
-
-function getStatusVariant(status: string) {
-  switch (status.toLowerCase()) {
-    case 'pending':
-      return 'secondary' 
-    case 'approved':
-      return 'success'
-    case 'rejected':
-      return 'destructive'
-    default:
-      return 'default'
-  }
 }
 </script>
 

@@ -7,10 +7,8 @@ import {
   TableBody,
   TableCell,
 } from '@/components/ui/table';
-import { defineProps } from 'vue';
-import { router } from '@inertiajs/vue3';
-import { usePage } from '@inertiajs/vue3';
-import { formatDate, formatDateTime } from '@/lib/utils';
+import { router, usePage } from '@inertiajs/vue3';
+import { formatDateTime } from '@/lib/utils';
 import { FileText } from 'lucide-vue-next';
 import StatusBadge from '@/components/StatusBadge.vue';
 
