@@ -72,13 +72,13 @@ Route::get('/test-email', function () {
     return 'Test email sent!';
 });
 
-require __DIR__.'/settings.php';
-require __DIR__.'/configuration.php';
-require __DIR__.'/auth.php';
-require __DIR__.'/pettycash.php';
-require __DIR__.'/vouchers.php';
-require __DIR__.'/reports.php';
-require __DIR__.'/request.php';
-require __DIR__.'/notification.php';
-require __DIR__.'/inventory.php';
-require __DIR__.'/receiving.php';
+require __DIR__.'/web/settings.php';
+require __DIR__.'/web/configuration.php';
+require __DIR__.'/web/auth.php';
+require __DIR__.'/web/pettycash.php';
+require __DIR__.'/web/vouchers.php';
+require __DIR__.'/web/reports.php';
+require __DIR__.'/web/request.php';
+require __DIR__.'/web/notification.php';
+require __DIR__.'/web/inventory.php';
+require __DIR__.'/web/receiving.php';
