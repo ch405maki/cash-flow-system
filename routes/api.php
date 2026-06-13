@@ -77,6 +77,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/requests/{request}/tagging', [ApprovedRequestController::class, 'updateTagging']);
     Route::patch('/requests/{request}/status', [RequestController::class, 'updateStatus']);
     Route::get('/requests/{request}/release-data', [RequestController::class, 'releaseData']);
+    Route::get('/requests/{request}/show-data', [RequestController::class, 'showData']);
+    Route::get('/requests/create-data', [RequestController::class, 'createData']);
+    Route::get('/requests/{request}/edit-data', [RequestController::class, 'editData']);
 
     // Configurations
     Route::prefix('configuration/departments')->group(function () {

@@ -73,6 +73,70 @@ class RequestController extends Controller
         ]);
     }
 
+    public function showData(Request $request, InventoryApiService $inventoryApi): JsonResponse
+    {
+        $request->load([
+            'user',
+            'department',
+            'details',
+            'approvals.user',
+            'releases.details.requestDetail',
+            'releases.user'
+        ]);
+
+        $inventoryStatus = [];
+        foreach ($request->details as $detail) {
+            if ($detail->item_id) {
+                $result = $inventoryApi->checkProductQuantity($detail->item_id);
+                $inventoryStatus[$detail->id] = [
+                    'has_item_id' => true,
+                    'exists_in_inventory' => $result['exists'],
+                    'available_quantity' => $result['quantity'],
+                    'has_sufficient' => $result['exists'] && $result['quantity'] > 0
+                ];
+            } else {
+                $inventoryStatus[$detail->id] = [
+                    'has_item_id' => false,
+                    'exists_in_inventory' => false,
+                    'available_quantity' => 0,
+                    'has_sufficient' => false
+                ];
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'request' => $request,
+                'accounts' => Account::all(['id', 'account_title']),
+                'inventoryStatus' => $inventoryStatus,
+            ],
+        ]);
+    }
+
+    public function createData(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'departments' => Department::all(),
+            ],
+        ]);
+    }
+
+    public function editData(Request $request): JsonResponse
+    {
+        $request->load(['details', 'user', 'department']);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'request' => $request,
+                'departments' => Department::all(),
+            ],
+        ]);
+    }
+
     public function updateStatus(HttpRequest $httpRequest, Request $request): JsonResponse
     {
         $validated = $httpRequest->validate([

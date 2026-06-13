@@ -77,4 +77,19 @@ export const requestService = {
         const { data } = await api.get(`/api/requests/${id}/release-data`);
         return data;
     },
+
+    showData: async (id: number): Promise<any> => {
+        const { data } = await api.get(`/api/requests/${id}/show-data`);
+        return data;
+    },
+
+    createData: async (): Promise<any> => {
+        const { data } = await api.get('/api/requests/create-data');
+        return data;
+    },
+
+    editData: async (id: number): Promise<any> => {
+        const { data } = await api.get(`/api/requests/${id}/edit-data`);
+        return data;
+    },
 };

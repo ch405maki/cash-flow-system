@@ -133,7 +133,7 @@ const handleReorder = () => {
         </div>
 
         <!-- Department Head -->
-        <div v-if="user.access == 3" class="flex gap-2">
+        <div v-if="(user.access ?? user.access_id) == 3" class="flex gap-2">
             <Button size="sm" v-if="request.status === 'pending'" @click="showOrderModal = true"> <BadgeCheck />Approve </Button>
             <PasswordDialog
                 v-model="showOrderModal"
