@@ -34,27 +34,8 @@ class RequestToOrderReleaseController extends Controller
 {
     public function index()
     {
-        $user = Auth::user();
-
-        if (in_array($user->role, ['admin', 'executive_director', 'property_custodian'])) {
-            $requests = Request::with(['department', 'user', 'details'])
-                ->whereIn('status', ['partially_released', 'to_order'])
-                ->get();
-        } else {
-            $requests = Request::with(['department', 'user', 'details'])
-                ->where('status', 'pending')
-                ->where('department_id', $user->department_id)
-                ->get();
-        }
-
         return Inertia::render('Request/Index', [
-            'requests' => $requests,
-            'departments' => Department::all(),
-            'authUser' => [
-                'id' => $user->id,
-                'role' => $user->role,
-                'department_id' => $user->department_id,
-            ],
+            'pageType' => 'on-process-orders',
         ]);
     }
 

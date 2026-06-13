@@ -16,11 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/request/create', [RequestController::class, 'create'])->name('request.create');
     Route::get('/requests/{request}/edit', [RequestController::class, 'edit'])->name('requests.edit');
     Route::get('/requests/{request}/release', [RequestController::class, 'release'])->name('requests.release');
-    Route::patch('/requests/{request}/status', [RequestController::class, 'updateStatus'])->name('request.updateStatus');
 
-    Route::get('/request/rejected', [RequestController::class, 'rejected'])->name('request.rejected');
-    Route::get('/request/released', [RequestController::class, 'released'])->name('request.released');
-    Route::get('/request/to-receive', [RequestController::class, 'toReceive'])->name('request.to-receive');
 });
 
 // Request To Order Route
@@ -38,7 +34,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/to-order/on-process', [RequestApprovalController::class, 'onProcess'])->name('request-to-order.on-process');
     Route::get('/for-approval', [RequestApprovalController::class, 'index'])->name('for-approval.index');
 
-    Route::get('/released-order', [RequestToOrderReleaseController::class, 'index'])->name('request-to-order.release.create');
+    Route::get('/on-process-orders', [RequestToOrderReleaseController::class, 'index'])->name('request-to-order.release.create');
     Route::get('/request-to-order/{order}/release', [RequestToOrderReleaseController::class, 'create'])->name('request-to-order.release.create');
     Route::post('/request-to-order/{order}/release', [RequestToOrderReleaseController::class, 'store'])->name('request-to-order.release.store');
 });

@@ -33,14 +33,208 @@ use App\Services\InventoryApiService;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
-use Inertia\Inertia;
-
-
 class RequestController extends Controller
 {
     public function __construct(
         protected GenerateRequestNumber $generateRequestNumber
     ) {}
+
+    public function index(HttpRequest $httpRequest): JsonResponse
+    {
+        $user = Auth::user();
+        $pageType = $httpRequest->query('pageType', 'index');
+
+        $query = Request::with(['department', 'user']);
+
+        match ($pageType) {
+            'released' => $query
+                ->where('status', 'released')
+                ->where('department_id', $user->department_id),
+            'to-receive' => $query
+                ->whereIn('status', ['propertyCustodian', 'to_order', 'partially_released'])
+                ->where('department_id', $user->department_id),
+            'rejected' => $query
+                ->where('status', 'rejected')
+                ->where('department_id', $user->department_id),
+            'on-process-orders' => in_array($user->role, ['admin', 'executive_director', 'property_custodian'])
+                ? $query->whereIn('status', ['partially_released', 'to_order'])
+                : $query->where('status', 'pending')->where('department_id', $user->department_id),
+            default => in_array($user->role, ['admin', 'executive_director', 'property_custodian'])
+                ? $query->whereIn('status', ['propertyCustodian'])
+                : $query->where('status', 'pending')->where('department_id', $user->department_id),
+        };
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'requests' => $query->get(),
+                'departments' => Department::all(),
+            ],
+        ]);
+    }
+
+    public function updateStatus(HttpRequest $httpRequest, Request $request): JsonResponse
+    {
+        $validated = $httpRequest->validate([
+            'status' => 'required|in:approved,rejected,propertyCustodian,to_order,released',
+            'password' => 'required_if:status,approved,propertyCustodian,to_order,released',
+        ]);
+
+        $passwordRequiredStatuses = ['approved', 'propertyCustodian', 'to_order', 'released'];
+        $authUser = auth()->user();
+
+        if (in_array($validated['status'], $passwordRequiredStatuses)) {
+            if (!Hash::check($validated['password'], $authUser->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid password',
+                    'errors' => ['password' => ['Invalid password']],
+                ], 422);
+            }
+        }
+
+        $oldStatus = $request->status;
+        $updateData = ['status' => $validated['status']];
+
+        if ($authUser->department_id === $request->department_id) {
+            $updateData['user_id'] = $authUser->id;
+        }
+
+        $request->update($updateData);
+
+        $description = "Request #{$request->request_no} status changed from {$oldStatus} to {$validated['status']} by {$authUser->username}";
+
+        RequestApproval::create([
+            'request_id' => $request->id,
+            'user_id' => $authUser->id,
+            'status' => $validated['status'],
+            'approved_at' => now(),
+            'remarks' => $description,
+        ]);
+
+        if ($validated['status'] === 'propertyCustodian') {
+            $custodians = User::where('role', 'property_custodian')->get();
+            $creator = User::find($request->user_id);
+
+            foreach ($custodians as $custodian) {
+                DB::table('notifications')->insert([
+                    'id' => (string) Str::uuid(),
+                    'type' => 'RequestForCustodian',
+                    'notifiable_type' => 'App\Models\User',
+                    'notifiable_id' => $custodian->id,
+                    'data' => json_encode([
+                        'request_id' => $request->id,
+                        'title' => 'Request Ready for Custodian',
+                        'request_no' => $request->request_no,
+                        'department' => $request->department->name ?? 'N/A',
+                        'purpose' => $request->purpose,
+                        'created_by' => $creator?->name ?? 'Unknown',
+                        'previous_status' => $oldStatus,
+                        'status' => $validated['status'],
+                        'message' => "Request #{$request->request_no} from {$request->department->name} is ready for processing.",
+                        'link' => route('request.show', $request->id),
+                        'updated_by' => $authUser->name,
+                    ]),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+        if ($validated['status'] === 'to_order') {
+            $creator = User::find($request->user_id);
+
+            if ($creator) {
+                DB::table('notifications')->insert([
+                    'id' => (string) Str::uuid(),
+                    'type' => 'RequestReadyToOrder',
+                    'notifiable_type' => 'App\Models\User',
+                    'notifiable_id' => $creator->id,
+                    'data' => json_encode([
+                        'request_id' => $request->id,
+                        'title' => 'Request Ready to Order',
+                        'request_no' => $request->request_no,
+                        'status' => $validated['status'],
+                        'message' => "Your request #{$request->request_no} is now ready to order.",
+                        'link' => route('request.show', $request->id),
+                        'updated_by' => $authUser->name,
+                    ]),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+        ActivityLogger::make($httpRequest)
+            ->on($request)
+            ->by($authUser)
+            ->withMacAddress()
+            ->with([
+                'old_status' => $oldStatus,
+                'new_status' => $validated['status'],
+                'changed_by' => $authUser->username,
+                'changed_by_role' => $authUser->role,
+                'request_no' => $request->request_no,
+            ])
+            ->logName('Status Updated')
+            ->log($description);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Request status updated successfully',
+            'data' => [
+                'request' => $request->fresh()->load(['department', 'user', 'approvals']),
+            ],
+        ]);
+    }
+
+    public function releaseData(Request $request, InventoryApiService $inventoryApi): JsonResponse
+    {
+        $request->load([
+            'details' => function ($query) {
+                $query->where('quantity', '!=', 0);
+            },
+            'user',
+            'department'
+        ]);
+
+        $inventoryStatus = [];
+        foreach ($request->details as $detail) {
+            if ($detail->item_id) {
+                $result = $inventoryApi->checkProductQuantity($detail->item_id);
+                $inventoryStatus[$detail->id] = [
+                    'has_item_id' => true,
+                    'exists' => $result['exists'],
+                    'available_quantity' => $result['quantity'],
+                    'has_stock' => $result['exists'] && $result['quantity'] > 0,
+                    'sufficient_for_request' => $result['exists'] && $result['quantity'] >= ($detail->quantity - $detail->released_quantity)
+                ];
+            } else {
+                $inventoryStatus[$detail->id] = [
+                    'has_item_id' => false,
+                    'exists' => false,
+                    'available_quantity' => 0,
+                    'has_stock' => false,
+                    'sufficient_for_request' => false
+                ];
+            }
+        }
+
+        $authUser = auth()->user();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'request' => $request,
+                'departments' => Department::all(),
+                'inventoryStatus' => $inventoryStatus,
+                'current_user' => [
+                    'id' => $authUser->id,
+                    'name' => $authUser->name,
+                ],
+            ],
+        ]);
+    }
 
     public function store(StoreRequestRequest $request): JsonResponse
     {
@@ -223,7 +417,7 @@ class RequestController extends Controller
         try {
             $validated = $httpRequest->validated();
 
-            $authUser = User::findOrFail($validated['user_id']);
+            $authUser = auth()->user();
 
             $signatureData = $validated['signature'] ?? null;
 
@@ -266,7 +460,7 @@ class RequestController extends Controller
                 if ($requestDetail->item_id) {
                     $inventoryData = [
                         'item_id'            => $requestDetail->item_id,
-                        'user_id'            => 1,
+                        'user_id'            => $authUser->id,
                         'type'               => 'Out',
                         'quantity'           => $item['quantity'],
                         'source_destination' => $request->department->department_name ?? 'N/A',
@@ -555,16 +749,4 @@ class RequestController extends Controller
         }
     }
 
-    // Api method to update tagging status
-    public function data(): JsonResponse
-    {
-        $requests = Request::with(['department', 'user', 'details'])
-            ->whereIn('status', ['propertyCustodian'])
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $requests,
-        ]);
-    }
 }

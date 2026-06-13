@@ -24,7 +24,6 @@ class ReleaseItemsRequest extends FormRequest
             ],
             'items.*.quantity' => 'required|integer|min:1',
             'notes' => 'nullable|string',
-            'user_id' => 'required|exists:users,id',
             'signature' => 'nullable|array',
             'signature.image' => 'nullable|string',
             'signature.signer_id' => 'nullable|integer',

@@ -170,10 +170,12 @@ class InventoryApiService
                 'data_sent' => $data
             ]);
             
+            $body = $response->body();
             return [
                 'success' => false,
-                'error' => 'Inventory API returned error: ' . $response->status(),
-                'status_code' => $response->status()
+                'error' => 'Inventory API returned error: ' . $response->status() . ($body ? " - " . substr($body, 0, 500) : ''),
+                'status_code' => $response->status(),
+                'response_body' => $body
             ];
             
         } catch (\Exception $e) {

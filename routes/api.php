@@ -69,12 +69,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('vouchers', VoucherController::class);
 
     // Request Routes
-    Route::get('/requests', [RequestController::class, 'data']);
+    Route::get('/requests', [RequestController::class, 'index']);
     Route::post('/requests', [RequestController::class, 'store']);
     Route::put('/requests/{request}/items', [RequestController::class, 'updateItems']);
     Route::post('/requests/{request}/release', [RequestController::class, 'releaseItems']);
     Route::put('/requests/{id}/purpose', [RequestController::class, 'updatePurpose']);
     Route::patch('/requests/{request}/tagging', [ApprovedRequestController::class, 'updateTagging']);
+    Route::patch('/requests/{request}/status', [RequestController::class, 'updateStatus']);
+    Route::get('/requests/{request}/release-data', [RequestController::class, 'releaseData']);
 
     // Configurations
     Route::prefix('configuration/departments')->group(function () {
