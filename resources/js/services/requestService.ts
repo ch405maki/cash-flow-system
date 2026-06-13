@@ -92,4 +92,9 @@ export const requestService = {
         const { data } = await api.get(`/api/requests/${id}/edit-data`);
         return data;
     },
+
+    getUnits: async (): Promise<any> => {
+        const { data } = await api.get('/api/units');
+        return data;
+    },
 };

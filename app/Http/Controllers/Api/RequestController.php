@@ -16,6 +16,7 @@ use App\Models\Release;
 use App\Models\User;
 use App\Models\RequestApproval;
 use App\Models\ReleaseDetail;
+use App\Models\Unit;
 use Illuminate\Http\JsonResponse;
 use App\Models\Request;
 use Illuminate\Http\Request as HttpRequest;
@@ -341,12 +342,17 @@ class RequestController extends Controller
                 ->log($description);
 
             foreach ($validated['items'] as $item) {
+                $unitName = trim($item['unit']);
+                if ($unitName !== '') {
+                    Unit::firstOrCreate(['name' => $unitName]);
+                }
+
                 RequestDetail::create([
                     'request_id' => $requestModel->id,
                     'item_id' => $item['item_id'] ?? null,
                     'quantity' => $item['quantity'],
                     'released_quantity' => 0,
-                    'unit' => $item['unit'],
+                    'unit' => $unitName,
                     'item_description' => $item['item_description'],
                     'tracking_status' => 'pending',
                 ]);
@@ -400,11 +406,16 @@ class RequestController extends Controller
             // Create new details
             $createdItems = [];
             foreach ($validated['details'] as $detail) {
+                $unitName = trim($detail['unit']);
+                if ($unitName !== '') {
+                    Unit::firstOrCreate(['name' => $unitName]);
+                }
+
                 $createdItem = $request->details()->create([
                     'request_id' => $request->id,
                     'item_id' => $detail['item_id'] ?? null,
                     'quantity' => $detail['quantity'],
-                    'unit' => $detail['unit'],
+                    'unit' => $unitName,
                     'item_description' => $detail['item_description']
                 ]);
                 $createdItems[] = $createdItem->id;

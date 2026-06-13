@@ -94,13 +94,8 @@ const newItem = ref<RequestItem>({
 const submitting = ref(false);
 const showPreview = ref(false);
 
-const unitOptions = [
-  { value: 'pcs', label: 'Piece/s' },
-  { value: 'box', label: 'Box/es' },
-  { value: 'set', label: 'Set/s' },
-  { value: 'kg', label: 'Kilogram/s' },
-  { value: 'pack', label: 'Pack/s' }
-];
+const units = ref<Array<{id: number, name: string}>>([]);
+const isLoadingUnits = ref(false);
 
 // NEW: Handle product selection from combobox
 const onProductSelect = (product: typeof inventoryProducts.value[0]) => {
@@ -235,9 +230,25 @@ const loadInventoryProducts = async () => {
   }
 };
 
+const loadUnits = async () => {
+  isLoadingUnits.value = true;
+  try {
+    const response = await axios.get('/api/units');
+    if (response.data.success) {
+      units.value = response.data.data;
+    }
+  } catch (error) {
+    console.error('Error loading units:', error);
+  } finally {
+    isLoadingUnits.value = false;
+  }
+};
+
 onMounted(() => {
   // Load products from inventory
   loadInventoryProducts();
+  // Load units
+  loadUnits();
   
   // First try to use the prop from Laravel
   if (props.reorderRequest && props.reorderRequest.id) {
@@ -421,16 +432,17 @@ const populateFormFromReorder = (reorderRequest: any) => {
               <ComboboxList>
                 <ComboboxEmpty>
                   <span class="text-sm text-muted-foreground px-2 py-1">
-                    No match found — type to add custom unit.
+                    <span v-if="isLoadingUnits">Loading units...</span>
+                    <span v-else>No match found — type to add custom unit.</span>
                   </span>
                 </ComboboxEmpty>
                 <ComboboxGroup>
                   <ComboboxItem
-                    v-for="unit in unitOptions"
-                    :key="unit.value"
-                    :value="unit.value"
+                    v-for="unit in units"
+                    :key="unit.id"
+                    :value="unit.name"
                   >
-                    {{ unit.label }}
+                    {{ unit.name }}
                     <ComboboxItemIndicator>
                       <Check class="ml-auto h-4 w-4" />
                     </ComboboxItemIndicator>
@@ -507,7 +519,7 @@ const populateFormFromReorder = (reorderRequest: any) => {
               
               <TableCell>
                 <div v-if="!item.editing">
-                  {{ unitOptions.find(u => u.value === item.unit)?.label || item.unit }}
+                  {{ item.unit }}
                 </div>
                 <Select 
                   v-else 
@@ -520,11 +532,11 @@ const populateFormFromReorder = (reorderRequest: any) => {
                   <SelectContent>
                     <SelectGroup>
                       <SelectItem 
-                        v-for="unit in unitOptions" 
-                        :key="unit.value" 
-                        :value="unit.value"
+                        v-for="unit in units" 
+                        :key="unit.id" 
+                        :value="unit.name"
                       >
-                        {{ unit.label }}
+                        {{ unit.name }}
                       </SelectItem>
                     </SelectGroup>
                   </SelectContent>
@@ -632,7 +644,7 @@ const populateFormFromReorder = (reorderRequest: any) => {
                       <TableCell>{{ item.item_description }}</TableCell>
                       <TableCell>{{ item.quantity }}</TableCell>
                       <TableCell>
-                        {{ unitOptions.find(u => u.value === item.unit)?.label || item.unit }}
+                        {{ item.unit }}
                       </TableCell>
                       <TableCell>
                         <span class="text-xs">{{ item.product_code || '-' }}</span>
