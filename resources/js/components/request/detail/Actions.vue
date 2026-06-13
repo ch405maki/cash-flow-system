@@ -8,7 +8,7 @@ import { router } from '@inertiajs/vue3';
 import { BadgeCheck, CircleCheck, FilePenLine, History, Printer, Rocket, ShoppingCart, XCircle } from 'lucide-vue-next';
 import { ref } from 'vue';
 import { useToast } from 'vue-toastification';
-import PasswordDialog from './PasswordDialog.vue';
+import PasswordDialog from '@/components/request/PasswordDialog.vue';
 
 const props = defineProps<{
     request: any;

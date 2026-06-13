@@ -8,10 +8,9 @@ import { Head, Link } from '@inertiajs/vue3';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useToast } from 'vue-toastification';
 
-import ItemsTable from '@/components/requests/releasing/ItemsTable.vue';
-import ReleaseControls from '@/components/requests/releasing/ReleaseControls.vue';
-import RequestDetailsTable from '@/components/requests/show/RequestDetailsTable.vue';
-import StatusBadge from '@/components/StatusBadge.vue';
+import ItemsTable from '@/components/request/release/ItemsTable.vue';
+import Controls from '@/components/request/release/Controls.vue';
+import DetailsTable from '@/components/request/detail/DetailsTable.vue';
 import SignatureDialog from '@/components/signature/SignatureDialog.vue';
 
 import { Skeleton } from '@/components/ui/skeleton';
@@ -252,7 +251,7 @@ const handleSignatureCancelled = () => {
                     </Link>
                 </div>
 
-                <RequestDetailsTable :request="request" />
+                <DetailsTable :request="request" />
 
                 <div class="pb-6 pt-4">
                     <h1 class="text-xl font-bold">Release Items</h1>
@@ -267,7 +266,7 @@ const handleSignatureCancelled = () => {
                             @update:releasedQuantity="updateReleasedQuantity"
                         />
 
-                        <ReleaseControls
+                        <Controls
                             :selected-items="selectedItems"
                             :details="form.details"
                             :is-releasing="isReleasing"
@@ -281,7 +280,7 @@ const handleSignatureCancelled = () => {
                                     <Link :href="route('request.index')">Cancel</Link>
                                 </Button>
                             </template>
-                        </ReleaseControls>
+                        </Controls>
                     </form>
                 </div>
             </template>

@@ -2,7 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, usePage } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
-import RequestForm from '@/components/requests/RequestForm.vue';
+import RequestForm from '@/components/request/RequestForm.vue';
 import { type BreadcrumbItem } from '@/types';
 import { requestService } from '@/services/requestService';
 import { Skeleton } from '@/components/ui/skeleton';

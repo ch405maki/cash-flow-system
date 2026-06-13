@@ -42,6 +42,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/approved-request', [ApprovedRequestController::class, 'index'])->name('approved-request.index');
-    Route::get('/approved-request/show/{request}', [ApprovedRequestController::class, 'show'])->name('approved-request.show');
 });
 

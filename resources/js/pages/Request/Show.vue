@@ -2,9 +2,9 @@
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Head, router, usePage } from '@inertiajs/vue3'
 import PrintableSection from '@/components/printables/RequestPrint.vue'
-import RequestDetailsTable from '@/components/requests/show/RequestDetailsTable.vue'
-import RequestItemsTable from '@/components/requests/show/RequestItemsTable.vue'
-import RequestActions from '@/components/requests/show/RequestActions.vue'
+import DetailsTable from '@/components/request/detail/DetailsTable.vue'
+import ItemsTable from '@/components/request/detail/ItemsTable.vue'
+import Actions from '@/components/request/detail/Actions.vue'
 import ReleasedItemsPrint from '@/components/printables/ReleasedItemsPrint.vue'
 import { ref, onMounted } from 'vue'
 import type { BreadcrumbItem } from '@/types'
@@ -70,7 +70,7 @@ onMounted(async () => {
         <div class="flex justify-between items-center">
           <h1 class="text-lg font-semibold">Request Details</h1>
           <div class="flex items-center space-x-2">
-            <RequestActions
+            <Actions
               :request="request"
               :user="user"
               @print-list="printArea"
@@ -80,9 +80,9 @@ onMounted(async () => {
           </div>
         </div>
 
-        <RequestDetailsTable :request="request" />
+        <DetailsTable :request="request" />
         <h2 class="text-lg font-semibold my-4">Items</h2>
-        <RequestItemsTable :user="user" :details="request.details" :inventory-status="inventoryStatus" />
+        <ItemsTable :user="user" :details="request.details" :inventory-status="inventoryStatus" />
 
         <PrintableSection ref="printableComponent" :request="request" :user="user" />
         <ReleasedItemsPrint ref="releasedItemsPrintable" :request="request" :user="user" />
