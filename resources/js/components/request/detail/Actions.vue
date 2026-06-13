@@ -39,13 +39,13 @@ function goToEditRequest(requestId: number) {
 async function submitStatusUpdate(newStatus: string, password: string) {
     processing.value = true;
     try {
-        await requestService.updateStatus(props.request.id, {
+        const response = await requestService.updateStatus(props.request.id, {
             status: newStatus,
             password: password,
         });
         toast.success('Status updated successfully');
         closeAllDialogs();
-        router.reload();
+        emit('status-updated', response.data.request);
     } catch (error: any) {
         if (error.response?.data?.errors?.password) {
             toast.error(error.response.data.errors.password[0]);
@@ -65,7 +65,7 @@ function closeAllDialogs() {
     showRejectModal.value = false;
 }
 
-const emit = defineEmits(['print-list', 'print-released-items', 'reorder']);
+const emit = defineEmits(['print-list', 'print-released-items', 'reorder', 'status-updated']);
 function printList() {
     emit('print-list');
 }
@@ -87,7 +87,7 @@ const handleReorder = () => {
                 <BadgeCheck />Approve
             </Button>
             <PasswordDialog
-                v-model="showApproveModal"
+                v-model:open="showApproveModal"
                 title="Password Verification"
                 description="Please enter your password to approve this request"
                 confirm-label="Confirm Approval"
@@ -100,7 +100,7 @@ const handleReorder = () => {
                 <XCircle />Reject
             </Button>
             <PasswordDialog
-                v-model="showRejectModal"
+                v-model:open="showRejectModal"
                 title="Password Verification"
                 description="Please enter your password to reject this request"
                 confirm-label="Confirm Rejection"
@@ -123,7 +123,7 @@ const handleReorder = () => {
                 <FilePenLine />For Request To Purchase
             </Button>
             <PasswordDialog
-                v-model="showForRequestModal"
+                v-model:open="showForRequestModal"
                 title="Password Verification"
                 description="Please enter your password to send this order"
                 confirm-label="Confirm Approval"
@@ -136,7 +136,7 @@ const handleReorder = () => {
         <div v-if="(user.access ?? user.access_id) == 3" class="flex gap-2">
             <Button size="sm" v-if="request.status === 'pending'" @click="showOrderModal = true"> <BadgeCheck />Approve </Button>
             <PasswordDialog
-                v-model="showOrderModal"
+                v-model:open="showOrderModal"
                 title="Password Verification"
                 description="Please enter your password to send this order"
                 confirm-label="Confirm Approval"
@@ -147,7 +147,7 @@ const handleReorder = () => {
             <!-- Reject Button for Department Head -->
             <Button variant="destructive" size="sm" v-if="request.status === 'pending'" @click="showRejectModal = true"> <XCircle />Deny </Button>
             <PasswordDialog
-                v-model="showRejectModal"
+                v-model:open="showRejectModal"
                 title="Password Verification"
                 description="Please enter your password to reject this request"
                 confirm-label="Confirm Rejection"

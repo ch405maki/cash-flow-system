@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 
 const props = defineProps<{
-  modelValue: boolean
+  open: boolean
   title: string
   description: string
   confirmLabel?: string
@@ -14,20 +14,22 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
+  (e: 'update:open', value: boolean): void
   (e: 'confirm', password: string): void
 }>()
 
 const password = ref('')
 
 function handleConfirm() {
-  emit('confirm', password.value)
+  const pwd = password.value
   password.value = ''
+  emit('update:open', false)
+  emit('confirm', pwd)
 }
 </script>
 
 <template>
-  <Dialog :open="modelValue" @update:open="$emit('update:modelValue', $event)">
+  <Dialog :open="open" @update:open="emit('update:open', $event)">
     <DialogContent>
       <DialogHeader>
         <DialogTitle>{{ title }}</DialogTitle>

@@ -247,7 +247,7 @@ class RequestController extends Controller
             'success' => true,
             'message' => 'Request status updated successfully',
             'data' => [
-                'request' => $request->fresh()->load(['department', 'user', 'approvals']),
+                'request' => $request->fresh()->load(['department', 'user', 'details', 'approvals.user']),
             ],
         ]);
     }

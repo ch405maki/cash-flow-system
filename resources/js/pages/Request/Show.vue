@@ -42,6 +42,10 @@ function handleReorder(request: any) {
   router.get('/request/create')
 }
 
+function onStatusUpdated(updatedRequest: any) {
+  request.value = updatedRequest
+}
+
 onMounted(async () => {
   try {
     const response = await requestService.showData(props.requestId)
@@ -76,6 +80,7 @@ onMounted(async () => {
               @print-list="printArea"
               @print-released-items="printReleasedItems"
               @reorder="handleReorder"
+              @status-updated="onStatusUpdated"
             />
           </div>
         </div>
