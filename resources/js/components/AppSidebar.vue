@@ -89,7 +89,7 @@ const executiveApprovalItems: NavItem[] = [
     },
     {
         title: 'P. O. Approval',
-        href: '/purchase-orders',
+        href: '/purchase-order',
         icon: ShoppingCart,
     },
 ];
@@ -137,9 +137,9 @@ const purchasingPONavItems = ref<DropdownNavItem[]>(
                 icon: ShoppingCart,
                 isOpen: false,
                 children: [
-                    { title: 'Draft', href: '/purchase-orders?status=draft' },
-                    { title: 'For EOD Approval', href: '/purchase-orders?status=forEOD' },
-                    { title: 'P. O. Status', href: '/purchase-orders?status=approved' },
+                    { title: 'Draft', href: '/purchase-order?status=draft' },
+                    { title: 'For EOD Approval', href: '/purchase-order?status=forEOD' },
+                    { title: 'P. O. Status', href: '/purchase-order?status=approved' },
                 ],
             },
         ],

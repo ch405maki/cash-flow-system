@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Link, router, useForm } from '@inertiajs/vue3'
+import { Link, router } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { PackageCheck, Ticket, Check, Send, Printer, ArrowLeft } from 'lucide-vue-next'
 import { useToast } from 'vue-toastification'
+import { purchaseOrderService } from '@/services/purchaseOrderService'
 import POTimestampSheet from './Potimestampsheet.vue'
 import POVoucherPopover from './Povoucherpopover.vue'
 
@@ -40,30 +41,30 @@ const emit = defineEmits<{
 
 const showApproveModal = ref(false)
 const showForApproveModal = ref(false)
+const processing = ref(false)
 
-const form = useForm({
-  status: '',
-  password: '',
-  remarks: '',
-  canvas_id: props.purchaseOrder.canvas_id,
-})
+const password = ref('')
+const remarks = ref('')
 
 async function submitStatusUpdate(newStatus: string) {
-  form.status = newStatus
-  form.canvas_id = props.purchaseOrder.canvas_id
-
-  form.patch(`/purchase-orders/${props.purchaseOrder.id}/status`, {
-    preserveScroll: true,
-    onSuccess: () => {
-      toast.success('Status updated successfully')
-      showApproveModal.value = false
-      showForApproveModal.value = false
-      form.reset()
-    },
-    onError: (errors) => {
-      toast.error(errors.password ?? 'Failed to update status')
-    },
-  })
+  processing.value = true
+  try {
+    await purchaseOrderService.updateStatus(props.purchaseOrder.id, {
+      status: newStatus,
+      password: password.value,
+      remarks: remarks.value,
+    })
+    toast.success('Status updated successfully')
+    showApproveModal.value = false
+    showForApproveModal.value = false
+    password.value = ''
+    remarks.value = ''
+    router.reload({ only: ['purchaseOrder'] })
+  } catch (error: any) {
+    toast.error(error.response?.data?.message || error.response?.data?.errors?.password || 'Failed to update status')
+  } finally {
+    processing.value = false
+  }
 }
 
 function goToCreate(poId?: number) {
@@ -75,7 +76,7 @@ function goToCreate(poId?: number) {
 <template>
   <div class="space-x-2 flex space-x-2">
     <!-- Receiving Page -->
-    <Button v-if="purchaseOrder.status === 'voucherCreated'" size="sm" @click="router.visit(`/purchase-orders/${purchaseOrder.id}/receiving`)">
+    <Button v-if="purchaseOrder.status === 'voucherCreated'" size="sm" @click="router.visit(`/purchase-order/${purchaseOrder.id}/receiving`)">
       <PackageCheck />
       Receiving Page
     </Button>
@@ -97,7 +98,7 @@ function goToCreate(poId?: number) {
           <Button
             variant="default"
             size="sm"
-            :disabled="purchaseOrder.status !== 'forEOD' || form.processing"
+            :disabled="purchaseOrder.status !== 'forEOD' || processing"
           >
             <Check /> Approve
           </Button>
@@ -110,16 +111,16 @@ function goToCreate(poId?: number) {
           <div class="space-y-4">
             <div class="space-y-2">
               <Label for="approve-password">Password</Label>
-              <Input id="approve-password" v-model="form.password" type="password" placeholder="Enter your password" class="w-full" />
+              <Input id="approve-password" v-model="password" type="password" placeholder="Enter your password" class="w-full" />
             </div>
             <div class="space-y-2">
               <Label for="approve-remarks">Remarks (Optional)</Label>
-              <Textarea id="approve-remarks" v-model="form.remarks" placeholder="Add any remarks" class="w-full" />
+              <Textarea id="approve-remarks" v-model="remarks" placeholder="Add any remarks" class="w-full" />
             </div>
           </div>
           <DialogFooter>
-            <Button @click="submitStatusUpdate('approved')" :disabled="!form.password || form.processing">
-              <span v-if="form.processing">Processing...</span>
+            <Button @click="submitStatusUpdate('approved')" :disabled="!password || processing">
+              <span v-if="processing">Processing...</span>
               <span v-else>Confirm Approval</span>
             </Button>
           </DialogFooter>
@@ -137,7 +138,7 @@ function goToCreate(poId?: number) {
           <Button
             variant="default"
             size="sm"
-            :disabled="['forEOD', 'approved'].includes(purchaseOrder.status) || form.processing"
+            :disabled="['forEOD', 'approved'].includes(purchaseOrder.status) || processing"
           >
             <Send /> Submit for EOD
           </Button>
@@ -150,16 +151,16 @@ function goToCreate(poId?: number) {
           <div class="space-y-4">
             <div class="space-y-2">
               <Label for="eod-password">Password</Label>
-              <Input id="eod-password" v-model="form.password" type="password" placeholder="Enter your password" class="w-full" />
+              <Input id="eod-password" v-model="password" type="password" placeholder="Enter your password" class="w-full" />
             </div>
             <div class="space-y-2">
               <Label for="eod-remarks">Remarks (Optional)</Label>
-              <Textarea id="eod-remarks" v-model="form.remarks" placeholder="Add any remarks" class="w-full" />
+              <Textarea id="eod-remarks" v-model="remarks" placeholder="Add any remarks" class="w-full" />
             </div>
           </div>
           <DialogFooter>
-            <Button @click="submitStatusUpdate('forEOD')" :disabled="!form.password || form.processing">
-              <span v-if="form.processing">Processing...</span>
+            <Button @click="submitStatusUpdate('forEOD')" :disabled="!password || processing">
+              <span v-if="processing">Processing...</span>
               <span v-else>Confirm Approval</span>
             </Button>
           </DialogFooter>
@@ -184,7 +185,7 @@ function goToCreate(poId?: number) {
         <Printer /> Print
       </Button>
       <Button variant="outline" size="sm" as-child>
-        <Link href="/purchase-orders"><ArrowLeft /> Back</Link>
+        <Link href="/purchase-order"><ArrowLeft /> Back</Link>
       </Button>
     </div>
   </div>

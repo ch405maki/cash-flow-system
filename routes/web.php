@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Web\PurchaseOrderController;
 use App\Http\Controllers\Web\CanvasController;
 use App\Http\Controllers\Web\ActivityLogController;
 use App\Http\Controllers\Web\DashboardController;
@@ -21,15 +20,6 @@ Route::get('/', [AuthenticatedSessionController::class, 'create'])
 // Dashboard Route
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-});
-
-// Purchase Order Route
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
-    Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
-    Route::get('/purchase-order/create', [PurchaseOrderController::class, 'create'])->name('purchase-order.create');
-    
-    Route::patch('/purchase-orders/{purchaseOrder}/status', [PurchaseOrderController::class, 'updateStatus'])->name('purchase-orders.status.update');
 });
 
 // Canvas Route
@@ -80,6 +70,7 @@ require __DIR__.'/web/vouchers.php';
 require __DIR__.'/web/reports.php';
 require __DIR__.'/web/request.php';
 require __DIR__.'/web/request-to-order.php';
+require __DIR__.'/web/purchase-orders.php';
 require __DIR__.'/web/notification.php';
 require __DIR__.'/web/inventory.php';
 require __DIR__.'/web/receiving.php';

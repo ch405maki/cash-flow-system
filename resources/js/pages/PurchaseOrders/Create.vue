@@ -216,7 +216,7 @@ const submitForm = async () => {
     const response = await purchaseOrderService.create(payload, config);
 
     toast.success('Purchase Order created successfully!');
-    window.location.href = `/purchase-orders/${response.id}`;
+    window.location.href = `/purchase-order/${response.id}`;
   } catch (error) {
     if (error.response?.data?.message) {
       toast.error(error.response.data.message);

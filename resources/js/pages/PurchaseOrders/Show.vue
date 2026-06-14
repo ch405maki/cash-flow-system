@@ -75,7 +75,7 @@ const props = defineProps<{
 
 // ── Breadcrumbs ──────────────────────────────────────────────────
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Purchase Orders', href: '/purchase-orders' },
+  { title: 'Purchase Orders', href: '/purchase-order' },
   { title: props.purchaseOrder.po_no, href: '' },
 ]
 

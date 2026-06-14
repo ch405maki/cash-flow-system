@@ -60,7 +60,7 @@ const requestNavItems: NavItem[] = [
 const purchaseNavItems: NavItem[] = [
     {
         title: 'Purchase Order',
-        href: '/purchase-orders',
+        href: '/purchase-order',
         icon: LayoutGrid,
     },
 ];

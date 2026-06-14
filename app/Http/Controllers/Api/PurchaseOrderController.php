@@ -4,27 +4,22 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\PurchaseOrder;
-use App\Models\PurchaseOrderDetail;
-use App\Models\Account;
 use App\Models\Canvas;
 use App\Models\CanvasFile;
 use App\Models\CanvasSelectedFile;
 use App\Models\PurchaseOrderApproval;
-use App\Models\Department;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use App\Models\Request as PurchaseRequest;
 use App\Services\ActivityLogger;
-use Inertia\Inertia;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 
 class PurchaseOrderController extends Controller
 {
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'payee' => 'required|string',
@@ -36,7 +31,7 @@ class PurchaseOrderController extends Controller
             'user_id' => 'required|exists:users,id',
             'department_id' => 'required|exists:departments,id',
             'account_id' => 'nullable|exists:accounts,id',
-            'details' => 'required|array|min:1',    
+            'details' => 'required|array|min:1',
             'details.*.quantity' => 'required|numeric|min:1',
             'details.*.unit' => 'required|string',
             'details.*.item_description' => 'required|string',
@@ -62,7 +57,6 @@ class PurchaseOrderController extends Controller
 
         DB::beginTransaction();
         try {
-            // Generate PO number safely with lock
             $yearMonth = date('Ym');
             $lastPO = PurchaseOrder::where('po_no', 'like', "PO-{$yearMonth}%")
                 ->lockForUpdate()
@@ -72,15 +66,12 @@ class PurchaseOrderController extends Controller
             $sequence = $lastPO ? ((int) substr($lastPO->po_no, -4)) + 1 : 1;
             $validated['po_no'] = 'PO-' . $yearMonth . str_pad($sequence, 4, '0', STR_PAD_LEFT);
 
-            // Create purchase order
             $purchaseOrder = PurchaseOrder::create($validated);
 
-            // Add details
             foreach ($validated['details'] as $detail) {
                 $purchaseOrder->details()->create($detail);
             }
 
-            // Handle file upload for no_canvas tagging
             if ($validated['tagging'] === 'no_canvas' && $request->hasFile('file')) {
                 $canvas = Canvas::create([
                     'title' => $purchaseOrder->po_no,
@@ -117,7 +108,6 @@ class PurchaseOrderController extends Controller
                     ->log("Supporting document uploaded for PO {$purchaseOrder->po_no}");
             }
 
-            // Optional canvas update for with_canvas tagging
             if ($validated['tagging'] === 'with_canvas' && $validated['canvas_id']) {
                 $canvas = Canvas::find($validated['canvas_id']);
                 if ($canvas) {
@@ -137,7 +127,6 @@ class PurchaseOrderController extends Controller
                 }
             }
 
-            // Activity log for PO
             ActivityLogger::make($request)
                 ->on($purchaseOrder)
                 ->with([
@@ -148,7 +137,6 @@ class PurchaseOrderController extends Controller
                 ->logName('PO Created')
                 ->log('Created purchase order');
 
-            // Approval entry creation
             PurchaseOrderApproval::create([
                 'purchase_order_id' => $purchaseOrder->id,
                 'user_id' => $validated['user_id'],
@@ -167,46 +155,38 @@ class PurchaseOrderController extends Controller
         }
     }
 
-    public function updateStatus(Request $request, PurchaseOrder $purchaseOrder)
+    public function updateStatus(Request $request, PurchaseOrder $purchaseOrder): JsonResponse
     {
         $validated = $request->validate([
             'status' => 'required|in:approved,rejected,released,to_order,forEOD',
             'password' => 'required|string',
             'remarks' => 'nullable|string|max:500',
-            'canvas_id' => 'nullable|exists:canvases,id' // Add validation for canvas_id
         ]);
 
-        // Verify password
         if (!Hash::check($validated['password'], auth()->user()->password)) {
-            return back()->withErrors(['password' => 'Incorrect password']);
+            return response()->json(['message' => 'Incorrect password'], 422);
         }
 
         DB::beginTransaction();
         try {
             $oldStatus = $purchaseOrder->status;
 
-            // Update Purchase Order
             $purchaseOrder->update([
                 'status' => $validated['status'],
                 'remarks' => $validated['remarks'] ?? null
             ]);
 
-            // Update related Canvas if canvas_id exists and status is being approved
             if ($purchaseOrder->canvas_id) {
                 $canvas = Canvas::find($purchaseOrder->canvas_id);
                 if ($canvas) {
-                    $canvas->update([
-                        'status' => 'submitted',
-                    ]);
-                    
-                    // Log canvas update
+                    $canvas->update(['status' => 'submitted']);
+
                     ActivityLogger::make($request)
                         ->on($canvas)
                         ->log("Canvas status updated to submitted");
                 }
             }
 
-            // Activity log for PO
             ActivityLogger::make($request)
                 ->on($purchaseOrder)
                 ->with([
@@ -218,7 +198,6 @@ class PurchaseOrderController extends Controller
                 ->logName('Approval')
                 ->log("Status changed to {$validated['status']}");
 
-            // Approval entry creation
             PurchaseOrderApproval::create([
                 'purchase_order_id' => $purchaseOrder->id,
                 'user_id' => auth()->id(),
@@ -228,10 +207,16 @@ class PurchaseOrderController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('success', 'Status updated successfully');
+            return response()->json([
+                'message' => 'Status updated successfully',
+                'purchaseOrder' => $purchaseOrder->fresh()->load('approvals.user'),
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Failed to update status: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to update status',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }

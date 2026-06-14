@@ -28,7 +28,7 @@ const goToRequestApproval = () => {
 };
 
 const goToPurchaseApproval = () => {
-  router.get('/purchase-orders');
+  router.get('/purchase-order');
 };
 
 const goToVoucherApproval = () => {

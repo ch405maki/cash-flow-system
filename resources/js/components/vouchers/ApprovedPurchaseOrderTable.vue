@@ -35,7 +35,7 @@ const handleRowClick = (event: MouseEvent, poId: number) => {
 };
 
 function goToPO(id: number) {
-  router.visit(`/purchase-orders/${id}`)
+  router.visit(`/purchase-order/${id}`)
 }
 
 function formatDate(dateStr: string): string {

@@ -75,6 +75,6 @@ class ReceivingController extends Controller
             ->on($purchaseOrder)
             ->log("Items received for PO #{$purchaseOrder->po_no}");
 
-        return back()->with('success', 'Items received successfully.');
+        return response()->json(['message' => 'Items received successfully.']);
     }
 }

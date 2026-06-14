@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import PurchaseOrderTable from '@/components/purchaseOrder/PurchaseOrderTable.vue';
 import { Button } from '@/components/ui/button';
+import { PlusCircle } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -30,10 +31,13 @@ const props = defineProps<{
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
-      <PageHeader 
-        title="Purchase Orders" 
-        subtitle="Monitoring submitted purchase orders"
-      />
+      <div class="flex justify-between items-center">
+        <PageHeader 
+          title="Purchase Orders" 
+          subtitle="Monitoring submitted purchase orders"
+        />
+        <Button v-if="filters.status === 'draft'" size="sm" @click="router.visit('/purchase-order/create')"><PlusCircle />Create PO</Button>
+      </div>
 
       <PurchaseOrderTable :purchase-orders="purchaseOrders" />
 
