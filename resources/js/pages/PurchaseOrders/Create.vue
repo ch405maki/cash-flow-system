@@ -91,11 +91,22 @@ const editItem = (index: number) => {
 };
 
 const saveEdit = (index: number) => {
-  form.value.details[index].amount = 
-    form.value.details[index].quantity * form.value.details[index].unit_price;
+  if (form.value.details[index].quantity === 0) {
+    form.value.details[index].amount = form.value.details[index].unit_price;
+  } else {
+    form.value.details[index].amount = 
+      form.value.details[index].quantity * form.value.details[index].unit_price;
+  }
   
   form.value.details[index].editing = false;
   delete form.value.details[index].original;
+};
+
+const calculateItemAmount = (item: PurchaseOrderDetail) => {
+  if (item.quantity === 0) {
+    return item.unit_price;
+  }
+  return item.quantity * item.unit_price;
 };
 
 const cancelEdit = (index: number) => {
@@ -128,7 +139,12 @@ const addItem = () => {
     return;
   }
 
-  newItem.value.amount = newItem.value.quantity * newItem.value.unit_price;
+  if (newItem.value.quantity === 0) {
+    newItem.value.amount = newItem.value.unit_price;
+  } else {
+    newItem.value.amount = newItem.value.quantity * newItem.value.unit_price;
+  }
+  
   form.value.details.push({ ...newItem.value });
   resetNewItem();
 };
@@ -208,7 +224,7 @@ const submitForm = async () => {
       formData.append('tagging', form.value.tagging);
       formData.append('amount', String(form.value.amount));
 
-      // ✅ Append details using correct nested array syntax
+      // Append details using correct nested array syntax
       form.value.details.forEach((item, index) => {
         formData.append(`details[${index}][quantity]`, String(item.quantity));
         formData.append(`details[${index}][unit]`, item.unit);
@@ -454,11 +470,11 @@ const submitForm = async () => {
                         v-else
                         type="number"
                         v-model.number="item.quantity"
-                        min="1"
+                        min="0"
                         placeholder="0"
                         @click.stop
                         @keydown="handleKeyDown($event, index)"
-                        @change="item.amount = item.quantity * item.unit_price"
+                        @change="item.amount = calculateItemAmount(item)"
                         class="w-full"
                       />
                     </TableCell>
@@ -497,7 +513,7 @@ const submitForm = async () => {
                         placeholder="0.00"
                         @click.stop
                         @keydown="handleKeyDown($event, index)"
-                        @change="item.amount = item.quantity * item.unit_price"
+                        @change="item.amount = calculateItemAmount(item)"
                         class="w-full"
                       />
                     </TableCell>

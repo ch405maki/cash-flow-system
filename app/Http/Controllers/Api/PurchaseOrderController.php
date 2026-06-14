@@ -138,7 +138,7 @@ class PurchaseOrderController extends Controller
             'department_id' => 'required|exists:departments,id',
             'account_id' => 'nullable|exists:accounts,id',
             'details' => 'required|array|min:1',
-            'details.*.quantity' => 'required|numeric|min:1',
+            'details.*.quantity' => 'required|numeric|min:0',
             'details.*.unit' => 'required|string',
             'details.*.item_description' => 'required|string',
             'details.*.unit_price' => 'required|numeric|min:0',
