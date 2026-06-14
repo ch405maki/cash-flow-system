@@ -45,8 +45,18 @@ export const purchaseOrderService = {
     return data;
   },
 
+  editData: async (id: number): Promise<any> => {
+    const { data } = await api.get(`/api/purchase-order/${id}/edit-data`);
+    return data;
+  },
+
   create: async (payload: CreatePOPayload | FormData, config?: any): Promise<{ id: number }> => {
     const { data } = await api.post('/api/purchase-order', payload, config);
+    return data;
+  },
+
+  update: async (id: number, payload: any): Promise<any> => {
+    const { data } = await api.patch(`/api/purchase-order/${id}`, payload);
     return data;
   },
 

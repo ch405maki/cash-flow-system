@@ -125,6 +125,20 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
+    public function editData(PurchaseOrder $purchaseOrder): JsonResponse
+    {
+        $purchaseOrder->load(['details']);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'purchaseOrder' => $purchaseOrder,
+                'departments' => Department::orderBy('department_name')->get(['id', 'department_name']),
+                'accounts' => Account::orderBy('account_title')->get(['id', 'account_title']),
+            ],
+        ]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -257,6 +271,76 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'message' => 'Failed to create purchase order',
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function update(Request $request, PurchaseOrder $purchaseOrder): JsonResponse
+    {
+        if ($purchaseOrder->status !== 'draft') {
+            return response()->json([
+                'message' => 'Only draft purchase orders can be edited.'
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'payee' => 'required|string',
+            'check_payable_to' => 'required|string',
+            'date' => 'required|date',
+            'purpose' => 'required|string',
+            'tin_no' => 'nullable|string',
+            'department_id' => 'required|exists:departments,id',
+            'details' => 'required|array|min:1',
+            'details.*.quantity' => 'required|numeric|min:0',
+            'details.*.unit' => 'required|string',
+            'details.*.item_description' => 'required|string',
+            'details.*.unit_price' => 'required|numeric|min:0',
+            'details.*.amount' => 'required|numeric|min:0',
+        ]);
+
+        $validated['amount'] = collect($validated['details'])->sum('amount');
+
+        DB::beginTransaction();
+        try {
+            $purchaseOrder->update([
+                'payee' => $validated['payee'],
+                'check_payable_to' => $validated['check_payable_to'],
+                'date' => $validated['date'],
+                'purpose' => $validated['purpose'],
+                'tin_no' => $validated['tin_no'] ?? null,
+                'department_id' => $validated['department_id'],
+                'amount' => $validated['amount'],
+            ]);
+
+            $purchaseOrder->details()->delete();
+
+            foreach ($validated['details'] as $detail) {
+                $purchaseOrder->details()->create($detail);
+            }
+
+            ActivityLogger::make($request)
+                ->on($purchaseOrder)
+                ->with([
+                    'po_no' => $purchaseOrder->po_no,
+                    'amount' => $validated['amount'],
+                    'department_id' => $validated['department_id'],
+                ])
+                ->logName('PO Updated')
+                ->log('Updated draft purchase order');
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Purchase order updated successfully',
+                'data' => $purchaseOrder->fresh()->load('details'),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Failed to update purchase order',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

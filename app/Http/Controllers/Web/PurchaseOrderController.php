@@ -29,4 +29,11 @@ class PurchaseOrderController extends Controller
             'canvas_id' => request()->query('canvas_id'),
         ]);
     }
+
+    public function edit(PurchaseOrder $purchaseOrder)
+    {
+        return Inertia::render('PurchaseOrders/Edit', [
+            'purchaseOrderId' => $purchaseOrder->id,
+        ]);
+    }
 }
