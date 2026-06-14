@@ -37,6 +37,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   print: []
+  statusUpdated: []
 }>()
 
 const showApproveModal = ref(false)
@@ -59,7 +60,7 @@ async function submitStatusUpdate(newStatus: string) {
     showForApproveModal.value = false
     password.value = ''
     remarks.value = ''
-    router.reload({ only: ['purchaseOrder'] })
+    emit('statusUpdated')
   } catch (error: any) {
     toast.error(error.response?.data?.message || error.response?.data?.errors?.password || 'Failed to update status')
   } finally {

@@ -30,6 +30,21 @@ export interface UpdateStatusPayload {
 }
 
 export const purchaseOrderService = {
+  indexData: async (params?: { status?: string; page?: number }): Promise<any> => {
+    const { data } = await api.get('/api/purchase-order/index-data', { params });
+    return data;
+  },
+
+  showData: async (id: number): Promise<any> => {
+    const { data } = await api.get(`/api/purchase-order/${id}/show-data`);
+    return data;
+  },
+
+  createData: async (): Promise<any> => {
+    const { data } = await api.get('/api/purchase-order/create-data');
+    return data;
+  },
+
   create: async (payload: CreatePOPayload | FormData, config?: any): Promise<{ id: number }> => {
     const { data } = await api.post('/api/purchase-order', payload, config);
     return data;

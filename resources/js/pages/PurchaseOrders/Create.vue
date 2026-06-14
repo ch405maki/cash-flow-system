@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGr
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from 'vue-toastification';
 import { purchaseOrderService } from '@/services/purchaseOrderService';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { Skeleton } from '@/components/ui/skeleton'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   Table,
@@ -32,15 +33,15 @@ interface PurchaseOrderDetail {
   original?: PurchaseOrderDetail;
 }
 
-interface Props {
-  user_id: number;
-  departments?: Array<{ id: number; department_name: string }>;
-  accounts?: Array<{ id: number; account_title: string }>;
+const props = defineProps<{
   canvas_id?: string;
-}
+}>();
 
-const props = defineProps<Props>();
 const toast = useToast();
+const loading = ref(true)
+const user_id = ref(0)
+const departments = ref<Array<{ id: number; department_name: string }>>([])
+const accounts = ref<Array<{ id: number; account_title: string }>>([])
 
 type TaggingType = 'with_canvas' | 'no_canvas';
 
@@ -56,13 +57,27 @@ const form = ref({
   purpose: '',
   tin_no: '',
   status: 'draft',
-  user_id: props.user_id,
+  user_id: 0,
   department_id: '',
   details: [] as PurchaseOrderDetail[],
   canvas_id: props.canvas_id || null,
   tagging: props.canvas_id ? 'with_canvas' : 'no_canvas' as TaggingType,
   file: null as File | null, 
 });
+
+onMounted(async () => {
+  try {
+    const response = await purchaseOrderService.createData()
+    user_id.value = response.data.user_id
+    departments.value = response.data.departments
+    accounts.value = response.data.accounts
+    form.value.user_id = response.data.user_id
+  } catch (error) {
+    console.error('Failed to load form data:', error)
+  } finally {
+    loading.value = false
+  }
+})
 
 const editItem = (index: number) => {
   form.value.details.forEach((item, i) => {
@@ -232,11 +247,18 @@ const submitForm = async () => {
 <template>
   <Head title="Create Purchase Order" />
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="p-6 space-y-6">
-      <form @submit.prevent="submitForm" class="space-y-2" enctype="multipart/form-data">
-        <div class="flex">
-          <h1 class="text-2xl font-bold">Create Purchase Order</h1>
-        </div>        
+    <div v-if="loading" class="p-6 space-y-4">
+      <Skeleton class="h-8 w-64" />
+      <Skeleton class="h-12 w-full" />
+      <Skeleton class="h-64 w-full" />
+    </div>
+
+    <template v-else>
+      <div class="p-6 space-y-6">
+        <form @submit.prevent="submitForm" class="space-y-2" enctype="multipart/form-data">
+          <div class="flex">
+            <h1 class="text-2xl font-bold">Create Purchase Order</h1>
+          </div>          
         <!-- File Upload Section (only for no_canvas) -->
         <div v-if="form.tagging === 'no_canvas'" class="space-y-4 border p-4 rounded-lg">
           <h2 class="text-lg font-semibold">Quote Document</h2>
@@ -287,7 +309,7 @@ const submitForm = async () => {
           <!-- Payee Field -->
           <div class="space-y-2 md:col-span-2">
             <Label for="payee">Company Name</Label>
-            <Input id="payee" v-model="form.payee" required />
+            <Input id="payee" v-model="form.payee" placeholder="e.g. Acme Corporation" required />
           </div>
           <!-- Tagging Radio Group -->
           <div class="space-y-2">
@@ -308,7 +330,7 @@ const submitForm = async () => {
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="space-y-2 md:col-span-2">
             <Label for="check_payable_to">Check Payable To</Label>
-            <Input id="check_payable_to" v-model="form.check_payable_to" required />
+            <Input id="check_payable_to" v-model="form.check_payable_to" placeholder="e.g. Acme Corporation" required />
           </div>
 
           <!-- Date Field -->
@@ -334,14 +356,14 @@ const submitForm = async () => {
           </div>
           <div class="space-y-2 md:col-span-1">
             <Label for="tin_no">Company TIN</Label>
-            <Input id="tin_no" type="text" v-model="form.tin_no" required />
+            <Input id="tin_no" type="text" v-model="form.tin_no" placeholder="e.g. 123-456-789-000" required />
           </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
           <div class="space-y-2">
             <Label for="purpose">Purpose</Label>
-            <Textarea id="purpose" v-model="form.purpose" required />
+            <Textarea id="purpose" v-model="form.purpose" placeholder="Describe the purpose of this purchase order..." required />
           </div>
         </div>
 
@@ -352,12 +374,12 @@ const submitForm = async () => {
             <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
               <div class="space-y-2 md:col-span-6">
                 <Label for="item_description">Description</Label>
-                <Input id="item_description" v-model="newItem.item_description" />
+                <Input id="item_description" v-model="newItem.item_description" placeholder="Enter item description" />
               </div>
 
               <div class="space-y-2 md:col-span-1">
                 <Label for="quantity">Quantity</Label>
-                <Input id="quantity" type="number" v-model.number="newItem.quantity" min="1" />
+                <Input id="quantity" type="number" v-model.number="newItem.quantity" min="1" placeholder="0" />
               </div>
 
               <div class="md:col-span-2 space-y-2">
@@ -379,7 +401,7 @@ const submitForm = async () => {
 
               <div class="space-y-2 md:col-span-2">
                 <Label for="unit_price">Unit Price</Label>
-                <Input id="unit_price" type="number" step="0.01" v-model.number="newItem.unit_price" min="0" />
+                <Input id="unit_price" type="number" step="0.01" v-model.number="newItem.unit_price" min="0" placeholder="0.00" />
               </div>
 
               <Button type="button" @click="addItem" class="w-full md:col-span-1 px">
@@ -418,6 +440,7 @@ const submitForm = async () => {
                       <Input 
                         v-else
                         v-model="item.item_description"
+                        placeholder="Enter item description"
                         @click.stop
                         @keydown="handleKeyDown($event, index)"
                         class="w-full"
@@ -432,6 +455,7 @@ const submitForm = async () => {
                         type="number"
                         v-model.number="item.quantity"
                         min="1"
+                        placeholder="0"
                         @click.stop
                         @keydown="handleKeyDown($event, index)"
                         @change="item.amount = item.quantity * item.unit_price"
@@ -470,6 +494,7 @@ const submitForm = async () => {
                         step="0.01"
                         v-model.number="item.unit_price"
                         min="0"
+                        placeholder="0.00"
                         @click.stop
                         @keydown="handleKeyDown($event, index)"
                         @change="item.amount = item.quantity * item.unit_price"
@@ -532,8 +557,9 @@ const submitForm = async () => {
           <Button type="submit">
             Create Purchase Order
           </Button>
-        </div>
-      </form>
-    </div>
+          </div>
+        </form>
+      </div>
+    </template>
   </AppLayout>
 </template>

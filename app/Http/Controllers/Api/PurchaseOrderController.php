@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\PurchaseOrder;
+use App\Models\Account;
+use App\Models\Department;
 use App\Models\Canvas;
 use App\Models\CanvasFile;
 use App\Models\CanvasSelectedFile;
@@ -19,6 +21,110 @@ use Illuminate\Support\Facades\Auth;
 
 class PurchaseOrderController extends Controller
 {
+    public function indexData(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        $status = $request->query('status');
+
+        $query = PurchaseOrder::with(['user', 'department', 'account', 'details'])
+                    ->latest();
+
+        if ($user->role === 'purchasing') {
+            $validStatuses = ['approved', 'draft', 'forEOD', 'rejected'];
+
+            if ($request->filled('status')) {
+                if (in_array($status, $validStatuses)) {
+                    if ($status === 'approved') {
+                        $query->whereIn('status', ['approved', 'voucherCreated']);
+                    } else {
+                        $query->where('status', $status);
+                    }
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
+            }
+
+        } elseif ($user->role === 'property_custodian') {
+            if ($request->filled('status')) {
+                if ($status === 'approved') {
+                    $query->whereIn('status', ['approved', 'voucherCreated']);
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
+            } else {
+                $query->whereIn('status', ['approved', 'voucherCreated']);
+            }
+
+        } else {
+            $query->where('status', 'forEOD');
+        }
+
+        $purchaseOrders = $query->paginate(10);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'purchaseOrders' => $purchaseOrders,
+            ],
+        ]);
+    }
+
+    public function showData(PurchaseOrder $purchaseOrder): JsonResponse
+    {
+        $user = Auth::user();
+
+        $purchaseOrder->load([
+            'user',
+            'department',
+            'account',
+            'details',
+            'canvas.selected_files.file',
+            'canvas.selected_files.approval',
+            'canvas.approvals.user',
+            'approvals.user',
+            'voucher.user',
+            'voucher.details',
+            'voucher.approvals.user',
+        ]);
+
+        $firstFileId = $purchaseOrder->canvas?->selected_files?->first()?->canvas_file_id;
+
+        $signatories = \App\Models\User::whereIn('role', ['executive_director', 'president', 'vice_president'])
+            ->get(['first_name', 'middle_name', 'last_name', 'role', 'id'])
+            ->map(fn ($u) => [
+                'full_name' => trim($u->first_name . ' ' . ($u->middle_name ?? '') . ' ' . $u->last_name),
+                'position' => $u->role,
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'purchaseOrder' => $purchaseOrder,
+                'authUser' => [
+                    'id' => $user->id,
+                    'name' => $user->first_name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'access' => $user->access_id,
+                ],
+                'firstFileId' => $firstFileId,
+                'signatories' => $signatories,
+            ],
+        ]);
+    }
+
+    public function createData(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'user_id' => Auth::id(),
+                'departments' => Department::orderBy('department_name')->get(['id', 'department_name']),
+                'accounts' => Account::orderBy('account_title')->get(['id', 'account_title']),
+            ],
+        ]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
