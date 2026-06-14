@@ -79,7 +79,7 @@ const executiveMainItems: NavItem[] = [
 const executiveApprovalItems: NavItem[] = [
     {
         title: 'Request For Purchase',
-        href: '/for-approval',
+        href: '/request-to-order/for-approval',
         icon: FileCheck2,
     },
     {
@@ -103,7 +103,7 @@ const purchasingNavItems: NavItem[] = [
     },
     {
         title: 'Approved Request',
-        href: '/approved-request',
+        href: '/request-to-order/approved',
         icon: FileCheck2,
     },
 ];
@@ -161,7 +161,7 @@ const custodianNavItems: NavItem[] = [
     },
     {
         title: 'On Process Orders',
-        href: '/on-process-orders',
+        href: '/request-to-order/on-process-orders',
         icon: Package,
     },
     {
@@ -187,12 +187,12 @@ const custodianApprovalItems: NavItem[] = [
     },
     {
         title: 'For EOD Approval',
-        href: '/for-approval',
+        href: '/request-to-order/for-approval',
         icon: ClipboardCheck,
     },
     {
         title: 'P. O. Status',
-        href: '/to-order/on-process',
+        href: '/request-to-order/on-process',
         icon: ClipboardCheck,
     },
 ];

@@ -116,7 +116,7 @@ const submit = () => {
     items,
     request_ids: [...new Set(items.map(item => item.request_id))],
     department_ids: [...new Set(items.map(item => item.department_id))]
-  })).post(route('request-to-orders.store'));
+  })).post(route('request-to-order.store'));
 };
 
 const printArea = () =>{

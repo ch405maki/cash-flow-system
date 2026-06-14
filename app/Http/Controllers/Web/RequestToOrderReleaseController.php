@@ -52,7 +52,7 @@ class RequestToOrderReleaseController extends Controller
             $detail->remaining_quantity = $detail->quantity - ($detail->releases_sum_quantity_released ?? 0);
         });
 
-        return Inertia::render('PurchaseRequest/Release/Create', [
+        return Inertia::render('RequestToOrder/Release/Create', [
             'order' => $order
         ]);
     }

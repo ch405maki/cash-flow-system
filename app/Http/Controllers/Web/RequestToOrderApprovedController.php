@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Inertia\Inertia;
 use App\Models\RequestToOrder;
 
-class ApprovedRequestController extends Controller
+class RequestToOrderApprovedController extends Controller
 {
 
     public function index()

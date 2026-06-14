@@ -113,7 +113,7 @@ const submitForm = () => {
     }
   })
 
-  form.post(route('request-to-orders.storeManual'), {
+  form.post(route('request-to-order.store-manual'), {
     preserveScroll: true,
     onSuccess: () => {
       toast.success('Order created successfully!')

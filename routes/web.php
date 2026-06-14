@@ -79,6 +79,7 @@ require __DIR__.'/web/pettycash.php';
 require __DIR__.'/web/vouchers.php';
 require __DIR__.'/web/reports.php';
 require __DIR__.'/web/request.php';
+require __DIR__.'/web/request-to-order.php';
 require __DIR__.'/web/notification.php';
 require __DIR__.'/web/inventory.php';
 require __DIR__.'/web/receiving.php';

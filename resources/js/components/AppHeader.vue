@@ -56,12 +56,12 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'For Approval Request',
-        href: '/for-approval',
+        href: '/request-to-order/for-approval',
         icon: LayoutGrid,
     },
     {
         title: 'Approved Request',
-        href: '/approved-request',
+        href: '/request-to-order/approved',
         icon: LayoutGrid,
     },
     {

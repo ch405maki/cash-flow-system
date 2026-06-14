@@ -15,7 +15,7 @@ use App\Http\Requests\StoreRequestToOrderRequest;
 use App\Models\Department;
 use App\Models\PurchaseOrderDetail;
 
-class RequestApprovalController extends Controller
+class RequestToOrderApprovalController extends Controller
 {
     public function index() 
     {
@@ -25,7 +25,7 @@ class RequestApprovalController extends Controller
             ->whereIn('status', ['forEOD'])
             ->get();
 
-        return Inertia::render('PurchaseRequest/Index', [
+        return Inertia::render('RequestToOrder/Index', [
             'requests' => $requests,
             'authUser' => [
                 'id' => $user->id,
@@ -43,7 +43,7 @@ class RequestApprovalController extends Controller
             ->whereIn('status', ['forEOD', 'forPO'])
             ->get();
 
-        return Inertia::render('PurchaseRequest/Index', [
+        return Inertia::render('RequestToOrder/Index', [
             'requests' => $requests,
             'authUser' => [
                 'id' => $user->id,
