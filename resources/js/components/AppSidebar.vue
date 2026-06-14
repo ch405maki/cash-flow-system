@@ -155,12 +155,12 @@ const custodianNavItems: NavItem[] = [
         icon: LayoutDashboard,
     },
     {
-        title: 'Department Requests',
+        title: 'Department Request',
         href: '/request',
         icon: FileText,
     },
     {
-        title: 'On Process Orders',
+        title: 'On Process Request',
         href: '/request-to-order?pageType=on-process-orders',
         icon: Package,
     },

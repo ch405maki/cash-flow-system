@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BadgeCheck, Send, Rocket, Printer, ArrowLeft, History } from 'lucide-vue-next'
+import { BadgeCheck, Send, Rocket, Printer, ArrowLeft, History, PlusCircle, UploadCloud } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -21,6 +21,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import TimestampSheet from './TimestampSheet.vue'
+import CanvasUploadDialog from '@/components/canvas/CanvasUploadDialog.vue'
 import { ref } from 'vue'
 
 const props = defineProps<{
@@ -35,6 +36,8 @@ const emit = defineEmits<{
   approve: [password: string]
   forEod: [password: string]
   receiveItems: []
+  createPo: []
+  canvasSuccess: []
   print: []
   back: []
   'update:showApproveModal': [value: boolean]
@@ -106,8 +109,10 @@ function submitForEOD() {
       </Dialog>
     </div>
 
-    <div v-if="authUser?.role === 'property_custodian' && order.status === 'forPO'">
-      <Button size="sm" @click="emit('receiveItems')"><Rocket />Receive Items</Button>
+    <div v-if="order.status === 'forPO'" class="space-x-2 flex items-center">
+      <Button size="sm" @click="emit('createPo')"><PlusCircle />Create PO</Button>
+      <CanvasUploadDialog :request="order" @success="emit('canvasSuccess')" />
+      <Button v-if="authUser?.role === 'property_custodian'" size="sm" @click="emit('receiveItems')"><Rocket />Receive Items</Button>
     </div>
 
     <Sheet>

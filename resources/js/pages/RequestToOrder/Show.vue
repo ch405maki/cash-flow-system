@@ -80,6 +80,16 @@ function handleReceiveItems() {
   }
 }
 
+function handleCreatePo() {
+  router.visit('/purchase-order/create')
+}
+
+function handleCanvasSuccess() {
+  requestToOrderService.showData(props.orderId).then(response => {
+    requestOrder.value = response.data.requestOrder
+  })
+}
+
 function printArea() {
   printableComponent.value?.printArea()
 }
@@ -120,6 +130,8 @@ const breadcrumbs = computed(() => [
             @approve="handleApprove"
             @for-eod="handleForEod"
             @receive-items="handleReceiveItems"
+            @create-po="handleCreatePo"
+            @canvas-success="handleCanvasSuccess"
             @print="printArea"
             @back="goBack"
           />
@@ -171,6 +183,7 @@ const breadcrumbs = computed(() => [
           <PrintableSection ref="printableComponent" :request-order="requestOrder" />
         </div>
       </div>
+
     </template>
   </AppLayout>
 </template>

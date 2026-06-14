@@ -3,8 +3,9 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { Head } from '@inertiajs/vue3'
 import { router } from '@inertiajs/vue3'
 import { ref, computed, onMounted } from 'vue'
-import { CirclePlus , ListChecks } from 'lucide-vue-next';
+import { CirclePlus , ListChecks, Search, PlusCircle } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { FileText } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue';
 import { Skeleton } from '@/components/ui/skeleton'
@@ -33,6 +34,16 @@ const requests = ref<any[]>([])
 const forOrders = ref<any[]>([])
 const authUser = ref<any>(null)
 const loading = ref(true)
+const searchQuery = ref('')
+
+const filteredRequests = computed(() => {
+  const q = searchQuery.value.toLowerCase().trim()
+  if (!q) return requests.value
+  return requests.value.filter(r =>
+    r.order_no?.toLowerCase().includes(q) ||
+    r.notes?.toLowerCase().includes(q)
+  )
+})
 
 onMounted(async () => {
   try {
@@ -121,19 +132,26 @@ function formatDate(dateStr: string): string {
       </div>
 
       <template v-else>
-        <div class="flex justify-between items-center">
+        <div class="flex justify-between items-center gap-4">
           <PageHeader 
             :title="pageConfig.title" 
             :subtitle="pageConfig.subtitle"
           />
-          <div v-if="pageConfig.showActions" class="space-x-2 items-center">
-            <Button variant="outline" @click="goToList" class="h-8"><ListChecks /> List to Purchase</Button>
-            <Button @click="goToCreate" class="h-8"><CirclePlus />Create New Purchase</Button>
+          <div class="flex items-center gap-2">
+            <div class="relative">
+              <Search class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input v-model="searchQuery" placeholder="Search..." class="pl-8 h-8 w-64" />
+            </div>
+            <Button v-if="props.pageType === 'approved' && authUser?.role === 'purchasing'" size="sm" @click="router.visit('/purchase-order/create')"><PlusCircle />Create PO</Button>
+            <div v-if="pageConfig.showActions" class="flex items-center gap-2">
+              <Button variant="outline" @click="goToList" class="h-8"><ListChecks /> List to Purchase</Button>
+              <Button @click="goToCreate" class="h-8"><CirclePlus />Create New Purchase</Button>
+            </div>
           </div>
         </div>
 
         <!-- Table -->
-        <div v-if="requests.length > 0">
+        <div v-if="filteredRequests.length > 0">
           <Table>
             <TableHeader>
               <TableRow>
@@ -144,22 +162,19 @@ function formatDate(dateStr: string): string {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow v-for="request in requests" :key="request.id" @click="viewRequest(request.id)" class="cursor-pointer hover:underline">
-                <TableCell class="font-medium">{{ request.order_no }}</TableCell>
-                <TableCell>{{ formatDate(request.order_date) }}</TableCell>
-                <TableCell>{{ request.notes }}</TableCell>
-                <TableCell class="text-right">
-                  <StatusBadge
-                    :status="request.status"
-                    show-icon
-                  />
+              <TableRow v-for="request in filteredRequests" :key="request.id" class="cursor-pointer hover:underline">
+                <TableCell class="font-medium" @click="viewRequest(request.id)">{{ request.order_no }}</TableCell>
+                <TableCell @click="viewRequest(request.id)">{{ formatDate(request.order_date) }}</TableCell>
+                <TableCell @click="viewRequest(request.id)">{{ request.notes }}</TableCell>
+                <TableCell class="text-right" @click="viewRequest(request.id)">
+                  <StatusBadge :status="request.status" show-icon />
                 </TableCell>
               </TableRow>
             </TableBody>
           </Table>
         </div>
 
-        <div v-else-if="requests" class="flex h-48 flex-col items-center justify-center rounded-xl border">
+        <div v-else-if="!loading" class="flex h-48 flex-col items-center justify-center rounded-xl border">
           <FileText class="h-8 w-8 text-muted-foreground" />
           <p class="mt-2 text-sm text-muted-foreground">{{ pageConfig.emptyTitle }}</p>
           <p class="text-xs text-muted-foreground">{{ pageConfig.emptyDesc }}</p>
