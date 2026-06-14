@@ -54,7 +54,21 @@ function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
-const showAlert = ref(true)
+// Computed property to check if there's any alert data to show
+const hasAlertData = computed(() => {
+  if (!purchaseOrder.value) return false
+  
+  const hasFiles = purchaseOrder.value.canvas?.selected_files?.some((file: any) => file.file) ?? false
+  const hasRemarks = purchaseOrder.value.remarks?.trim() ? true : false
+  const hasComments = purchaseOrder.value.canvas?.approvals?.some((approval: any) => approval.comments?.trim()) ?? false
+  
+  return hasFiles || hasRemarks || hasComments
+})
+
+// Only show alert if there's actual data to display
+const showAlert = computed(() => {
+  return hasAlertData.value
+})
 
 const previewOpen = ref(false)
 const previewFile = ref<{ name: string; path: string; type: string; path_name: string } | null>(null)
@@ -125,7 +139,9 @@ async function reloadData() {
           />
         </div>
 
+        <!-- Only show POAlerts component if there's data to display -->
         <POAlerts
+          v-if="hasAlertData"
           :show-alert="showAlert"
           :selected-files="purchaseOrder.canvas?.selected_files"
           :remarks="purchaseOrder.remarks"

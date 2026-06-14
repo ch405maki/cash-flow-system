@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle, BellRing, X } from 'lucide-vue-next'
+import { computed } from 'vue'
 
-defineProps<{
+const props = defineProps<{
   showAlert: boolean
   selectedFiles?: Array<{
     id: number
@@ -24,58 +25,71 @@ const emit = defineEmits<{
   dismiss: []
   previewFile: [file: any]
 }>()
+
+// Computed property to check if there are any files
+const hasFiles = computed(() => {
+  return props.selectedFiles?.some(file => file.file) ?? false
+})
+
+// Computed property to check if there are any remarks or comments
+const hasRemarksOrComments = computed(() => {
+  return !!(props.remarks?.trim() || props.canvasApprovals?.some(approval => approval.comments?.trim()))
+})
+
+// Computed property to determine if file alert should be shown
+const showFileAlert = computed(() => {
+  return props.showAlert && hasFiles.value
+})
+
+// Computed property to determine if remarks alert should be shown
+const showRemarksAlert = computed(() => {
+  return props.showAlert && hasRemarksOrComments.value
+})
 </script>
 
 <template>
-  <!-- Selected Files Alert -->
+  <!-- Selected Files Alert - Only show if there are files -->
   <Alert
-    v-if="showAlert"
-    variant="warning"
-    class="relative pr-10"
+    v-if="showFileAlert"
+    variant="info"
+    class="relative pr-10 border-blue-200 bg-blue-50"
   >
-    <AlertCircle class="h-4 w-4" />
-    <AlertTitle>Selected File</AlertTitle>
-    <AlertDescription>
-      <template v-if="selectedFiles?.length">
-        <div class="space-y-3">
-          <div v-for="selectedFile in selectedFiles" :key="selectedFile.id">
-            <div>
-              <span class="font-medium">File: </span>
-              <span
-                v-if="selectedFile.file"
-                class="text-blue-600 underline cursor-pointer capitalize"
-                @click="$emit('previewFile', selectedFile.file)"
-              >
-                {{ selectedFile.file.original_filename || 'N/A' }}
-              </span>
-              <span v-else>File not found</span>
-            </div>
+    <AlertCircle class="h-4 w-4 text-blue-600" />
+    <AlertTitle class="text-blue-900">Selected File</AlertTitle>
+    <AlertDescription class="text-blue-700">
+      <div class="space-y-3">
+        <div v-for="selectedFile in selectedFiles" :key="selectedFile.id">
+          <div v-if="selectedFile.file">
+            <span class="font-medium">File: </span>
+            <span
+              class="text-blue-700 underline cursor-pointer capitalize hover:text-blue-900"
+              @click="$emit('previewFile', selectedFile.file)"
+            >
+              {{ selectedFile.file.original_filename || 'N/A' }}
+            </span>
           </div>
         </div>
-      </template>
-      <template v-else>
-        <p>No selected files found for this canvas</p>
-      </template>
+      </div>
     </AlertDescription>
     <button
       class="absolute right-2 top-2 text-sm text-muted-foreground hover:text-foreground"
       @click="$emit('dismiss')"
       aria-label="Dismiss"
     >
-      <X class="h-4 w-4 text-yellow-700" />
+      <X class="h-4 w-4 text-blue-500 hover:text-blue-700" />
     </button>
   </Alert>
 
-  <!-- Remarks Alert -->
+  <!-- Remarks Alert - Only show if there are remarks or comments -->
   <Alert
-    v-if="showAlert && (remarks || canvasApprovals?.length)"
-    variant="success"
-    class="relative pr-10"
+    v-if="showRemarksAlert"
+    variant="info"
+    class="relative pr-10 border-indigo-200 bg-indigo-50"
   >
-    <BellRing class="h-4 w-4" />
-    <AlertTitle>Remarks and Comments</AlertTitle>
-    <AlertDescription>
-      <div v-if="remarks">
+    <BellRing class="h-4 w-4 text-indigo-600" />
+    <AlertTitle class="text-indigo-900">Remarks and Comments</AlertTitle>
+    <AlertDescription class="text-indigo-700">
+      <div v-if="remarks?.trim()">
         Purchasing: <span class="font-medium">{{ remarks }}.</span>
       </div>
       <div
@@ -84,7 +98,9 @@ const emit = defineEmits<{
         :key="comment.id"
         class="capitalize"
       >
-        {{ comment.user?.username }}: <span class="font-medium">{{ comment.comments }}.</span>
+        <div v-if="comment.comments?.trim()">
+          {{ comment.user?.username }}: <span class="font-medium">{{ comment.comments }}.</span>
+        </div>
       </div>
     </AlertDescription>
     <button
@@ -92,7 +108,7 @@ const emit = defineEmits<{
       @click="$emit('dismiss')"
       aria-label="Dismiss"
     >
-      <X class="h-4 w-4 text-purple-700" />
+      <X class="h-4 w-4 text-indigo-500 hover:text-indigo-700" />
     </button>
   </Alert>
 </template>
