@@ -14,4 +14,5 @@ Route::middleware('auth:sanctum')->group(function () {
     require __DIR__.'/api/configuration.php';
     require __DIR__.'/api/inventory.php';
     require __DIR__.'/api/units.php';
+    require __DIR__.'/api/request-to-order.php';
 });

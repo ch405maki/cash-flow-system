@@ -52,7 +52,7 @@ const requestNavItems: NavItem[] = [
     },
     {
         title: 'Approved Request',
-        href: '/request-to-order/approved',
+        href: '/request-to-order?pageType=approved',
         icon: LayoutGrid,
     },
 ];

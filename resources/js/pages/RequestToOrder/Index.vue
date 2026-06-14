@@ -2,11 +2,13 @@
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Head } from '@inertiajs/vue3'
 import { router } from '@inertiajs/vue3'
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { CirclePlus , ListChecks } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button'
 import { FileText } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue';
+import { Skeleton } from '@/components/ui/skeleton'
+import { requestToOrderService } from '@/services/requestToOrderService';
 import {
   Table,
   TableCaption,
@@ -23,6 +25,28 @@ const breadcrumbs = [
   { title: 'Purchase Request', href: '/request-to-order' },
 ]
 
+const props = defineProps<{
+  pageType?: string
+}>()
+
+const requests = ref<any[]>([])
+const forOrders = ref<any[]>([])
+const authUser = ref<any>(null)
+const loading = ref(true)
+
+onMounted(async () => {
+  try {
+    const response = await requestToOrderService.index(props.pageType || 'index')
+    requests.value = response.data.requests || []
+    forOrders.value = response.data.forOrders || []
+    authUser.value = response.data.authUser
+  } catch (error) {
+    console.error('Failed to load request to order data:', error)
+  } finally {
+    loading.value = false
+  }
+})
+
 function goToList() {
   router.visit('/request-to-order/list-to-order')
 }
@@ -35,33 +59,21 @@ function viewRequest(id: number) {
   router.visit(`/request-to-order/${id}`)
 }
 
-const props = defineProps({
-  requests: {
-    type: Array,
-    default: () => [],
-  },
-  forOrders: {
-    type: Array,
-    default: () => [],
-  },
-  authUser: {
-    type: Array,
-    default: () => [],
-  },
-  pageType: {
-    type: String,
-    default: 'index',
-  },
-})
-
 const pageConfig = computed(() => {
-  const configs = {
+  const configs: Record<string, { title: string; subtitle: string; showActions: boolean; emptyTitle: string; emptyDesc: string }> = {
     index: {
       title: 'Purchase Request List',
       subtitle: 'View Request information and status',
       showActions: true,
       emptyTitle: 'No request to order found',
       emptyDesc: 'On process requests will appear here',
+    },
+    pending: {
+      title: 'Pending Orders',
+      subtitle: 'Purchase requests waiting to be processed',
+      showActions: false,
+      emptyTitle: 'No pending orders',
+      emptyDesc: 'New orders will appear here',
     },
     'for-approval': {
       title: 'For Approval',
@@ -77,13 +89,16 @@ const pageConfig = computed(() => {
       emptyTitle: 'No request to order found',
       emptyDesc: 'On process requests will appear here',
     },
+    approved: {
+      title: 'Approved Request',
+      subtitle: 'Approved purchase requests ready for purchasing',
+      showActions: false,
+      emptyTitle: 'No approved request found',
+      emptyDesc: 'Approved requests for purchasing will appear here',
+    },
   }
-  return configs[props.pageType] || configs.index
+  return configs[props.pageType || 'index'] || configs.index
 })
-
-function goToShowRequest(requestId: number) {
-  router.get(`/request/show/${requestId}`)
-}
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr)
@@ -100,49 +115,56 @@ function formatDate(dateStr: string): string {
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-      <div class="flex justify-between items-center">
-        <PageHeader 
-          :title="pageConfig.title" 
-          :subtitle="pageConfig.subtitle"
-        />
-        <div v-if="pageConfig.showActions" class="space-x-2 items-center">
-          <Button variant="outline" @click="goToList" class="h-8"><ListChecks /> List to Purchase</Button>
-          <Button @click="goToCreate" class="h-8"><CirclePlus />Create New Purchase</Button>
+      <div v-if="loading" class="space-y-4">
+        <Skeleton class="h-8 w-64" />
+        <Skeleton class="h-64 w-full" />
+      </div>
+
+      <template v-else>
+        <div class="flex justify-between items-center">
+          <PageHeader 
+            :title="pageConfig.title" 
+            :subtitle="pageConfig.subtitle"
+          />
+          <div v-if="pageConfig.showActions" class="space-x-2 items-center">
+            <Button variant="outline" @click="goToList" class="h-8"><ListChecks /> List to Purchase</Button>
+            <Button @click="goToCreate" class="h-8"><CirclePlus />Create New Purchase</Button>
+          </div>
         </div>
-      </div>
 
-      <!-- Table -->
-      <div v-if="requests.length > 0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead class="w-[240px]">Order No</TableHead>
-              <TableHead class="w-[140px]">Date Request</TableHead>
-              <TableHead class="w-[540px]">Notes</TableHead>
-              <TableHead class="w-[140px] text-right">Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow v-for="request in props.requests" :key="request.id" @click="viewRequest(request.id)" class="cursor-pointer hover:underline">
-              <TableCell class="font-medium">{{ request.order_no }}</TableCell>
-              <TableCell>{{ formatDate(request.order_date) }}</TableCell>
-              <TableCell>{{ request.notes }}</TableCell>
-              <TableCell class="text-right">
-                <StatusBadge
-                  :status="request.status"
-                  show-icon
-                />
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
+        <!-- Table -->
+        <div v-if="requests.length > 0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead class="w-[240px]">Order No</TableHead>
+                <TableHead class="w-[140px]">Date Request</TableHead>
+                <TableHead class="w-[540px]">Notes</TableHead>
+                <TableHead class="w-[140px] text-right">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-for="request in requests" :key="request.id" @click="viewRequest(request.id)" class="cursor-pointer hover:underline">
+                <TableCell class="font-medium">{{ request.order_no }}</TableCell>
+                <TableCell>{{ formatDate(request.order_date) }}</TableCell>
+                <TableCell>{{ request.notes }}</TableCell>
+                <TableCell class="text-right">
+                  <StatusBadge
+                    :status="request.status"
+                    show-icon
+                  />
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
 
-      <div v-else-if="requests" class="flex h-48 flex-col items-center justify-center rounded-xl border">
-        <FileText class="h-8 w-8 text-muted-foreground" />
-        <p class="mt-2 text-sm text-muted-foreground">{{ pageConfig.emptyTitle }}</p>
-        <p class="text-xs text-muted-foreground">{{ pageConfig.emptyDesc }}</p>
-      </div>
+        <div v-else-if="requests" class="flex h-48 flex-col items-center justify-center rounded-xl border">
+          <FileText class="h-8 w-8 text-muted-foreground" />
+          <p class="mt-2 text-sm text-muted-foreground">{{ pageConfig.emptyTitle }}</p>
+          <p class="text-xs text-muted-foreground">{{ pageConfig.emptyDesc }}</p>
+        </div>
+      </template>
     </div>
   </AppLayout>
 </template>

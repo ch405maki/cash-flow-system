@@ -24,7 +24,7 @@ defineProps<{
 
 
 const goToRequestApproval = () => {
-  router.get('/request-to-order/for-approval');
+  router.get('/request-to-order?pageType=for-approval');
 };
 
 const goToPurchaseApproval = () => {

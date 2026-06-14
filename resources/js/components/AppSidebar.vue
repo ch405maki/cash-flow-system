@@ -79,7 +79,7 @@ const executiveMainItems: NavItem[] = [
 const executiveApprovalItems: NavItem[] = [
     {
         title: 'Request For Purchase',
-        href: '/request-to-order/for-approval',
+        href: '/request-to-order?pageType=for-approval',
         icon: FileCheck2,
     },
     {
@@ -103,7 +103,7 @@ const purchasingNavItems: NavItem[] = [
     },
     {
         title: 'Approved Request',
-        href: '/request-to-order/approved',
+        href: '/request-to-order?pageType=approved',
         icon: FileCheck2,
     },
 ];
@@ -161,7 +161,7 @@ const custodianNavItems: NavItem[] = [
     },
     {
         title: 'On Process Orders',
-        href: '/request-to-order/on-process-orders',
+        href: '/request-to-order?pageType=on-process-orders',
         icon: Package,
     },
     {
@@ -182,17 +182,22 @@ const receivingNavItems: NavItem[] = [
 const custodianApprovalItems: NavItem[] = [
     {
         title: 'Create',
-        href: '/request-to-order',
+        href: '/request-to-order/create',
         icon: Package,
     },
     {
-        title: 'For EOD Approval',
-        href: '/request-to-order/for-approval',
+        title: 'Pending',
+        href: '/request-to-order?pageType=pending',
         icon: ClipboardCheck,
     },
     {
-        title: 'P. O. Status',
-        href: '/request-to-order/on-process',
+        title: 'For Approval',
+        href: '/request-to-order?pageType=for-approval',
+        icon: ClipboardCheck,
+    },
+    {
+        title: 'Approved Request',
+        href: '/request-to-order?pageType=on-process',
         icon: ClipboardCheck,
     },
 ];

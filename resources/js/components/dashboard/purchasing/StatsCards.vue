@@ -19,7 +19,7 @@ defineProps<{
 }>()
 
 const goToApprovedRequest = () => {
-  router.get('/request-to-order/approved');
+  router.get('/request-to-order?pageType=approved');
 };
 const goToCanvas = () => {
   router.get('/canvas/approval');
