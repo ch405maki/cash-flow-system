@@ -2,7 +2,9 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
-import { Upload, File, Trash2 } from 'lucide-vue-next';
+import axios from 'axios';
+import { Upload, File, Trash2, Check, ChevronsUpDown } from 'lucide-vue-next';
+import { Combobox, ComboboxAnchor, ComboboxEmpty, ComboboxGroup, ComboboxInput, ComboboxItem, ComboboxItemIndicator, ComboboxList, ComboboxTrigger } from '@/components/ui/combobox'
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -42,6 +44,8 @@ const loading = ref(true)
 const user_id = ref(0)
 const departments = ref<Array<{ id: number; department_name: string }>>([])
 const accounts = ref<Array<{ id: number; account_title: string }>>([])
+const units = ref<Array<{id: number, name: string}>>([]);
+const isLoadingUnits = ref(false);
 
 type TaggingType = 'with_canvas' | 'no_canvas';
 
@@ -74,6 +78,15 @@ onMounted(async () => {
     form.value.user_id = response.data.user_id
   } catch (error) {
     console.error('Failed to load form data:', error)
+  }
+
+  try {
+    const unitResponse = await axios.get('/api/units')
+    if (unitResponse.data.success) {
+      units.value = unitResponse.data.data
+    }
+  } catch (error) {
+    console.error('Error loading units:', error)
   } finally {
     loading.value = false
   }
@@ -399,20 +412,44 @@ const submitForm = async () => {
               </div>
 
               <div class="md:col-span-2 space-y-2">
-                <Label for="quantity">Unit</Label>
-                <Select v-model="newItem.unit">
-                  <SelectTrigger class="w-full">
-                    <SelectValue placeholder="Select a unit" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="pc">pc/s</SelectItem>
-                      <SelectItem value="box">box/es</SelectItem>
-                      <SelectItem value="kg">kg/s</SelectItem>
-                      <SelectItem value="pack">pack/s</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                <Label for="unit">Unit</Label>
+                <Combobox v-model="newItem.unit">
+                  <ComboboxAnchor>
+                    <div class="relative w-full items-center">
+                      <ComboboxInput
+                        placeholder="Select or type a unit..."
+                        :display-value="(val) => val || ''"
+                        @update:model-value="(val) => newItem.unit = val"
+                        @change="(e) => newItem.unit = e.target.value"
+                      />
+                      <ComboboxTrigger
+                        class="absolute end-0 inset-y-0 flex items-center justify-center px-3"
+                      >
+                        <ChevronsUpDown class="size-4 text-muted-foreground" />
+                      </ComboboxTrigger>
+                    </div>
+                  </ComboboxAnchor>
+                  <ComboboxList>
+                    <ComboboxEmpty>
+                      <span class="text-sm text-muted-foreground px-2 py-1">
+                        <span v-if="isLoadingUnits">Loading units...</span>
+                        <span v-else>No match found — type to add custom unit.</span>
+                      </span>
+                    </ComboboxEmpty>
+                    <ComboboxGroup>
+                      <ComboboxItem
+                        v-for="unit in units"
+                        :key="unit.id"
+                        :value="unit.name"
+                      >
+                        {{ unit.name }}
+                        <ComboboxItemIndicator>
+                          <Check class="ml-auto h-4 w-4" />
+                        </ComboboxItemIndicator>
+                      </ComboboxItem>
+                    </ComboboxGroup>
+                  </ComboboxList>
+                </Combobox>
               </div>
 
               <div class="space-y-2 md:col-span-2">
@@ -482,23 +519,39 @@ const submitForm = async () => {
                     <!-- Unit Column -->
                     <TableCell>
                       <div v-if="!item.editing">{{ item.unit }}</div>
-                      <Select 
+                      <Combobox
                         v-else
                         v-model="item.unit"
                         @click.stop
                       >
-                        <SelectTrigger class="w-full">
-                          <SelectValue placeholder="Select unit" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            <SelectItem value="pc">pc/s</SelectItem>
-                            <SelectItem value="box">box/es</SelectItem>
-                            <SelectItem value="kg">kg/s</SelectItem>
-                            <SelectItem value="pack">pack/s</SelectItem>
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
+                        <ComboboxAnchor>
+                          <ComboboxInput
+                            placeholder="Select or type a unit..."
+                            :display-value="(val) => val || ''"
+                            @update:model-value="(val) => item.unit = val"
+                            @change="(e) => item.unit = e.target.value"
+                            class="w-full"
+                          />
+                        </ComboboxAnchor>
+                        <ComboboxList>
+                          <ComboboxEmpty class="text-sm text-muted-foreground px-2 py-1">
+                            <span v-if="isLoadingUnits">Loading units...</span>
+                            <span v-else>No match found — type to add custom unit.</span>
+                          </ComboboxEmpty>
+                          <ComboboxGroup>
+                            <ComboboxItem
+                              v-for="unit in units"
+                              :key="unit.id"
+                              :value="unit.name"
+                            >
+                              {{ unit.name }}
+                              <ComboboxItemIndicator>
+                                <Check class="ml-auto h-4 w-4" />
+                              </ComboboxItemIndicator>
+                            </ComboboxItem>
+                          </ComboboxGroup>
+                        </ComboboxList>
+                      </Combobox>
                     </TableCell>
                     
                     <!-- Unit Price Column -->

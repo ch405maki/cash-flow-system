@@ -2,10 +2,9 @@
 import { ref, computed, onMounted } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { type BreadcrumbItem } from '@/types'
-import { Head, router } from '@inertiajs/vue3'
+import { Head } from '@inertiajs/vue3'
 import PageHeader from '@/components/PageHeader.vue'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Button } from '@/components/ui/button'
 import { purchaseOrderService } from '@/services/purchaseOrderService'
 
 import POActionButtons    from '@/components/purchaseOrder/POActionButtons.vue'
@@ -113,6 +112,7 @@ async function reloadData() {
     loading.value = false
   }
 }
+
 </script>
 
 <template>
@@ -132,22 +132,12 @@ async function reloadData() {
             :title="`Purchase Order: # ${purchaseOrder.po_no}`"
             subtitle="Purchase order details"
           />
-          <div class="flex items-center gap-2">
-            <Button
-              v-if="purchaseOrder.status === 'draft'"
-              variant="outline"
-              size="sm"
-              @click="router.visit(`/purchase-order/${purchaseOrder.id}/edit`)"
-            >
-              Edit
-            </Button>
-            <POActionButtons
-              :purchase-order="purchaseOrder"
-              :auth-user="authUser"
-              @print="printArea"
-              @status-updated="reloadData"
-            />
-          </div>
+          <POActionButtons
+            :purchase-order="purchaseOrder"
+            :auth-user="authUser"
+            @print="printArea"
+            @status-updated="reloadData"
+          />
         </div>
 
         <!-- Only show POAlerts component if there's data to display -->

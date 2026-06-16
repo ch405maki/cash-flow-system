@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Web\ReceivingController;
 
-Route::apiResource('purchase-order', PurchaseOrderController::class)->only(['store']);
+Route::apiResource('purchase-order', PurchaseOrderController::class)->only(['store', 'destroy']);
 Route::get('purchase-order/index-data', [PurchaseOrderController::class, 'indexData']);
 Route::get('purchase-order/{purchase_order}/show-data', [PurchaseOrderController::class, 'showData']);
 Route::get('purchase-order/create-data', [PurchaseOrderController::class, 'createData']);

@@ -60,6 +60,11 @@ export const purchaseOrderService = {
     return data;
   },
 
+  remove: async (id: number): Promise<any> => {
+    const { data } = await api.delete(`/api/purchase-order/${id}`);
+    return data;
+  },
+
   updateStatus: async (id: number, payload: UpdateStatusPayload): Promise<any> => {
     const { data } = await api.patch(`/api/purchase-order/${id}/status`, payload);
     return data;

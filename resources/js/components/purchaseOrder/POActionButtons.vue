@@ -4,12 +4,13 @@ import { Link, router } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog, DialogContent, DialogDescription,
   DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog'
-import { PackageCheck, Ticket, Check, Send, Printer, ArrowLeft } from 'lucide-vue-next'
+import { PackageCheck, Ticket, Check, Send, Printer, ArrowLeft, SquarePen, Trash2 } from 'lucide-vue-next'
 import { useToast } from 'vue-toastification'
 import { purchaseOrderService } from '@/services/purchaseOrderService'
 import POTimestampSheet from './Potimestampsheet.vue'
@@ -42,7 +43,10 @@ const emit = defineEmits<{
 
 const showApproveModal = ref(false)
 const showForApproveModal = ref(false)
+const showDeleteModal = ref(false)
 const processing = ref(false)
+const deleting = ref(false)
+const deleteConfirmed = ref(false)
 
 const password = ref('')
 const remarks = ref('')
@@ -72,10 +76,77 @@ function goToCreate(poId?: number) {
   const url = poId ? `/vouchers/create?po_id=${poId}` : '/vouchers/create'
   router.visit(url)
 }
+
+function goToEdit() {
+  router.visit(`/purchase-order/${props.purchaseOrder.id}/edit`)
+}
+
+function onDeleteDialogOpenChange(value: boolean) {
+  showDeleteModal.value = value
+  if (!value) {
+    deleteConfirmed.value = false
+  }
+}
+
+async function deleteDraftPo() {
+  if (!deleteConfirmed.value) return
+
+  deleting.value = true
+  try {
+    await purchaseOrderService.remove(props.purchaseOrder.id)
+    toast.success('Purchase order deleted successfully')
+    showDeleteModal.value = false
+    deleteConfirmed.value = false
+    router.visit('/purchase-order')
+  } catch (error: any) {
+    toast.error(error.response?.data?.message || 'Failed to delete purchase order')
+  } finally {
+    deleting.value = false
+  }
+}
 </script>
 
 <template>
-  <div class="space-x-2 flex space-x-2">
+  <div class="flex items-center space-x-2">
+    <!-- Draft Edit + Delete -->
+    <Button
+      v-if="purchaseOrder.status === 'draft'"
+      variant="outline"
+      size="sm"
+      @click="goToEdit"
+    >
+      <SquarePen />
+    </Button>
+
+    <Dialog :open="showDeleteModal" @update:open="onDeleteDialogOpenChange">
+      <DialogTrigger v-if="purchaseOrder.status === 'draft'" as-child>
+        <Button variant="destructive" size="sm" title="Delete draft PO">
+          <Trash2/>
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete Draft Purchase Order</DialogTitle>
+          <DialogDescription>
+            This action cannot be undone. This will permanently delete this draft purchase order.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="flex items-center space-x-2 mt-2">
+          <Checkbox id="confirm-delete-po" v-model:checked="deleteConfirmed" />
+          <Label for="confirm-delete-po">I understand and want to delete this draft PO.</Label>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" @click="onDeleteDialogOpenChange(false)">Cancel</Button>
+          <Button variant="destructive" :disabled="!deleteConfirmed || deleting" @click="deleteDraftPo">
+            <span v-if="deleting">Deleting...</span>
+            <span v-else>Delete Purchase Order</span>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
     <!-- Receiving Page -->
     <Button v-if="purchaseOrder.status === 'voucherCreated'" size="sm" @click="router.visit(`/purchase-order/${purchaseOrder.id}/receiving`)">
       <PackageCheck />
@@ -176,18 +247,16 @@ function goToCreate(poId?: number) {
     />
 
     <!-- Timestamp Sheet + Print + Back -->
-    <div class="flex items-center space-x-2">
-      <POTimestampSheet
-        :po-no="purchaseOrder.po_no"
-        :created-at="purchaseOrder.created_at"
-        :approvals="purchaseOrder.approvals"
-      />
-      <Button size="sm" variant="outline" @click="$emit('print')">
-        <Printer /> Print
-      </Button>
-      <Button variant="outline" size="sm" as-child>
-        <Link href="/purchase-order"><ArrowLeft /> Back</Link>
-      </Button>
-    </div>
+    <POTimestampSheet
+      :po-no="purchaseOrder.po_no"
+      :created-at="purchaseOrder.created_at"
+      :approvals="purchaseOrder.approvals"
+    />
+    <Button size="sm" variant="outline" @click="$emit('print')">
+      <Printer /> Print
+    </Button>
+    <Button variant="outline" size="sm" as-child>
+      <Link href="/purchase-order"><ArrowLeft /> Back</Link>
+    </Button>
   </div>
 </template>

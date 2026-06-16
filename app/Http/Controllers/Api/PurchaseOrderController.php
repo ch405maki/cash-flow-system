@@ -409,4 +409,35 @@ class PurchaseOrderController extends Controller
             ], 500);
         }
     }
+
+    public function destroy(PurchaseOrder $purchaseOrder): JsonResponse
+    {
+        if ($purchaseOrder->status !== 'draft') {
+            return response()->json([
+                'message' => 'Only draft purchase orders can be deleted.'
+            ], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            $poNo = $purchaseOrder->po_no;
+
+            $purchaseOrder->approvals()->delete();
+            $purchaseOrder->details()->delete();
+            $purchaseOrder->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Purchase order {$poNo} deleted successfully.",
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to delete purchase order',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
