@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Link, router } from '@inertiajs/vue3'
+import { router } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -79,6 +79,10 @@ function goToCreate(poId?: number) {
 
 function goToEdit() {
   router.visit(`/purchase-order/${props.purchaseOrder.id}/edit`)
+}
+
+function goBack() {
+  window.history.back()
 }
 
 function onDeleteDialogOpenChange(value: boolean) {
@@ -255,8 +259,8 @@ async function deleteDraftPo() {
     <Button size="sm" variant="outline" @click="$emit('print')">
       <Printer /> Print
     </Button>
-    <Button variant="outline" size="sm" as-child>
-      <Link href="/purchase-order"><ArrowLeft /> Back</Link>
+    <Button variant="outline" size="sm" @click="goBack">
+      <ArrowLeft /> Back
     </Button>
   </div>
 </template>

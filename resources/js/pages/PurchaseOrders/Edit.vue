@@ -12,7 +12,7 @@ import { Check, ChevronsUpDown } from 'lucide-vue-next'
 import { Combobox, ComboboxAnchor, ComboboxEmpty, ComboboxGroup, ComboboxInput, ComboboxItem, ComboboxItemIndicator, ComboboxList, ComboboxTrigger } from '@/components/ui/combobox'
 import { useToast } from 'vue-toastification'
 import { purchaseOrderService } from '@/services/purchaseOrderService'
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
@@ -41,6 +41,11 @@ const departments = ref<Array<{ id: number; department_name: string }>>([])
 const purchaseOrderNo = ref('')
 const units = ref<Array<{id: number, name: string}>>([])
 const isLoadingUnits = ref(false)
+const selectedDepartment = ref<{ id: number; department_name: string } | null>(null)
+
+watch(selectedDepartment, (dept) => {
+  form.value.department_id = dept?.id?.toString() || ''
+})
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
   { title: 'Dashboard', href: '/dashboard' },
@@ -72,6 +77,7 @@ onMounted(async () => {
     form.value.purpose = po.purpose || ''
     form.value.tin_no = po.tin_no || ''
     form.value.department_id = po.department_id ? String(po.department_id) : ''
+    selectedDepartment.value = departments.value.find(d => d.id === po.department_id) || null
     form.value.details = (po.details || []).map((d: any) => ({
       quantity: Number(d.quantity) || 0,
       unit: d.unit || 'pc',
@@ -222,16 +228,38 @@ const submitForm = async () => {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="space-y-2">
             <Label for="department_id">Department</Label>
-            <Select v-model="form.department_id" required>
-              <SelectTrigger>
-                <SelectValue placeholder="Select department" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="dept in departments" :key="dept.id" :value="dept.id.toString()">
-                  {{ dept.department_name }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <Combobox v-model="selectedDepartment">
+              <ComboboxAnchor class="w-full">
+                <div class="relative w-full items-center">
+                  <ComboboxInput
+                    placeholder="Select or type a department..."
+                    :display-value="(dept: any) => dept?.department_name || ''"
+                  />
+                  <ComboboxTrigger
+                    class="absolute end-0 inset-y-0 flex items-center justify-center px-3"
+                  >
+                    <ChevronsUpDown class="size-4 text-muted-foreground" />
+                  </ComboboxTrigger>
+                </div>
+              </ComboboxAnchor>
+              <ComboboxList>
+                <ComboboxEmpty class="text-sm text-muted-foreground px-2 py-1">
+                  No department found.
+                </ComboboxEmpty>
+                <ComboboxGroup>
+                  <ComboboxItem
+                    v-for="dept in departments"
+                    :key="dept.id"
+                    :value="dept"
+                  >
+                    {{ dept.department_name }}
+                    <ComboboxItemIndicator>
+                      <Check class="ml-auto h-4 w-4" />
+                    </ComboboxItemIndicator>
+                  </ComboboxItem>
+                </ComboboxGroup>
+              </ComboboxList>
+            </Combobox>
           </div>
 
           <div class="space-y-2 md:col-span-1">

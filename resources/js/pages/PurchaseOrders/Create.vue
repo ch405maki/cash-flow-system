@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGr
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from 'vue-toastification';
 import { purchaseOrderService } from '@/services/purchaseOrderService';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { Skeleton } from '@/components/ui/skeleton'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
@@ -46,6 +46,11 @@ const departments = ref<Array<{ id: number; department_name: string }>>([])
 const accounts = ref<Array<{ id: number; account_title: string }>>([])
 const units = ref<Array<{id: number, name: string}>>([]);
 const isLoadingUnits = ref(false);
+const selectedDepartment = ref<{ id: number; department_name: string } | null>(null)
+
+watch(selectedDepartment, (dept) => {
+  form.value.department_id = dept?.id?.toString() || ''
+})
 
 type TaggingType = 'with_canvas' | 'no_canvas';
 
@@ -210,6 +215,24 @@ const removeFile = () => {
   }
 };
 
+const resetForm = () => {
+  form.value.payee = ''
+  form.value.check_payable_to = ''
+  form.value.date = new Date().toISOString().split('T')[0]
+  form.value.purpose = ''
+  form.value.tin_no = ''
+  form.value.department_id = ''
+  form.value.details = []
+  form.value.canvas_id = null
+  form.value.file = null
+  form.value.department_id = ''
+  selectedDepartment.value = null
+  uploadedFile.value = null
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
+}
+
 const submitForm = async () => {
   try {
     if (form.value.tagging === 'with_canvas' && !form.value.canvas_id) {
@@ -372,16 +395,38 @@ const submitForm = async () => {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="space-y-2">
             <Label for="department_id">Department</Label>
-            <Select v-model="form.department_id" required>
-              <SelectTrigger>
-                <SelectValue placeholder="Select department" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="dept in departments" :key="dept.id" :value="dept.id.toString()">
-                  {{ dept.department_name }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <Combobox v-model="selectedDepartment">
+              <ComboboxAnchor class="w-full">
+                <div class="relative w-full items-center">
+                  <ComboboxInput
+                    placeholder="Select or type a department..."
+                    :display-value="(dept: any) => dept?.department_name || ''"
+                  />
+                  <ComboboxTrigger
+                    class="absolute end-0 inset-y-0 flex items-center justify-center px-3"
+                  >
+                    <ChevronsUpDown class="size-4 text-muted-foreground" />
+                  </ComboboxTrigger>
+                </div>
+              </ComboboxAnchor>
+              <ComboboxList>
+                <ComboboxEmpty class="text-sm text-muted-foreground px-2 py-1">
+                  No department found.
+                </ComboboxEmpty>
+                <ComboboxGroup>
+                  <ComboboxItem
+                    v-for="dept in departments"
+                    :key="dept.id"
+                    :value="dept"
+                  >
+                    {{ dept.department_name }}
+                    <ComboboxItemIndicator>
+                      <Check class="ml-auto h-4 w-4" />
+                    </ComboboxItemIndicator>
+                  </ComboboxItem>
+                </ComboboxGroup>
+              </ComboboxList>
+            </Combobox>
           </div>
           <div class="space-y-2 md:col-span-1">
             <Label for="tin_no">Company TIN</Label>
@@ -620,8 +665,8 @@ const submitForm = async () => {
 
         <!-- Form Actions -->
         <div class="flex justify-end space-x-4">
-          <Button type="button" variant="outline">
-            Cancel
+          <Button type="button" variant="outline" @click="resetForm">
+            Clear Fields
           </Button>
           <Button type="submit">
             Create Purchase Order
