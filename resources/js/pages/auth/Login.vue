@@ -38,7 +38,7 @@ const submit = () => {
         <form @submit.prevent="submit" class="flex flex-col gap-6">
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="login">Username</Label>
+                    <Label for="login">Username Testing</Label>
                     <Input
                         id="login"
                         type="text"
