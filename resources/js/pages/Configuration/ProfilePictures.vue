@@ -7,7 +7,7 @@ import { Camera, Upload, Loader2, Trash2, X } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from "vue-toastification";
-import axios from "axios";
+import { profilePictureService } from '@/services/profilePictureService';
 import {
   Dialog,
   DialogContent,
@@ -85,7 +85,7 @@ const deletePicture = async () => {
   
   isDeleting.value = true
   try {
-    await axios.delete(`/api/profile-pictures/${pictureToDelete.value}`)
+    await profilePictureService.delete(pictureToDelete.value)
     toast.success('Profile picture deleted successfully')
     window.location.reload() // Refresh to update the list
   } catch (error) {

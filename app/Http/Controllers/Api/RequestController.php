@@ -3,6 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreRequestRequest;
+use App\Http\Requests\UpdateRequestItemsRequest;
+use App\Http\Requests\ReleaseItemsRequest;
+use App\Actions\Requests\GenerateRequestNumber;
 use App\Models\Department;
 use App\Models\RequestDetail;
 use App\Models\PurchaseOrder;
@@ -12,6 +16,7 @@ use App\Models\Release;
 use App\Models\User;
 use App\Models\RequestApproval;
 use App\Models\ReleaseDetail;
+use App\Models\Unit;
 use Illuminate\Http\JsonResponse;
 use App\Models\Request;
 use Illuminate\Http\Request as HttpRequest;
@@ -22,128 +27,334 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use App\Notifications\NewRequestNotification;
+use App\Services\ActivityLogger;
 
 use App\Helpers\MacAddressHelper;
 use App\Services\InventoryApiService;
 use Carbon\Carbon;
-
-
-use Inertia\Inertia;
-
+use Illuminate\Support\Str;
 
 class RequestController extends Controller
 {
+    public function __construct(
+        protected GenerateRequestNumber $generateRequestNumber
+    ) {}
 
-    public function store(HttpRequest $request): JsonResponse
+    public function index(HttpRequest $httpRequest): JsonResponse
     {
-        try {
-            $macAddress = MacAddressHelper::getClientMac($request);
+        $user = Auth::user();
+        $pageType = $httpRequest->query('pageType', 'index');
 
-            $validated = $request->validate([
-                'purpose' => 'required|string|max:500',
-                'status' => 'required|in:pending,approved,rejected',
-                'department_id' => 'required|exists:departments,id',
-                'user_id' => 'required|exists:users,id',
-                'items' => 'required|array|min:1',
-                'items.*.item_id' => 'nullable|integer', 
-                'items.*.quantity' => 'required|numeric|min:1',
-                'items.*.unit' => 'required|string|max:20',
-                'items.*.item_description' => 'required|string|max:255'
-            ]);
+        $query = Request::with(['department', 'user']);
 
-            // Auto-generate request number
-            $validated['request_no'] = $this->generateRequestNumber();
-            $validated['request_date'] = now();
+        match ($pageType) {
+            'released' => $query
+                ->where('status', 'released')
+                ->where('department_id', $user->department_id),
+            'to-receive' => $query
+                ->whereIn('status', ['propertyCustodian', 'to_order', 'partially_released'])
+                ->where('department_id', $user->department_id),
+            'rejected' => $query
+                ->where('status', 'rejected')
+                ->where('department_id', $user->department_id),
+            'on-process-orders' => in_array($user->role, ['admin', 'executive_director', 'property_custodian'])
+                ? $query->whereIn('status', ['partially_released', 'to_order'])
+                : $query->where('status', 'pending')->where('department_id', $user->department_id),
+            default => in_array($user->role, ['admin', 'executive_director', 'property_custodian'])
+                ? $query->whereIn('status', ['propertyCustodian'])
+                : $query->where('status', 'pending')->where('department_id', $user->department_id),
+        };
 
-            // Create the request
-            $requestModel = Request::create(collect($validated)->except('items')->toArray());
-            
-            // ===== NOTIFICATION CHANGES START =====
-            // Instead of using the notification class, manually insert into notifications table
-            
-            // 1. Notify the creator
-            DB::table('notifications')->insert([
-                'id' => (string) \Illuminate\Support\Str::uuid(),
-                'type' => 'Request',
-                'notifiable_type' => 'App\Models\User',
-                'notifiable_id' => $validated['user_id'],
-                'data' => json_encode([
-                    'request_id' => $requestModel->id,
-                    'title' => "Request",
-                    'request_no' => $requestModel->request_no,
-                    'status' => $requestModel->status,
-                    'message' => "Request #{$requestModel->request_no} has been created",
-                    'link' => route('request.show', $requestModel->id),
-                ]),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'requests' => $query->get(),
+                'departments' => Department::all(),
+            ],
+        ]);
+    }
 
-            // 2. Notify department approvers (access level 3)
-            $approvers = User::where('department_id', $validated['department_id'])
-                ->where('access_id', 3)
-                ->where('id', '!=', $validated['user_id'])
-                ->get();
+    public function showData(Request $request, InventoryApiService $inventoryApi): JsonResponse
+    {
+        $request->load([
+            'user',
+            'department',
+            'details',
+            'approvals.user',
+            'releases.details.requestDetail',
+            'releases.user'
+        ]);
 
-            foreach ($approvers as $approver) {
+        $inventoryStatus = [];
+        foreach ($request->details as $detail) {
+            if ($detail->item_id) {
+                $result = $inventoryApi->checkProductQuantity($detail->item_id);
+                $inventoryStatus[$detail->id] = [
+                    'has_item_id' => true,
+                    'exists_in_inventory' => $result['exists'],
+                    'available_quantity' => $result['quantity'],
+                    'has_sufficient' => $result['exists'] && $result['quantity'] > 0
+                ];
+            } else {
+                $inventoryStatus[$detail->id] = [
+                    'has_item_id' => false,
+                    'exists_in_inventory' => false,
+                    'available_quantity' => 0,
+                    'has_sufficient' => false
+                ];
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'request' => $request,
+                'accounts' => Account::all(['id', 'account_title']),
+                'inventoryStatus' => $inventoryStatus,
+            ],
+        ]);
+    }
+
+    public function createData(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'departments' => Department::all(),
+            ],
+        ]);
+    }
+
+    public function editData(Request $request): JsonResponse
+    {
+        $request->load(['details', 'user', 'department']);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'request' => $request,
+                'departments' => Department::all(),
+            ],
+        ]);
+    }
+
+    public function updateStatus(HttpRequest $httpRequest, Request $request): JsonResponse
+    {
+        $validated = $httpRequest->validate([
+            'status' => 'required|in:approved,rejected,propertyCustodian,to_order,released',
+            'password' => 'required_if:status,approved,propertyCustodian,to_order,released',
+        ]);
+
+        $passwordRequiredStatuses = ['approved', 'propertyCustodian', 'to_order', 'released'];
+        $authUser = auth()->user();
+
+        if (in_array($validated['status'], $passwordRequiredStatuses)) {
+            if (!Hash::check($validated['password'], $authUser->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid password',
+                    'errors' => ['password' => ['Invalid password']],
+                ], 422);
+            }
+        }
+
+        $oldStatus = $request->status;
+        $updateData = ['status' => $validated['status']];
+
+        if ($authUser->department_id === $request->department_id) {
+            $updateData['user_id'] = $authUser->id;
+        }
+
+        $request->update($updateData);
+
+        $description = "Request #{$request->request_no} status changed from {$oldStatus} to {$validated['status']} by {$authUser->username}";
+
+        RequestApproval::create([
+            'request_id' => $request->id,
+            'user_id' => $authUser->id,
+            'status' => $validated['status'],
+            'approved_at' => now(),
+            'remarks' => $description,
+        ]);
+
+        if ($validated['status'] === 'propertyCustodian') {
+            $custodians = User::where('role', 'property_custodian')->get();
+            $creator = User::find($request->user_id);
+
+            foreach ($custodians as $custodian) {
                 DB::table('notifications')->insert([
-                    'id' => (string) \Illuminate\Support\Str::uuid(),
-                    'type' => 'App\Notifications\NewRequestNotification',
+                    'id' => (string) Str::uuid(),
+                    'type' => 'RequestForCustodian',
                     'notifiable_type' => 'App\Models\User',
-                    'notifiable_id' => $approver->id,
+                    'notifiable_id' => $custodian->id,
                     'data' => json_encode([
-                        'request_id' => $requestModel->id,
-                        'request_no' => $requestModel->request_no,
-                        'status' => $requestModel->status,
-                        'message' => "New request #{$requestModel->request_no} needs approval from " . ($creatorUser->name ?? 'Unknown'),
-                        'link' => route('request.show', $requestModel->id),
+                        'request_id' => $request->id,
+                        'title' => 'Request Ready for Custodian',
+                        'request_no' => $request->request_no,
+                        'department' => $request->department->name ?? 'N/A',
+                        'purpose' => $request->purpose,
+                        'created_by' => $creator?->name ?? 'Unknown',
+                        'previous_status' => $oldStatus,
+                        'status' => $validated['status'],
+                        'message' => "Request #{$request->request_no} from {$request->department->name} is ready for processing.",
+                        'link' => route('request.show', $request->id),
+                        'updated_by' => $authUser->name,
                     ]),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
             }
-            // ===== NOTIFICATION CHANGES END =====
+        }
 
-            // Log the creation with full details
-            $creatorUser = User::find($validated['user_id']);
-            $creator = $creatorUser?->username ?? 'system';
-            $description = "Request #{$validated['request_no']} was created by {$creator}";
+        if ($validated['status'] === 'to_order') {
+            $creator = User::find($request->user_id);
+
+            if ($creator) {
+                DB::table('notifications')->insert([
+                    'id' => (string) Str::uuid(),
+                    'type' => 'RequestReadyToOrder',
+                    'notifiable_type' => 'App\Models\User',
+                    'notifiable_id' => $creator->id,
+                    'data' => json_encode([
+                        'request_id' => $request->id,
+                        'title' => 'Request Ready to Order',
+                        'request_no' => $request->request_no,
+                        'status' => $validated['status'],
+                        'message' => "Your request #{$request->request_no} is now ready to order.",
+                        'link' => route('request.show', $request->id),
+                        'updated_by' => $authUser->name,
+                    ]),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+        ActivityLogger::make($httpRequest)
+            ->on($request)
+            ->by($authUser)
+            ->withMacAddress()
+            ->with([
+                'old_status' => $oldStatus,
+                'new_status' => $validated['status'],
+                'changed_by' => $authUser->username,
+                'changed_by_role' => $authUser->role,
+                'request_no' => $request->request_no,
+            ])
+            ->logName('Status Updated')
+            ->log($description);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Request status updated successfully',
+            'data' => [
+                'request' => $request->fresh()->load(['department', 'user', 'details', 'approvals.user']),
+            ],
+        ]);
+    }
+
+    public function releaseData(Request $request, InventoryApiService $inventoryApi): JsonResponse
+    {
+        $request->load([
+            'details' => function ($query) {
+                $query->where('quantity', '!=', 0);
+            },
+            'user',
+            'department'
+        ]);
+
+        $inventoryStatus = [];
+        foreach ($request->details as $detail) {
+            if ($detail->item_id) {
+                $result = $inventoryApi->checkProductQuantity($detail->item_id);
+                $inventoryStatus[$detail->id] = [
+                    'has_item_id' => true,
+                    'exists' => $result['exists'],
+                    'available_quantity' => $result['quantity'],
+                    'has_stock' => $result['exists'] && $result['quantity'] > 0,
+                    'sufficient_for_request' => $result['exists'] && $result['quantity'] >= ($detail->quantity - $detail->released_quantity)
+                ];
+            } else {
+                $inventoryStatus[$detail->id] = [
+                    'has_item_id' => false,
+                    'exists' => false,
+                    'available_quantity' => 0,
+                    'has_stock' => false,
+                    'sufficient_for_request' => false
+                ];
+            }
+        }
+
+        $authUser = auth()->user();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'request' => $request,
+                'departments' => Department::all(),
+                'inventoryStatus' => $inventoryStatus,
+                'current_user' => [
+                    'id' => $authUser->id,
+                    'name' => $authUser->name,
+                ],
+            ],
+        ]);
+    }
+
+    public function store(StoreRequestRequest $request): JsonResponse
+    {
+        try {
+            $macAddress = MacAddressHelper::getClientMac($request);
+            $validated = $request->validated();
+
+            $creatorUser = Auth::user();
+            $userId = $creatorUser->id;
+
+            $validated['request_no'] = $this->generateRequestNumber->execute();
+            $validated['request_date'] = now();
+            $validated['user_id'] = $userId;
+
+            $requestModel = Request::create(collect($validated)->except('items')->toArray());
+
+            // Notifications
+            $this->notifyRequestCreator($requestModel, $userId);
+            $this->notifyRequestApprovers($requestModel, $validated['department_id'], $userId, $creatorUser);
+
+            $description = "Request #{$validated['request_no']} was created by " . ($creatorUser?->username ?? 'system');
 
             RequestApproval::create([
                 'request_id' => $requestModel->id,
-                'user_id' => $validated['user_id'],
+                'user_id' => $userId,
                 'status' => $validated['status'],
                 'remarks' => $description,
                 'approved_at' => now(),
             ]);
 
-            activity()
-                ->performedOn($requestModel)
-                ->causedBy($creatorUser)
-                ->useLog('Request Created')
-                ->withProperties([
-                    'action' => 'create',
-                    'event' => 'Request Created',
-                    'mac_address' => $macAddress,
-                    'user_agent' => $request->userAgent(),
-                    'ip_address' => $request->ip(),
-                    'request_data' => $validated, 
+            ActivityLogger::make($request)
+                ->on($requestModel)
+                ->by($creatorUser)
+                ->withMacAddress()
+                ->with([
                     'items_count' => count($validated['items']),
-                    'department' => $requestModel->department->name,
                     'request_no' => $validated['request_no'],
                 ])
+                ->logName('Request Created')
                 ->log($description);
 
-            // Create request details
             foreach ($validated['items'] as $item) {
+                $unitName = trim($item['unit']);
+                if ($unitName !== '') {
+                    Unit::firstOrCreate(['name' => $unitName]);
+                }
+
                 RequestDetail::create([
                     'request_id' => $requestModel->id,
-                    'item_id' => $item['item_id'] ?? null,   
+                    'item_id' => $item['item_id'] ?? null,
                     'quantity' => $item['quantity'],
                     'released_quantity' => 0,
-                    'unit' => $item['unit'],
+                    'unit' => $unitName,
                     'item_description' => $item['item_description'],
-                    'tracking_status' => 'pending'
+                    'tracking_status' => 'pending',
                 ]);
             }
 
@@ -154,70 +365,39 @@ class RequestController extends Controller
                 'meta' => [
                     'created_at' => now()->toDateTimeString(),
                     'items_count' => count($validated['items']),
-                    'mac_address' => $macAddress
-                ]
+                    'mac_address' => $macAddress,
+                ],
             ], 201);
 
         } catch (ValidationException $e) {
-            $errors = $e->errors();
-            
-            if (isset($errors['request_no'])) {
-                $errors['request_no'] = [
-                    'The request number must be unique.',
-                    'Suggested available number: ' . $this->generateRequestNumber()
-                ];  
-            }
-            
             return response()->json([
                 'success' => false,
                 'message' => 'Validation error',
-                'errors' => $errors,
+                'errors' => $e->errors(),
                 'suggestions' => [
-                    'available_request_no' => $this->generateRequestNumber()
-                ]
+                    'available_request_no' => $this->generateRequestNumber->execute(),
+                ],
             ], 422);
         } catch (QueryException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Database error',
-                'error' => config('app.debug') ? $e->getMessage() : null
+                'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Server error',
-                'error' => config('app.debug') ? $e->getMessage() : null
+                'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
     }
 
-    protected function generateRequestNumber(): string
-    {
-        $prefix = 'REQ-' . now()->format('Ym') . '-';
-        $lastRequest = Request::where('request_no', 'like', $prefix . '%')->latest()->first();
-        
-        $sequence = $lastRequest 
-            ? (int) str_replace($prefix, '', $lastRequest->request_no) + 1
-            : 1;
-        
-        return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
-    }
-
-    public function updateItems(HttpRequest $httpRequest, Request $request)
+    public function updateItems(UpdateRequestItemsRequest $httpRequest, Request $request)
     {
         DB::beginTransaction();
         try {
-            \Log::debug('Incoming update items request:', $httpRequest->all());
-
-            $validated = $httpRequest->validate([
-                'details' => 'required|array|min:1',
-                'details.*.item_id' => 'nullable|integer',
-                'details.*.quantity' => 'required|numeric|min:1',
-                'details.*.unit' => 'required|string|max:20',
-                'details.*.item_description' => 'required|string|max:255',
-            ]);
-
-            \Log::debug('Validated data:', $validated);
+            $validated = $httpRequest->validated();
 
             // Delete existing details
             $deletedCount = $request->details()->delete();
@@ -226,11 +406,16 @@ class RequestController extends Controller
             // Create new details
             $createdItems = [];
             foreach ($validated['details'] as $detail) {
+                $unitName = trim($detail['unit']);
+                if ($unitName !== '') {
+                    Unit::firstOrCreate(['name' => $unitName]);
+                }
+
                 $createdItem = $request->details()->create([
                     'request_id' => $request->id,
                     'item_id' => $detail['item_id'] ?? null,
                     'quantity' => $detail['quantity'],
-                    'unit' => $detail['unit'],
+                    'unit' => $unitName,
                     'item_description' => $detail['item_description']
                 ]);
                 $createdItems[] = $createdItem->id;
@@ -300,30 +485,14 @@ class RequestController extends Controller
         }
     }
 
-    public function releaseItems(HttpRequest $httpRequest, Request $request, InventoryApiService $inventoryApi)
+    public function releaseItems(ReleaseItemsRequest $httpRequest, Request $request, InventoryApiService $inventoryApi)
     {
         DB::beginTransaction();
 
         try {
-            $macAddress = MacAddressHelper::getClientMac($httpRequest);
+            $validated = $httpRequest->validated();
 
-            $validated = $httpRequest->validate([
-                'items'                          => 'required|array|min:1',
-                'items.*.request_detail_id'      => [
-                    'required',
-                    Rule::exists('request_details', 'id')->where('request_id', $request->id)
-                ],
-                'items.*.quantity'               => 'required|integer|min:1',
-                'notes'                          => 'nullable|string',
-                'user_id'                        => 'required|exists:users,id',
-                'signature'                      => 'nullable|array',
-                'signature.image'                => 'nullable|string',
-                'signature.signer_id'            => 'nullable|integer',
-                'signature.signer_name'          => 'nullable|string',
-                'signature.signed_at'            => 'nullable|date'
-            ]);
-
-            $authUser = User::findOrFail($validated['user_id']);
+            $authUser = auth()->user();
 
             $signatureData = $validated['signature'] ?? null;
 
@@ -366,7 +535,7 @@ class RequestController extends Controller
                 if ($requestDetail->item_id) {
                     $inventoryData = [
                         'item_id'            => $requestDetail->item_id,
-                        'user_id'            => 1,
+                        'user_id'            => $authUser->id,
                         'type'               => 'Out',
                         'quantity'           => $item['quantity'],
                         'source_destination' => $request->department->department_name ?? 'N/A',
@@ -461,21 +630,17 @@ class RequestController extends Controller
             | Activity Log AFTER Commit
             |--------------------------------------------------------------------------
             */
-            activity()
-                ->performedOn($release)
-                ->causedBy($authUser)
-                ->useLog('Released Items')
-                ->withProperties([
-                    'action'             => 'release',
-                    'event'              => 'Items Released',
-                    'mac_address'        => $macAddress,
-                    'user_agent'         => $httpRequest->userAgent(),
-                    'ip_address'         => $httpRequest->ip(),
-                    'request_no'         => $request->request_no,
-                    'released_quantity'  => $totalQuantity,
-                    'inventory_synced'   => $inventorySynced,
-                    'inventory_skipped'  => $inventorySkipped,
+            ActivityLogger::make($httpRequest)
+                ->on($release)
+                ->by($authUser)
+                ->withMacAddress()
+                ->with([
+                    'request_no'        => $request->request_no,
+                    'released_quantity' => $totalQuantity,
+                    'inventory_synced'  => $inventorySynced,
+                    'inventory_skipped' => $inventorySkipped,
                 ])
+                ->logName('Released Items')
                 ->log("Released {$totalQuantity} items for request #{$request->request_no}. Inventory synced: {$inventorySynced}, skipped (unlinked): {$inventorySkipped}");
 
             return response()->json([
@@ -560,16 +725,15 @@ class RequestController extends Controller
             $request->update(['status' => $newStatus]);
             
             // Log the status change
-            activity()
-                ->performedOn($request)
-                ->causedBy(auth()->user())
-                ->useLog('Request Status Update')
-                ->withProperties([
+            ActivityLogger::make()
+                ->on($request)
+                ->with([
                     'old_status' => $oldStatus,
                     'new_status' => $newStatus,
                     'total_quantity' => $details->sum('quantity'),
-                    'total_released' => $details->sum('released_quantity')
+                    'total_released' => $details->sum('released_quantity'),
                 ])
+                ->logName('Request Status Update')
                 ->log("Request status automatically updated from {$oldStatus} to {$newStatus}");
         }
     }
@@ -614,16 +778,50 @@ class RequestController extends Controller
         }
     }
 
-    // Api method to update tagging status
-    public function data(): JsonResponse
+    protected function notifyRequestCreator($requestModel, int $userId): void
     {
-        $requests = Request::with(['department', 'user', 'details'])
-            ->whereIn('status', ['propertyCustodian'])
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $requests,
+        DB::table('notifications')->insert([
+            'id' => (string) Str::uuid(),
+            'type' => 'Request',
+            'notifiable_type' => 'App\Models\User',
+            'notifiable_id' => $userId,
+            'data' => json_encode([
+                'request_id' => $requestModel->id,
+                'title' => 'Request',
+                'request_no' => $requestModel->request_no,
+                'status' => $requestModel->status,
+                'message' => "Request #{$requestModel->request_no} has been created",
+                'link' => route('request.show', $requestModel->id),
+            ]),
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
     }
+
+    protected function notifyRequestApprovers($requestModel, int $departmentId, int $userId, ?User $creatorUser): void
+    {
+        $approvers = User::where('department_id', $departmentId)
+            ->where('access_id', 3)
+            ->where('id', '!=', $userId)
+            ->get();
+
+        foreach ($approvers as $approver) {
+            DB::table('notifications')->insert([
+                'id' => (string) Str::uuid(),
+                'type' => 'App\Notifications\NewRequestNotification',
+                'notifiable_type' => 'App\Models\User',
+                'notifiable_id' => $approver->id,
+                'data' => json_encode([
+                    'request_id' => $requestModel->id,
+                    'request_no' => $requestModel->request_no,
+                    'status' => $requestModel->status,
+                    'message' => "New request #{$requestModel->request_no} needs approval from " . ($creatorUser->name ?? 'Unknown'),
+                    'link' => route('request.show', $requestModel->id),
+                ]),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    }
+
 }

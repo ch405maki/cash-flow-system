@@ -24,6 +24,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 use App\Models\DistributionExpense;
 use App\Models\PettyCash;
+use App\Services\ActivityLogger;
 
 
 class VoucherController extends Controller
@@ -201,15 +202,15 @@ class VoucherController extends Controller
             ]);
 
             // Log the activity
-            activity()
-                ->performedOn($voucher)
-                ->causedBy($user)
-                ->useLog('Voucher Update')
-                ->withProperties([
+            ActivityLogger::make($request)
+                ->on($voucher)
+                ->by($user)
+                ->with([
                     'voucher_no' => $voucher->voucher_no,
                     'action' => $action,
                     'new_status' => $newStatus,
                 ])
+                ->logName('Voucher Update')
                 ->log("Voucher {$voucher->voucher_no} Updated: {$action} ");
         });
 

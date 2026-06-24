@@ -24,11 +24,11 @@ defineProps<{
 
 
 const goToRequestApproval = () => {
-  router.get('/for-approval');
+  router.get('/request-to-order?pageType=for-approval');
 };
 
 const goToPurchaseApproval = () => {
-  router.get('/purchase-orders');
+  router.get('/purchase-order');
 };
 
 const goToVoucherApproval = () => {

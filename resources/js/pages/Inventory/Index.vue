@@ -20,8 +20,8 @@ import {
   Filter, 
   X 
 } from 'lucide-vue-next';
-import axios from 'axios';
 import { useToast } from 'vue-toastification';
+import { inventoryService } from '@/services/inventoryService';
 import PageHeader from '@/components/PageHeader.vue';
 import {
     Table,
@@ -117,8 +117,8 @@ const getStockStatusBadgeClass = (quantity: number, minStock: number) => {
 const fetchItems = async () => {
     loading.value = true;
     try {
-        const response = await axios.get('/api/inventory/items');
-        items.value = response.data.data;
+        const response = await inventoryService.getItems();
+        items.value = response.data;
     } catch (error) {
         console.error('Error fetching items:', error);
         toast.error('Failed to load inventory items');

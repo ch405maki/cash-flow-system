@@ -4,18 +4,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Users\UserController;
-use App\Http\Controllers\Api\DepartmentController;
-use App\Http\Controllers\Api\AccessController;
-use App\Http\Controllers\Api\AccountController;
-use App\Http\Controllers\Api\SignatoryController;
-use App\Http\Controllers\Api\PurchaseOrderController;
-use App\Http\Controllers\Api\CanvasController;
-use App\Http\Controllers\Api\ActivityLogController;
-use App\Http\Controllers\Api\ProfilePictureController;
-use App\Http\Controllers\NotificationController;
-
-// web
+use App\Http\Controllers\Web\CanvasController;
+use App\Http\Controllers\Web\ActivityLogController;
 use App\Http\Controllers\Web\DashboardController;
 
 use App\Models\User;
@@ -32,15 +22,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 
-// Purchase Order Route
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
-    Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
-    Route::get('/purchase-order/create', [PurchaseOrderController::class, 'create'])->name('purchase-order.create');
-    
-    Route::patch('/purchase-orders/{purchaseOrder}/status', [PurchaseOrderController::class, 'updateStatus'])->name('purchase-orders.status.update');
-});
-
 // Canvas Route
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/canvas/create', [CanvasController::class, 'create'])->name('canvas.create');
@@ -51,6 +32,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/canvas/{canvas}', [CanvasController::class, 'show'])->name('canvas.show');
     Route::get('/canvases/{canvas}/download', [CanvasController::class, 'downloadAll'])->name('canvas.download.all');
     Route::get('/canvases/{canvas}/download/{file}', [CanvasController::class, 'downloadFile'])->name('canvas.download.file');
+    Route::get('/canvas/{canvas}/files/{file}/preview', [CanvasController::class, 'preview'])->name('canvas.preview.file');
     Route::patch('/canvas/{canvas}', [CanvasController::class, 'update'])->name('canvas.update');
 });
 
@@ -80,13 +62,15 @@ Route::get('/test-email', function () {
     return 'Test email sent!';
 });
 
-require __DIR__.'/settings.php';
-require __DIR__.'/configuration.php';
-require __DIR__.'/auth.php';
-require __DIR__.'/pettycash.php';
-require __DIR__.'/vouchers.php';
-require __DIR__.'/reports.php';
-require __DIR__.'/request.php';
-require __DIR__.'/notification.php';
-require __DIR__.'/inventory.php';
-require __DIR__.'/receiving.php';
+require __DIR__.'/web/settings.php';
+require __DIR__.'/web/configuration.php';
+require __DIR__.'/web/auth.php';
+require __DIR__.'/web/pettycash.php';
+require __DIR__.'/web/vouchers.php';
+require __DIR__.'/web/reports.php';
+require __DIR__.'/web/request.php';
+require __DIR__.'/web/request-to-order.php';
+require __DIR__.'/web/purchase-orders.php';
+require __DIR__.'/web/notification.php';
+require __DIR__.'/web/inventory.php';
+require __DIR__.'/web/receiving.php';

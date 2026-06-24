@@ -10,8 +10,8 @@ import {
   DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
 import {
-  Loader2, CheckCircle2, XCircle,
-  PenLine, ShieldCheck, Eye, Tablet, Pencil,
+  Loader2, CheckCircle2, XCircle, RefreshCcw,
+  PenLine, ShieldCheck, Eye, Tablet, Signature,
 } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -155,14 +155,13 @@ const closeDialog = () => {
             v-if="signatureMode === 'canvas' && !padInfo"
             class="w-full flex items-center gap-2 text-xs text-muted-foreground bg-muted rounded-md px-3 py-2"
           >
-            <Tablet class="w-3.5 h-3.5 shrink-0" />
-            Signature pad not detected — using on-screen signing.
+              Signature pad not detected — using on-screen signing.
             <button
               type="button"
               class="ml-auto underline underline-offset-2 hover:text-foreground transition-colors"
               @click="initPad"
             >
-              Retry pad
+              <RefreshCcw class="w-4 h-4"/>
             </button>
           </div>
 
@@ -186,7 +185,7 @@ const closeDialog = () => {
                 : 'text-muted-foreground hover:text-foreground'"
               @click="signatureMode = 'canvas'"
             >
-              <Pencil class="w-4 h-4" /> Draw On-Screen
+              <Signature class="w-4 h-4" /> Draw On-Screen
             </button>
           </div>
 
@@ -323,7 +322,7 @@ const closeDialog = () => {
         <template v-else-if="step === 'ready'">
           <Button variant="outline" @click="closeDialog">Cancel</Button>
           <Button v-if="signatureMode === 'pad'" @click="beginSigning">
-            <PenLine class="w-4 h-4 mr-2" /> Start Signing
+            <PenLine class="w-4 h-4" /> Start Signing
           </Button>
           <Button
             v-else

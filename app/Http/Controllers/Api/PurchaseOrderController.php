@@ -4,26 +4,24 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\PurchaseOrder;
-use App\Models\PurchaseOrderDetail;
 use App\Models\Account;
+use App\Models\Department;
 use App\Models\Canvas;
 use App\Models\CanvasFile;
 use App\Models\CanvasSelectedFile;
 use App\Models\PurchaseOrderApproval;
-use App\Models\Department;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use App\Models\Request as PurchaseRequest;
-use Inertia\Inertia;
+use App\Services\ActivityLogger;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 
 class PurchaseOrderController extends Controller
 {
-    public function index(Request $request)
+    public function indexData(Request $request): JsonResponse
     {
         $user = Auth::user();
         $status = $request->query('status');
@@ -31,12 +29,9 @@ class PurchaseOrderController extends Controller
         $query = PurchaseOrder::with(['user', 'department', 'account', 'details'])
                     ->latest();
 
-        // Define valid statuses for each role
-        $validStatuses = [];
-        
         if ($user->role === 'purchasing') {
             $validStatuses = ['approved', 'draft', 'forEOD', 'rejected'];
-            
+
             if ($request->filled('status')) {
                 if (in_array($status, $validStatuses)) {
                     if ($status === 'approved') {
@@ -45,79 +40,106 @@ class PurchaseOrderController extends Controller
                         $query->where('status', $status);
                     }
                 } else {
-                    // Invalid status parameter - return empty result
                     $query->whereRaw('1 = 0');
                 }
             }
-            // If no status parameter, show all
-            
+
         } elseif ($user->role === 'property_custodian') {
-            $validStatuses = ['approved'];
-            
             if ($request->filled('status')) {
-                if (in_array($status, $validStatuses)) {
+                if ($status === 'approved') {
                     $query->whereIn('status', ['approved', 'voucherCreated']);
                 } else {
-                    // Invalid status parameter - return empty result
                     $query->whereRaw('1 = 0');
                 }
             } else {
-                // Default show approved and voucherCreated
                 $query->whereIn('status', ['approved', 'voucherCreated']);
             }
-            
+
         } else {
-            // Other roles: only show forEOD
             $query->where('status', 'forEOD');
         }
 
         $purchaseOrders = $query->paginate(10);
 
-        return Inertia::render('PurchaseOrders/Index', [
-            'purchaseOrders' => $purchaseOrders,
-            'filters' => $request->only(['status']),
-        ]);
-    }
-
-    public function show(PurchaseOrder $purchaseOrder)
-    {
-        $user = Auth::user();
-
-        return Inertia::render('PurchaseOrders/Show', [
-            'purchaseOrder' => $purchaseOrder->load([
-                'user',
-                'department', 
-                'account',
-                'details',
-                'canvas.selected_files.file',
-                'canvas.selected_files.approval',
-                'canvas.approvals.user',
-                'approvals.user',
-                'voucher.user',  
-                'voucher.details',
-                'voucher.approvals.user',
-            ]),
-            'authUser' => [
-                'id' => $user->id,
-                'role' => $user->role,
-                'access' => $user->access_id,
-                'name' => $user->first_name,
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'purchaseOrders' => $purchaseOrders,
             ],
         ]);
     }
 
-    public function create(Request $request)
+    public function showData(PurchaseOrder $purchaseOrder): JsonResponse
     {
-        $canvasId = $request->query('canvas_id');
-        return Inertia::render('PurchaseOrders/Create', [
-            'user_id' => Auth::id(),
-            'departments' => Department::orderBy('department_name')->get(['id', 'department_name']),
-            'accounts' => Account::orderBy('account_title')->get(['id', 'account_title']),
-            'canvas_id' => $canvasId,
+        $user = Auth::user();
+
+        $purchaseOrder->load([
+            'user',
+            'department',
+            'account',
+            'details',
+            'canvas.selected_files.file',
+            'canvas.selected_files.approval',
+            'canvas.approvals.user',
+            'approvals.user',
+            'voucher.user',
+            'voucher.details',
+            'voucher.approvals.user',
+        ]);
+
+        $firstFileId = $purchaseOrder->canvas?->selected_files?->first()?->canvas_file_id;
+
+        $signatories = \App\Models\User::whereIn('role', ['executive_director', 'president', 'vice_president'])
+            ->get(['first_name', 'middle_name', 'last_name', 'role', 'id'])
+            ->map(fn ($u) => [
+                'full_name' => trim($u->first_name . ' ' . ($u->middle_name ?? '') . ' ' . $u->last_name),
+                'position' => $u->role,
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'purchaseOrder' => $purchaseOrder,
+                'authUser' => [
+                    'id' => $user->id,
+                    'name' => $user->first_name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'access' => $user->access_id,
+                ],
+                'firstFileId' => $firstFileId,
+                'signatories' => $signatories,
+            ],
         ]);
     }
 
-    public function store(Request $request)
+    public function createData(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'user_id' => Auth::id(),
+                'departments' => Department::orderBy('department_name')->get(['id', 'department_name']),
+                'accounts' => Account::orderBy('account_title')->get(['id', 'account_title']),
+            ],
+        ]);
+    }
+
+    public function editData(PurchaseOrder $purchaseOrder): JsonResponse
+    {
+        $purchaseOrder->load(['details']);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'purchaseOrder' => $purchaseOrder,
+                'departments' => Department::orderBy('department_name')->get(['id', 'department_name']),
+                'accounts' => Account::orderBy('account_title')->get(['id', 'account_title']),
+            ],
+        ]);
+    }
+
+    public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'payee' => 'required|string',
@@ -129,8 +151,8 @@ class PurchaseOrderController extends Controller
             'user_id' => 'required|exists:users,id',
             'department_id' => 'required|exists:departments,id',
             'account_id' => 'nullable|exists:accounts,id',
-            'details' => 'required|array|min:1',    
-            'details.*.quantity' => 'required|numeric|min:1',
+            'details' => 'required|array|min:1',
+            'details.*.quantity' => 'required|numeric|min:0',
             'details.*.unit' => 'required|string',
             'details.*.item_description' => 'required|string',
             'details.*.unit_price' => 'required|numeric|min:0',
@@ -155,7 +177,6 @@ class PurchaseOrderController extends Controller
 
         DB::beginTransaction();
         try {
-            // Generate PO number safely with lock
             $yearMonth = date('Ym');
             $lastPO = PurchaseOrder::where('po_no', 'like', "PO-{$yearMonth}%")
                 ->lockForUpdate()
@@ -165,15 +186,12 @@ class PurchaseOrderController extends Controller
             $sequence = $lastPO ? ((int) substr($lastPO->po_no, -4)) + 1 : 1;
             $validated['po_no'] = 'PO-' . $yearMonth . str_pad($sequence, 4, '0', STR_PAD_LEFT);
 
-            // Create purchase order
             $purchaseOrder = PurchaseOrder::create($validated);
 
-            // Add details
             foreach ($validated['details'] as $detail) {
                 $purchaseOrder->details()->create($detail);
             }
 
-            // Handle file upload for no_canvas tagging
             if ($validated['tagging'] === 'no_canvas' && $request->hasFile('file')) {
                 $canvas = Canvas::create([
                     'title' => $purchaseOrder->po_no,
@@ -201,17 +219,15 @@ class PurchaseOrderController extends Controller
 
                 $purchaseOrder->update(['canvas_id' => $canvas->id]);
 
-                activity()
-                    ->performedOn($canvas)
-                    ->causedBy(auth()->user())
-                    ->withProperties([
+                ActivityLogger::make($request)
+                    ->on($canvas)
+                    ->with([
                         'file_name' => $file->getClientOriginalName(),
                         'po_id' => $purchaseOrder->id,
                     ])
                     ->log("Supporting document uploaded for PO {$purchaseOrder->po_no}");
             }
 
-            // Optional canvas update for with_canvas tagging
             if ($validated['tagging'] === 'with_canvas' && $validated['canvas_id']) {
                 $canvas = Canvas::find($validated['canvas_id']);
                 if ($canvas) {
@@ -220,10 +236,9 @@ class PurchaseOrderController extends Controller
                         'purchase_order_id' => $purchaseOrder->id,
                     ]);
 
-                    activity()
-                        ->performedOn($canvas)
-                        ->causedBy(auth()->user())
-                        ->withProperties([
+                    ActivityLogger::make($request)
+                        ->on($canvas)
+                        ->with([
                             'linked_po' => $purchaseOrder->po_no,
                             'canvas_id' => $canvas->id,
                             'approval_id' => 1,
@@ -232,19 +247,16 @@ class PurchaseOrderController extends Controller
                 }
             }
 
-            // Activity log for PO
-            activity()
-                ->performedOn($purchaseOrder)
-                ->causedBy(auth()->user())
-                ->useLog('PO Created')
-                ->withProperties([
+            ActivityLogger::make($request)
+                ->on($purchaseOrder)
+                ->with([
                     'po_no' => $purchaseOrder->po_no,
                     'amount' => $validated['amount'],
                     'department_id' => $validated['department_id'],
                 ])
+                ->logName('PO Created')
                 ->log('Created purchase order');
 
-            // Approval entry creation
             PurchaseOrderApproval::create([
                 'purchase_order_id' => $purchaseOrder->id,
                 'user_id' => $validated['user_id'],
@@ -263,60 +275,119 @@ class PurchaseOrderController extends Controller
         }
     }
 
-    public function updateStatus(Request $request, PurchaseOrder $purchaseOrder)
+    public function update(Request $request, PurchaseOrder $purchaseOrder): JsonResponse
+    {
+        if ($purchaseOrder->status !== 'draft') {
+            return response()->json([
+                'message' => 'Only draft purchase orders can be edited.'
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'payee' => 'required|string',
+            'check_payable_to' => 'required|string',
+            'date' => 'required|date',
+            'purpose' => 'required|string',
+            'tin_no' => 'nullable|string',
+            'department_id' => 'required|exists:departments,id',
+            'details' => 'required|array|min:1',
+            'details.*.quantity' => 'required|numeric|min:0',
+            'details.*.unit' => 'required|string',
+            'details.*.item_description' => 'required|string',
+            'details.*.unit_price' => 'required|numeric|min:0',
+            'details.*.amount' => 'required|numeric|min:0',
+        ]);
+
+        $validated['amount'] = collect($validated['details'])->sum('amount');
+
+        DB::beginTransaction();
+        try {
+            $purchaseOrder->update([
+                'payee' => $validated['payee'],
+                'check_payable_to' => $validated['check_payable_to'],
+                'date' => $validated['date'],
+                'purpose' => $validated['purpose'],
+                'tin_no' => $validated['tin_no'] ?? null,
+                'department_id' => $validated['department_id'],
+                'amount' => $validated['amount'],
+            ]);
+
+            $purchaseOrder->details()->delete();
+
+            foreach ($validated['details'] as $detail) {
+                $purchaseOrder->details()->create($detail);
+            }
+
+            ActivityLogger::make($request)
+                ->on($purchaseOrder)
+                ->with([
+                    'po_no' => $purchaseOrder->po_no,
+                    'amount' => $validated['amount'],
+                    'department_id' => $validated['department_id'],
+                ])
+                ->logName('PO Updated')
+                ->log('Updated draft purchase order');
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Purchase order updated successfully',
+                'data' => $purchaseOrder->fresh()->load('details'),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Failed to update purchase order',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function updateStatus(Request $request, PurchaseOrder $purchaseOrder): JsonResponse
     {
         $validated = $request->validate([
             'status' => 'required|in:approved,rejected,released,to_order,forEOD',
             'password' => 'required|string',
             'remarks' => 'nullable|string|max:500',
-            'canvas_id' => 'nullable|exists:canvases,id' // Add validation for canvas_id
         ]);
 
-        // Verify password
         if (!Hash::check($validated['password'], auth()->user()->password)) {
-            return back()->withErrors(['password' => 'Incorrect password']);
+            return response()->json(['message' => 'Incorrect password'], 422);
         }
 
         DB::beginTransaction();
         try {
             $oldStatus = $purchaseOrder->status;
 
-            // Update Purchase Order
             $purchaseOrder->update([
                 'status' => $validated['status'],
                 'remarks' => $validated['remarks'] ?? null
             ]);
 
-            // Update related Canvas if canvas_id exists and status is being approved
             if ($purchaseOrder->canvas_id) {
                 $canvas = Canvas::find($purchaseOrder->canvas_id);
                 if ($canvas) {
-                    $canvas->update([
-                        'status' => 'submitted',
-                    ]);
-                    
-                    // Log canvas update
-                    activity()
-                        ->performedOn($canvas)
-                        ->causedBy(auth()->user())
+                    $canvas->update(['status' => 'submitted']);
+
+                    ActivityLogger::make($request)
+                        ->on($canvas)
                         ->log("Canvas status updated to submitted");
                 }
             }
 
-            // Activity log for PO
-            activity()
-                ->performedOn($purchaseOrder)
-                ->causedBy(auth()->user())
-                ->useLog('Approval')
-                ->withProperties([
+            ActivityLogger::make($request)
+                ->on($purchaseOrder)
+                ->with([
                     'po_no' => $purchaseOrder->po_no,
                     'old_status' => $oldStatus,
                     'new_status' => $validated['status'],
                     'remarks' => $validated['remarks'] ?? null,
                 ])
+                ->logName('Approval')
                 ->log("Status changed to {$validated['status']}");
 
-            // Approval entry creation
             PurchaseOrderApproval::create([
                 'purchase_order_id' => $purchaseOrder->id,
                 'user_id' => auth()->id(),
@@ -326,10 +397,47 @@ class PurchaseOrderController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('success', 'Status updated successfully');
+            return response()->json([
+                'message' => 'Status updated successfully',
+                'purchaseOrder' => $purchaseOrder->fresh()->load('approvals.user'),
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Failed to update status: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to update status',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function destroy(PurchaseOrder $purchaseOrder): JsonResponse
+    {
+        if ($purchaseOrder->status !== 'draft') {
+            return response()->json([
+                'message' => 'Only draft purchase orders can be deleted.'
+            ], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            $poNo = $purchaseOrder->po_no;
+
+            $purchaseOrder->approvals()->delete();
+            $purchaseOrder->details()->delete();
+            $purchaseOrder->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Purchase order {$poNo} deleted successfully.",
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to delete purchase order',
+                'error' => $e->getMessage(),
+            ], 500);
         }
     }
 }

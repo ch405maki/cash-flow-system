@@ -3,47 +3,54 @@
 namespace App\Http\Controllers\Configuration;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Configuration\StoreDepartmentRequest;
+use App\Http\Requests\Configuration\UpdateDepartmentRequest;
 use App\Models\Department;
+use App\Services\ConfigurationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class DepartmentController extends Controller
 {
+    public function __construct(
+        protected ConfigurationService $configService
+    ) {}
+
     public function index()
     {
-        $departments = Department::all();
         return Inertia::render('Configuration/Departments', [
-            'departments' => $departments
+            'departments' => Department::all()
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreDepartmentRequest $request)
     {
-        $validated = $request->validate([
-            'department_name' => 'required|string|max:255|unique:departments',
-            'department_description' => 'nullable|string|max:500',
-        ]);
-
-        $department = Department::create($validated);
+        $department = $this->configService->create(
+            Department::class,
+            $request->validated(),
+            $request,
+            'department_name'
+        );
 
         return response()->json($department, 201);
     }
 
-    public function update(Request $request, Department $department)
+    public function update(UpdateDepartmentRequest $request, Department $department)
     {
-        $validated = $request->validate([
-            'department_name' => 'required|string|max:255|unique:departments,department_name,'.$department->id,
-            'department_description' => 'nullable|string|max:500',
-        ]);
-
-        $department->update($validated);
+        $department = $this->configService->update(
+            $department,
+            $request->validated(),
+            $request,
+            'department_name'
+        );
 
         return response()->json($department);
     }
 
-    public function destroy(Department $department)
+    public function destroy(Request $request, Department $department)
     {
-        $department->delete();
+        $this->configService->delete($department, $request, 'department_name');
+
         return response()->json(null, 204);
     }
 }

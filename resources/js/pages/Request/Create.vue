@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
-import RequestForm from '@/components/requests/RequestForm.vue';
-import RequestTable from '@/components/requests/RequestTable.vue';
+import RequestForm from '@/components/request/RequestForm.vue';
 import { type BreadcrumbItem } from '@/types';
+import { requestService } from '@/services/requestService';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -21,29 +22,26 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
 ];
 
-const props = defineProps({
-  requests: {
-    type: Array,
-    default: () => [],
-  },
-  departments: {
-    type: Array,
-    default: () => [],
-  },
-  authUser: {
-    type: Object,
-    required: true,
-  },
-});
+const departments = ref<any[]>([])
+const loading = ref(true)
+const authUser = usePage().props.auth.user
 
-// Check if we have reorder data
 const reorderRequest = ref<any>(null)
 
-onMounted(() => {
+onMounted(async () => {
   const storedReorder = sessionStorage.getItem('reorderRequest')
   if (storedReorder) {
     reorderRequest.value = JSON.parse(storedReorder)
     sessionStorage.removeItem('reorderRequest')
+  }
+
+  try {
+    const response = await requestService.createData()
+    departments.value = response.data.departments
+  } catch (error) {
+    console.error('Failed to load create data:', error)
+  } finally {
+    loading.value = false
   }
 })
 </script>
@@ -53,9 +51,11 @@ onMounted(() => {
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
-      <RequestForm 
-        :departments="departments" 
-        :auth-user="authUser" 
+      <Skeleton v-if="loading" class="h-[600px] w-full" />
+      <RequestForm
+        v-else
+        :departments="departments"
+        :auth-user="authUser"
         :reorder-request="reorderRequest"
       />
     </div>

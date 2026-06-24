@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -70,6 +71,10 @@ class ReceivingController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Items received successfully.');
+        ActivityLogger::make($request)
+            ->on($purchaseOrder)
+            ->log("Items received for PO #{$purchaseOrder->po_no}");
+
+        return response()->json(['message' => 'Items received successfully.']);
     }
 }

@@ -3,47 +3,54 @@
 namespace App\Http\Controllers\Configuration;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Configuration\StoreAccessRequest;
+use App\Http\Requests\Configuration\UpdateAccessRequest;
 use App\Models\Access;
+use App\Services\ConfigurationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class UserAccessController extends Controller
 {
+    public function __construct(
+        protected ConfigurationService $configService
+    ) {}
+
     public function index()
     {
-        $accesses = Access::all();
         return Inertia::render('Configuration/Access', [
-            'accesses' => $accesses
+            'accesses' => Access::all()
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreAccessRequest $request)
     {
-        $validated = $request->validate([
-            'program_name' => 'required|string|max:255',
-            'access_level' => 'required|string|max:255',
-        ]);
-
-        $access = Access::create($validated);
+        $access = $this->configService->create(
+            Access::class,
+            $request->validated(),
+            $request,
+            'program_name'
+        );
 
         return response()->json($access, 201);
     }
 
-    public function update(Request $request, Access $access)
+    public function update(UpdateAccessRequest $request, Access $access)
     {
-        $validated = $request->validate([
-            'program_name' => 'sometimes|string|max:255',
-            'access_level' => 'sometimes|string|max:255',
-        ]);
-
-        $access->update($validated);
+        $access = $this->configService->update(
+            $access,
+            $request->validated(),
+            $request,
+            'program_name'
+        );
 
         return response()->json($access);
     }
 
-    public function destroy(Access $access)
+    public function destroy(Request $request, Access $access)
     {
-        $access->delete();
+        $this->configService->delete($access, $request, 'program_name');
+
         return response()->json(null, 204);
     }
 }

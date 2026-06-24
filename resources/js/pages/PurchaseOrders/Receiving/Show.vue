@@ -14,6 +14,7 @@ import { useToast } from 'vue-toastification'
 import {
   CheckCircle2, AlertTriangle, Info, Save, ChevronDown,
 } from 'lucide-vue-next'
+import api from '@/services/api'
 
 const toast = useToast()
 
@@ -58,8 +59,8 @@ const props = defineProps<{
 
 // ── Breadcrumbs ──────────────────────────────────────────────────
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Purchase Orders', href: '/purchase-orders' },
-  { title: 'Receiving', href: '/purchase-orders/receiving' },
+  { title: 'Purchase Orders', href: '/purchase-order' },
+  { title: 'Receiving', href: '/purchase-order/receiving' },
   { title: props.purchaseOrder.po_no, href: '' },
 ]
 
@@ -180,29 +181,22 @@ function submit() {
 
   processing.value = true
 
-  // Use router.post directly instead of useForm inside a function
-  router.post(
-    `/purchase-orders/${props.purchaseOrder.id}/receiving`,
-    { items },
-    {
-      preserveScroll: true,
-      onSuccess: () => {
-        toast.success('Receiving saved successfully')
-        rows.value.forEach((r) => {
-          r.quantity_received = ''
-          r.remarks = ''
-          r.dirty = false
-        })
-      },
-      onError: (errors) => {
-        console.error('Receiving errors:', errors)
-        toast.error('Failed to save — check quantities and try again')
-      },
-      onFinish: () => {
-        processing.value = false
-      },
-    }
-  )
+  api.post(`/api/purchase-order/${props.purchaseOrder.id}/receiving`, { items })
+    .then(() => {
+      toast.success('Receiving saved successfully')
+      rows.value.forEach((r) => {
+        r.quantity_received = ''
+        r.remarks = ''
+        r.dirty = false
+      })
+    })
+    .catch((error) => {
+      console.error('Receiving errors:', error)
+      toast.error('Failed to save — check quantities and try again')
+    })
+    .finally(() => {
+      processing.value = false
+    })
 }
 </script>
 

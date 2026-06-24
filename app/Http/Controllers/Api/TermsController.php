@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\ActivityLogger;
 
 class TermsController extends Controller
 {
@@ -25,17 +26,15 @@ class TermsController extends Controller
         ]);
 
         // Log the activity
-        activity()
-            ->performedOn($user)
-            ->causedBy($user)
-            ->useLog('Terms and Conditions')
-            ->withProperties([
+        ActivityLogger::make($request)
+            ->on($user)
+            ->by($user)
+            ->with([
                 'action' => 'Accepted',
                 'event' => 'Terms and Conditions',
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
                 'username' => $user->username,
             ])
+            ->logName('Terms and Conditions')
             ->log("User {$user->username} accepted Terms and Conditions");
         
         return response()->json(['success' => true]);

@@ -2,22 +2,15 @@
 import { Head } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
 import { ref } from 'vue';
-import axios from 'axios';
+import { Button } from '@/components/ui/button';
 import { useToast } from 'vue-toastification';
+import DataTable from '@/components/common/DataTable.vue';
+import CrudDialog from '@/components/common/CrudDialog.vue';
+import ConfirmDeleteDialog from '@/components/common/ConfirmDeleteDialog.vue';
+import { usePagination } from '@/composables/usePagination';
+import { configurationService } from '@/services/configurationService';
+import type { Column } from '@/components/common/DataTable.vue';
 
 interface Department {
     id: number;
@@ -25,193 +18,115 @@ interface Department {
     department_description: string | null;
 }
 
-const props = defineProps<{
-    departments: Department[];
-}>();
+const props = defineProps<{ departments: Department[] }>();
 
 const toast = useToast();
-const departments = ref<Department[]>(props.departments);
-const newDepartment = ref({
-    department_name: '',
-    department_description: ''
-});
-const editingDepartment = ref<Partial<Department> | null>(null);
-const isDialogOpen = ref(false);
-const isEditDialogOpen = ref(false);
+const items = ref<Department[]>(props.departments);
+const createForm = ref({ department_name: '', department_description: '' });
+const editForm = ref<Partial<Department>>({});
+const showCreate = ref(false);
+const showEdit = ref(false);
 
-const createDepartment = async () => {
-    try {
-        const response = await axios.post('/api/configuration/departments', newDepartment.value);
-        departments.value.push(response.data);
-        newDepartment.value = { department_name: '', department_description: '' };
-        isDialogOpen.value = false;
+const columns: Column[] = [
+    { key: 'id', label: 'ID' },
+    { key: 'department_name', label: 'Name' },
+    { key: 'department_description', label: 'Description' },
+];
+
+const { paginatedItems, currentPage, totalPages, hasPrevPage, hasNextPage, prevPage, nextPage } = usePagination(items, 20);
+
+async function handleCreate() {
+    const data = await configurationService.create<Department>('departments', createForm.value);
+    if (data) {
+        items.value.push(data);
+        createForm.value = { department_name: '', department_description: '' };
+        showCreate.value = false;
         toast.success('Department created successfully');
-    } catch (error: any) {
-        if (error.response?.data?.errors) {
-            Object.values(error.response.data.errors).forEach((messages: any) => {
-                messages.forEach((message: string) => toast.error(message));
-            });
-        } else {
-            toast.error('Failed to create department');
-        }
     }
-};
+}
 
-const updateDepartment = async () => {
-    if (!editingDepartment.value?.id) return;
-    
-    try {
-        const response = await axios.put(`/api/configuration/departments/${editingDepartment.value.id}`, editingDepartment.value);
-        const index = departments.value.findIndex(d => d.id === editingDepartment.value?.id);
-        if (index !== -1) {
-            departments.value[index] = response.data;
-        }
-        editingDepartment.value = null;
-        isEditDialogOpen.value = false;
+function openEdit(item: Department) {
+    editForm.value = { ...item };
+    showEdit.value = true;
+}
+
+async function handleUpdate() {
+    if (!editForm.value?.id) return;
+    const data = await configurationService.update<Department>('departments', editForm.value.id, editForm.value);
+    if (data) {
+        const idx = items.value.findIndex(d => d.id === data.id);
+        if (idx !== -1) items.value[idx] = data;
+        editForm.value = {};
+        showEdit.value = false;
         toast.success('Department updated successfully');
-    } catch (error: any) {
-        if (error.response?.data?.errors) {
-            Object.values(error.response.data.errors).forEach((messages: any) => {
-                messages.forEach((message: string) => toast.error(message));
-            });
-        } else {
-            toast.error('Failed to update department');
-        }
     }
-};
+}
 
-const deleteDepartment = async (id: number) => {
-    try {
-        await axios.delete(`/api/configuration/departments/${id}`);
-        departments.value = departments.value.filter(d => d.id !== id);
-        toast.success('Department deleted successfully');
-    } catch (error) {
-        toast.error('Failed to delete department');
-    }
-};
-
-const openEditDialog = (department: Department) => {
-    editingDepartment.value = { ...department };
-    isEditDialogOpen.value = true;
-};
+async function handleDelete(id: number) {
+    await configurationService.delete('departments', id);
+    items.value = items.value.filter(d => d.id !== id);
+    toast.success('Department deleted successfully');
+}
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Dashboard', href: '/dashboard' },
-  { title: 'Department Management', href: '#' },
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Department Management', href: '#' },
 ];
 </script>
 
 <template>
     <Head title="Departments" />
     <AppLayout :breadcrumbs="breadcrumbs">
-            <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-semibold">Department Management</h2>
-                    <Dialog v-model:open="isDialogOpen">
-                        <DialogTrigger as-child>
-                            <Button variant="default">
-                                Add New Department
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Add New Department</DialogTitle>
-                                <DialogDescription>
-                                    Create a new department for your organization.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div class="grid gap-4 py-4">
-                                <div class="grid grid-cols-4 items-center gap-4">
-                                    <label for="department_name" class="text-right">Name</label>
-                                    <Input 
-                                        id="department_name" 
-                                        v-model="newDepartment.department_name" 
-                                        placeholder="Enter department name" 
-                                        class="col-span-3" 
-                                    />
-                                </div>
-                                <div class="grid grid-cols-4 items-center gap-4">
-                                    <label for="department_description" class="text-right">Description</label>
-                                    <Textarea 
-                                        id="department_description" 
-                                        v-model="newDepartment.department_description" 
-                                        placeholder="Enter department description (optional)" 
-                                        class="col-span-3" 
-                                    />
-                                </div>
-                            </div>
-                            <DialogFooter>
-                                <Button type="submit" @click="createDepartment">Save</Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                </div>
-
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>ID</TableHead>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead class="text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        <TableRow v-for="department in departments" :key="department.id">
-                            <TableCell>{{ department.id }}</TableCell>
-                            <TableCell>{{ department.department_name }}</TableCell>
-                            <TableCell>{{ department.department_description || '-' }}</TableCell>
-                            <TableCell class="text-right">
-                                <div class="flex gap-2 justify-end">
-                                    <Dialog v-model:open="isEditDialogOpen">
-                                        <DialogTrigger as-child>
-                                            <Button 
-                                                variant="outline" 
-                                                size="sm" 
-                                                @click="openEditDialog(department)"
-                                            >
-                                                Edit
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent>
-                                            <DialogHeader>
-                                                <DialogTitle>Edit Department</DialogTitle>
-                                            </DialogHeader>
-                                            <div class="grid gap-4 py-4">
-                                                <div class="grid grid-cols-4 items-center gap-4">
-                                                    <label for="edit-department_name" class="text-right">Name</label>
-                                                    <Input 
-                                                        id="edit-department_name" 
-                                                        v-model="editingDepartment.department_name" 
-                                                        class="col-span-3" 
-                                                    />
-                                                </div>
-                                                <div class="grid grid-cols-4 items-center gap-4">
-                                                    <label for="edit-department_description" class="text-right">Description</label>
-                                                    <Textarea 
-                                                        id="edit-department_description" 
-                                                        v-model="editingDepartment.department_description" 
-                                                        class="col-span-3" 
-                                                    />
-                                                </div>
-                                            </div>
-                                            <DialogFooter>
-                                                <Button type="submit" @click="updateDepartment">Save Changes</Button>
-                                            </DialogFooter>
-                                        </DialogContent>
-                                    </Dialog>
-                                    <Button 
-                                        variant="destructive" 
-                                        size="sm" 
-                                        @click="deleteDepartment(department.id)"
-                                    >
-                                        Delete
-                                    </Button>
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
+        <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold">Department Management</h2>
+                <CrudDialog
+                    title="Add New Department"
+                    description="Create a new department for your organization."
+                    :fields="[
+                        { key: 'department_name', label: 'Name', type: 'text', placeholder: 'Enter department name' },
+                        { key: 'department_description', label: 'Description', type: 'textarea', placeholder: 'Enter department description (optional)' },
+                    ]"
+                    v-model="createForm"
+                    v-model:open="showCreate"
+                    trigger-label="Add New Department"
+                    @save="handleCreate"
+                />
             </div>
+
+            <CrudDialog
+                title="Edit Department"
+                :fields="[
+                    { key: 'department_name', label: 'Name', type: 'text' },
+                    { key: 'department_description', label: 'Description', type: 'textarea' },
+                ]"
+                v-model="editForm"
+                v-model:open="showEdit"
+                :is-editing="true"
+                save-label="Save Changes"
+                @save="handleUpdate"
+            />
+
+            <DataTable :columns="columns" :data="paginatedItems">
+                <template #cell-department_description="{ value }">
+                    {{ value || '-' }}
+                </template>
+                <template #actions="{ item }">
+                    <div class="flex gap-2 justify-end">
+                        <Button variant="outline" size="sm" @click="openEdit(item)">Edit</Button>
+                        <ConfirmDeleteDialog item-name="this department" @confirm="handleDelete(item.id)" />
+                    </div>
+                </template>
+                <template #pagination>
+                    <div class="flex items-center justify-between mt-4">
+                        <p class="text-sm text-muted-foreground">Page {{ currentPage }} of {{ totalPages }}</p>
+                        <div class="flex gap-2">
+                            <Button variant="outline" size="sm" :disabled="!hasPrevPage" @click="prevPage">Previous</Button>
+                            <Button variant="outline" size="sm" :disabled="!hasNextPage" @click="nextPage">Next</Button>
+                        </div>
+                    </div>
+                </template>
+            </DataTable>
+        </div>
     </AppLayout>
 </template>
